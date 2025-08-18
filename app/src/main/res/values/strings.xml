@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Food log</string>
+    <string name="goal_label">Set Your Goal:</string>
+    <string name="goal_hint">Enter goal value</string>
+    <string name="current_goal_label">Current Goal:</string>
+    <string name="set_goal_button">Set Goal</string>
+    <string name="add_piece_button">Add New Piece</string>
+    <string name="check_in_button">Check In Piece</string>
+    <string name="pieces_label">Your Pieces:</string>
+    <string name="check_ins_label">Recent Check-ins:</string>
+    <string name="piece_name_hint">Piece name</string>
+    <string name="piece_value_hint">Piece value</string>
+    <string name="percentage_hint">Enter percentage (0-100)</string>
+    <string name="check_in_dialog_title">Check in ${piece.name}</string>
+    <string name="add_piece_dialog_title">Add New Piece</string>
+    <string name="piece_added_toast">Added ${piece.name}</string>
+    <string name="piece_selected_dialog_title">Select Piece to Check In</string>
+    <string name="check_in_toast">Checked in ${piece.name}</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="add_button">Add</string>
+</resources>
