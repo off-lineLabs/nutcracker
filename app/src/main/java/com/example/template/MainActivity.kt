@@ -1,253 +1,390 @@
 package com.example.template
 
 import android.os.Bundle
-import android.widget.*
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.example.template.ui.theme.FoodLogTheme // Use your theme
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
-class MainActivity : AppCompatActivity() {
+// Data classes remain the same
+data class Piece(val name: String, val value: Double, val id: String = UUID.randomUUID().toString())
+data class CheckIn(val pieceName: String, val pieceId: String, val percentage: Double, val timestamp: String, val id: String = UUID.randomUUID().toString())
 
-    // Data classes to structure our data
-    data class Piece(val name: String, val value: Double)
-    data class CheckIn(val pieceName: String, val percentage: Double, val timestamp: String)
-
-    // Storage for our data (in a real app, you'd use a database)
-    private var goal: Double = 0.0
-    private val pieces = mutableListOf<Piece>()
-    private val checkIns = mutableListOf<CheckIn>()
-
-    // UI components
-    private lateinit var goalEditText: EditText
-    private lateinit var goalTextView: TextView
-    private lateinit var setGoalButton: Button
-    private lateinit var addPieceButton: Button
-    private lateinit var checkInButton: Button
-    private lateinit var piecesListView: ListView
-    private lateinit var checkInsListView: ListView
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Inflate the layout from XML
-        setContentView(R.layout.activity_main) // <--- KEY CHANGE HERE
-
-        // Initialize UI components by finding them by their ID
-        initializeViews() // <--- NEW METHOD
-
-        // Set up button listeners
-        setupListeners()
-
-        // Update the display
-        updateDisplay()
-    }
-
-    private fun initializeViews() {
-        goalEditText = findViewById(R.id.goalEditText)
-        goalTextView = findViewById(R.id.goalTextView)
-        setGoalButton = findViewById(R.id.setGoalButton)
-        addPieceButton = findViewById(R.id.addPieceButton)
-        checkInButton = findViewById(R.id.checkInButton)
-        piecesListView = findViewById(R.id.piecesListView)
-        checkInsListView = findViewById(R.id.checkInsListView)
-    }
-
-    /**
-    private fun createLayout() {
-        // Create a vertical LinearLayout
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
-        }
-
-        // Goal section
-        mainLayout.addView(TextView(this).apply {
-            text = "Set Your Goal:"
-            textSize = 18f
-        })
-
-        goalEditText = EditText(this).apply {
-            hint = "Enter goal value"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        mainLayout.addView(goalEditText)
-
-        setGoalButton = Button(this).apply { text = "Set Goal" }
-        mainLayout.addView(setGoalButton)
-
-        goalTextView = TextView(this).apply {
-            text = "Current Goal: $goal"
-            textSize = 16f
-            setPadding(0, 16, 0, 16)
-        }
-        mainLayout.addView(goalTextView)
-
-        // Buttons section
-        addPieceButton = Button(this).apply { text = "Add New Piece" }
-        mainLayout.addView(addPieceButton)
-
-        checkInButton = Button(this).apply { text = "Check In Piece" }
-        mainLayout.addView(checkInButton)
-
-        // Pieces list
-        mainLayout.addView(TextView(this).apply {
-            text = "Your Pieces:"
-            textSize = 16f
-            setPadding(0, 16, 0, 8)
-        })
-
-        piecesListView = ListView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                300
-            )
-        }
-        mainLayout.addView(piecesListView)
-
-        // Check-ins list
-        mainLayout.addView(TextView(this).apply {
-            text = "Recent Check-ins:"
-            textSize = 16f
-            setPadding(0, 16, 0, 8)
-        })
-
-        checkInsListView = ListView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                300
-            )
-        }
-        mainLayout.addView(checkInsListView)
-
-        setContentView(mainLayout)
-    }
-**/
-    private fun setupListeners() {
-        setGoalButton.setOnClickListener {
-            val goalText = goalEditText.text.toString()
-            if (goalText.isNotEmpty()) {
-                goal = goalText.toDoubleOrNull() ?: 0.0
-                updateDisplay()
-                goalEditText.text.clear()
-                Toast.makeText(this, "Goal set to $goal", Toast.LENGTH_SHORT).show()
+        setContent {
+            FoodLogTheme { // Apply your app's theme
+                CalorieAppScreen()
             }
         }
+    }
+}
 
-        addPieceButton.setOnClickListener {
-            showAddPieceDialog()
+// --------- ViewModel (Optional but Recommended for complex state) --------
+// For simplicity in this example, state is managed directly in Composables
+// For a more robust app, consider using a ViewModel:
+// class CalorieViewModel : ViewModel() {
+//    private val _goal = mutableStateOf(0.0)
+//    val goal: State<Double> = _goal
+//    // ... other state and logic
+// }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalorieAppScreen() {
+    // State variables
+    var goal by rememberSaveable { mutableDoubleStateOf(2000.0) } // Example initial goal
+    var pieces by rememberSaveable { mutableStateOf(listOf<Piece>()) }
+    var checkIns by rememberSaveable { mutableStateOf(listOf<CheckIn>()) }
+
+    var showSetGoalDialog by remember { mutableStateOf(false) }
+    var showAddPieceDialog by remember { mutableStateOf(false) }
+    var showCheckInDialog by remember { mutableStateOf<Piece?>(null) } // Holds the piece to check in
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Calorie Tracker") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddPieceDialog = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "Add New Piece")
+            }
         }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Goal Section
+            Text("Current Goal: ${String.format("%.2f", goal)}", style = MaterialTheme.typography.headlineSmall)
+            Button(onClick = { showSetGoalDialog = true }, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Set Goal")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        checkInButton.setOnClickListener {
+            // Pieces Section
+            Text("Your Pieces", style = MaterialTheme.typography.titleMedium)
             if (pieces.isEmpty()) {
-                Toast.makeText(this, "Add some pieces first!", Toast.LENGTH_SHORT).show()
+                Text("No pieces added yet. Click the '+' button to add one.", modifier = Modifier.padding(8.dp))
             } else {
-                showCheckInDialog()
-            }
-        }
-    }
-
-    private fun showAddPieceDialog() {
-        val dialogLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
-        }
-
-        val nameEditText = EditText(this).apply {
-            hint = "Piece name"
-        }
-        dialogLayout.addView(nameEditText)
-
-        val valueEditText = EditText(this).apply {
-            hint = "Piece value"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        dialogLayout.addView(valueEditText)
-
-        AlertDialog.Builder(this)
-            .setTitle("Add New Piece")
-            .setView(dialogLayout)
-            .setPositiveButton("Add") { _, _ ->
-                val name = nameEditText.text.toString()
-                val valueText = valueEditText.text.toString()
-
-                if (name.isNotEmpty() && valueText.isNotEmpty()) {
-                    val value = valueText.toDoubleOrNull() ?: 0.0
-                    pieces.add(Piece(name, value))
-                    updateDisplay()
-                    Toast.makeText(this, "Added $name", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showCheckInDialog() {
-        // First, show piece selection
-        val pieceNames = pieces.map { it.name }.toTypedArray()
-
-        AlertDialog.Builder(this)
-            .setTitle("Select Piece to Check In")
-            .setItems(pieceNames) { _, which ->
-                val selectedPiece = pieces[which]
-                showPercentageDialog(selectedPiece)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showPercentageDialog(piece: Piece) {
-        val percentageEditText = EditText(this).apply {
-            hint = "Enter percentage (0-100)"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Check in ${piece.name}")
-            .setMessage("Current value: ${piece.value}")
-            .setView(percentageEditText)
-            .setPositiveButton("Check In") { _, _ ->
-                val percentageText = percentageEditText.text.toString()
-                if (percentageText.isNotEmpty()) {
-                    val percentage = percentageText.toDoubleOrNull() ?: 0.0
-                    if (percentage in 0.0..100.0) {
-                        performCheckIn(piece, percentage)
-                    } else {
-                        Toast.makeText(this, "Please enter a valid percentage (0-100)", Toast.LENGTH_SHORT).show()
+                LazyColumn(modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()) {
+                    items(pieces, key = { it.id }) { piece ->
+                        PieceItem(piece = piece, onCheckInClick = { showCheckInDialog = piece })
+                        HorizontalDivider()
                     }
                 }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            Button(
+                onClick = { if (pieces.isNotEmpty()) showCheckInDialog = pieces.first() /* Example: auto-select first or let user choose from list */ },
+                enabled = pieces.isNotEmpty(),
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Check In Piece")
+            }
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Recent Check-ins Section
+            Text("Recent Check-ins", style = MaterialTheme.typography.titleMedium)
+            if (checkIns.isEmpty()) {
+                Text("No check-ins yet.", modifier = Modifier.padding(8.dp))
+            } else {
+                LazyColumn(modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()) {
+                    items(checkIns.take(5), key = { it.id }) { checkIn -> // Display latest 5
+                        CheckInItem(checkIn = checkIn)
+                        HorizontalDivider()
+                    }
+                }
+            }
+        }
     }
 
-    private fun performCheckIn(piece: Piece, percentage: Double) {
-        val checkInValue = piece.value * (percentage / 100.0)
-        goal -= checkInValue
-
-        val timestamp = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()).format(Date())
-        checkIns.add(CheckIn(piece.name, percentage, timestamp))
-
-        updateDisplay()
-        Toast.makeText(this, "Checked in ${percentage}% of ${piece.name}", Toast.LENGTH_SHORT).show()
+    // --- Dialogs ---
+    if (showSetGoalDialog) {
+        SetGoalDialog(
+            currentGoal = goal,
+            onDismiss = { showSetGoalDialog = false },
+            onSetGoal = { newGoal ->
+                goal = newGoal
+                showSetGoalDialog = false
+            }
+        )
     }
 
-    private fun updateDisplay() {
-        goalTextView.text = "Current Goal: ${String.format("%.2f", goal)}"
-
-        // Update pieces list
-        val piecesAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_1,
-            pieces.map { "${it.name}: ${it.value}" }
+    if (showAddPieceDialog) {
+        AddPieceDialog(
+            onDismiss = { showAddPieceDialog = false },
+            onAddPiece = { newPiece ->
+                pieces = pieces + newPiece // Add to the list
+                showAddPieceDialog = false
+            }
         )
-        piecesListView.adapter = piecesAdapter
+    }
 
-        // Update check-ins list
-        val checkInsAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_1,
-            checkIns.takeLast(5).map { "${it.timestamp}: ${it.percentage}% of ${it.pieceName}" }
+    showCheckInDialog?.let { pieceToCheckIn ->
+        CheckInPieceDialog(
+            piece = pieceToCheckIn,
+            onDismiss = { showCheckInDialog = null },
+            onCheckIn = { piece, percentage ->
+                val checkInValue = piece.value * (percentage / 100.0)
+                goal -= checkInValue // Direct mutation; consider ViewModel for complex logic
+
+                val timestamp = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()).format(Date())
+                val newCheckIn = CheckIn(piece.name, piece.id, percentage, timestamp)
+                checkIns = listOf(newCheckIn) + checkIns // Add to the beginning of the list
+
+                showCheckInDialog = null
+            }
         )
-        checkInsListView.adapter = checkInsAdapter
+    }
+}
+
+@Composable
+fun PieceItem(piece: Piece, onCheckInClick: (Piece) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckInClick(piece) } // Make the whole item clickable for check-in
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("${piece.name}: ${String.format("%.2f", piece.value)}")
+        // Optionally, add a specific "Check In" button per item if preferred
+        // Button(onClick = { onCheckInClick(piece) }) { Text("Check In") }
+    }
+}
+
+@Composable
+fun CheckInItem(checkIn: CheckIn) {
+    Text(
+        text = "${checkIn.timestamp}: ${checkIn.percentage}% of ${checkIn.pieceName}",
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
+
+
+// --- Dialog Composable Functions ---
+
+@Composable
+fun SetGoalDialog(currentGoal: Double, onDismiss: () -> Unit, onSetGoal: (Double) -> Unit) {
+    var goalInput by rememberSaveable { mutableStateOf(currentGoal.toString()) }
+    var inputError by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Set Your Goal") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = goalInput,
+                    onValueChange = {
+                        goalInput = it
+                        inputError = null // Clear error on change
+                    },
+                    label = { Text("Goal Value") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = inputError != null
+                )
+                if (inputError != null) {
+                    Text(inputError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val newGoal = goalInput.toDoubleOrNull()
+                    if (newGoal != null && newGoal > 0) {
+                        onSetGoal(newGoal)
+                    } else {
+                        inputError = "Please enter a valid positive number."
+                    }
+                }
+            ) { Text("Set") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun AddPieceDialog(onDismiss: () -> Unit, onAddPiece: (Piece) -> Unit) {
+    var nameInput by rememberSaveable { mutableStateOf("") }
+    var valueInput by rememberSaveable { mutableStateOf("") }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var valueError by remember { mutableStateOf<String?>(null) }
+
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add New Piece") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it; nameError = null },
+                    label = { Text("Piece Name") },
+                    isError = nameError != null
+                )
+                if (nameError != null) {
+                    Text(nameError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = valueInput,
+                    onValueChange = { valueInput = it; valueError = null },
+                    label = { Text("Piece Value") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = valueError != null
+                )
+                if (valueError != null) {
+                    Text(valueError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val name = nameInput.trim()
+                    val value = valueInput.toDoubleOrNull()
+                    var isValid = true
+                    if (name.isEmpty()) {
+                        nameError = "Name cannot be empty."
+                        isValid = false
+                    }
+                    if (value == null || value <= 0) {
+                        valueError = "Enter a valid positive value."
+                        isValid = false
+                    }
+
+                    if (isValid) {
+                        onAddPiece(Piece(name, value!!))
+                    }
+                }
+            ) { Text("Add") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun CheckInPieceDialog(piece: Piece, onDismiss: () -> Unit, onCheckIn: (Piece, Double) -> Unit) {
+    var percentageInput by rememberSaveable { mutableStateOf("") }
+    var inputError by remember { mutableStateOf<String?>(null) }
+
+
+    // If you want a list selection first (if `showCheckInDialog` was just a boolean)
+    // You would manage a separate state for the selected piece from a list of pieces.
+    // For this example, we assume `piece` is already the selected one.
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Check in ${piece.name}") },
+        text = {
+            Column {
+                Text("Current value: ${piece.value}")
+                OutlinedTextField(
+                    value = percentageInput,
+                    onValueChange = { percentageInput = it; inputError = null },
+                    label = { Text("Percentage (0-100)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = inputError != null
+                )
+                if (inputError != null) {
+                    Text(inputError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val percentage = percentageInput.toDoubleOrNull()
+                    if (percentage != null && percentage in 0.0..100.0) {
+                        onCheckIn(piece, percentage)
+                    } else {
+                        inputError = "Enter a valid percentage (0-100)."
+                    }
+                }
+            ) { Text("Check In") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+
+// --- Previews ---
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    FoodLogTheme {
+        CalorieAppScreen()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 200)
+@Composable
+fun PieceItemPreview() {
+    FoodLogTheme {
+        PieceItem(piece = Piece("Apple", 95.0), onCheckInClick = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CheckInItemPreview() {
+    FoodLogTheme {
+        CheckInItem(checkIn = CheckIn("Apple", "id1", 50.0, "12/25 10:00"))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SetGoalDialogPreview() {
+    FoodLogTheme {
+        SetGoalDialog(currentGoal = 2000.0, onDismiss = {}, onSetGoal = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddPieceDialogPreview() {
+    FoodLogTheme {
+        AddPieceDialog(onDismiss = {}, onAddPiece = {})
     }
 }
