@@ -6,24 +6,13 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.template.R // Your project's R file
 
 // Define the Inter FontFamily using your variable fonts
 val InterFontFamily = FontFamily(
-    // Reference the upright variable font for normal style
-    Font(R.font.inter_variable, FontWeight.Normal, FontStyle.Normal), // Catches all normal weights
-
-    // Reference the italic variable font for italic style
-    Font(
-        R.font.inter_italic_variable,
-        FontWeight.Normal,
-        FontStyle.Italic
-    ) // Catches all italic weights
-    // Note: The FontWeight.Normal here is a placeholder for the variable font.
-    // The actual weight will be determined by the FontWeight you specify in your TextStyle.
+    Font(R.font.inter_italic_variable)
 )
 
 // Now, update your Typography object to use InterFontFamily
