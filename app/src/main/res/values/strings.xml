@@ -1,21 +1,54 @@
 <resources>
-    <string name="app_name">Food log</string>
-    <string name="goal_label">Set Your Goal:</string>
-    <string name="goal_hint">Enter goal value</string>
-    <string name="current_goal_label">Current Goal:</string>
-    <string name="set_goal_button">Set Goal</string>
-    <string name="add_piece_button">Add New Piece</string>
-    <string name="check_in_button">Check In Piece</string>
-    <string name="pieces_label">Your Pieces:</string>
-    <string name="check_ins_label">Recent Check-ins:</string>
-    <string name="piece_name_hint">Piece name</string>
-    <string name="piece_value_hint">Piece value</string>
-    <string name="percentage_hint">Enter percentage (0-100)</string>
-    <string name="check_in_dialog_title">Check in ${piece.name}</string>
-    <string name="add_piece_dialog_title">Add New Piece</string>
-    <string name="piece_added_toast">Added ${piece.name}</string>
-    <string name="piece_selected_dialog_title">Select Piece to Check In</string>
-    <string name="check_in_toast">Checked in ${piece.name}</string>
-    <string name="cancel_button">Cancel</string>
-    <string name="add_button">Add</string>
+    <string name="app_name">Offline Calorie Calculator</string>
+    <!-- Screens / Sections -->
+    <string name="progress_title">Today\'s Progress</string>
+    <string name="todays_log_title">Today\'s Log</string>
+
+    <!-- Ring / Calories -->
+    <string name="calories_remaining_label">Remaining</string>
+    <string name="calories_remaining_value">%1$d</string> <!-- e.g., 1250 -->
+    <string name="calories_goal_value">%1$d / %2$d kcal</string> <!-- e.g., 1250 / 2500 kcal -->
+
+    <!-- Toggle / Bonus -->
+    <string name="tef_bonus_label">TEF Bonus</string>
+    <string name="temf_bonus_on">On</string>
+    <string name="temf_bonus_off">Off</string>
+
+    <!-- Macros & Nutrients (labels and dynamic values) -->
+    <string name="nutrient_carbs">Carbs</string>
+    <string name="nutrient_protein">Protein</string>
+    <string name="nutrient_fat">Fat</string>
+    <string name="nutrient_fiber">Fiber</string>
+    <string name="nutrient_sodium">Sodium</string>
+
+    <!-- Common value pattern: current / goal with units -->
+    <!-- Use these where appropriate to keep consistency -->
+    <string name="value_of_total">%1$s / %2$s</string>                 <!-- generic -->
+    <string name="grams_value_of_total">%1$d / %2$d g</string>         <!-- e.g., 150 / 300g -->
+    <string name="milligrams_value_of_total">%1$d / %2$d mg</string>   <!-- optional if needed -->
+    <string name="kcal_value_of_total">%1$d / %2$d kcal</string>       <!-- calories variant -->
+    <string name="decimal_value_of_total">%1$.1f / %2$.1f</string>     <!-- e.g., 1.2 / 2.3 -->
+
+    <!-- Specific examples from mock-up (keep if you prefer explicit keys per item) -->
+    <string name="carbs_value">%1$d / %2$d g</string>       <!-- 150 / 300g -->
+    <string name="protein_value">%1$d / %2$d g</string>     <!-- 80 / 150g -->
+    <string name="fat_value">%1$d / %2$d g</string>         <!-- 40 / 70g -->
+    <string name="fiber_value">%1$d / %2$d g</string>       <!-- 15 / 30g -->
+    <string name="sodium_value">%1$.1f / %2$.1f g</string>  <!-- 1.2 / 2.3g -->
+
+    <!-- Buttons / Actions -->
+    <string name="action_meal_check_in">MEAL CHECK IN</string>
+    <string name="action_exercise_bonus">EXERCISE BONUS</string>
+    <string name="action_my_meals">My Meals</string>
+    <string name="action_my_exercises">My Exercises</string>
+    <string name="action_meal_for_later">Meal for Later</string>
+
+    <!-- Accessibility (content descriptions) -->
+    <string name="acc_progress_ring">Calorie progress ring</string>
+    <string name="acc_tef_bonus_toggle">Toggle TEF Bonus</string>
+    <string name="acc_macro_bar_carbs">Carbs progress bar</string>
+    <string name="acc_macro_bar_protein">Protein progress bar</string>
+    <string name="acc_macro_bar_fat">Fat progress bar</string>
+    <string name="acc_macro_bar_fiber">Fiber progress bar</string>
+    <string name="acc_macro_bar_sodium">Sodium progress bar</string>
 </resources>
