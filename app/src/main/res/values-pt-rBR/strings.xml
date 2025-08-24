@@ -1,4 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Template</string>
+    <string name="app_name">Calculadora de Calorias Offline</string>
+    
+    <!-- Screens / Sections -->
+    <string name="progress_title">Progresso de Hoje</string>
+    <string name="todays_log_title">Registro de Hoje</string>
+
+    <!-- Ring / Calories -->
+    <string name="calories_remaining_label">Restante</string>
+    <string name="calories_remaining_value">1250</string>
+    <string name="calories_consumed">500</string>
+    <string name="calories_goal_value">500 / 2500 kcal</string>
+
+    <!-- Toggle / Bonus -->
+    <string name="tef_bonus_label">Bônus TEF</string>
+    <string name="temf_bonus_on">Ativado</string>
+    <string name="temf_bonus_off">Desativado</string>
+
+    <!-- Macros & Nutrients (labels and dynamic values) -->
+    <string name="nutrient_carbs">Carboidratos</string>
+    <string name="nutrient_protein">Proteína</string>
+    <string name="nutrient_fat">Gordura</string>
+    <string name="nutrient_fiber">Fibra</string>
+    <string name="nutrient_sodium">Sódio</string>
+
+    <!-- Common value pattern: current / goal with units -->
+    <string name="value_of_total">%1$s / %2$s</string>
+    <string name="grams_value_of_total">%1$d / %2$d g</string>
+    <string name="milligrams_value_of_total">%1$d / %2$d mg</string>
+    <string name="kcal_value_of_total">%1$d / %2$d kcal</string>
+    <string name="decimal_value_of_total">%1$.1f / %2$.1f</string>
+
+    <!-- Specific examples from mock-up -->
+    <string name="carbs_value">%1$d / %2$d g</string>
+    <string name="protein_value">%1$d / %2$d g</string>
+    <string name="fat_value">%1$d / %2$d g</string>
+    <string name="fiber_value">%1$d / %2$d g</string>
+    <string name="sodium_value">%1$.1f / %2$.1f g</string>
+
+    <!-- Buttons / Actions -->
+    <string name="action_meal_check_in">REGISTRAR REFEIÇÃO</string>
+    <string name="action_exercise_bonus">BÔNUS DE EXERCÍCIO</string>
+    <string name="action_my_meals">Minhas Refeições</string>
+    <string name="action_my_exercises">Meus Exercícios</string>
+    <string name="action_meal_for_later">Refeição para Depois</string>
+
+    <!-- Accessibility (content descriptions) -->
+    <string name="acc_progress_ring">Anel de progresso de calorias</string>
+    <string name="acc_tef_bonus_toggle">Alternar Bônus TEF</string>
+    <string name="acc_macro_bar_carbs">Barra de progresso de carboidratos</string>
+    <string name="acc_macro_bar_protein">Barra de progresso de proteína</string>
+    <string name="acc_macro_bar_fat">Barra de progresso de gordura</string>
+    <string name="acc_macro_bar_fiber">Barra de progresso de fibra</string>
+    <string name="acc_macro_bar_sodium">Barra de progresso de sódio</string>
+
+    <!-- Dashboard specific strings -->
+    <string name="add_new_meal">Adicionar Nova Refeição</string>
+    <string name="set_goal">Definir Meta</string>
+    <string name="your_meals">Suas Refeições</string>
+    <string name="no_meals_added">Ainda não há refeições adicionadas</string>
+    <string name="check_in_meal">Registrar Refeição</string>
+    <string name="recent_check_ins">Registros Recentes</string>
+    <string name="no_check_ins_yet">Ainda não há registros</string>
+    
+    <!-- Check-in dialog strings -->
+    <string name="check_in_meal_title">Registrar %1$s</string>
+    <string name="meal_calories_info">%1$d kcal por %2$d %3$s</string>
+    <string name="serving_size">Tamanho da Porção</string>
+    <string name="serving_size_value">%1$.1fx (%2$d kcal)</string>
+    <string name="serving_size_display">%1$.1fx</string>
+    <string name="notes_optional">Notas (opcional)</string>
+    <string name="check_in">Registrar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="calories_value">%1$d kcal</string>
+    <string name="delete_check_in">Excluir registro</string>
 </resources>

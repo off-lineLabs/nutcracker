@@ -16,19 +16,6 @@ data class CheckIn(
 	val id: String = UUID.randomUUID().toString()
 )
 
-// Basic placeholders for future expansion
-data class Meal(
-	val name: String,
-	val calories: Int,
-	val id: String = UUID.randomUUID().toString()
-)
-
-data class Exercise(
-	val name: String,
-	val caloriesBurned: Int,
-	val id: String = UUID.randomUUID().toString()
-)
-
 data class Macro(
 	val carbs: Int,
 	val protein: Int,

@@ -6,8 +6,9 @@
 
     <!-- Ring / Calories -->
     <string name="calories_remaining_label">Remaining</string>
-    <string name="calories_remaining_value">%1$d</string> <!-- e.g., 1250 -->
-    <string name="calories_goal_value">%1$d / %2$d kcal</string> <!-- e.g., 1250 / 2500 kcal -->
+    <string name="calories_remaining_value">1250</string> <!-- e.g., 1250 -->
+    <string name="calories_consumed">500</string>
+    <string name="calories_goal_value">500 / 2500 kcal</string> <!-- e.g., 1250 / 2500 kcal -->
 
     <!-- Toggle / Bonus -->
     <string name="tef_bonus_label">TEF Bonus</string>
@@ -51,4 +52,25 @@
     <string name="acc_macro_bar_fat">Fat progress bar</string>
     <string name="acc_macro_bar_fiber">Fiber progress bar</string>
     <string name="acc_macro_bar_sodium">Sodium progress bar</string>
+
+    <!-- Dashboard specific strings -->
+    <string name="add_new_meal">Add New Meal</string>
+    <string name="set_goal">Set Goal</string>
+    <string name="your_meals">Your Meals</string>
+    <string name="no_meals_added">No meals added yet</string>
+    <string name="check_in_meal">Check In Meal</string>
+    <string name="recent_check_ins">Recent Check-ins</string>
+    <string name="no_check_ins_yet">No check-ins yet</string>
+    
+    <!-- Check-in dialog strings -->
+    <string name="check_in_meal_title">Check in %1$s</string>
+    <string name="meal_calories_info">%1$d kcal per %2$d %3$s</string>
+    <string name="serving_size">Serving Size</string>
+    <string name="serving_size_value">%1$.1fx (%2$d kcal)</string>
+    <string name="serving_size_display">%1$.1fx</string>
+    <string name="notes_optional">Notes (optional)</string>
+    <string name="check_in">Check In</string>
+    <string name="cancel">Cancel</string>
+    <string name="calories_value">%1$d kcal</string>
+    <string name="delete_check_in">Delete check-in</string>
 </resources>
