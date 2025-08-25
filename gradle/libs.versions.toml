@@ -1,6 +1,6 @@
 [versions]
-agp = "8.12.0"
-kotlin = "2.0.21"
+agp = "8.12.1"
+kotlin = "2.2.10"
 coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -10,6 +10,10 @@ activityCompose = "1.8.0"
 composeBom = "2024.09.00"
 appcompat = "1.7.0"
 material = "1.12.0"
+ksp = "2.2.10-2.0.2" # Latest KSP version for Kotlin 2.2.10
+room = "2.7.0"
+roomRuntime = "2.7.2"
+hiltAndroid = "2.57.1"      # Updated Room version for better Kotlin 2.2.10 compatibility
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,9 +32,14 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }  # Added Room runtime
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" } # Added Room compiler
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }            # Added Room KTX
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" } # Added KSP plugin
 

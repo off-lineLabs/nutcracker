@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.ksp) // Apply KSP plugin
 }
 
 android {
@@ -33,6 +34,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true")
     }
     buildFeatures {
         compose = true
@@ -51,6 +53,13 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.material) // Added Material Components dependency
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.hilt.android)
+    ksp(libs.androidx.room.compiler) // Use ksp for the annotation processor
+    implementation(libs.androidx.room.ktx) // For Kotlin Coroutines support
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
