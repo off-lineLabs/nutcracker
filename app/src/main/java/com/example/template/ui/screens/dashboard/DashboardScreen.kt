@@ -28,19 +28,56 @@ import androidx.compose.ui.unit.sp
 import com.example.template.FoodLogApplication
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
+import com.example.template.data.dao.DailyTotals // Added import
 import com.example.template.data.model.Meal
-import com.example.template.data.model.MealCheckIn
-import com.example.template.data.model.UserGoal // Added import
+import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.items.CheckInItem
 import com.example.template.ui.components.items.MealItem
-import kotlinx.coroutines.flow.collectLatest // Added import
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
+
+@Composable
+fun NutrientProgressDisplay(
+    nutrientName: String,
+    consumed: Double,
+    goal: Double,
+    unit: String,
+    labelColor: Color,
+    valueColor: Color,
+    goalColor: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = nutrientName.uppercase(Locale.getDefault()),
+            color = labelColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = valueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
+                    append(String.format(Locale.getDefault(), "%.1f", consumed))
+                }
+                withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
+                    append(" / ")
+                    append(String.format(Locale.getDefault(), "%.1f", goal))
+                    append(" $unit")
+                }
+            },
+            textAlign = TextAlign.End
+        )
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,9 +87,10 @@ fun DashboardScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
-    var userGoal by remember { mutableStateOf(UserGoal.default()) } // Use UserGoal state
-    var dailyCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) } // Real check-ins from database
-    var consumedCalories by remember { mutableStateOf(0) } // Daily calorie consumption
+    var userGoal by remember { mutableStateOf(UserGoal.default()) }
+    var dailyCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
+    var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) } // New state for all totals
+    var consumedCalories by remember { mutableStateOf(0.0) } // Changed to Double
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
@@ -66,8 +104,7 @@ fun DashboardScreen() {
 
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getUserGoal().collectLatest { goalFromDb ->
-            userGoal = goalFromDb ?: UserGoal.default() // Update state, use default if null
-            // If no goal is in DB, insert the default one
+            userGoal = goalFromDb ?: UserGoal.default()
             if (goalFromDb == null) {
                 coroutineScope.launch {
                     foodLogRepository.upsertUserGoal(UserGoal.default())
@@ -76,22 +113,22 @@ fun DashboardScreen() {
         }
     }
 
-    // Get today's date in YYYY-MM-DD format
     val today = remember {
         val dateFormatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         dateFormatter.format(java.util.Date())
     }
 
-    // Load daily check-ins and calorie consumption
     LaunchedEffect(key1 = foodLogRepository, key2 = today) {
         foodLogRepository.getDailyNutritionSummary(today).collectLatest { checkInsList ->
             dailyCheckIns = checkInsList
         }
     }
 
+    // Load daily nutrient totals (replaces getDailyCalories)
     LaunchedEffect(key1 = foodLogRepository, key2 = today) {
-        foodLogRepository.getDailyCalories(today).collectLatest { calories ->
-            consumedCalories = calories
+        foodLogRepository.getDailyNutrientTotals(today).collectLatest { totals ->
+            dailyTotalsConsumed = totals
+            consumedCalories = totals?.totalCalories ?: 0.0
         }
     }
 
@@ -106,7 +143,18 @@ fun DashboardScreen() {
     val innerContainerBackgroundColor = darkGray800
 
     // Calculate remaining calories based on actual data
-    val remainingCalories = userGoal.caloriesGoal - consumedCalories
+    val remainingCalories = (userGoal.caloriesGoal - consumedCalories).toInt()
+
+    val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
+    val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
+    val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
+    val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
+
+    // Nutrient specific colors (can be themed as well)
+    val nutrientLabelColor = caloriesRemainingLabelColor
+    val nutrientConsumedColor = caloriesConsumedColor
+    val nutrientGoalColor = caloriesGoalColor
+
 
     Scaffold(
         topBar = {
@@ -116,7 +164,7 @@ fun DashboardScreen() {
                         text = stringResource(id = R.string.progress_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFC0C0C0),
+                        color = Color(0xFFC0C0C0), // Consider theming this
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -159,11 +207,6 @@ fun DashboardScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
-                    val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
-                    val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
-                    val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
-
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = stringResource(id = R.string.calories_remaining_label),
@@ -179,7 +222,7 @@ fun DashboardScreen() {
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(style = SpanStyle(color = caloriesConsumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
-                                    append("$consumedCalories")
+                                    append(String.format(Locale.getDefault(), "%.0f", consumedCalories))
                                 }
                                 withStyle(style = SpanStyle(color = caloriesGoalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                                     append(" / ")
@@ -193,6 +236,64 @@ fun DashboardScreen() {
                     Button(onClick = { showSetGoalDialog = true }, modifier = Modifier.padding(top = 8.dp)) {
                         Text(stringResource(R.string.set_goal))
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
+
+                    // Nutrient Details Section
+                    Text(
+                        text = stringResource(id = R.string.nutrient_details_title), // Add R.string.nutrient_details_title
+                        style = MaterialTheme.typography.titleMedium,
+                        color = textGray200,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        NutrientProgressDisplay(
+                            nutrientName = stringResource(id = R.string.carbohydrates_label),
+                            consumed = dailyTotalsConsumed?.totalCarbohydrates ?: 0.0,
+                            goal = userGoal.carbsGoal_g.toDouble(),
+                            unit = "g",
+                            labelColor = nutrientLabelColor,
+                            valueColor = nutrientConsumedColor,
+                            goalColor = nutrientGoalColor
+                        )
+                        NutrientProgressDisplay(
+                            nutrientName = stringResource(id = R.string.protein_label),
+                            consumed = dailyTotalsConsumed?.totalProtein ?: 0.0,
+                            goal = userGoal.proteinGoal_g.toDouble(),
+                            unit = "g",
+                            labelColor = nutrientLabelColor,
+                            valueColor = nutrientConsumedColor,
+                            goalColor = nutrientGoalColor
+                        )
+                        NutrientProgressDisplay(
+                            nutrientName = stringResource(id = R.string.fat_label),
+                            consumed = dailyTotalsConsumed?.totalFat ?: 0.0,
+                            goal = userGoal.fatGoal_g.toDouble(),
+                            unit = "g",
+                            labelColor = nutrientLabelColor,
+                            valueColor = nutrientConsumedColor,
+                            goalColor = nutrientGoalColor
+                        )
+                        NutrientProgressDisplay(
+                            nutrientName = stringResource(id = R.string.fiber_label),
+                            consumed = dailyTotalsConsumed?.totalFiber ?: 0.0,
+                            goal = userGoal.fiberGoal_g.toDouble(),
+                            unit = "g",
+                            labelColor = nutrientLabelColor,
+                            valueColor = nutrientConsumedColor,
+                            goalColor = nutrientGoalColor
+                        )
+                        NutrientProgressDisplay(
+                            nutrientName = stringResource(id = R.string.sodium_label),
+                            consumed = dailyTotalsConsumed?.totalSodium ?: 0.0,
+                            goal = userGoal.sodiumGoal_mg.toDouble(),
+                            unit = "mg",
+                            labelColor = nutrientLabelColor,
+                            valueColor = nutrientConsumedColor,
+                            goalColor = nutrientGoalColor
+                        )
+                    }
+                    
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
@@ -209,9 +310,9 @@ fun DashboardScreen() {
                             color = textGray200
                         )
                     } else {
-                        LazyColumn(
+                        LazyColumn( // This LazyColumn might need a fixed height or a weight if inside another scrollable
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(1f) // If this Column is meant to scroll, this weight might be an issue
                                 .fillMaxWidth()
                         ) {
                             items(meals, key = { it.id }) { meal ->
@@ -242,9 +343,9 @@ fun DashboardScreen() {
                             color = textGray200
                         )
                     } else {
-                        LazyColumn(
+                        LazyColumn( // Similar to above, manage height/weight if overall Column is scrollable
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(1f) // This weight might be an issue if the parent Column isn't weighted correctly
                                 .fillMaxWidth()
                         ) {
                             items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
@@ -264,9 +365,9 @@ fun DashboardScreen() {
 
     if (showSetGoalDialog) {
         SetGoalDialog(
-            currentUserGoal = userGoal, // Pass the full UserGoal object
+            currentUserGoal = userGoal,
             onDismiss = { showSetGoalDialog = false },
-            onSetGoal = { updatedGoal -> // Callback gives the full UserGoal object
+            onSetGoal = { updatedGoal ->
                 coroutineScope.launch {
                     foodLogRepository.upsertUserGoal(updatedGoal)
                 }

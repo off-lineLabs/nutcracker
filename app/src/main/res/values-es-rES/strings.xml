@@ -24,6 +24,13 @@
     <string name="nutrient_fiber">Fibra</string>
     <string name="nutrient_sodium">Sodio</string>
 
+    <string name="nutrient_details_title">Detalles de Nutrientes</string>
+    <string name="carbohydrates_label">Carbohidratos</string>
+    <string name="protein_label">Proteína</string>
+    <string name="fat_label">Grasa</string>
+    <string name="fiber_label">Fibra</string>
+    <string name="sodium_label">Sodio</string>
+
     <!-- Common value pattern: current / goal with units -->
     <string name="value_of_total">%1$s / %2$s</string>
     <string name="grams_value_of_total">%1$d / %2$d g</string>
