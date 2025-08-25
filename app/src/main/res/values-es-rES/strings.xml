@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Caluladora de calorías offline</string>
+    <string name="app_name">NutCracker</string>
     
     <!-- Screens / Sections -->
     <string name="progress_title">Progreso de Hoy</string>
