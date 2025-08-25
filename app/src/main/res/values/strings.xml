@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Offline Calorie Calculator</string>
+    <string name="app_name">NutCracker</string>
     <!-- Screens / Sections -->
     <string name="progress_title">Today\'s Progress</string>
     <string name="todays_log_title">Today\'s Log</string>
