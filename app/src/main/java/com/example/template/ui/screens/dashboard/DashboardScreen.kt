@@ -274,7 +274,7 @@ fun DashboardScreen() {
                             valueColor = nutrientConsumedColor,
                             goalColor = nutrientGoalColor
                         )
-                         NutrientProgressDisplay(
+                        NutrientProgressDisplay(
                             nutrientName = stringResource(id = R.string.fiber_label),
                             consumed = dailyTotalsConsumed?.totalFiber ?: 0.0,
                             goal = userGoal.fiberGoal_g.toDouble(),
