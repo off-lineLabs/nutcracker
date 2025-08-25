@@ -3,6 +3,7 @@ package com.example.template.data.repo
 import com.example.template.data.dao.MealDao
 import com.example.template.data.dao.MealCheckInDao
 import com.example.template.data.dao.UserGoalDao
+import com.example.template.data.dao.DailyTotals
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
@@ -29,8 +30,8 @@ interface FoodLogRepository {
     suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn)
     fun getCheckInsByDate(date: String): Flow<List<MealCheckIn>>
     fun getRecentCheckIns(limit: Int = 10): Flow<List<MealCheckIn>>
-    fun getDailyCalories(date: String): Flow<Int>
     fun getDailyNutritionSummary(date: String): Flow<List<com.example.template.data.dao.DailyNutritionEntry>>
+    fun getDailyNutrientTotals(date: String): Flow<DailyTotals?>
 
     // TODO: Add methods for Exercise operations later
 }
@@ -61,8 +62,8 @@ class OfflineFoodLogRepository(
     override suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn) = mealCheckInDao.deleteMealCheckIn(mealCheckIn)
     override fun getCheckInsByDate(date: String): Flow<List<MealCheckIn>> = mealCheckInDao.getCheckInsByDate(date)
     override fun getRecentCheckIns(limit: Int): Flow<List<MealCheckIn>> = mealCheckInDao.getRecentCheckIns(limit)
-    override fun getDailyCalories(date: String): Flow<Int> = mealCheckInDao.getDailyCalories(date)
     override fun getDailyNutritionSummary(date: String): Flow<List<com.example.template.data.dao.DailyNutritionEntry>> = mealCheckInDao.getDailyNutritionSummary(date)
+    override fun getDailyNutrientTotals(date: String): Flow<DailyTotals?> = mealCheckInDao.getDailyNutrientTotals(date)
 
     // TODO: Implement methods for Exercise operations later
 }

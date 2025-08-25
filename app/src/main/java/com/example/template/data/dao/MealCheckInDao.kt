@@ -60,14 +60,20 @@ interface MealCheckInDao {
     """)
     fun getDailyNutritionSummary(date: String): Flow<List<DailyNutritionEntry>>
 
-    // Simple query to get total calories for a specific date
+    // Query to get total calories and nutrients for a specific date
     @Query("""
-        SELECT COALESCE(SUM(m.calories * mci.servingSize), 0) as totalCalories
+        SELECT 
+            COALESCE(SUM(m.calories * mci.servingSize), 0.0) as totalCalories,
+            COALESCE(SUM(m.carbohydrates_g * mci.servingSize), 0.0) as totalCarbohydrates,
+            COALESCE(SUM(m.protein_g * mci.servingSize), 0.0) as totalProtein,
+            COALESCE(SUM(m.fat_g * mci.servingSize), 0.0) as totalFat,
+            COALESCE(SUM(m.fiber_g * mci.servingSize), 0.0) as totalFiber,
+            COALESCE(SUM(m.sodium_mg * mci.servingSize), 0.0) as totalSodium
         FROM meal_check_ins mci
         INNER JOIN meals m ON mci.mealId = m.id
         WHERE mci.checkInDate = :date
     """)
-    fun getDailyCalories(date: String): Flow<Int>
+    fun getDailyNutrientTotals(date: String): Flow<DailyTotals?>
 }
 
 // Data class for the complex query result
@@ -87,6 +93,16 @@ data class DailyNutritionEntry(
     val mealSodium: Double,
     val totalCalories: Double,
     val totalCarbs: Double,
+    val totalProtein: Double,
+    val totalFat: Double,
+    val totalFiber: Double,
+    val totalSodium: Double
+)
+
+// Data class for daily nutrient totals
+data class DailyTotals(
+    val totalCalories: Double,
+    val totalCarbohydrates: Double,
     val totalProtein: Double,
     val totalFat: Double,
     val totalFiber: Double,
