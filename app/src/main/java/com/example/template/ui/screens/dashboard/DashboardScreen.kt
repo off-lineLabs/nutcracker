@@ -60,7 +60,7 @@ fun NutrientProgressDisplay(
     goalColor: Color
 ) {
     val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF8C95C8)
+    val proteinFiberColor = Color(0xFF5D916D)
     val isFiber = nutrientName == stringResource(R.string.fiber_label)
     val finalValueColor = when {
         consumed > goal && isFiber -> proteinFiberColor
@@ -416,104 +416,109 @@ fun DashboardScreen() {
                     )
                 )
                 .padding(scaffoldPaddingValues)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(top = 5.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .background(
                         color = innerContainerBackgroundColor.copy(alpha = 0.8f),
                         shape = RoundedCornerShape(24.dp)
                     )
                     .clip(RoundedCornerShape(24.dp))
-                    .padding(24.dp)
             ) {
-                // Edit button in top right
-                IconButton(
-                    onClick = { showSetGoalDialog = true },
+                LazyColumn(
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = stringResource(R.string.set_goal),
-                        tint = Color(0xFF9CA3AF),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
+                        .fillMaxSize()
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Calories ring section
-                    CaloriesRing(
-                        consumedCalories = consumedCalories,
-                        goalCalories = userGoal.caloriesGoal.toDouble(),
-                        labelColor = caloriesRemainingLabelColor,
-                        valueColor = caloriesRemainingValueColor,
-                        consumedColor = caloriesConsumedColor,
-                        goalColor = caloriesGoalColor
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
-
-                    // Nutrient Details Section
-                    Text(
-                        text = stringResource(id = R.string.nutrient_details_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = textGray200,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    NutrientBox(
-                        totals = dailyTotalsConsumed,
-                        goals = userGoal,
-                        isDark = isSystemInDarkTheme()
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        stringResource(R.string.recent_check_ins),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = textGray200
-                    )
-                    if (dailyCheckIns.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.no_check_ins_yet),
-                            modifier = Modifier.padding(8.dp),
-                            fontStyle = FontStyle.Normal,
-                            color = textGray200
+                    item {
+                        // Calories ring section
+                        Spacer(modifier = Modifier.height(8.dp)) // Add top padding to prevent clipping
+                        CaloriesRing(
+                            consumedCalories = consumedCalories,
+                            goalCalories = userGoal.caloriesGoal.toDouble(),
+                            labelColor = caloriesRemainingLabelColor,
+                            valueColor = caloriesRemainingValueColor,
+                            consumedColor = caloriesConsumedColor,
+                            goalColor = caloriesGoalColor
                         )
-                    } else {
-                        LazyColumn( // Similar to above, manage height/weight if overall Column is scrollable
-                            modifier = Modifier
-                                .weight(1f) // This weight might be an issue if the parent Column isn't weighted correctly
-                                .fillMaxWidth()
+
+                        Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
+
+                        // Nutrient Details Section with Edit button
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
-                                CheckInItem(
-                                    checkIn = checkIn,
-                                    onDelete = {
-                                        coroutineScope.launch {
-                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                            val mealCheckIn = MealCheckIn(
-                                                id = checkIn.checkInId,
-                                                mealId = checkIn.mealId,
-                                                checkInDate = checkIn.checkInDate,
-                                                checkInDateTime = checkIn.checkInDateTime,
-                                                servingSize = checkIn.servingSize,
-                                                notes = checkIn.notes
-                                            )
-                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
-                                        }
-                                    }
+                            Text(
+                                text = stringResource(id = R.string.nutrient_details_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = textGray200,
+                                textAlign = TextAlign.Center
+                            )
+                            IconButton(
+                                onClick = { showSetGoalDialog = true },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .align(Alignment.CenterEnd)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.set_goal),
+                                    tint = Color(0xFF9CA3AF),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        NutrientBox(
+                            totals = dailyTotalsConsumed,
+                            goals = userGoal,
+                            isDark = isSystemInDarkTheme()
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            stringResource(R.string.recent_check_ins),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = textGray200
+                        )
+                    }
+                    
+                    if (dailyCheckIns.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_check_ins_yet),
+                                modifier = Modifier.padding(8.dp),
+                                fontStyle = FontStyle.Normal,
+                                color = textGray200
+                            )
+                        }
+                    } else {
+                        items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
+                            CheckInItem(
+                                checkIn = checkIn,
+                                onDelete = {
+                                    coroutineScope.launch {
+                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                        val mealCheckIn = MealCheckIn(
+                                            id = checkIn.checkInId,
+                                            mealId = checkIn.mealId,
+                                            checkInDate = checkIn.checkInDate,
+                                            checkInDateTime = checkIn.checkInDateTime,
+                                            servingSize = checkIn.servingSize,
+                                            notes = checkIn.notes
+                                        )
+                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                    }
+                                }
+                            )
                         }
                     }
                 }
