@@ -64,7 +64,7 @@ fun SelectMealForCheckInDialog(
                                     }
                                 }
                             )
-                            Divider()
+                            HorizontalDivider()
                         }
                     }
                 }
