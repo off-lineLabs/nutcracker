@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,6 +58,9 @@ fun NutrientProgressDisplay(
     valueColor: Color,
     goalColor: Color
 ) {
+    val exceededColor = Color(0xFFB65755)
+    val finalValueColor = if (consumed > goal) exceededColor else valueColor
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -71,7 +75,7 @@ fun NutrientProgressDisplay(
         )
         Text(
             text = buildAnnotatedString {
-                withStyle(style = SpanStyle(color = valueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
+                withStyle(style = SpanStyle(color = finalValueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                     append(String.format(Locale.getDefault(), "%.1f", consumed))
                 }
                 withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
@@ -172,6 +176,9 @@ private fun NutrientBarRow(
     trackColor: Color,
     unit: String
 ) {
+    val exceededColor = Color(0xFFB65755)
+    val finalConsumedColor = if (consumed > goal) exceededColor else Color(0xFFE5E7EB)
+    
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -183,7 +190,7 @@ private fun NutrientBarRow(
             val consumedText = String.format(Locale.getDefault(), "%.0f", consumed)
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color(0xFFE5E7EB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
+                    withStyle(style = SpanStyle(color = finalConsumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                         append(consumedText)
                     }
                     withStyle(style = SpanStyle(color = Color(0xFF9CA3AF), fontSize = 12.sp)) {
@@ -218,10 +225,11 @@ private fun NutrientBarRow(
 private fun NutrientBox(
     totals: DailyTotals?,
     goals: UserGoal,
-    isDark: Boolean
+    isDark: Boolean,
+    onEditClick: () -> Unit
 ) {
     val track = if (isDark) Color(0xFF4B5563) else Color(0xFFE5E7EB)
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
@@ -230,6 +238,22 @@ private fun NutrientBox(
             )
             .padding(16.dp)
     ) {
+        // Edit button in top right
+        IconButton(
+            onClick = onEditClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = stringResource(R.string.set_goal),
+                tint = Color(0xFF9CA3AF),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        
+        Column {
         NutrientBarRow(
             title = stringResource(id = R.string.carbohydrates_label),
             consumed = totals?.totalCarbohydrates ?: 0.0,
@@ -279,6 +303,7 @@ private fun NutrientBox(
             valueColor = Color(0xFFE5E7EB),
             goalColor = Color(0xFF9CA3AF)
         )
+        }
     }
 }
 
@@ -421,10 +446,6 @@ fun DashboardScreen() {
                         goalColor = caloriesGoalColor
                     )
 
-                    Button(onClick = { showSetGoalDialog = true }, modifier = Modifier.padding(top = 8.dp)) {
-                        Text(stringResource(R.string.set_goal))
-                    }
-
                     Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
 
                     // Nutrient Details Section
@@ -437,7 +458,8 @@ fun DashboardScreen() {
                     NutrientBox(
                         totals = dailyTotalsConsumed,
                         goals = userGoal,
-                        isDark = isSystemInDarkTheme()
+                        isDark = isSystemInDarkTheme(),
+                        onEditClick = { showSetGoalDialog = true }
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
