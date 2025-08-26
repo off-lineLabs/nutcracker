@@ -39,7 +39,7 @@ import com.example.template.data.model.Meal
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
-import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog // Added import
+import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.items.CheckInItem
 import com.example.template.ui.components.items.MealItem
