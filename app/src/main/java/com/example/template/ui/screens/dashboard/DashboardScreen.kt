@@ -259,7 +259,7 @@ private fun NutrientBox(
             trackColor = track,
             unit = "g"
         )
-        Divider(modifier = Modifier.padding(vertical = 12.dp), color = track)
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = track)
         // Secondary nutrients
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.fiber_label),
