@@ -37,6 +37,7 @@ import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
 import com.example.template.data.dao.DailyTotals // Added import
 import com.example.template.data.model.Meal
+import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
@@ -59,7 +60,13 @@ fun NutrientProgressDisplay(
     goalColor: Color
 ) {
     val exceededColor = Color(0xFFB65755)
-    val finalValueColor = if (consumed > goal) exceededColor else valueColor
+    val proteinFiberColor = Color(0xFF8C95C8)
+    val isFiber = nutrientName == stringResource(R.string.fiber_label)
+    val finalValueColor = when {
+        consumed > goal && isFiber -> proteinFiberColor
+        consumed > goal -> exceededColor
+        else -> valueColor
+    }
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -103,8 +110,10 @@ private fun CaloriesRing(
     sizeDp: Dp = 160.dp,
     strokeWidthDp: Dp = 12.dp
 ) {
-    val remaining = (goalCalories - consumedCalories).coerceAtLeast(0.0)
+    val remaining = goalCalories - consumedCalories
     val progress = if (goalCalories > 0) (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
+    val exceededColor = Color(0xFFB65755)
+    val finalValueColor = if (remaining < 0) exceededColor else valueColor
 
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
@@ -146,7 +155,7 @@ private fun CaloriesRing(
             )
             Text(
                 text = remaining.toInt().toString(),
-                color = valueColor,
+                color = finalValueColor,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -177,7 +186,13 @@ private fun NutrientBarRow(
     unit: String
 ) {
     val exceededColor = Color(0xFFB65755)
-    val finalConsumedColor = if (consumed > goal) exceededColor else Color(0xFFE5E7EB)
+    val proteinFiberColor = Color(0xFF8C95C8)
+    val isProteinOrFiber = title == stringResource(R.string.protein_label) || title == stringResource(R.string.fiber_label)
+    val finalConsumedColor = when {
+        consumed > goal && isProteinOrFiber -> proteinFiberColor
+        consumed > goal -> exceededColor
+        else -> Color(0xFFE5E7EB)
+    }
     
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -225,11 +240,10 @@ private fun NutrientBarRow(
 private fun NutrientBox(
     totals: DailyTotals?,
     goals: UserGoal,
-    isDark: Boolean,
-    onEditClick: () -> Unit
+    isDark: Boolean
 ) {
     val track = if (isDark) Color(0xFF4B5563) else Color(0xFFE5E7EB)
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
@@ -238,22 +252,6 @@ private fun NutrientBox(
             )
             .padding(16.dp)
     ) {
-        // Edit button in top right
-        IconButton(
-            onClick = onEditClick,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = stringResource(R.string.set_goal),
-                tint = Color(0xFF9CA3AF),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        
-        Column {
         NutrientBarRow(
             title = stringResource(id = R.string.carbohydrates_label),
             consumed = totals?.totalCarbohydrates ?: 0.0,
@@ -303,7 +301,6 @@ private fun NutrientBox(
             valueColor = Color(0xFFE5E7EB),
             goalColor = Color(0xFF9CA3AF)
         )
-        }
     }
 }
 
@@ -432,6 +429,21 @@ fun DashboardScreen() {
                     .clip(RoundedCornerShape(24.dp))
                     .padding(24.dp)
             ) {
+                // Edit button in top right
+                IconButton(
+                    onClick = { showSetGoalDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.set_goal),
+                        tint = Color(0xFF9CA3AF),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -458,8 +470,7 @@ fun DashboardScreen() {
                     NutrientBox(
                         totals = dailyTotalsConsumed,
                         goals = userGoal,
-                        isDark = isSystemInDarkTheme(),
-                        onEditClick = { showSetGoalDialog = true }
+                        isDark = isSystemInDarkTheme()
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -488,7 +499,18 @@ fun DashboardScreen() {
                                 CheckInItem(
                                     checkIn = checkIn,
                                     onDelete = {
-                                        // TODO: Implement delete functionality
+                                        coroutineScope.launch {
+                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                            val mealCheckIn = MealCheckIn(
+                                                id = checkIn.checkInId,
+                                                mealId = checkIn.mealId,
+                                                checkInDate = checkIn.checkInDate,
+                                                checkInDateTime = checkIn.checkInDateTime,
+                                                servingSize = checkIn.servingSize,
+                                                notes = checkIn.notes
+                                            )
+                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                        }
                                     }
                                 )
                             }
