@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +37,7 @@ import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
 import com.example.template.data.dao.DailyTotals // Added import
 import com.example.template.data.model.Meal
+import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
@@ -57,6 +59,16 @@ fun NutrientProgressDisplay(
     valueColor: Color,
     goalColor: Color
 ) {
+    val exceededColor = Color(0xFFB65755)
+    val proteinFiberColor = Color(0xFF5D916D)
+    val fiberLabel = stringResource(R.string.fiber_label)
+    val isFiber = nutrientName == fiberLabel
+    val finalValueColor = when {
+        consumed > goal && isFiber -> proteinFiberColor
+        consumed > goal -> exceededColor
+        else -> valueColor
+    }
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -71,7 +83,7 @@ fun NutrientProgressDisplay(
         )
         Text(
             text = buildAnnotatedString {
-                withStyle(style = SpanStyle(color = valueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
+                withStyle(style = SpanStyle(color = finalValueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                     append(String.format(Locale.getDefault(), "%.1f", consumed))
                 }
                 withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
@@ -99,8 +111,10 @@ private fun CaloriesRing(
     sizeDp: Dp = 160.dp,
     strokeWidthDp: Dp = 12.dp
 ) {
-    val remaining = (goalCalories - consumedCalories).coerceAtLeast(0.0)
+    val remaining = goalCalories - consumedCalories
     val progress = if (goalCalories > 0) (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
+    val exceededColor = Color(0xFFB65755)
+    val finalValueColor = if (remaining < 0) exceededColor else valueColor
 
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
@@ -142,7 +156,7 @@ private fun CaloriesRing(
             )
             Text(
                 text = remaining.toInt().toString(),
-                color = valueColor,
+                color = finalValueColor,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -172,6 +186,17 @@ private fun NutrientBarRow(
     trackColor: Color,
     unit: String
 ) {
+    val exceededColor = Color(0xFFB65755)
+    val proteinFiberColor = Color(0xFF5D916D)
+    val proteinLabel = stringResource(R.string.protein_label)
+    val fiberLabel = stringResource(R.string.fiber_label)
+    val isProteinOrFiber = title == proteinLabel || title == fiberLabel
+    val finalConsumedColor = when {
+        consumed > goal && isProteinOrFiber -> proteinFiberColor
+        consumed > goal -> exceededColor
+        else -> Color(0xFFE5E7EB)
+    }
+    
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -183,7 +208,7 @@ private fun NutrientBarRow(
             val consumedText = String.format(Locale.getDefault(), "%.0f", consumed)
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color(0xFFE5E7EB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
+                    withStyle(style = SpanStyle(color = finalConsumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                         append(consumedText)
                     }
                     withStyle(style = SpanStyle(color = Color(0xFF9CA3AF), fontSize = 12.sp)) {
@@ -299,6 +324,9 @@ fun DashboardScreen() {
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
+    
+    // Snackbar state for error handling
+    var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
 
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
@@ -311,7 +339,13 @@ fun DashboardScreen() {
             userGoal = goalFromDb ?: UserGoal.default()
             if (goalFromDb == null) {
                 coroutineScope.launch {
-                    foodLogRepository.upsertUserGoal(UserGoal.default())
+                    try {
+                        foodLogRepository.upsertUserGoal(UserGoal.default())
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to save goal. Please try again."
+                        )
+                    }
                 }
             }
         }
@@ -383,6 +417,7 @@ fun DashboardScreen() {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.check_in_meal))
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
     ) { scaffoldPaddingValues ->
         Box(
@@ -394,82 +429,120 @@ fun DashboardScreen() {
                     )
                 )
                 .padding(scaffoldPaddingValues)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(top = 5.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .background(
                         color = innerContainerBackgroundColor.copy(alpha = 0.8f),
                         shape = RoundedCornerShape(24.dp)
                     )
                     .clip(RoundedCornerShape(24.dp))
-                    .padding(24.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Calories ring section
-                    CaloriesRing(
-                        consumedCalories = consumedCalories,
-                        goalCalories = userGoal.caloriesGoal.toDouble(),
-                        labelColor = caloriesRemainingLabelColor,
-                        valueColor = caloriesRemainingValueColor,
-                        consumedColor = caloriesConsumedColor,
-                        goalColor = caloriesGoalColor
-                    )
-
-                    Button(onClick = { showSetGoalDialog = true }, modifier = Modifier.padding(top = 8.dp)) {
-                        Text(stringResource(R.string.set_goal))
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
-
-                    // Nutrient Details Section
-                    Text(
-                        text = stringResource(id = R.string.nutrient_details_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = textGray200,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    NutrientBox(
-                        totals = dailyTotalsConsumed,
-                        goals = userGoal,
-                        isDark = isSystemInDarkTheme()
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        stringResource(R.string.recent_check_ins),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = textGray200
-                    )
-                    if (dailyCheckIns.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.no_check_ins_yet),
-                            modifier = Modifier.padding(8.dp),
-                            fontStyle = FontStyle.Normal,
-                            color = textGray200
+                    item {
+                        // Calories ring section
+                        Spacer(modifier = Modifier.height(8.dp)) // Add top padding to prevent clipping
+                        CaloriesRing(
+                            consumedCalories = consumedCalories,
+                            goalCalories = userGoal.caloriesGoal.toDouble(),
+                            labelColor = caloriesRemainingLabelColor,
+                            valueColor = caloriesRemainingValueColor,
+                            consumedColor = caloriesConsumedColor,
+                            goalColor = caloriesGoalColor
                         )
-                    } else {
-                        LazyColumn( // Similar to above, manage height/weight if overall Column is scrollable
-                            modifier = Modifier
-                                .weight(1f) // This weight might be an issue if the parent Column isn't weighted correctly
-                                .fillMaxWidth()
+
+                        Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
+
+                        // Nutrient Details Section with Edit button
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
-                                CheckInItem(
-                                    checkIn = checkIn,
-                                    onDelete = {
-                                        // TODO: Implement delete functionality
-                                    }
+                            Text(
+                                text = stringResource(id = R.string.nutrient_details_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = textGray200,
+                                textAlign = TextAlign.Center
+                            )
+                            IconButton(
+                                onClick = { showSetGoalDialog = true },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .align(Alignment.CenterEnd)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.set_goal),
+                                    tint = Color(0xFF9CA3AF),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        NutrientBox(
+                            totals = dailyTotalsConsumed,
+                            goals = userGoal,
+                            isDark = isSystemInDarkTheme()
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            stringResource(R.string.recent_check_ins),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = textGray200
+                        )
+                    }
+                    
+                    if (dailyCheckIns.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_check_ins_yet),
+                                modifier = Modifier.padding(8.dp),
+                                fontStyle = FontStyle.Normal,
+                                color = textGray200
+                            )
+                        }
+                    } else {
+                        items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
+                            CheckInItem(
+                                checkIn = checkIn,
+                                onDelete = {
+                                    coroutineScope.launch {
+                                        try {
+                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                            val mealCheckIn = MealCheckIn(
+                                                id = checkIn.checkInId,
+                                                mealId = checkIn.mealId,
+                                                checkInDate = checkIn.checkInDate,
+                                                checkInDateTime = checkIn.checkInDateTime,
+                                                servingSize = checkIn.servingSize,
+                                                notes = checkIn.notes
+                                            )
+                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                            // Show success message
+                                            snackbarHostState.showSnackbar(
+                                                message = "Check-in deleted successfully"
+                                            )
+                                        } catch (e: Exception) {
+                                            // Show error message
+                                            snackbarHostState.showSnackbar(
+                                                message = "Failed to delete check-in. Please try again."
+                                            )
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -483,7 +556,16 @@ fun DashboardScreen() {
             onDismiss = { showSetGoalDialog = false },
             onSetGoal = { updatedGoal ->
                 coroutineScope.launch {
-                    foodLogRepository.upsertUserGoal(updatedGoal)
+                    try {
+                        foodLogRepository.upsertUserGoal(updatedGoal)
+                        snackbarHostState.showSnackbar(
+                            message = "Goal saved successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to save goal. Please try again."
+                        )
+                    }
                 }
                 showSetGoalDialog = false
             }
@@ -510,7 +592,16 @@ fun DashboardScreen() {
             onDismiss = { showAddMealDialog = false },
             onAddMeal = { newMeal ->
                 coroutineScope.launch {
-                    foodLogRepository.insertMeal(newMeal)
+                    try {
+                        foodLogRepository.insertMeal(newMeal)
+                        snackbarHostState.showSnackbar(
+                            message = "Meal added successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to add meal. Please try again."
+                        )
+                    }
                 }
                 showAddMealDialog = false
             }
@@ -523,7 +614,16 @@ fun DashboardScreen() {
             onDismiss = { showCheckInMealDialog = null },
             onCheckIn = { mealCheckIn ->
                 coroutineScope.launch {
-                    foodLogRepository.insertMealCheckIn(mealCheckIn)
+                    try {
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        snackbarHostState.showSnackbar(
+                            message = "Check-in completed successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to complete check-in. Please try again."
+                        )
+                    }
                 }
                 showCheckInMealDialog = null
             }
