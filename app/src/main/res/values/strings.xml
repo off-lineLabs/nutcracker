@@ -80,4 +80,12 @@
     <string name="cancel">Cancel</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="delete_check_in">Delete check-in</string>
+    <string name="delete_check_in_success">Check-in deleted successfully</string>
+    <string name="delete_check_in_error">Failed to delete check-in. Please try again.</string>
+    <string name="goal_saved_success">Goal saved successfully</string>
+    <string name="goal_save_error">Failed to save goal. Please try again.</string>
+    <string name="meal_added_success">Meal added successfully</string>
+    <string name="meal_add_error">Failed to add meal. Please try again.</string>
+    <string name="check_in_success">Check-in completed successfully</string>
+    <string name="check_in_error">Failed to complete check-in. Please try again.</string>
 </resources>

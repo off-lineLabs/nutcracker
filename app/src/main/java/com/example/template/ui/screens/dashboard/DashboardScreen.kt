@@ -61,7 +61,8 @@ fun NutrientProgressDisplay(
 ) {
     val exceededColor = Color(0xFFB65755)
     val proteinFiberColor = Color(0xFF5D916D)
-    val isFiber = nutrientName == stringResource(R.string.fiber_label)
+    val fiberLabel = stringResource(R.string.fiber_label)
+    val isFiber = nutrientName == fiberLabel
     val finalValueColor = when {
         consumed > goal && isFiber -> proteinFiberColor
         consumed > goal -> exceededColor
@@ -186,8 +187,10 @@ private fun NutrientBarRow(
     unit: String
 ) {
     val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF8C95C8)
-    val isProteinOrFiber = title == stringResource(R.string.protein_label) || title == stringResource(R.string.fiber_label)
+    val proteinFiberColor = Color(0xFF5D916D)
+    val proteinLabel = stringResource(R.string.protein_label)
+    val fiberLabel = stringResource(R.string.fiber_label)
+    val isProteinOrFiber = title == proteinLabel || title == fiberLabel
     val finalConsumedColor = when {
         consumed > goal && isProteinOrFiber -> proteinFiberColor
         consumed > goal -> exceededColor
@@ -321,6 +324,9 @@ fun DashboardScreen() {
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
+    
+    // Snackbar state for error handling
+    var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
 
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
@@ -333,7 +339,13 @@ fun DashboardScreen() {
             userGoal = goalFromDb ?: UserGoal.default()
             if (goalFromDb == null) {
                 coroutineScope.launch {
-                    foodLogRepository.upsertUserGoal(UserGoal.default())
+                    try {
+                        foodLogRepository.upsertUserGoal(UserGoal.default())
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to save goal. Please try again."
+                        )
+                    }
                 }
             }
         }
@@ -405,6 +417,7 @@ fun DashboardScreen() {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.check_in_meal))
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
     ) { scaffoldPaddingValues ->
         Box(
@@ -506,16 +519,27 @@ fun DashboardScreen() {
                                 checkIn = checkIn,
                                 onDelete = {
                                     coroutineScope.launch {
-                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                        val mealCheckIn = MealCheckIn(
-                                            id = checkIn.checkInId,
-                                            mealId = checkIn.mealId,
-                                            checkInDate = checkIn.checkInDate,
-                                            checkInDateTime = checkIn.checkInDateTime,
-                                            servingSize = checkIn.servingSize,
-                                            notes = checkIn.notes
-                                        )
-                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                        try {
+                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                            val mealCheckIn = MealCheckIn(
+                                                id = checkIn.checkInId,
+                                                mealId = checkIn.mealId,
+                                                checkInDate = checkIn.checkInDate,
+                                                checkInDateTime = checkIn.checkInDateTime,
+                                                servingSize = checkIn.servingSize,
+                                                notes = checkIn.notes
+                                            )
+                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                            // Show success message
+                                            snackbarHostState.showSnackbar(
+                                                message = "Check-in deleted successfully"
+                                            )
+                                        } catch (e: Exception) {
+                                            // Show error message
+                                            snackbarHostState.showSnackbar(
+                                                message = "Failed to delete check-in. Please try again."
+                                            )
+                                        }
                                     }
                                 }
                             )
@@ -532,7 +556,16 @@ fun DashboardScreen() {
             onDismiss = { showSetGoalDialog = false },
             onSetGoal = { updatedGoal ->
                 coroutineScope.launch {
-                    foodLogRepository.upsertUserGoal(updatedGoal)
+                    try {
+                        foodLogRepository.upsertUserGoal(updatedGoal)
+                        snackbarHostState.showSnackbar(
+                            message = "Goal saved successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to save goal. Please try again."
+                        )
+                    }
                 }
                 showSetGoalDialog = false
             }
@@ -559,7 +592,16 @@ fun DashboardScreen() {
             onDismiss = { showAddMealDialog = false },
             onAddMeal = { newMeal ->
                 coroutineScope.launch {
-                    foodLogRepository.insertMeal(newMeal)
+                    try {
+                        foodLogRepository.insertMeal(newMeal)
+                        snackbarHostState.showSnackbar(
+                            message = "Meal added successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to add meal. Please try again."
+                        )
+                    }
                 }
                 showAddMealDialog = false
             }
@@ -572,7 +614,16 @@ fun DashboardScreen() {
             onDismiss = { showCheckInMealDialog = null },
             onCheckIn = { mealCheckIn ->
                 coroutineScope.launch {
-                    foodLogRepository.insertMealCheckIn(mealCheckIn)
+                    try {
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        snackbarHostState.showSnackbar(
+                            message = "Check-in completed successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to complete check-in. Please try again."
+                        )
+                    }
                 }
                 showCheckInMealDialog = null
             }
