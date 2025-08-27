@@ -1,6 +1,7 @@
 package com.example.template.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Offset
@@ -21,6 +22,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.template.FoodLogApplication
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
@@ -332,7 +339,7 @@ fun DashboardScreen() {
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
     
-    // Date navigation state
+    // Date navigation state - always start with today
     var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     
     // Snackbar state for error handling
@@ -403,13 +410,23 @@ fun DashboardScreen() {
     val nutrientGoalColor = caloriesGoalColor
 
 
+    val view = LocalView.current
+    val density = LocalDensity.current
+    
+    // Calculate status bar height
+    val statusBarHeight = with(density) {
+        WindowInsetsCompat.Type.statusBars().let { insets ->
+            view.rootWindowInsets?.getInsets(insets)?.top ?: 0
+        }.toDp()
+    }
+
     Scaffold(
         topBar = {
             // Custom header with date navigation
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(top = statusBarHeight + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -449,18 +466,24 @@ fun DashboardScreen() {
                             )
                         }
                         
-                        // Date display
-                        Text(
-                            text = selectedDate.format(
-                                java.time.format.DateTimeFormatter.ofLocalizedDate(
-                                    java.time.format.FormatStyle.MEDIUM
-                                )
-                            ),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFC0C0C0),
-                            textAlign = TextAlign.Center
-                        )
+                                                 // Date display
+                         val today = java.time.LocalDate.now()
+                         val dateText = if (selectedDate == today) {
+                             stringResource(R.string.today)
+                         } else {
+                             selectedDate.format(
+                                 java.time.format.DateTimeFormatter.ofLocalizedDate(
+                                     java.time.format.FormatStyle.MEDIUM
+                                 )
+                             )
+                         }
+                         Text(
+                             text = dateText,
+                             fontSize = 20.sp,
+                             fontWeight = FontWeight.Bold,
+                             color = Color(0xFFC0C0C0),
+                             textAlign = TextAlign.Center
+                         )
                         
                         // Right arrow
                         IconButton(
@@ -510,7 +533,7 @@ fun DashboardScreen() {
                     )
                 )
                 .padding(scaffoldPaddingValues)
-                .padding(top = 5.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -524,12 +547,11 @@ fun DashboardScreen() {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
                         // Calories ring section
-                        Spacer(modifier = Modifier.height(8.dp)) // Add top padding to prevent clipping
                         CaloriesRing(
                             consumedCalories = consumedCalories,
                             goalCalories = userGoal.caloriesGoal.toDouble(),
@@ -711,7 +733,7 @@ fun DashboardScreen() {
         )
     }
 
-    // Calendar Dialog
+    // Calendar Dialog - Using AlertDialog for better compatibility
     if (showCalendarDialog) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.atStartOfDay(
@@ -731,7 +753,23 @@ fun DashboardScreen() {
             text = {
                 DatePicker(
                     state = datePickerState,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = DatePickerDefaults.colors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color(0xFFE5E7EB),
+                        headlineContentColor = Color(0xFFE5E7EB),
+                        weekdayContentColor = Color(0xFF9CA3AF),
+                        subheadContentColor = Color(0xFFE5E7EB),
+                        yearContentColor = Color(0xFFE5E7EB),
+                        currentYearContentColor = Color(0xFF60A5FA),
+                        selectedYearContentColor = Color.White,
+                        selectedYearContainerColor = Color(0xFF60A5FA),
+                        dayContentColor = Color(0xFFE5E7EB),
+                        selectedDayContentColor = Color.White,
+                        selectedDayContainerColor = Color(0xFF60A5FA),
+                        todayContentColor = Color(0xFF60A5FA),
+                        todayDateBorderColor = Color(0xFF60A5FA)
+                    )
                 )
             },
             confirmButton = {

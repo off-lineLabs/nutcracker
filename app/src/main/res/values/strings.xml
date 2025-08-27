@@ -90,6 +90,7 @@
     <string name="check_in_error">Failed to complete check-in. Please try again.</string>
     
     <!-- Date Navigation -->
+    <string name="today">Today</string>
     <string name="select_date">Select Date</string>
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
