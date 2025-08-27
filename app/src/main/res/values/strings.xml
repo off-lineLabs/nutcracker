@@ -88,4 +88,10 @@
     <string name="meal_add_error">Failed to add meal. Please try again.</string>
     <string name="check_in_success">Check-in completed successfully</string>
     <string name="check_in_error">Failed to complete check-in. Please try again.</string>
+    
+    <!-- Date Navigation -->
+    <string name="select_date">Select Date</string>
+    <string name="previous_day">Previous Day</string>
+    <string name="next_day">Next Day</string>
+    <string name="progress_details">Progress Details</string>
 </resources>

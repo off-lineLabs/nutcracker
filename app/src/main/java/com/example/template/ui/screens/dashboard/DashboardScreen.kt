@@ -14,7 +14,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -324,6 +330,10 @@ fun DashboardScreen() {
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
+    var showCalendarDialog by remember { mutableStateOf(false) }
+    
+    // Date navigation state
+    var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     
     // Snackbar state for error handling
     var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
@@ -351,20 +361,19 @@ fun DashboardScreen() {
         }
     }
 
-    val today = remember {
-        val dateFormatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        dateFormatter.format(java.util.Date())
+    val selectedDateString = remember(selectedDate) {
+        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 
-    LaunchedEffect(key1 = foodLogRepository, key2 = today) {
-        foodLogRepository.getDailyNutritionSummary(today).collectLatest { checkInsList ->
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyNutritionSummary(selectedDateString).collectLatest { checkInsList ->
             dailyCheckIns = checkInsList
         }
     }
 
     // Load daily nutrient totals (replaces getDailyCalories)
-    LaunchedEffect(key1 = foodLogRepository, key2 = today) {
-        foodLogRepository.getDailyNutrientTotals(today).collectLatest { totals ->
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
             dailyTotalsConsumed = totals
             consumedCalories = totals?.totalCalories ?: 0.0
         }
@@ -396,21 +405,93 @@ fun DashboardScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.progress_title),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFC0C0C0), // Consider theming this
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
+            // Custom header with date navigation
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Calendar icon on the left
+                    IconButton(
+                        onClick = { showCalendarDialog = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DateRange,
+                            contentDescription = stringResource(R.string.select_date),
+                            tint = Color(0xFFC0C0C0),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    
+                    // Center section with navigation arrows and date
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Left arrow
+                        IconButton(
+                            onClick = { 
+                                selectedDate = selectedDate.minusDays(1)
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = stringResource(R.string.previous_day),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        // Date display
+                        Text(
+                            text = selectedDate.format(
+                                java.time.format.DateTimeFormatter.ofLocalizedDate(
+                                    java.time.format.FormatStyle.MEDIUM
+                                )
+                            ),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFC0C0C0),
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        // Right arrow
+                        IconButton(
+                            onClick = { 
+                                selectedDate = selectedDate.plusDays(1)
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = stringResource(R.string.next_day),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    
+                    // Progress bar button on the right
+                    IconButton(
+                        onClick = { /* TODO: Implement progress bar functionality */ },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = stringResource(R.string.progress_details),
+                            tint = Color(0xFFC0C0C0),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showSelectMealDialog = true }) {
@@ -627,6 +708,56 @@ fun DashboardScreen() {
                 }
                 showCheckInMealDialog = null
             }
+        )
+    }
+
+    // Calendar Dialog
+    if (showCalendarDialog) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.atStartOfDay(
+                java.time.ZoneId.systemDefault()
+            ).toInstant().toEpochMilli()
+        )
+        
+        AlertDialog(
+            onDismissRequest = { showCalendarDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.select_date),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color(0xFFE5E7EB)
+                )
+            },
+            text = {
+                DatePicker(
+                    state = datePickerState,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val instant = java.time.Instant.ofEpochMilli(millis)
+                            val zonedDateTime = instant.atZone(java.time.ZoneId.systemDefault())
+                            selectedDate = zonedDateTime.toLocalDate()
+                        }
+                        showCalendarDialog = false
+                    }
+                ) {
+                    Text("OK", color = Color(0xFF60A5FA))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCalendarDialog = false }
+                ) {
+                    Text("Cancel", color = Color(0xFF9CA3AF))
+                }
+            },
+            containerColor = Color(0xFF374151),
+            titleContentColor = Color(0xFFE5E7EB),
+            textContentColor = Color(0xFFE5E7EB)
         )
     }
 }
