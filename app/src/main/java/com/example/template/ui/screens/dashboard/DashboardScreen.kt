@@ -132,7 +132,8 @@ private fun CaloriesRing(
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
-            val diameter = size.minDimension
+            val strokeWidthPx = strokeWidthDp.toPx()
+            val diameter = size.minDimension - strokeWidthPx
             val topLeft = Offset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
@@ -733,7 +734,7 @@ fun DashboardScreen() {
         )
     }
 
-    // Calendar Dialog - Using AlertDialog for better compatibility
+    // Calendar Dialog - Using DatePickerDialog for better layout and compatibility
     if (showCalendarDialog) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.atStartOfDay(
@@ -741,37 +742,8 @@ fun DashboardScreen() {
             ).toInstant().toEpochMilli()
         )
         
-        AlertDialog(
+        DatePickerDialog(
             onDismissRequest = { showCalendarDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.select_date),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color(0xFFE5E7EB)
-                )
-            },
-            text = {
-                DatePicker(
-                    state = datePickerState,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = DatePickerDefaults.colors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = Color(0xFFE5E7EB),
-                        headlineContentColor = Color(0xFFE5E7EB),
-                        weekdayContentColor = Color(0xFF9CA3AF),
-                        subheadContentColor = Color(0xFFE5E7EB),
-                        yearContentColor = Color(0xFFE5E7EB),
-                        currentYearContentColor = Color(0xFF60A5FA),
-                        selectedYearContentColor = Color.White,
-                        selectedYearContainerColor = Color(0xFF60A5FA),
-                        dayContentColor = Color(0xFFE5E7EB),
-                        selectedDayContentColor = Color.White,
-                        selectedDayContainerColor = Color(0xFF60A5FA),
-                        todayContentColor = Color(0xFF60A5FA),
-                        todayDateBorderColor = Color(0xFF60A5FA)
-                    )
-                )
-            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -793,9 +765,27 @@ fun DashboardScreen() {
                     Text("Cancel", color = Color(0xFF9CA3AF))
                 }
             },
-            containerColor = Color(0xFF374151),
-            titleContentColor = Color(0xFFE5E7EB),
-            textContentColor = Color(0xFFE5E7EB)
-        )
+            colors = DatePickerDefaults.colors(
+                containerColor = Color(0xFF374151),
+                titleContentColor = Color(0xFFE5E7EB),
+                headlineContentColor = Color(0xFFE5E7EB),
+                weekdayContentColor = Color(0xFF9CA3AF),
+                subheadContentColor = Color(0xFFE5E7EB),
+                yearContentColor = Color(0xFFE5E7EB),
+                currentYearContentColor = Color(0xFF60A5FA),
+                selectedYearContentColor = Color.White,
+                selectedYearContainerColor = Color(0xFF60A5FA),
+                dayContentColor = Color(0xFFE5E7EB),
+                selectedDayContentColor = Color.White,
+                selectedDayContainerColor = Color(0xFF60A5FA),
+                todayContentColor = Color(0xFF60A5FA),
+                todayDateBorderColor = Color(0xFF60A5FA)
+            )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
