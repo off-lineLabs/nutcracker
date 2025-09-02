@@ -1,7 +1,6 @@
 package com.example.template.ui.screens.dashboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Offset
@@ -10,20 +9,18 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,27 +34,30 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.example.template.FoodLogApplication
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
-import com.example.template.data.dao.DailyTotals // Added import
+import com.example.template.data.dao.DailyExerciseEntry
+import com.example.template.data.dao.DailyTotals
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
+import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
+import com.example.template.ui.components.dialogs.AddExerciseDialog
+import com.example.template.ui.components.dialogs.CheckInExerciseDialog
+import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
-import com.example.template.ui.components.items.CheckInItem
-import com.example.template.ui.components.items.MealItem
+import com.example.template.ui.components.SwipeableHistoryView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -329,15 +329,22 @@ fun DashboardScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
+    var exercises by remember { mutableStateOf(emptyList<Exercise>()) }
     var userGoal by remember { mutableStateOf(UserGoal.default()) }
-    var dailyCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
-    var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) } // New state for all totals
-    var consumedCalories by remember { mutableStateOf(0.0) } // Changed to Double
+    var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
+    var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
+    var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
+    var consumedCalories by remember { mutableStateOf(0.0) }
+    var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
+    var includeExerciseCalories by remember { mutableStateOf(true) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
+    var showAddExerciseDialog by remember { mutableStateOf(false) }
+    var showSelectExerciseDialog by remember { mutableStateOf(false) }
+    var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
     
     // Date navigation state - always start with today
@@ -349,6 +356,12 @@ fun DashboardScreen() {
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
             meals = mealList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository) {
+        foodLogRepository.getAllExercises().collectLatest { exerciseList ->
+            exercises = exerciseList
         }
     }
 
@@ -374,14 +387,26 @@ fun DashboardScreen() {
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
-        foodLogRepository.getDailyNutritionSummary(selectedDateString).collectLatest { checkInsList ->
-            dailyCheckIns = checkInsList
+        foodLogRepository.getCheckInsByDate(selectedDateString).collectLatest { checkInsList ->
+            dailyMealCheckIns = checkInsList
         }
     }
 
-    // Load daily nutrient totals (replaces getDailyCalories)
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
-        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
+        foodLogRepository.getExerciseLogsByDate(selectedDateString).collectLatest { exerciseLogsList ->
+            dailyExerciseLogs = exerciseLogsList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyExerciseCalories(selectedDateString).collectLatest { calories ->
+            exerciseCaloriesBurned = calories
+        }
+    }
+
+    // Load daily nutrient totals with exercise calories consideration
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = includeExerciseCalories) {
+        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories).collectLatest { totals ->
             dailyTotalsConsumed = totals
             consumedCalories = totals?.totalCalories ?: 0.0
         }
@@ -518,8 +543,25 @@ fun DashboardScreen() {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showSelectMealDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.check_in_meal))
+            // Two FABs for Add Meal and Add Exercise
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Add Exercise FAB
+                FloatingActionButton(
+                    onClick = { showSelectExerciseDialog = true },
+                    containerColor = Color(0xFF3B82F6)
+                ) {
+                    Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.add_exercise))
+                }
+                
+                // Add Meal FAB
+                FloatingActionButton(
+                    onClick = { showSelectMealDialog = true },
+                    containerColor = Color(0xFF10B981)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_meal))
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -562,7 +604,26 @@ fun DashboardScreen() {
                             goalColor = caloriesGoalColor
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Exercise calories toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.include_exercise_calories),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = textGray200
+                            )
+                            Switch(
+                                checked = includeExerciseCalories,
+                                onCheckedChange = { includeExerciseCalories = it }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Nutrient Details Section with Edit button
                         Box(
@@ -606,48 +667,67 @@ fun DashboardScreen() {
                             style = MaterialTheme.typography.titleMedium,
                             color = textGray200
                         )
-                    }
-                    
-                    if (dailyCheckIns.isEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.no_check_ins_yet),
-                                modifier = Modifier.padding(8.dp),
-                                fontStyle = FontStyle.Normal,
-                                color = textGray200
-                            )
-                        }
-                    } else {
-                        items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
-                            CheckInItem(
-                                checkIn = checkIn,
-                                onDelete = {
-                                    coroutineScope.launch {
-                                        try {
-                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                            val mealCheckIn = MealCheckIn(
-                                                id = checkIn.checkInId,
-                                                mealId = checkIn.mealId,
-                                                checkInDate = checkIn.checkInDate,
-                                                checkInDateTime = checkIn.checkInDateTime,
-                                                servingSize = checkIn.servingSize,
-                                                notes = checkIn.notes
-                                            )
-                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
-                                            // Show success message
-                                            snackbarHostState.showSnackbar(
-                                                message = "Check-in deleted successfully"
-                                            )
-                                        } catch (e: Exception) {
-                                            // Show error message
-                                            snackbarHostState.showSnackbar(
-                                                message = "Failed to delete check-in. Please try again."
-                                            )
-                                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Use SwipeableHistoryView for both meals and exercises
+                        SwipeableHistoryView(
+                            mealEntries = dailyMealCheckIns,
+                            exerciseEntries = dailyExerciseLogs,
+                            onDeleteMeal = { checkIn ->
+                                coroutineScope.launch {
+                                    try {
+                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                        val mealCheckIn = MealCheckIn(
+                                            id = checkIn.checkInId,
+                                            mealId = checkIn.mealId,
+                                            checkInDate = checkIn.checkInDate,
+                                            checkInDateTime = checkIn.checkInDateTime,
+                                            servingSize = checkIn.servingSize,
+                                            notes = checkIn.notes
+                                        )
+                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                        // Show success message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Check-in deleted successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        // Show error message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to delete check-in. Please try again."
+                                        )
                                     }
                                 }
-                            )
-                        }
+                            },
+                            onDeleteExercise = { exerciseEntry ->
+                                coroutineScope.launch {
+                                    try {
+                                        // Convert DailyExerciseEntry to ExerciseLog for deletion
+                                        val exerciseLog = ExerciseLog(
+                                            id = exerciseEntry.logId,
+                                            exerciseId = exerciseEntry.exerciseId,
+                                            logDate = exerciseEntry.logDate,
+                                            logDateTime = exerciseEntry.logDateTime,
+                                            weight = exerciseEntry.weight,
+                                            reps = exerciseEntry.reps,
+                                            sets = exerciseEntry.sets,
+                                            caloriesBurned = exerciseEntry.caloriesBurned,
+                                            notes = exerciseEntry.notes
+                                        )
+                                        foodLogRepository.deleteExerciseLog(exerciseLog)
+                                        // Show success message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Exercise log deleted successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        // Show error message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to delete exercise log. Please try again."
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -730,6 +810,82 @@ fun DashboardScreen() {
                     }
                 }
                 showCheckInMealDialog = null
+            }
+        )
+    }
+
+    if (showSelectExerciseDialog) {
+        SelectExerciseForCheckInDialog(
+            exercises = exercises,
+            onDismiss = { showSelectExerciseDialog = false },
+            onAddExercise = {
+                showSelectExerciseDialog = false
+                showAddExerciseDialog = true
+            },
+            onSelectExercise = { exercise ->
+                showSelectExerciseDialog = false
+                showCheckInExerciseDialog = exercise
+            }
+        )
+    }
+
+    if (showAddExerciseDialog) {
+        AddExerciseDialog(
+            onDismiss = { showAddExerciseDialog = false },
+            onAddExercise = { newExercise ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.insertExercise(newExercise)
+                        snackbarHostState.showSnackbar(
+                            message = "Exercise added successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to add exercise. Please try again."
+                        )
+                    }
+                }
+                showAddExerciseDialog = false
+            }
+        )
+    }
+
+    showCheckInExerciseDialog?.let { exerciseToCheckIn ->
+        var lastLog by remember { mutableStateOf<ExerciseLog?>(null) }
+        var maxWeight by remember { mutableStateOf<Double?>(null) }
+        
+        // Load last log and max weight for this exercise
+        LaunchedEffect(exerciseToCheckIn.id) {
+            foodLogRepository.getLastLogForExercise(exerciseToCheckIn.id).collectLatest { log ->
+                lastLog = log
+            }
+        }
+        
+        LaunchedEffect(exerciseToCheckIn.id) {
+            foodLogRepository.getMaxWeightForExercise(exerciseToCheckIn.id).collectLatest { weight ->
+                maxWeight = weight
+            }
+        }
+        
+        CheckInExerciseDialog(
+            exercise = exerciseToCheckIn,
+            lastLog = lastLog,
+            maxWeight = maxWeight,
+            onDismiss = { showCheckInExerciseDialog = null },
+            onCheckIn = { exerciseLog ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.insertExerciseLog(exerciseLog)
+                        snackbarHostState.showSnackbar(
+                            message = "Exercise check-in completed successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to complete exercise check-in. Please try again."
+                        )
+                    }
+                }
+                showCheckInExerciseDialog = null
             }
         )
     }
