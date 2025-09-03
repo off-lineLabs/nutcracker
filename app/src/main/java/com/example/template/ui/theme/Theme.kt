@@ -59,13 +59,16 @@ fun FoodLogTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            // Make the status bar transparent and draw behind it
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            
-            // Configure status bar icons based on theme
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = !darkTheme
+            val activity = view.context as? Activity
+            if (activity != null) {
+                val window = activity.window
+                // Make the status bar transparent and draw behind it
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+                
+                // Configure status bar icons based on theme
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                insetsController.isAppearanceLightStatusBars = !darkTheme
+            }
         }
     }
 
