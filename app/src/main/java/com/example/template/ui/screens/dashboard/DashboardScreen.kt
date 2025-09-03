@@ -132,8 +132,7 @@ private fun CaloriesRing(
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
-            val strokeWidthPx = strokeWidthDp.toPx()
-            val diameter = size.minDimension - strokeWidthPx
+            val diameter = size.minDimension - (strokeWidthPx * 2)
             val topLeft = Offset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
