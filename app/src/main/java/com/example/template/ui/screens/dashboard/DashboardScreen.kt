@@ -9,12 +9,18 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,23 +34,30 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowInsetsCompat
 import com.example.template.FoodLogApplication
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
-import com.example.template.data.dao.DailyTotals // Added import
+import com.example.template.data.dao.DailyExerciseEntry
+import com.example.template.data.dao.DailyTotals
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
+import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
+import com.example.template.ui.components.dialogs.AddExerciseDialog
+import com.example.template.ui.components.dialogs.CheckInExerciseDialog
+import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
-import com.example.template.ui.components.items.CheckInItem
-import com.example.template.ui.components.items.MealItem
+import com.example.template.ui.components.SwipeableHistoryView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -119,7 +132,7 @@ private fun CaloriesRing(
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
-            val diameter = size.minDimension
+            val diameter = size.minDimension - (strokeWidthPx * 2)
             val topLeft = Offset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
@@ -315,15 +328,26 @@ fun DashboardScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
+    var exercises by remember { mutableStateOf(emptyList<Exercise>()) }
     var userGoal by remember { mutableStateOf(UserGoal.default()) }
-    var dailyCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
-    var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) } // New state for all totals
-    var consumedCalories by remember { mutableStateOf(0.0) } // Changed to Double
+    var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
+    var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
+    var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
+    var consumedCalories by remember { mutableStateOf(0.0) }
+    var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
+    var includeExerciseCalories by remember { mutableStateOf(true) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
+    var showAddExerciseDialog by remember { mutableStateOf(false) }
+    var showSelectExerciseDialog by remember { mutableStateOf(false) }
+    var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
+    var showCalendarDialog by remember { mutableStateOf(false) }
+    
+    // Date navigation state - always start with today
+    var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     
     // Snackbar state for error handling
     var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
@@ -331,6 +355,12 @@ fun DashboardScreen() {
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
             meals = mealList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository) {
+        foodLogRepository.getAllExercises().collectLatest { exerciseList ->
+            exercises = exerciseList
         }
     }
 
@@ -351,20 +381,31 @@ fun DashboardScreen() {
         }
     }
 
-    val today = remember {
-        val dateFormatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        dateFormatter.format(java.util.Date())
+    val selectedDateString = remember(selectedDate) {
+        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 
-    LaunchedEffect(key1 = foodLogRepository, key2 = today) {
-        foodLogRepository.getDailyNutritionSummary(today).collectLatest { checkInsList ->
-            dailyCheckIns = checkInsList
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getCheckInsByDate(selectedDateString).collectLatest { checkInsList ->
+            dailyMealCheckIns = checkInsList
         }
     }
 
-    // Load daily nutrient totals (replaces getDailyCalories)
-    LaunchedEffect(key1 = foodLogRepository, key2 = today) {
-        foodLogRepository.getDailyNutrientTotals(today).collectLatest { totals ->
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getExerciseLogsByDate(selectedDateString).collectLatest { exerciseLogsList ->
+            dailyExerciseLogs = exerciseLogsList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyExerciseCalories(selectedDateString).collectLatest { calories ->
+            exerciseCaloriesBurned = calories
+        }
+    }
+
+    // Load daily nutrient totals with exercise calories consideration
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = includeExerciseCalories) {
+        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories).collectLatest { totals ->
             dailyTotalsConsumed = totals
             consumedCalories = totals?.totalCalories ?: 0.0
         }
@@ -394,27 +435,132 @@ fun DashboardScreen() {
     val nutrientGoalColor = caloriesGoalColor
 
 
+    val view = LocalView.current
+    val density = LocalDensity.current
+    
+    // Calculate status bar height
+    val statusBarHeight = with(density) {
+        WindowInsetsCompat.Type.statusBars().let { insets ->
+            view.rootWindowInsets?.getInsets(insets)?.top ?: 0
+        }.toDp()
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.progress_title),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFC0C0C0), // Consider theming this
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
+            // Custom header with date navigation
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = statusBarHeight + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Calendar icon on the left
+                    IconButton(
+                        onClick = { showCalendarDialog = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DateRange,
+                            contentDescription = stringResource(R.string.select_date),
+                            tint = Color(0xFFC0C0C0),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    
+                    // Center section with navigation arrows and date
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Left arrow
+                        IconButton(
+                            onClick = { 
+                                selectedDate = selectedDate.minusDays(1)
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = stringResource(R.string.previous_day),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                                                 // Date display
+                         val today = java.time.LocalDate.now()
+                         val dateText = if (selectedDate == today) {
+                             stringResource(R.string.today)
+                         } else {
+                             selectedDate.format(
+                                 java.time.format.DateTimeFormatter.ofLocalizedDate(
+                                     java.time.format.FormatStyle.MEDIUM
+                                 )
+                             )
+                         }
+                         Text(
+                             text = dateText,
+                             fontSize = 20.sp,
+                             fontWeight = FontWeight.Bold,
+                             color = Color(0xFFC0C0C0),
+                             textAlign = TextAlign.Center
+                         )
+                        
+                        // Right arrow
+                        IconButton(
+                            onClick = { 
+                                selectedDate = selectedDate.plusDays(1)
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = stringResource(R.string.next_day),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    
+                    // Progress bar button on the right
+                    IconButton(
+                        onClick = { /* TODO: Implement progress bar functionality */ },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = stringResource(R.string.progress_details),
+                            tint = Color(0xFFC0C0C0),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showSelectMealDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.check_in_meal))
+            // Two FABs for Add Meal and Add Exercise
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Add Exercise FAB
+                FloatingActionButton(
+                    onClick = { showSelectExerciseDialog = true },
+                    containerColor = Color(0xFF3B82F6)
+                ) {
+                    Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.add_exercise))
+                }
+                
+                // Add Meal FAB
+                FloatingActionButton(
+                    onClick = { showSelectMealDialog = true },
+                    containerColor = Color(0xFF10B981)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_meal))
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -429,7 +575,7 @@ fun DashboardScreen() {
                     )
                 )
                 .padding(scaffoldPaddingValues)
-                .padding(top = 5.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -443,12 +589,11 @@ fun DashboardScreen() {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
                         // Calories ring section
-                        Spacer(modifier = Modifier.height(8.dp)) // Add top padding to prevent clipping
                         CaloriesRing(
                             consumedCalories = consumedCalories,
                             goalCalories = userGoal.caloriesGoal.toDouble(),
@@ -458,7 +603,26 @@ fun DashboardScreen() {
                             goalColor = caloriesGoalColor
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp)) // Spacer before nutrient details
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Exercise calories toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.include_exercise_calories),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = textGray200
+                            )
+                            Switch(
+                                checked = includeExerciseCalories,
+                                onCheckedChange = { includeExerciseCalories = it }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Nutrient Details Section with Edit button
                         Box(
@@ -502,48 +666,67 @@ fun DashboardScreen() {
                             style = MaterialTheme.typography.titleMedium,
                             color = textGray200
                         )
-                    }
-                    
-                    if (dailyCheckIns.isEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.no_check_ins_yet),
-                                modifier = Modifier.padding(8.dp),
-                                fontStyle = FontStyle.Normal,
-                                color = textGray200
-                            )
-                        }
-                    } else {
-                        items(dailyCheckIns.take(5), key = { it.checkInId }) { checkIn ->
-                            CheckInItem(
-                                checkIn = checkIn,
-                                onDelete = {
-                                    coroutineScope.launch {
-                                        try {
-                                            // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                            val mealCheckIn = MealCheckIn(
-                                                id = checkIn.checkInId,
-                                                mealId = checkIn.mealId,
-                                                checkInDate = checkIn.checkInDate,
-                                                checkInDateTime = checkIn.checkInDateTime,
-                                                servingSize = checkIn.servingSize,
-                                                notes = checkIn.notes
-                                            )
-                                            foodLogRepository.deleteMealCheckIn(mealCheckIn)
-                                            // Show success message
-                                            snackbarHostState.showSnackbar(
-                                                message = "Check-in deleted successfully"
-                                            )
-                                        } catch (e: Exception) {
-                                            // Show error message
-                                            snackbarHostState.showSnackbar(
-                                                message = "Failed to delete check-in. Please try again."
-                                            )
-                                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Use SwipeableHistoryView for both meals and exercises
+                        SwipeableHistoryView(
+                            mealEntries = dailyMealCheckIns,
+                            exerciseEntries = dailyExerciseLogs,
+                            onDeleteMeal = { checkIn ->
+                                coroutineScope.launch {
+                                    try {
+                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
+                                        val mealCheckIn = MealCheckIn(
+                                            id = checkIn.checkInId,
+                                            mealId = checkIn.mealId,
+                                            checkInDate = checkIn.checkInDate,
+                                            checkInDateTime = checkIn.checkInDateTime,
+                                            servingSize = checkIn.servingSize,
+                                            notes = checkIn.notes
+                                        )
+                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
+                                        // Show success message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Check-in deleted successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        // Show error message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to delete check-in. Please try again."
+                                        )
                                     }
                                 }
-                            )
-                        }
+                            },
+                            onDeleteExercise = { exerciseEntry ->
+                                coroutineScope.launch {
+                                    try {
+                                        // Convert DailyExerciseEntry to ExerciseLog for deletion
+                                        val exerciseLog = ExerciseLog(
+                                            id = exerciseEntry.logId,
+                                            exerciseId = exerciseEntry.exerciseId,
+                                            logDate = exerciseEntry.logDate,
+                                            logDateTime = exerciseEntry.logDateTime,
+                                            weight = exerciseEntry.weight,
+                                            reps = exerciseEntry.reps,
+                                            sets = exerciseEntry.sets,
+                                            caloriesBurned = exerciseEntry.caloriesBurned,
+                                            notes = exerciseEntry.notes
+                                        )
+                                        foodLogRepository.deleteExerciseLog(exerciseLog)
+                                        // Show success message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Exercise log deleted successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        // Show error message
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to delete exercise log. Please try again."
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -628,5 +811,136 @@ fun DashboardScreen() {
                 showCheckInMealDialog = null
             }
         )
+    }
+
+    if (showSelectExerciseDialog) {
+        SelectExerciseForCheckInDialog(
+            exercises = exercises,
+            onDismiss = { showSelectExerciseDialog = false },
+            onAddExercise = {
+                showSelectExerciseDialog = false
+                showAddExerciseDialog = true
+            },
+            onSelectExercise = { exercise ->
+                showSelectExerciseDialog = false
+                showCheckInExerciseDialog = exercise
+            }
+        )
+    }
+
+    if (showAddExerciseDialog) {
+        AddExerciseDialog(
+            onDismiss = { showAddExerciseDialog = false },
+            onAddExercise = { newExercise ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.insertExercise(newExercise)
+                        snackbarHostState.showSnackbar(
+                            message = "Exercise added successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to add exercise. Please try again."
+                        )
+                    }
+                }
+                showAddExerciseDialog = false
+            }
+        )
+    }
+
+    showCheckInExerciseDialog?.let { exerciseToCheckIn ->
+        var lastLog by remember { mutableStateOf<ExerciseLog?>(null) }
+        var maxWeight by remember { mutableStateOf<Double?>(null) }
+        
+        // Load last log and max weight for this exercise
+        LaunchedEffect(exerciseToCheckIn.id) {
+            foodLogRepository.getLastLogForExercise(exerciseToCheckIn.id).collectLatest { log ->
+                lastLog = log
+            }
+        }
+        
+        LaunchedEffect(exerciseToCheckIn.id) {
+            foodLogRepository.getMaxWeightForExercise(exerciseToCheckIn.id).collectLatest { weight ->
+                maxWeight = weight
+            }
+        }
+        
+        CheckInExerciseDialog(
+            exercise = exerciseToCheckIn,
+            lastLog = lastLog,
+            maxWeight = maxWeight,
+            onDismiss = { showCheckInExerciseDialog = null },
+            onCheckIn = { exerciseLog ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.insertExerciseLog(exerciseLog)
+                        snackbarHostState.showSnackbar(
+                            message = "Exercise check-in completed successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to complete exercise check-in. Please try again."
+                        )
+                    }
+                }
+                showCheckInExerciseDialog = null
+            }
+        )
+    }
+
+    // Calendar Dialog - Using DatePickerDialog for better layout and compatibility
+    if (showCalendarDialog) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.atStartOfDay(
+                java.time.ZoneId.systemDefault()
+            ).toInstant().toEpochMilli()
+        )
+        
+        DatePickerDialog(
+            onDismissRequest = { showCalendarDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val instant = java.time.Instant.ofEpochMilli(millis)
+                            val zonedDateTime = instant.atZone(java.time.ZoneId.systemDefault())
+                            selectedDate = zonedDateTime.toLocalDate()
+                        }
+                        showCalendarDialog = false
+                    }
+                ) {
+                    Text("OK", color = Color(0xFF60A5FA))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCalendarDialog = false }
+                ) {
+                    Text("Cancel", color = Color(0xFF9CA3AF))
+                }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = Color(0xFF374151),
+                titleContentColor = Color(0xFFE5E7EB),
+                headlineContentColor = Color(0xFFE5E7EB),
+                weekdayContentColor = Color(0xFF9CA3AF),
+                subheadContentColor = Color(0xFFE5E7EB),
+                yearContentColor = Color(0xFFE5E7EB),
+                currentYearContentColor = Color(0xFF60A5FA),
+                selectedYearContentColor = Color.White,
+                selectedYearContainerColor = Color(0xFF60A5FA),
+                dayContentColor = Color(0xFFE5E7EB),
+                selectedDayContentColor = Color.White,
+                selectedDayContainerColor = Color(0xFF60A5FA),
+                todayContentColor = Color(0xFF60A5FA),
+                todayDateBorderColor = Color(0xFF60A5FA)
+            )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

@@ -7,16 +7,32 @@ import androidx.room.RoomDatabase
 import com.example.template.data.dao.MealDao
 import com.example.template.data.dao.MealCheckInDao
 import com.example.template.data.dao.UserGoalDao
+import com.example.template.data.dao.ExerciseDao
+import com.example.template.data.dao.ExerciseLogDao
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
+import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseLog
 
-@Database(entities = [Meal::class, UserGoal::class, MealCheckIn::class], version = 3, exportSchema = false) // Added MealCheckIn, incremented version
+@Database(
+    entities = [
+        Meal::class, 
+        UserGoal::class, 
+        MealCheckIn::class,
+        Exercise::class,
+        ExerciseLog::class
+    ], 
+    version = 4, 
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun mealDao(): MealDao
-    abstract fun userGoalDao(): UserGoalDao // Added UserGoalDao accessor
-    abstract fun mealCheckInDao(): MealCheckInDao // Added MealCheckInDao accessor
+    abstract fun userGoalDao(): UserGoalDao
+    abstract fun mealCheckInDao(): MealCheckInDao
+    abstract fun exerciseDao(): ExerciseDao
+    abstract fun exerciseLogDao(): ExerciseLogDao
 
     companion object {
         @Volatile
@@ -27,11 +43,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "food_log_database" // Name of your database file
+                    "food_log_database"
                 )
-                // Wipes and rebuilds instead of migrating if no Migration object.
-                // Migration is not covered in this scope for version 2.
-                .fallbackToDestructiveMigration() // Be careful with this in production
+                .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance
                 instance

@@ -10,6 +10,12 @@ class FoodLogApplication : Application() {
     val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
     
     val foodLogRepository: FoodLogRepository by lazy {
-        OfflineFoodLogRepository(database.mealDao(), database.userGoalDao(), database.mealCheckInDao())
+        OfflineFoodLogRepository(
+            database.mealDao(), 
+            database.userGoalDao(), 
+            database.mealCheckInDao(),
+            database.exerciseDao(),
+            database.exerciseLogDao()
+        )
     }
 }
