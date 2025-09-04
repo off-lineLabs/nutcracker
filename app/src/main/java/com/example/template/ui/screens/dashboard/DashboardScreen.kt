@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.BarChart
@@ -567,7 +569,7 @@ fun DashboardScreen() {
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = Color(0xFF3B82F6)
                 ) {
-                    Icon(Icons.Filled.FitnessCenter, contentDescription = stringResource(R.string.add_exercise))
+                    Icon(painterResource(R.drawable.ic_sprint), contentDescription = stringResource(R.string.add_exercise))
                 }
                 
                 // Add Meal FAB

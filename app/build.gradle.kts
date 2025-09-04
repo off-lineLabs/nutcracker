@@ -53,7 +53,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.material) // Added Material Components dependency
-    implementation("androidx.compose.material:material-icons-extended:1.7.7")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
     // Room
     implementation(libs.androidx.room.runtime)
