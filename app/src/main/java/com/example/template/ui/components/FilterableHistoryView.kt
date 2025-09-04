@@ -97,7 +97,7 @@ fun FilterableHistoryView(
             
             // All filter (center)
             FilterBubble(
-                text = "All",
+                text = stringResource(R.string.all),
                 isSelected = selectedFilter == HistoryFilter.ALL,
                 onClick = { selectedFilter = HistoryFilter.ALL },
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -125,7 +125,7 @@ fun FilterableHistoryView(
             ) {
                 Text(
                     text = when (selectedFilter) {
-                        HistoryFilter.ALL -> "No activities today"
+                        HistoryFilter.ALL -> stringResource(R.string.no_activities_today)
                         HistoryFilter.MEALS -> stringResource(R.string.no_meals_today)
                         HistoryFilter.EXERCISES -> stringResource(R.string.no_exercises_today)
                     },

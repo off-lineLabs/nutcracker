@@ -28,8 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
@@ -342,6 +342,20 @@ fun DashboardScreen() {
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
+    
+    // Store string resources in variables to avoid calling stringResource in non-composable contexts
+    val exerciseLogDeletedSuccess = stringResource(R.string.exercise_log_deleted_success)
+    val exerciseLogDeleteError = stringResource(R.string.exercise_log_delete_error)
+    val goalSavedSuccess = stringResource(R.string.goal_saved_success)
+    val goalSaveError = stringResource(R.string.goal_save_error)
+    val mealAddedSuccess = stringResource(R.string.meal_added_success)
+    val mealAddError = stringResource(R.string.meal_add_error)
+    val checkInCompletedSuccess = stringResource(R.string.check_in_completed_success)
+    val checkInCompletedError = stringResource(R.string.check_in_completed_error)
+    val exerciseAddedSuccess = stringResource(R.string.exercise_added_success)
+    val exerciseAddError = stringResource(R.string.exercise_add_error)
+    val okText = stringResource(R.string.ok)
+    val cancelText = stringResource(R.string.cancel)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -718,12 +732,12 @@ fun DashboardScreen() {
                                         foodLogRepository.deleteExerciseLog(exerciseLog)
                                         // Show success message
                                         snackbarHostState.showSnackbar(
-                                            message = "Exercise log deleted successfully"
+                                            message = exerciseLogDeletedSuccess
                                         )
                                     } catch (e: Exception) {
                                         // Show error message
                                         snackbarHostState.showSnackbar(
-                                            message = "Failed to delete exercise log. Please try again."
+                                            message = exerciseLogDeleteError
                                         )
                                     }
                                 }
@@ -744,11 +758,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.upsertUserGoal(updatedGoal)
                         snackbarHostState.showSnackbar(
-                            message = "Goal saved successfully"
+                            message = goalSavedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to save goal. Please try again."
+                            message = goalSaveError
                         )
                     }
                 }
@@ -780,11 +794,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertMeal(newMeal)
                         snackbarHostState.showSnackbar(
-                            message = "Meal added successfully"
+                            message = mealAddedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to add meal. Please try again."
+                            message = mealAddError
                         )
                     }
                 }
@@ -802,11 +816,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         snackbarHostState.showSnackbar(
-                            message = "Check-in completed successfully"
+                            message = checkInCompletedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to complete check-in. Please try again."
+                            message = checkInCompletedError
                         )
                     }
                 }
@@ -838,11 +852,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertExercise(newExercise)
                         snackbarHostState.showSnackbar(
-                            message = "Exercise added successfully"
+                            message = exerciseAddedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to add exercise. Please try again."
+                            message = exerciseAddError
                         )
                     }
                 }
@@ -912,14 +926,14 @@ fun DashboardScreen() {
                         showCalendarDialog = false
                     }
                 ) {
-                    Text("OK", color = Color(0xFF60A5FA))
+                    Text(okText, color = Color(0xFF60A5FA))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showCalendarDialog = false }
                 ) {
-                    Text("Cancel", color = Color(0xFF9CA3AF))
+                    Text(cancelText, color = Color(0xFF9CA3AF))
                 }
             },
             colors = DatePickerDefaults.colors(

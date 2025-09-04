@@ -154,4 +154,42 @@
     <string name="unit_units">Units (unit)</string>
     <string name="unit_servings">Servings (serving)</string>
     <string name="unit_portions">Portions (portion)</string>
+    
+    <!-- Additional hardcoded strings found -->
+    <string name="meal_name">Meal Name</string>
+    <string name="calories">Calories</string>
+    <string name="protein_g">Protein (g)</string>
+    <string name="carbs_g">Carbs (g)</string>
+    <string name="fat_g">Fat (g)</string>
+    <string name="fiber_g">Fiber (g)</string>
+    <string name="sodium_mg">Sodium (mg)</string>
+    <string name="set_your_daily_goals">Set Your Daily Goals</string>
+    <string name="calories_kcal">Calories (kcal)</string>
+    <string name="carbohydrates_g">Carbohydrates (g)</string>
+    <string name="protein_g_goal">Protein (g)</string>
+    <string name="fat_g_goal">Fat (g)</string>
+    <string name="fiber_g_goal">Fiber (g)</string>
+    <string name="sodium_mg_goal">Sodium (mg)</string>
+    <string name="set_goals">Set Goals</string>
+    <string name="all">All</string>
+    <string name="no_activities_today">No activities today</string>
+    <string name="ok">OK</string>
+    <string name="exercise_log_deleted_success">Exercise log deleted successfully</string>
+    <string name="exercise_log_delete_error">Failed to delete exercise log. Please try again.</string>
+    <string name="check_in_completed_success">Check-in completed successfully</string>
+    <string name="check_in_completed_error">Failed to complete check-in. Please try again.</string>
+    <string name="exercise_added_success">Exercise added successfully</string>
+    <string name="exercise_add_error">Failed to add exercise. Please try again.</string>
+    <string name="validation_calories_positive">Calories must be a positive number.</string>
+    <string name="validation_carbs_non_negative">Carbs must be a non-negative number.</string>
+    <string name="validation_protein_non_negative">Protein must be a non-negative number.</string>
+    <string name="validation_fat_non_negative">Fat must be a non-negative number.</string>
+    <string name="validation_fiber_non_negative">Fiber must be a non-negative number.</string>
+    <string name="validation_sodium_non_negative">Sodium must be a non-negative number.</string>
+    
+    <!-- Exercise display units -->
+    <string name="kg_unit">kg</string>
+    <string name="min_unit">min</string>
+    <string name="reps_unit">reps</string>
+    <string name="sets_unit">sets</string>
 </resources>

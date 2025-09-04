@@ -9,8 +9,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.template.R
 import com.example.template.data.model.UserGoal
 
 @Composable
@@ -27,18 +29,33 @@ fun SetGoalDialog(
     var sodiumInput by remember { mutableStateOf(currentUserGoal.sodiumGoal_mg.toString()) }
 
     var inputError by remember { mutableStateOf<String?>(null) }
+    
+    // Store string resources in variables to avoid calling stringResource in non-composable contexts
+    val caloriesLabel = stringResource(R.string.calories_kcal)
+    val carbsLabel = stringResource(R.string.carbohydrates_g)
+    val proteinLabel = stringResource(R.string.protein_g_goal)
+    val fatLabel = stringResource(R.string.fat_g_goal)
+    val fiberLabel = stringResource(R.string.fiber_g_goal)
+    val sodiumLabel = stringResource(R.string.sodium_mg_goal)
+    
+    val validationCaloriesPositive = stringResource(R.string.validation_calories_positive)
+    val validationCarbsNonNegative = stringResource(R.string.validation_carbs_non_negative)
+    val validationProteinNonNegative = stringResource(R.string.validation_protein_non_negative)
+    val validationFatNonNegative = stringResource(R.string.validation_fat_non_negative)
+    val validationFiberNonNegative = stringResource(R.string.validation_fiber_non_negative)
+    val validationSodiumNonNegative = stringResource(R.string.validation_sodium_non_negative)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Set Your Daily Goals") },
+        title = { Text(stringResource(R.string.set_your_daily_goals)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                GoalTextField(label = "Calories (kcal)", value = caloriesInput, onValueChange = { caloriesInput = it; inputError = null }, isError = inputError?.contains("Calories") == true)
-                GoalTextField(label = "Carbohydrates (g)", value = carbsInput, onValueChange = { carbsInput = it; inputError = null }, isError = inputError?.contains("Carbs") == true)
-                GoalTextField(label = "Protein (g)", value = proteinInput, onValueChange = { proteinInput = it; inputError = null }, isError = inputError?.contains("Protein") == true)
-                GoalTextField(label = "Fat (g)", value = fatInput, onValueChange = { fatInput = it; inputError = null }, isError = inputError?.contains("Fat") == true)
-                GoalTextField(label = "Fiber (g)", value = fiberInput, onValueChange = { fiberInput = it; inputError = null }, isError = inputError?.contains("Fiber") == true)
-                GoalTextField(label = "Sodium (mg)", value = sodiumInput, onValueChange = { sodiumInput = it; inputError = null }, isError = inputError?.contains("Sodium") == true)
+                GoalTextField(label = caloriesLabel, value = caloriesInput, onValueChange = { caloriesInput = it; inputError = null }, isError = inputError?.contains(caloriesLabel) == true)
+                GoalTextField(label = carbsLabel, value = carbsInput, onValueChange = { carbsInput = it; inputError = null }, isError = inputError?.contains(carbsLabel) == true)
+                GoalTextField(label = proteinLabel, value = proteinInput, onValueChange = { proteinInput = it; inputError = null }, isError = inputError?.contains(proteinLabel) == true)
+                GoalTextField(label = fatLabel, value = fatInput, onValueChange = { fatInput = it; inputError = null }, isError = inputError?.contains(fatLabel) == true)
+                GoalTextField(label = fiberLabel, value = fiberInput, onValueChange = { fiberInput = it; inputError = null }, isError = inputError?.contains(fiberLabel) == true)
+                GoalTextField(label = sodiumLabel, value = sodiumInput, onValueChange = { sodiumInput = it; inputError = null }, isError = inputError?.contains(sodiumLabel) == true)
 
                 if (inputError != null) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -57,27 +74,27 @@ fun SetGoalDialog(
                     val sodium = sodiumInput.toIntOrNull()
 
                     if (calories == null || calories <= 0) {
-                        inputError = "Calories must be a positive number."
+                        inputError = validationCaloriesPositive
                         return@Button
                     }
                     if (carbs == null || carbs < 0) {
-                        inputError = "Carbs must be a non-negative number."
+                        inputError = validationCarbsNonNegative
                         return@Button
                     }
                     if (protein == null || protein < 0) {
-                        inputError = "Protein must be a non-negative number."
+                        inputError = validationProteinNonNegative
                         return@Button
                     }
                     if (fat == null || fat < 0) {
-                        inputError = "Fat must be a non-negative number."
+                        inputError = validationFatNonNegative
                         return@Button
                     }
                     if (fiber == null || fiber < 0) {
-                        inputError = "Fiber must be a non-negative number."
+                        inputError = validationFiberNonNegative
                         return@Button
                     }
                     if (sodium == null || sodium < 0) {
-                        inputError = "Sodium must be a non-negative number."
+                        inputError = validationSodiumNonNegative
                         return@Button
                     }
 
@@ -93,10 +110,10 @@ fun SetGoalDialog(
                         )
                     )
                 }
-            ) { Text("Set Goals") }
+            ) { Text(stringResource(R.string.set_goals)) }
         },
         dismissButton = {
-            Button(onClick = onDismiss) { Text("Cancel") }
+            Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }

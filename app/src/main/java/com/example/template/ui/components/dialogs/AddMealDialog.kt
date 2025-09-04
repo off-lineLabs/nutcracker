@@ -55,7 +55,7 @@ fun AddMealDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Meal Name") },
+                    label = { Text(stringResource(R.string.meal_name)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
@@ -64,7 +64,7 @@ fun AddMealDialog(
                 OutlinedTextField(
                     value = calories,
                     onValueChange = { calories = it },
-                    label = { Text("Calories") },
+                    label = { Text(stringResource(R.string.calories)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
@@ -77,13 +77,13 @@ fun AddMealDialog(
                     OutlinedTextField(
                         value = protein,
                         onValueChange = { protein = it },
-                        label = { Text("Protein (g)") },
+                        label = { Text(stringResource(R.string.protein_g)) },
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
                         value = carbs,
                         onValueChange = { carbs = it },
-                        label = { Text("Carbs (g)") },
+                        label = { Text(stringResource(R.string.carbs_g)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -97,13 +97,13 @@ fun AddMealDialog(
                     OutlinedTextField(
                         value = fat,
                         onValueChange = { fat = it },
-                        label = { Text("Fat (g)") },
+                        label = { Text(stringResource(R.string.fat_g)) },
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
                         value = fiber,
                         onValueChange = { fiber = it },
-                        label = { Text("Fiber (g)") },
+                        label = { Text(stringResource(R.string.fiber_g)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -111,7 +111,7 @@ fun AddMealDialog(
                 OutlinedTextField(
                     value = sodium,
                     onValueChange = { sodium = it },
-                    label = { Text("Sodium (mg)") },
+                    label = { Text(stringResource(R.string.sodium_mg)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp)
@@ -180,7 +180,7 @@ fun AddMealDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -201,7 +201,7 @@ fun AddMealDialog(
                         },
                         enabled = name.isNotBlank() && calories.isNotBlank() && servingSizeValue.isNotBlank()
                     ) {
-                        Text("Add Meal")
+                        Text(stringResource(R.string.add_meal))
                     }
                 }
             }

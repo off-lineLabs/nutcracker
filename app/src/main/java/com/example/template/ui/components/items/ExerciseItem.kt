@@ -78,7 +78,7 @@ fun ExerciseItem(
                     // Weight (for strength exercises)
                     if (exerciseEntry.exerciseType == "STRENGTH") {
                         Text(
-                            text = "${exerciseEntry.weight} kg",
+                            text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF9CA3AF)
                         )
@@ -87,8 +87,8 @@ fun ExerciseItem(
                     // Reps
                     Text(
                         text = when (exerciseEntry.exerciseType) {
-                            "CARDIO" -> "${exerciseEntry.reps} min"
-                            else -> "${exerciseEntry.reps} reps"
+                            "CARDIO" -> "${exerciseEntry.reps} ${stringResource(R.string.min_unit)}"
+                            else -> "${exerciseEntry.reps} ${stringResource(R.string.reps_unit)}"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF9CA3AF)
@@ -97,7 +97,7 @@ fun ExerciseItem(
                     // Sets (for non-cardio exercises)
                     if (exerciseEntry.exerciseType != "CARDIO") {
                         Text(
-                            text = "${exerciseEntry.sets} sets",
+                            text = "${exerciseEntry.sets} ${stringResource(R.string.sets_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF9CA3AF)
                         )
