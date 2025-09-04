@@ -12,6 +12,7 @@ import com.example.template.R
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.ExerciseType
+import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 
@@ -69,7 +70,8 @@ private fun ExerciseCheckInContent(
 
     // Calculate calories burned
     val caloriesBurned = remember(weight, reps, sets, exercise) {
-        when (exercise.exerciseType) {
+        val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+        when (exerciseType) {
             ExerciseType.STRENGTH -> {
                 val weightVal = weight.toDoubleOrNull() ?: 0.0
                 val repsVal = reps.toIntOrNull() ?: 0
@@ -119,7 +121,8 @@ private fun ExerciseCheckInContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Weight field (for strength exercises)
-                if (exercise.exerciseType == ExerciseType.STRENGTH) {
+                val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+                if (exerciseType == ExerciseType.STRENGTH) {
                     OutlinedTextField(
                         value = weight,
                         onValueChange = { weight = it },
@@ -138,7 +141,7 @@ private fun ExerciseCheckInContent(
                     onValueChange = { reps = it },
                     label = { 
                         Text(
-                            when (exercise.exerciseType) {
+                            when (exerciseType) {
                                 ExerciseType.CARDIO -> stringResource(R.string.minutes)
                                 else -> stringResource(R.string.reps)
                             }
@@ -152,7 +155,7 @@ private fun ExerciseCheckInContent(
                 )
 
                 // Sets field (for strength and bodyweight exercises)
-                if (exercise.exerciseType != ExerciseType.CARDIO) {
+                if (exerciseType != ExerciseType.CARDIO) {
                     OutlinedTextField(
                         value = sets,
                         onValueChange = { sets = it },

@@ -14,6 +14,7 @@ import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.ExerciseTypeConverters
 
 @Database(
     entities = [
@@ -23,9 +24,10 @@ import com.example.template.data.model.ExerciseLog
         Exercise::class,
         ExerciseLog::class
     ], 
-    version = 5, 
+    version = 6, 
     exportSchema = false
 )
+@androidx.room.TypeConverters(ExerciseTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun mealDao(): MealDao

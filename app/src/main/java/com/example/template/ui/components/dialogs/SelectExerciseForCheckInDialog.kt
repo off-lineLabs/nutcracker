@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.template.R
 import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,10 +108,10 @@ fun SelectExerciseForCheckInDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = when (exercise.exerciseType) {
-                                                com.example.template.data.model.ExerciseType.STRENGTH -> stringResource(R.string.strength)
-                                                com.example.template.data.model.ExerciseType.CARDIO -> stringResource(R.string.cardio)
-                                                com.example.template.data.model.ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
+                                            text = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+                                                ExerciseType.STRENGTH -> stringResource(R.string.strength)
+                                                ExerciseType.CARDIO -> stringResource(R.string.cardio)
+                                                ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
                                             },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant

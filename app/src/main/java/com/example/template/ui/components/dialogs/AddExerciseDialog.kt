@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseType
+import com.example.template.data.model.ExerciseCategoryMapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -175,7 +176,7 @@ fun AddExerciseDialog(
                 onClick = {
                     val exercise = Exercise(
                         name = name.trim(),
-                        exerciseType = exerciseType,
+                        category = ExerciseCategoryMapper.getCategory(exerciseType),
                         kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
                         kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
                         defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
