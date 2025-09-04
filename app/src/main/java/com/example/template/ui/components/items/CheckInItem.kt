@@ -31,7 +31,7 @@ fun CheckInItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937) // Darker background for better contrast
+            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
         ),
         shape = RoundedCornerShape(12.dp)
     ) {

@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -534,7 +534,7 @@ fun DashboardScreen() {
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Analytics,
+                            imageVector = Icons.Filled.BarChart,
                             contentDescription = stringResource(R.string.progress_details),
                             tint = Color(0xFFC0C0C0),
                             modifier = Modifier.size(24.dp)
