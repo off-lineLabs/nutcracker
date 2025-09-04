@@ -1,12 +1,17 @@
 package com.example.template.ui.components.items
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,8 +31,9 @@ fun CheckInItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+            containerColor = Color(0xFF1F2937) // Darker background for better contrast
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -36,6 +42,24 @@ fun CheckInItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Meal icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF10B981)), // Green color for meals
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -43,7 +67,7 @@ fun CheckInItem(
                     text = checkIn.mealName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.White
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -57,7 +81,7 @@ fun CheckInItem(
                             checkIn.totalCalories.toInt()
                         ),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = Color(0xFF9CA3AF)
                     )
                     
                     if (checkIn.servingSize != 1.0) {
@@ -67,7 +91,7 @@ fun CheckInItem(
                                 checkIn.servingSize
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            color = Color(0xFF6B7280)
                         )
                     }
                 }
@@ -79,7 +103,7 @@ fun CheckInItem(
                         Text(
                             text = notes,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            color = Color(0xFF6B7280),
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                         )
                     }
@@ -90,17 +114,21 @@ fun CheckInItem(
                 Text(
                     text = formatCheckInTime(checkIn.checkInDateTime),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = Color(0xFF6B7280)
                 )
             }
             
             // Delete button if provided
             onDelete?.let { deleteCallback ->
-                IconButton(onClick = deleteCallback) {
+                IconButton(
+                    onClick = deleteCallback,
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = stringResource(R.string.delete_check_in),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = Color(0xFFEF4444),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

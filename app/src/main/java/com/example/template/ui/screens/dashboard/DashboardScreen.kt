@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Analytics
@@ -57,7 +58,7 @@ import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
-import com.example.template.ui.components.SwipeableHistoryView
+import com.example.template.ui.components.FilterableHistoryView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -560,7 +561,7 @@ fun DashboardScreen() {
                     onClick = { showSelectMealDialog = true },
                     containerColor = Color(0xFF10B981)
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_meal))
+                    Icon(Icons.Filled.Restaurant, contentDescription = stringResource(R.string.add_meal))
                 }
             }
         },
@@ -670,8 +671,8 @@ fun DashboardScreen() {
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Use SwipeableHistoryView for both meals and exercises
-                        SwipeableHistoryView(
+                        // Use FilterableHistoryView for both meals and exercises
+                        FilterableHistoryView(
                             mealEntries = dailyMealCheckIns,
                             exerciseEntries = dailyExerciseLogs,
                             onDeleteMeal = { checkIn ->

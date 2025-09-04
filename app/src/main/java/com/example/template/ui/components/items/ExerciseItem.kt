@@ -31,7 +31,7 @@ fun ExerciseItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
+            containerColor = Color(0xFF1F2937) // Keep the same dark background for consistency
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
