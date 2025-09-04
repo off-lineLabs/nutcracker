@@ -78,37 +78,38 @@ fun FilterableHistoryView(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Filter bubbles
+        // Filter bubbles - centered layout
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // All filter
+            // Exercises filter (left) - icon only
+            FilterBubble(
+                text = null,
+                isSelected = selectedFilter == HistoryFilter.EXERCISES,
+                onClick = { selectedFilter = HistoryFilter.EXERCISES },
+                modifier = Modifier.size(48.dp),
+                icon = Icons.Filled.FitnessCenter
+            )
+            
+            // All filter (center)
             FilterBubble(
                 text = "All",
                 isSelected = selectedFilter == HistoryFilter.ALL,
                 onClick = { selectedFilter = HistoryFilter.ALL },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             
-            // Meals filter
+            // Meals filter (right) - icon only
             FilterBubble(
-                text = "Meals",
+                text = null,
                 isSelected = selectedFilter == HistoryFilter.MEALS,
                 onClick = { selectedFilter = HistoryFilter.MEALS },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.size(48.dp),
                 icon = Icons.Filled.Restaurant
-            )
-            
-            // Exercises filter
-            FilterBubble(
-                text = "Exercises",
-                isSelected = selectedFilter == HistoryFilter.EXERCISES,
-                onClick = { selectedFilter = HistoryFilter.EXERCISES },
-                modifier = Modifier.weight(1f),
-                icon = Icons.Filled.FitnessCenter
             )
         }
         
@@ -157,7 +158,7 @@ fun FilterableHistoryView(
 
 @Composable
 private fun FilterBubble(
-    text: String,
+    text: String?,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -180,27 +181,46 @@ private fun FilterBubble(
             .clip(RoundedCornerShape(20.dp))
             .background(backgroundColor)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .then(
+                if (text != null) {
+                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                } else {
+                    Modifier // No padding for icon-only bubbles
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        if (text != null) {
+            // Text + optional icon layout
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                icon?.let {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = contentColor
+                )
+            }
+        } else {
+            // Icon-only layout
             icon?.let {
                 Icon(
                     imageVector = it,
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                color = contentColor
-            )
         }
     }
 }
