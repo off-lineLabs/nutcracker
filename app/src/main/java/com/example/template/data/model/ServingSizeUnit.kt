@@ -1,36 +1,38 @@
 package com.example.template.data.model
 
+import com.example.template.R
+
 /**
  * Enum representing different serving size units for nutrition tracking
  */
 enum class ServingSizeUnit(
-    val displayName: String,
+    val stringResourceId: Int,
     val abbreviation: String,
     val isWeight: Boolean = true, // true for weight units, false for volume units
     val isMetric: Boolean = true // true for metric units, false for imperial
 ) {
     // Weight units
-    GRAMS("Grams", "g", true, true),
-    KILOGRAMS("Kilograms", "kg", true, true),
-    POUNDS("Pounds", "lb", true, false),
-    OUNCES("Ounces", "oz", true, false),
+    GRAMS(R.string.unit_grams, "g", true, true),
+    KILOGRAMS(R.string.unit_kilograms, "kg", true, true),
+    POUNDS(R.string.unit_pounds, "lb", true, false),
+    OUNCES(R.string.unit_ounces, "oz", true, false),
     
     // Volume units
-    MILLILITERS("Milliliters", "ml", false, true),
-    LITERS("Liters", "L", false, true),
-    CUPS("Cups", "cup", false, false),
-    FLUID_OUNCES("Fluid Ounces", "fl oz", false, false),
-    TABLESPOONS("Tablespoons", "tbsp", false, false),
-    TEASPOONS("Teaspoons", "tsp", false, false),
+    MILLILITERS(R.string.unit_milliliters, "ml", false, true),
+    LITERS(R.string.unit_liters, "L", false, true),
+    CUPS(R.string.unit_cups, "cup", false, false),
+    FLUID_OUNCES(R.string.unit_fluid_ounces, "fl oz", false, false),
+    TABLESPOONS(R.string.unit_tablespoons, "tbsp", false, false),
+    TEASPOONS(R.string.unit_teaspoons, "tsp", false, false),
     
     // Count units
-    PIECES("Pieces", "pcs", false, false),
-    SLICES("Slices", "slice", false, false),
-    UNITS("Units", "unit", false, false),
+    PIECES(R.string.unit_pieces, "pcs", false, false),
+    SLICES(R.string.unit_slices, "slice", false, false),
+    UNITS(R.string.unit_units, "unit", false, false),
     
     // Special units
-    SERVINGS("Servings", "serving", false, false),
-    PORTIONS("Portions", "portion", false, false);
+    SERVINGS(R.string.unit_servings, "serving", false, false),
+    PORTIONS(R.string.unit_portions, "portion", false, false);
     
     companion object {
         /**

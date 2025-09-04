@@ -145,7 +145,7 @@ fun AddMealDialog(
                         modifier = Modifier.weight(1f)
                     ) {
                         OutlinedTextField(
-                            value = selectedUnit.displayName,
+                            value = stringResource(selectedUnit.stringResourceId),
                             onValueChange = { },
                             readOnly = true,
                             label = { Text(stringResource(R.string.serving_size_unit_label)) },
@@ -164,7 +164,7 @@ fun AddMealDialog(
                         ) {
                             ServingSizeUnit.values().forEach { unit ->
                                 DropdownMenuItem(
-                                    text = { Text(unit.displayName) },
+                                    text = { Text(stringResource(unit.stringResourceId)) },
                                     onClick = {
                                         selectedUnit = unit
                                         expanded = false

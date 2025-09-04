@@ -81,4 +81,29 @@
     <string name="cancel">Cancelar</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="delete_check_in">Eliminar registro</string>
+    
+    <!-- Serving Size -->
+    <string name="serving_size_label">Tamaño de Porción</string>
+    <string name="serving_size_value_label">Cantidad</string>
+    <string name="serving_size_unit_label">Unidad</string>
+    <string name="serving_size_default_value">100</string>
+    <string name="serving_size_placeholder">Ingrese la cantidad</string>
+    <string name="serving_size_validation_error">Por favor, ingrese un tamaño de porción válido</string>
+    
+    <!-- Serving Size Units -->
+    <string name="unit_grams">Gramos (g)</string>
+    <string name="unit_kilograms">Kilogramos (kg)</string>
+    <string name="unit_pounds">Libras (lb)</string>
+    <string name="unit_ounces">Onzas (oz)</string>
+    <string name="unit_milliliters">Mililitros (ml)</string>
+    <string name="unit_liters">Litros (L)</string>
+    <string name="unit_cups">Tazas (cup)</string>
+    <string name="unit_fluid_ounces">Onzas Fluidas (fl oz)</string>
+    <string name="unit_tablespoons">Cucharadas (tbsp)</string>
+    <string name="unit_teaspoons">Cucharaditas (tsp)</string>
+    <string name="unit_pieces">Piezas (pcs)</string>
+    <string name="unit_slices">Rebanadas (slice)</string>
+    <string name="unit_units">Unidades (unit)</string>
+    <string name="unit_servings">Porciones (serving)</string>
+    <string name="unit_portions">Porciones (portion)</string>
 </resources>
