@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -93,7 +93,7 @@ fun SelectExerciseForCheckInDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                                             Icon(
-                            imageVector = Icons.Filled.Star,
+                            imageVector = Icons.Filled.SportsGymnastics,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +50,7 @@ fun ExerciseItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Star,
+                    imageVector = Icons.Filled.SportsGymnastics,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)

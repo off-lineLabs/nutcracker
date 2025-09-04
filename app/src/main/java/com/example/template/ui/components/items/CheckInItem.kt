@@ -98,7 +98,7 @@ fun CheckInItem(
             onDelete?.let { deleteCallback ->
                 IconButton(onClick = deleteCallback) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
+                        imageVector = Icons.Filled.Delete,
                         contentDescription = stringResource(R.string.delete_check_in),
                         tint = MaterialTheme.colorScheme.error
                     )

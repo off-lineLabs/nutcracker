@@ -14,10 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -132,7 +132,8 @@ private fun CaloriesRing(
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
-            val diameter = size.minDimension - (strokeWidthPx * 2)
+            val strokeWidthPx = strokeWidthDp.toPx()
+            val diameter = size.minDimension - strokeWidthPx
             val topLeft = Offset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
@@ -532,7 +533,7 @@ fun DashboardScreen() {
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Info,
+                            imageVector = Icons.Filled.Analytics,
                             contentDescription = stringResource(R.string.progress_details),
                             tint = Color(0xFFC0C0C0),
                             modifier = Modifier.size(24.dp)
@@ -551,7 +552,7 @@ fun DashboardScreen() {
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = Color(0xFF3B82F6)
                 ) {
-                    Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.add_exercise))
+                    Icon(Icons.Filled.SportsGymnastics, contentDescription = stringResource(R.string.add_exercise))
                 }
                 
                 // Add Meal FAB
