@@ -109,8 +109,8 @@ fun SelectMealForCheckInDialog(
                                             text = stringResource(
                                                 R.string.meal_calories_info,
                                                 meal.calories,
-                                                meal.servingSize_value,
-                                                meal.servingSize_unit
+                                                meal.servingSize_value.toInt(),
+                                                meal.servingSize_unit.abbreviation
                                             ),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant

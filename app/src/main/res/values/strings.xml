@@ -129,4 +129,29 @@
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
     <string name="progress_details">Progress Details</string>
+    
+    <!-- Serving Size -->
+    <string name="serving_size_label">Serving Size</string>
+    <string name="serving_size_value_label">Amount</string>
+    <string name="serving_size_unit_label">Unit</string>
+    <string name="serving_size_default_value">100</string>
+    <string name="serving_size_placeholder">Enter amount</string>
+    <string name="serving_size_validation_error">Please enter a valid serving size</string>
+    
+    <!-- Serving Size Units -->
+    <string name="unit_grams">Grams (g)</string>
+    <string name="unit_kilograms">Kilograms (kg)</string>
+    <string name="unit_pounds">Pounds (lb)</string>
+    <string name="unit_ounces">Ounces (oz)</string>
+    <string name="unit_milliliters">Milliliters (ml)</string>
+    <string name="unit_liters">Liters (L)</string>
+    <string name="unit_cups">Cups (cup)</string>
+    <string name="unit_fluid_ounces">Fluid Ounces (fl oz)</string>
+    <string name="unit_tablespoons">Tablespoons (tbsp)</string>
+    <string name="unit_teaspoons">Teaspoons (tsp)</string>
+    <string name="unit_pieces">Pieces (pcs)</string>
+    <string name="unit_slices">Slices (slice)</string>
+    <string name="unit_units">Units (unit)</string>
+    <string name="unit_servings">Servings (serving)</string>
+    <string name="unit_portions">Portions (portion)</string>
 </resources>
