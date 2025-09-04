@@ -12,6 +12,11 @@ import com.example.template.R // Your project's R file
 
 // Define the Inter FontFamily using your variable fonts
 val InterFontFamily = FontFamily(
+    Font(R.font.inter_variable)
+)
+
+// Define italic font family for when you need italic text
+val InterItalicFontFamily = FontFamily(
     Font(R.font.inter_italic_variable)
 )
 
