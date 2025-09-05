@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,12 +29,24 @@ fun PillTracker(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        // Pill icon button
+        // Pill icon button with glow effect when taken
         IconButton(
             onClick = onPillToggle,
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
+                .then(
+                    if (isPillTaken) {
+                        Modifier.shadow(
+                            elevation = 8.dp,
+                            shape = CircleShape,
+                            ambientColor = Color(0xFF4CAF50).copy(alpha = 0.3f),
+                            spotColor = Color(0xFF4CAF50).copy(alpha = 0.3f)
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_pill_24),

@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import com.example.template.ui.components.PillTracker
+import com.example.template.ui.components.ExerciseToggle
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
 import androidx.compose.ui.platform.LocalView
@@ -518,9 +519,15 @@ fun DashboardScreen() {
                             timestamp = java.time.LocalDateTime.now()
                         )
                         foodLogRepository.insertPillCheckIn(newCheckIn)
+                        snackbarHostState.showSnackbar(
+                            message = "Daily supplement taken"
+                        )
                     } else {
                         // Delete existing pill check-in
                         foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
+                        snackbarHostState.showSnackbar(
+                            message = "Daily supplement removed"
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -528,6 +535,19 @@ fun DashboardScreen() {
                     message = "Failed to update pill status. Please try again."
                 )
             }
+        }
+    }
+
+    // Exercise toggle function
+    val onExerciseToggle: () -> Unit = {
+        includeExerciseCalories = !includeExerciseCalories
+        coroutineScope.launch {
+            val message = if (includeExerciseCalories) {
+                "Exercise bonus calories ON"
+            } else {
+                "Exercise bonus calories OFF"
+            }
+            snackbarHostState.showSnackbar(message = message)
         }
     }
 
@@ -679,7 +699,7 @@ fun DashboardScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
-                        // Calories ring section with pill tracker positioned discretely
+                        // Calories ring section with symmetrical toggles
                         Box(
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.Center
@@ -694,31 +714,19 @@ fun DashboardScreen() {
                                 goalColor = caloriesGoalColor
                             )
                             
-                            // Pill tracker - positioned discretely on the right
+                            // Exercise toggle - positioned on the left
+                            ExerciseToggle(
+                                isEnabled = includeExerciseCalories,
+                                onToggle = onExerciseToggle,
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                            
+                            // Pill tracker - positioned on the right
                             PillTracker(
                                 isPillTaken = currentPillCheckIn != null,
                                 pillCheckIn = currentPillCheckIn,
                                 onPillToggle = onPillToggle,
                                 modifier = Modifier.align(Alignment.CenterEnd)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Exercise calories toggle
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.include_exercise_calories),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = textGray200
-                            )
-                            Switch(
-                                checked = includeExerciseCalories,
-                                onCheckedChange = { includeExerciseCalories = it }
                             )
                         }
 
