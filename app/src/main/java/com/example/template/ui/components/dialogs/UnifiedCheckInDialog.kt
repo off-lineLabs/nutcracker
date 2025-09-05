@@ -35,7 +35,7 @@ fun UnifiedCheckInDialog(
     val isExercise = exercise != null
     val isMeal = meal != null
     
-    require(isExercise != isMeal) { "Exactly one of exercise or meal must be provided" }
+    require((isExercise && !isMeal) || (!isExercise && isMeal)) { "Exactly one of exercise or meal must be provided" }
     
     if (isExercise) {
         ExerciseCheckInContent(
