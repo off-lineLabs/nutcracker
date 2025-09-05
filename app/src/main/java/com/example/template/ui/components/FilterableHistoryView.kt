@@ -47,7 +47,9 @@ fun FilterableHistoryView(
     mealEntries: List<DailyNutritionEntry>,
     exerciseEntries: List<DailyExerciseEntry>,
     onDeleteMeal: (DailyNutritionEntry) -> Unit,
-    onDeleteExercise: (DailyExerciseEntry) -> Unit
+    onDeleteExercise: (DailyExerciseEntry) -> Unit,
+    onEditMeal: (DailyNutritionEntry) -> Unit,
+    onEditExercise: (DailyExerciseEntry) -> Unit
 ) {
     var selectedFilter by remember { mutableStateOf(HistoryFilter.ALL) }
     
@@ -142,13 +144,13 @@ fun FilterableHistoryView(
                         is HistoryItem.MealItem -> {
                             CheckInItem(
                                 checkIn = item.entry,
-                                onDelete = { onDeleteMeal(item.entry) }
+                                onEdit = { onEditMeal(item.entry) }
                             )
                         }
                         is HistoryItem.ExerciseItem -> {
                             ExerciseItem(
                                 exerciseEntry = item.entry,
-                                onDelete = { onDeleteExercise(item.entry) }
+                                onEdit = { onEditExercise(item.entry) }
                             )
                         }
                     }

@@ -78,6 +78,7 @@
     <string name="serving_size_display">%1$.1fx</string>
     <string name="notes_optional">Notes (optional)</string>
     <string name="check_in">Check In</string>
+    <string name="update">Update</string>
     <string name="cancel">Cancel</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="delete_check_in">Delete check-in</string>
@@ -99,6 +100,7 @@
     <string name="cardio">Cardio</string>
     <string name="bodyweight">Bodyweight</string>
     <string name="kcal_per_rep">Kcal per Rep</string>
+    <string name="kcal_per_set">Kcal per Set</string>
     <string name="kcal_per_minute">Kcal per Minute</string>
     <string name="default_weight_kg">Default Weight (kg)</string>
     <string name="default_reps">Default Reps</string>

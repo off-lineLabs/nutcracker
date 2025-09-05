@@ -34,6 +34,7 @@ interface FoodLogRepository {
 
     // MealCheckIn operations
     suspend fun insertMealCheckIn(mealCheckIn: MealCheckIn): Long
+    suspend fun updateMealCheckIn(mealCheckIn: MealCheckIn)
     suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn)
     fun getCheckInsByDate(date: String): Flow<List<DailyNutritionEntry>>
     fun getRecentCheckIns(limit: Int = 10): Flow<List<MealCheckIn>>
@@ -49,6 +50,7 @@ interface FoodLogRepository {
 
     // ExerciseLog operations
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
+    suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
     fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>>
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
@@ -86,6 +88,7 @@ class OfflineFoodLogRepository(
 
     // MealCheckIn operations
     override suspend fun insertMealCheckIn(mealCheckIn: MealCheckIn): Long = mealCheckInDao.insertMealCheckIn(mealCheckIn)
+    override suspend fun updateMealCheckIn(mealCheckIn: MealCheckIn) = mealCheckInDao.updateMealCheckIn(mealCheckIn)
     override suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn) = mealCheckInDao.deleteMealCheckIn(mealCheckIn)
     override fun getCheckInsByDate(date: String): Flow<List<DailyNutritionEntry>> = mealCheckInDao.getDailyNutritionSummary(date)
     override fun getRecentCheckIns(limit: Int): Flow<List<MealCheckIn>> = mealCheckInDao.getRecentCheckIns(limit)
@@ -101,6 +104,7 @@ class OfflineFoodLogRepository(
 
     // ExerciseLog operations
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
+    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
     override fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>> = exerciseLogDao.getDailyExerciseSummary(date)
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)

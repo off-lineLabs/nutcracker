@@ -15,6 +15,9 @@ interface MealCheckInDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMealCheckIn(mealCheckIn: MealCheckIn): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateMealCheckIn(mealCheckIn: MealCheckIn)
+
     @Delete
     suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn)
 

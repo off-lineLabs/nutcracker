@@ -11,7 +11,7 @@ data class Exercise(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val kcalBurnedPerRep: Double? = null, // Kcal per single repetition (for rep-based exercises)
+    val kcalBurnedPerRep: Double? = null, // Kcal per set (for strength exercises) or per rep (for bodyweight exercises)
     val kcalBurnedPerMinute: Double? = null, // Kcal per minute (for time-based exercises)
     val defaultWeight: Double = 0.0, // Default weight in kg
     val defaultReps: Int = 0, // Default number of reps

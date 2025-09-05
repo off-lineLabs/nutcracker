@@ -14,6 +14,9 @@ interface ExerciseLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
+
     @Delete
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
 

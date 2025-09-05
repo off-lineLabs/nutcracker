@@ -126,7 +126,7 @@ fun AddExerciseDialog(
                         OutlinedTextField(
                             value = kcalPerRep,
                             onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_rep)) },
+                            label = { Text(stringResource(R.string.kcal_per_set)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(

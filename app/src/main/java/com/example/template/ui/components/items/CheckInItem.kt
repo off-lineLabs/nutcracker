@@ -1,6 +1,7 @@
 package com.example.template.ui.components.items
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,12 +25,13 @@ import java.util.Locale
 @Composable
 fun CheckInItem(
     checkIn: DailyNutritionEntry,
-    onDelete: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onEdit?.invoke() },
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
         ),
@@ -116,21 +118,6 @@ fun CheckInItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF6B7280)
                 )
-            }
-            
-            // Delete button if provided
-            onDelete?.let { deleteCallback ->
-                IconButton(
-                    onClick = deleteCallback,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete_check_in),
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
             }
         }
     }

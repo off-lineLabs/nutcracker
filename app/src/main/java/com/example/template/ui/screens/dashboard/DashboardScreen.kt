@@ -60,6 +60,8 @@ import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
+import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
+import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -363,6 +365,10 @@ fun DashboardScreen() {
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
+    
+    // Edit dialog state variables
+    var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
+    var showEditExerciseDialog by remember { mutableStateOf<DailyExerciseEntry?>(null) }
     
     // Date navigation state - always start with today
     var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
@@ -691,58 +697,13 @@ fun DashboardScreen() {
                         FilterableHistoryView(
                             mealEntries = dailyMealCheckIns,
                             exerciseEntries = dailyExerciseLogs,
-                            onDeleteMeal = { checkIn ->
-                                coroutineScope.launch {
-                                    try {
-                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                        val mealCheckIn = MealCheckIn(
-                                            id = checkIn.checkInId,
-                                            mealId = checkIn.mealId,
-                                            checkInDate = checkIn.checkInDate,
-                                            checkInDateTime = checkIn.checkInDateTime,
-                                            servingSize = checkIn.servingSize,
-                                            notes = checkIn.notes
-                                        )
-                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
-                                        // Show success message
-                                        snackbarHostState.showSnackbar(
-                                            message = "Check-in deleted successfully"
-                                        )
-                                    } catch (e: Exception) {
-                                        // Show error message
-                                        snackbarHostState.showSnackbar(
-                                            message = "Failed to delete check-in. Please try again."
-                                        )
-                                    }
-                                }
+                            onDeleteMeal = { }, // No longer used - delete only available in edit dialog
+                            onDeleteExercise = { }, // No longer used - delete only available in edit dialog
+                            onEditMeal = { checkIn ->
+                                showEditMealDialog = checkIn
                             },
-                            onDeleteExercise = { exerciseEntry ->
-                                coroutineScope.launch {
-                                    try {
-                                        // Convert DailyExerciseEntry to ExerciseLog for deletion
-                                        val exerciseLog = ExerciseLog(
-                                            id = exerciseEntry.logId,
-                                            exerciseId = exerciseEntry.exerciseId,
-                                            logDate = exerciseEntry.logDate,
-                                            logDateTime = exerciseEntry.logDateTime,
-                                            weight = exerciseEntry.weight,
-                                            reps = exerciseEntry.reps,
-                                            sets = exerciseEntry.sets,
-                                            caloriesBurned = exerciseEntry.caloriesBurned,
-                                            notes = exerciseEntry.notes
-                                        )
-                                        foodLogRepository.deleteExerciseLog(exerciseLog)
-                                        // Show success message
-                                        snackbarHostState.showSnackbar(
-                                            message = exerciseLogDeletedSuccess
-                                        )
-                                    } catch (e: Exception) {
-                                        // Show error message
-                                        snackbarHostState.showSnackbar(
-                                            message = exerciseLogDeleteError
-                                        )
-                                    }
-                                }
+                            onEditExercise = { exerciseEntry ->
+                                showEditExerciseDialog = exerciseEntry
                             }
                         )
                     }
@@ -958,6 +919,117 @@ fun DashboardScreen() {
             DatePicker(
                 state = datePickerState,
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+    
+    // Edit Meal Dialog
+    showEditMealDialog?.let { checkIn ->
+        // Find the corresponding meal
+        val meal = meals.find { it.id == checkIn.mealId }
+        if (meal != null) {
+            // Convert DailyNutritionEntry to MealCheckIn for editing
+            val existingMealCheckIn = MealCheckIn(
+                id = checkIn.checkInId,
+                mealId = checkIn.mealId,
+                checkInDate = checkIn.checkInDate,
+                checkInDateTime = checkIn.checkInDateTime,
+                servingSize = checkIn.servingSize,
+                notes = checkIn.notes
+            )
+            
+            UnifiedCheckInDialog<CheckInData.Meal>(
+                onDismiss = { showEditMealDialog = null },
+                onCheckIn = { checkInData ->
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.updateMealCheckIn(checkInData.mealCheckIn)
+                            snackbarHostState.showSnackbar(
+                                message = "Meal updated successfully"
+                            )
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(
+                                message = "Failed to update meal. Please try again."
+                            )
+                        }
+                    }
+                    showEditMealDialog = null
+                },
+                onDelete = {
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteMealCheckIn(existingMealCheckIn)
+                            snackbarHostState.showSnackbar(
+                                message = "Meal deleted successfully"
+                            )
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(
+                                message = "Failed to delete meal. Please try again."
+                            )
+                        }
+                    }
+                    showEditMealDialog = null
+                },
+                isEditMode = true,
+                meal = meal,
+                existingMealCheckIn = existingMealCheckIn
+            )
+        }
+    }
+    
+    // Edit Exercise Dialog
+    showEditExerciseDialog?.let { exerciseEntry ->
+        // Find the corresponding exercise
+        val exercise = exercises.find { it.id == exerciseEntry.exerciseId }
+        if (exercise != null) {
+            // Convert DailyExerciseEntry to ExerciseLog for editing
+            val existingExerciseLog = ExerciseLog(
+                id = exerciseEntry.logId,
+                exerciseId = exerciseEntry.exerciseId,
+                logDate = exerciseEntry.logDate,
+                logDateTime = exerciseEntry.logDateTime,
+                weight = exerciseEntry.weight,
+                reps = exerciseEntry.reps,
+                sets = exerciseEntry.sets,
+                caloriesBurned = exerciseEntry.caloriesBurned,
+                notes = exerciseEntry.notes
+            )
+            
+            UnifiedCheckInDialog<CheckInData.Exercise>(
+                onDismiss = { showEditExerciseDialog = null },
+                onCheckIn = { checkInData ->
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.updateExerciseLog(checkInData.exerciseLog)
+                            snackbarHostState.showSnackbar(
+                                message = "Exercise updated successfully"
+                            )
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(
+                                message = "Failed to update exercise. Please try again."
+                            )
+                        }
+                    }
+                    showEditExerciseDialog = null
+                },
+                onDelete = {
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteExerciseLog(existingExerciseLog)
+                            snackbarHostState.showSnackbar(
+                                message = "Exercise deleted successfully"
+                            )
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(
+                                message = "Failed to delete exercise. Please try again."
+                            )
+                        }
+                    }
+                    showEditExerciseDialog = null
+                },
+                isEditMode = true,
+                exercise = exercise,
+                existingExerciseLog = existingExerciseLog
             )
         }
     }

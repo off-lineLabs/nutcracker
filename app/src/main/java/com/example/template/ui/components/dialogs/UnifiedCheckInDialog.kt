@@ -1,6 +1,8 @@
 package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,14 +25,18 @@ fun <T : CheckInData> UnifiedCheckInDialog(
     // Common parameters
     onDismiss: () -> Unit,
     onCheckIn: (T) -> Unit,
+    onDelete: (() -> Unit)? = null,
+    isEditMode: Boolean = false,
     
     // Exercise-specific parameters
     exercise: Exercise? = null,
     lastLog: ExerciseLog? = null,
     maxWeight: Double? = null,
+    existingExerciseLog: ExerciseLog? = null,
     
     // Meal-specific parameters
-    meal: Meal? = null
+    meal: Meal? = null,
+    existingMealCheckIn: MealCheckIn? = null
 ) {
     // Determine if this is an exercise or meal check-in
     val isExercise = exercise != null
@@ -43,20 +49,26 @@ fun <T : CheckInData> UnifiedCheckInDialog(
             exercise = exercise!!,
             lastLog = lastLog,
             maxWeight = maxWeight,
+            existingExerciseLog = existingExerciseLog,
+            isEditMode = isEditMode,
             onDismiss = onDismiss,
             onCheckIn = { exerciseLog -> 
                 @Suppress("UNCHECKED_CAST")
                 onCheckIn(CheckInData.Exercise(exerciseLog) as T)
-            }
+            },
+            onDelete = onDelete
         )
     } else {
         MealCheckInContent(
             meal = meal!!,
+            existingMealCheckIn = existingMealCheckIn,
+            isEditMode = isEditMode,
             onDismiss = onDismiss,
             onCheckIn = { mealCheckIn -> 
                 @Suppress("UNCHECKED_CAST")
                 onCheckIn(CheckInData.Meal(mealCheckIn) as T)
-            }
+            },
+            onDelete = onDelete
         )
     }
 }
@@ -67,24 +79,57 @@ private fun ExerciseCheckInContent(
     exercise: Exercise,
     lastLog: ExerciseLog?,
     maxWeight: Double?,
+    existingExerciseLog: ExerciseLog?,
+    isEditMode: Boolean,
     onDismiss: () -> Unit,
-    onCheckIn: (ExerciseLog) -> Unit
+    onCheckIn: (ExerciseLog) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
-    var weight by remember { mutableStateOf(lastLog?.weight?.toString() ?: exercise.defaultWeight.toString()) }
-    var reps by remember { mutableStateOf(lastLog?.reps?.toString() ?: exercise.defaultReps.toString()) }
-    var sets by remember { mutableStateOf(lastLog?.sets?.toString() ?: exercise.defaultSets.toString()) }
-    var notes by remember { mutableStateOf("") }
+    var weight by remember { 
+        mutableStateOf(
+            if (isEditMode && existingExerciseLog != null) {
+                existingExerciseLog.weight.toString()
+            } else {
+                lastLog?.weight?.toString() ?: exercise.defaultWeight.toString()
+            }
+        )
+    }
+    var reps by remember { 
+        mutableStateOf(
+            if (isEditMode && existingExerciseLog != null) {
+                existingExerciseLog.reps.toString()
+            } else {
+                lastLog?.reps?.toString() ?: exercise.defaultReps.toString()
+            }
+        )
+    }
+    var sets by remember { 
+        mutableStateOf(
+            if (isEditMode && existingExerciseLog != null) {
+                existingExerciseLog.sets.toString()
+            } else {
+                lastLog?.sets?.toString() ?: exercise.defaultSets.toString()
+            }
+        )
+    }
+    var notes by remember { 
+        mutableStateOf(
+            if (isEditMode && existingExerciseLog != null) {
+                existingExerciseLog.notes ?: ""
+            } else {
+                ""
+            }
+        )
+    }
 
     // Calculate calories burned
     val caloriesBurned = remember(weight, reps, sets, exercise) {
         val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
         when (exerciseType) {
             ExerciseType.STRENGTH -> {
-                val weightVal = weight.toDoubleOrNull() ?: 0.0
-                val repsVal = reps.toIntOrNull() ?: 0
                 val setsVal = sets.toIntOrNull() ?: 0
-                val kcalPerRep = exercise.kcalBurnedPerRep ?: 0.0
-                weightVal * repsVal * setsVal * kcalPerRep
+                val kcalPerSet = exercise.kcalBurnedPerRep ?: 0.0 // This field now represents kcal per set
+                setsVal * kcalPerSet
             }
             ExerciseType.CARDIO -> {
                 val repsVal = reps.toIntOrNull() ?: 0
@@ -216,24 +261,59 @@ private fun ExerciseCheckInContent(
         confirmButton = {
             Button(
                 onClick = {
-                    val exerciseLog = ExerciseLog.create(
-                        exerciseId = exercise.id,
-                        weight = weight.toDoubleOrNull() ?: 0.0,
-                        reps = reps.toIntOrNull() ?: 0,
-                        sets = sets.toIntOrNull() ?: 0,
-                        caloriesBurned = caloriesBurned,
-                        notes = notes.takeIf { it.isNotBlank() }
-                    )
+                    val exerciseLog = if (isEditMode && existingExerciseLog != null) {
+                        // Update existing log with new values but preserve ID and timestamps
+                        existingExerciseLog.copy(
+                            weight = weight.toDoubleOrNull() ?: 0.0,
+                            reps = reps.toIntOrNull() ?: 0,
+                            sets = sets.toIntOrNull() ?: 0,
+                            caloriesBurned = caloriesBurned,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    } else {
+                        // Create new log
+                        ExerciseLog.create(
+                            exerciseId = exercise.id,
+                            weight = weight.toDoubleOrNull() ?: 0.0,
+                            reps = reps.toIntOrNull() ?: 0,
+                            sets = sets.toIntOrNull() ?: 0,
+                            caloriesBurned = caloriesBurned,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    }
                     onCheckIn(exerciseLog)
                 },
                 enabled = weight.isNotBlank() && reps.isNotBlank() && sets.isNotBlank()
             ) {
-                Text(stringResource(R.string.check_in))
+                Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Delete button (only in edit mode) - positioned at bottom-left
+                if (isEditMode && onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                } else {
+                    // Empty space to maintain layout when no delete button
+                    Spacer(modifier = Modifier.size(48.dp))
+                }
+                
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     )
@@ -243,11 +323,30 @@ private fun ExerciseCheckInContent(
 @Composable
 private fun MealCheckInContent(
     meal: Meal,
+    existingMealCheckIn: MealCheckIn?,
+    isEditMode: Boolean,
     onDismiss: () -> Unit,
-    onCheckIn: (MealCheckIn) -> Unit
+    onCheckIn: (MealCheckIn) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
-    var servingSize by remember { mutableStateOf(1.0) }
-    var notes by remember { mutableStateOf("") }
+    var servingSize by remember { 
+        mutableStateOf(
+            if (isEditMode && existingMealCheckIn != null) {
+                existingMealCheckIn.servingSize
+            } else {
+                1.0
+            }
+        )
+    }
+    var notes by remember { 
+        mutableStateOf(
+            if (isEditMode && existingMealCheckIn != null) {
+                existingMealCheckIn.notes ?: ""
+            } else {
+                ""
+            }
+        )
+    }
 
     // Calculate total calories based on serving size
     val totalCalories = remember(servingSize, meal) {
@@ -362,20 +461,52 @@ private fun MealCheckInContent(
         confirmButton = {
             Button(
                 onClick = {
-                    val checkIn = MealCheckIn.create(
-                        mealId = meal.id,
-                        servingSize = servingSize,
-                        notes = notes.takeIf { it.isNotBlank() }
-                    )
+                    val checkIn = if (isEditMode && existingMealCheckIn != null) {
+                        // Update existing check-in with new values but preserve ID and timestamps
+                        existingMealCheckIn.copy(
+                            servingSize = servingSize,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    } else {
+                        // Create new check-in
+                        MealCheckIn.create(
+                            mealId = meal.id,
+                            servingSize = servingSize,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    }
                     onCheckIn(checkIn)
                 }
             ) {
-                Text(stringResource(R.string.check_in))
+                Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Delete button (only in edit mode) - positioned at bottom-left
+                if (isEditMode && onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                } else {
+                    // Empty space to maintain layout when no delete button
+                    Spacer(modifier = Modifier.size(48.dp))
+                }
+                
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     )
