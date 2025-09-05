@@ -3,6 +3,7 @@ package com.example.template.ui.components.dialogs
 import androidx.compose.runtime.*
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.CheckInData
 
 @Composable
 fun CheckInExerciseDialog(
@@ -12,9 +13,9 @@ fun CheckInExerciseDialog(
     onDismiss: () -> Unit,
     onCheckIn: (ExerciseLog) -> Unit
 ) {
-    UnifiedCheckInDialog(
+    UnifiedCheckInDialog<CheckInData.Exercise>(
         onDismiss = onDismiss,
-        onCheckIn = { checkIn -> onCheckIn(checkIn as ExerciseLog) },
+        onCheckIn = { checkInData -> onCheckIn(checkInData.exerciseLog) },
         exercise = exercise,
         lastLog = lastLog,
         maxWeight = maxWeight

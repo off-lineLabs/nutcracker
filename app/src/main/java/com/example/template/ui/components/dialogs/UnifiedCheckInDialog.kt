@@ -15,13 +15,14 @@ import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
+import com.example.template.data.model.CheckInData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UnifiedCheckInDialog(
+fun <T : CheckInData> UnifiedCheckInDialog(
     // Common parameters
     onDismiss: () -> Unit,
-    onCheckIn: (Any) -> Unit, // Will be ExerciseLog or MealCheckIn
+    onCheckIn: (T) -> Unit,
     
     // Exercise-specific parameters
     exercise: Exercise? = null,
@@ -43,13 +44,19 @@ fun UnifiedCheckInDialog(
             lastLog = lastLog,
             maxWeight = maxWeight,
             onDismiss = onDismiss,
-            onCheckIn = onCheckIn
+            onCheckIn = { exerciseLog -> 
+                @Suppress("UNCHECKED_CAST")
+                onCheckIn(CheckInData.Exercise(exerciseLog) as T)
+            }
         )
     } else {
         MealCheckInContent(
             meal = meal!!,
             onDismiss = onDismiss,
-            onCheckIn = onCheckIn
+            onCheckIn = { mealCheckIn -> 
+                @Suppress("UNCHECKED_CAST")
+                onCheckIn(CheckInData.Meal(mealCheckIn) as T)
+            }
         )
     }
 }
@@ -61,7 +68,7 @@ private fun ExerciseCheckInContent(
     lastLog: ExerciseLog?,
     maxWeight: Double?,
     onDismiss: () -> Unit,
-    onCheckIn: (Any) -> Unit
+    onCheckIn: (ExerciseLog) -> Unit
 ) {
     var weight by remember { mutableStateOf(lastLog?.weight?.toString() ?: exercise.defaultWeight.toString()) }
     var reps by remember { mutableStateOf(lastLog?.reps?.toString() ?: exercise.defaultReps.toString()) }
@@ -237,7 +244,7 @@ private fun ExerciseCheckInContent(
 private fun MealCheckInContent(
     meal: Meal,
     onDismiss: () -> Unit,
-    onCheckIn: (Any) -> Unit
+    onCheckIn: (MealCheckIn) -> Unit
 ) {
     var servingSize by remember { mutableStateOf(1.0) }
     var notes by remember { mutableStateOf("") }

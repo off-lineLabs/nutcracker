@@ -3,6 +3,7 @@ package com.example.template.ui.components.dialogs
 import androidx.compose.runtime.*
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
+import com.example.template.data.model.CheckInData
 
 @Composable
 fun CheckInMealDialog(
@@ -10,9 +11,9 @@ fun CheckInMealDialog(
     onDismiss: () -> Unit,
     onCheckIn: (MealCheckIn) -> Unit
 ) {
-    UnifiedCheckInDialog(
+    UnifiedCheckInDialog<CheckInData.Meal>(
         onDismiss = onDismiss,
-        onCheckIn = { checkIn -> onCheckIn(checkIn as MealCheckIn) },
+        onCheckIn = { checkInData -> onCheckIn(checkInData.mealCheckIn) },
         meal = meal
     )
 }
