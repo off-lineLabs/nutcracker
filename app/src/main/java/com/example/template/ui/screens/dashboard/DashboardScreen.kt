@@ -679,13 +679,12 @@ fun DashboardScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
-                        // Calories ring section with pill tracker
-                        Row(
+                        // Calories ring section with pill tracker positioned discretely
+                        Box(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentAlignment = Alignment.Center
                         ) {
-                            // Calories ring
+                            // Calories ring - centered as before
                             CaloriesRing(
                                 consumedCalories = consumedCalories,
                                 goalCalories = userGoal.caloriesGoal.toDouble(),
@@ -695,11 +694,12 @@ fun DashboardScreen() {
                                 goalColor = caloriesGoalColor
                             )
                             
-                            // Pill tracker
+                            // Pill tracker - positioned discretely on the right
                             PillTracker(
                                 isPillTaken = currentPillCheckIn != null,
                                 pillCheckIn = currentPillCheckIn,
-                                onPillToggle = onPillToggle
+                                onPillToggle = onPillToggle,
+                                modifier = Modifier.align(Alignment.CenterEnd)
                             )
                         }
 
