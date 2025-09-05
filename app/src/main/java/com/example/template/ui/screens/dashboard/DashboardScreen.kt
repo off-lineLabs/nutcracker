@@ -41,6 +41,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import com.example.template.ui.components.PillTracker
+import com.example.template.data.model.Pill
+import com.example.template.data.model.PillCheckIn
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import com.example.template.FoodLogApplication
@@ -342,6 +345,10 @@ fun DashboardScreen() {
     var consumedCalories by remember { mutableStateOf(0.0) }
     var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
+    
+    // Pill tracking state
+    var pills by remember { mutableStateOf(emptyList<Pill>()) }
+    var currentPillCheckIn by remember { mutableStateOf<PillCheckIn?>(null) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
@@ -405,6 +412,25 @@ fun DashboardScreen() {
         }
     }
 
+    // Load pills and initialize default pill if none exist
+    LaunchedEffect(key1 = foodLogRepository) {
+        foodLogRepository.getAllPills().collectLatest { pillList ->
+            pills = pillList
+            if (pillList.isEmpty()) {
+                // Create default pill
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.insertPill(Pill(name = "default"))
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to create default pill. Please try again."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     val selectedDateString = remember(selectedDate) {
         selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
@@ -418,6 +444,16 @@ fun DashboardScreen() {
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
         foodLogRepository.getExerciseLogsByDate(selectedDateString).collectLatest { exerciseLogsList ->
             dailyExerciseLogs = exerciseLogsList
+        }
+    }
+
+    // Check for pill check-in on selected date
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = pills) {
+        if (pills.isNotEmpty()) {
+            val defaultPillId = pills.first().id
+            foodLogRepository.getPillCheckInByPillIdAndDate(defaultPillId, selectedDateString).collectLatest { checkIn ->
+                currentPillCheckIn = checkIn
+            }
         }
     }
 
@@ -467,6 +503,32 @@ fun DashboardScreen() {
         WindowInsetsCompat.Type.statusBars().let { insets ->
             view.rootWindowInsets?.getInsets(insets)?.top ?: 0
         }.toDp()
+    }
+
+    // Pill toggle function
+    val onPillToggle: () -> Unit = {
+        coroutineScope.launch {
+            try {
+                if (pills.isNotEmpty()) {
+                    val defaultPillId = pills.first().id
+                    if (currentPillCheckIn == null) {
+                        // Create new pill check-in
+                        val newCheckIn = PillCheckIn(
+                            pillId = defaultPillId,
+                            timestamp = java.time.LocalDateTime.now()
+                        )
+                        foodLogRepository.insertPillCheckIn(newCheckIn)
+                    } else {
+                        // Delete existing pill check-in
+                        foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
+                    }
+                }
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar(
+                    message = "Failed to update pill status. Please try again."
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -617,15 +679,29 @@ fun DashboardScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
-                        // Calories ring section
-                        CaloriesRing(
-                            consumedCalories = consumedCalories,
-                            goalCalories = userGoal.caloriesGoal.toDouble(),
-                            labelColor = caloriesRemainingLabelColor,
-                            valueColor = caloriesRemainingValueColor,
-                            consumedColor = caloriesConsumedColor,
-                            goalColor = caloriesGoalColor
-                        )
+                        // Calories ring section with pill tracker
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Calories ring
+                            CaloriesRing(
+                                consumedCalories = consumedCalories,
+                                goalCalories = userGoal.caloriesGoal.toDouble(),
+                                labelColor = caloriesRemainingLabelColor,
+                                valueColor = caloriesRemainingValueColor,
+                                consumedColor = caloriesConsumedColor,
+                                goalColor = caloriesGoalColor
+                            )
+                            
+                            // Pill tracker
+                            PillTracker(
+                                isPillTaken = currentPillCheckIn != null,
+                                pillCheckIn = currentPillCheckIn,
+                                onPillToggle = onPillToggle
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 

@@ -15,7 +15,9 @@ class FoodLogApplication : Application() {
             database.userGoalDao(), 
             database.mealCheckInDao(),
             database.exerciseDao(),
-            database.exerciseLogDao()
+            database.exerciseLogDao(),
+            database.pillDao(),
+            database.pillCheckInDao()
         )
     }
 }

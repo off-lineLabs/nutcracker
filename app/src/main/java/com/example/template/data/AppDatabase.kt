@@ -9,12 +9,17 @@ import com.example.template.data.dao.MealCheckInDao
 import com.example.template.data.dao.UserGoalDao
 import com.example.template.data.dao.ExerciseDao
 import com.example.template.data.dao.ExerciseLogDao
+import com.example.template.data.dao.PillDao
+import com.example.template.data.dao.PillCheckInDao
 import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.ExerciseTypeConverters
+import com.example.template.data.model.Pill
+import com.example.template.data.model.PillCheckIn
+import com.example.template.data.model.DateTimeTypeConverters
 
 @Database(
     entities = [
@@ -22,12 +27,14 @@ import com.example.template.data.model.ExerciseTypeConverters
         UserGoal::class, 
         MealCheckIn::class,
         Exercise::class,
-        ExerciseLog::class
+        ExerciseLog::class,
+        Pill::class,
+        PillCheckIn::class
     ], 
-    version = 6, 
+    version = 7, 
     exportSchema = false
 )
-@androidx.room.TypeConverters(ExerciseTypeConverters::class)
+@androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun mealDao(): MealDao
@@ -35,6 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mealCheckInDao(): MealCheckInDao
     abstract fun exerciseDao(): ExerciseDao
     abstract fun exerciseLogDao(): ExerciseLogDao
+    abstract fun pillDao(): PillDao
+    abstract fun pillCheckInDao(): PillCheckInDao
 
     companion object {
         @Volatile

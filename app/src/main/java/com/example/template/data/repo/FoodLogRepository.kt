@@ -5,6 +5,8 @@ import com.example.template.data.dao.MealCheckInDao
 import com.example.template.data.dao.UserGoalDao
 import com.example.template.data.dao.ExerciseDao
 import com.example.template.data.dao.ExerciseLogDao
+import com.example.template.data.dao.PillDao
+import com.example.template.data.dao.PillCheckInDao
 import com.example.template.data.dao.DailyTotals
 import com.example.template.data.dao.DailyNutritionEntry
 import com.example.template.data.dao.DailyExerciseEntry
@@ -13,6 +15,8 @@ import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.Pill
+import com.example.template.data.model.PillCheckIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -58,6 +62,22 @@ interface FoodLogRepository {
     fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?>
     fun getDailyExerciseCalories(date: String): Flow<Double>
 
+    // Pill operations
+    fun getAllPills(): Flow<List<Pill>>
+    fun getPillById(pillId: Long): Flow<Pill?>
+    suspend fun insertPill(pill: Pill): Long
+    suspend fun updatePill(pill: Pill)
+    suspend fun deletePill(pill: Pill)
+    suspend fun deleteAllPills()
+
+    // PillCheckIn operations
+    suspend fun insertPillCheckIn(pillCheckIn: PillCheckIn): Long
+    suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn)
+    suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn)
+    fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>>
+    fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?>
+    suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String)
+
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
     fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true): Flow<DailyTotals?>
@@ -71,7 +91,9 @@ class OfflineFoodLogRepository(
     private val userGoalDao: UserGoalDao,
     private val mealCheckInDao: MealCheckInDao,
     private val exerciseDao: ExerciseDao,
-    private val exerciseLogDao: ExerciseLogDao
+    private val exerciseLogDao: ExerciseLogDao,
+    private val pillDao: PillDao,
+    private val pillCheckInDao: PillCheckInDao
 ) : FoodLogRepository {
 
     // Meal operations
@@ -111,6 +133,22 @@ class OfflineFoodLogRepository(
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
+
+    // Pill operations
+    override fun getAllPills(): Flow<List<Pill>> = pillDao.getAllPills()
+    override fun getPillById(pillId: Long): Flow<Pill?> = pillDao.getPillById(pillId)
+    override suspend fun insertPill(pill: Pill): Long = pillDao.insertPill(pill)
+    override suspend fun updatePill(pill: Pill) = pillDao.updatePill(pill)
+    override suspend fun deletePill(pill: Pill) = pillDao.deletePill(pill)
+    override suspend fun deleteAllPills() = pillDao.deleteAllPills()
+
+    // PillCheckIn operations
+    override suspend fun insertPillCheckIn(pillCheckIn: PillCheckIn): Long = pillCheckInDao.insertPillCheckIn(pillCheckIn)
+    override suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.updatePillCheckIn(pillCheckIn)
+    override suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.deletePillCheckIn(pillCheckIn)
+    override fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>> = pillCheckInDao.getPillCheckInsByDate(date)
+    override fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?> = pillCheckInDao.getPillCheckInByPillIdAndDate(pillId, date)
+    override suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String) = pillCheckInDao.deletePillCheckInByPillIdAndDate(pillId, date)
 
     // Combined operations for dashboard
     override fun getDailyCombinedSummary(date: String): Flow<List<Any>> {
