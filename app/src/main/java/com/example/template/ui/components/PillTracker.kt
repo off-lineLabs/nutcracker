@@ -56,14 +56,20 @@ fun PillTracker(
             )
         }
         
-        // Show timestamp when pill is taken
-        if (isPillTaken && pillCheckIn != null) {
-            Text(
-                text = pillCheckIn.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF4CAF50)
-            )
+        // Always reserve space for timestamp to prevent layout shift
+        Box(
+            modifier = Modifier.height(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Show timestamp when pill is taken
+            if (isPillTaken && pillCheckIn != null) {
+                Text(
+                    text = pillCheckIn.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF4CAF50)
+                )
+            }
         }
     }
 }

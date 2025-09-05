@@ -49,5 +49,10 @@ fun ExerciseToggle(
                 modifier = Modifier.size(24.dp)
             )
         }
+        
+        // Reserve same space as pill tracker to maintain alignment
+        Box(
+            modifier = Modifier.height(20.dp)
+        )
     }
 }
