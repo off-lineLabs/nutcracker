@@ -6,7 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.template.R
 import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,12 +96,16 @@ fun SelectExerciseForCheckInDialog(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                                            Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
+                                    Icon(
+                                        imageVector = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+                                            ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
+                                            ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
+                                            ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
+                                        },
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -106,10 +114,10 @@ fun SelectExerciseForCheckInDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = when (exercise.exerciseType) {
-                                                com.example.template.data.model.ExerciseType.STRENGTH -> stringResource(R.string.strength)
-                                                com.example.template.data.model.ExerciseType.CARDIO -> stringResource(R.string.cardio)
-                                                com.example.template.data.model.ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
+                                            text = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+                                                ExerciseType.STRENGTH -> stringResource(R.string.strength)
+                                                ExerciseType.CARDIO -> stringResource(R.string.cardio)
+                                                ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
                                             },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant

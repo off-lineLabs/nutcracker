@@ -81,4 +81,118 @@
     <string name="cancel">Cancelar</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="delete_check_in">Eliminar registro</string>
+    
+    <!-- Serving Size -->
+    <string name="serving_size_label">Tamaño de Porción</string>
+    <string name="serving_size_value_label">Cantidad</string>
+    <string name="serving_size_unit_label">Unidad</string>
+    <string name="serving_size_default_value">100</string>
+    <string name="serving_size_placeholder">Ingrese la cantidad</string>
+    <string name="serving_size_validation_error">Por favor, ingrese un tamaño de porción válido</string>
+    
+    <!-- Serving Size Units -->
+    <string name="unit_grams">Gramos (g)</string>
+    <string name="unit_kilograms">Kilogramos (kg)</string>
+    <string name="unit_pounds">Libras (lb)</string>
+    <string name="unit_ounces">Onzas (oz)</string>
+    <string name="unit_milliliters">Mililitros (ml)</string>
+    <string name="unit_liters">Litros (L)</string>
+    <string name="unit_cups">Tazas (cup)</string>
+    <string name="unit_fluid_ounces">Onzas Fluidas (fl oz)</string>
+    <string name="unit_tablespoons">Cucharadas (tbsp)</string>
+    <string name="unit_teaspoons">Cucharaditas (tsp)</string>
+    <string name="unit_pieces">Piezas (pcs)</string>
+    <string name="unit_slices">Rebanadas (slice)</string>
+    <string name="unit_units">Unidades (unit)</string>
+    <string name="unit_servings">Porciones (serving)</string>
+    <string name="unit_portions">Porciones (portion)</string>
+    
+    <!-- Additional strings that were missing -->
+    <string name="add_meal">Agregar Comida</string>
+    <string name="delete_check_in_success">Registro eliminado exitosamente</string>
+    <string name="delete_check_in_error">Error al eliminar registro. Por favor, inténtalo de nuevo.</string>
+    <string name="goal_saved_success">Meta guardada exitosamente</string>
+    <string name="goal_save_error">Error al guardar meta. Por favor, inténtalo de nuevo.</string>
+    <string name="meal_added_success">Comida agregada exitosamente</string>
+    <string name="meal_add_error">Error al agregar comida. Por favor, inténtalo de nuevo.</string>
+    <string name="check_in_success">Registro completado exitosamente</string>
+    <string name="check_in_error">Error al completar registro. Por favor, inténtalo de nuevo.</string>
+    
+    <!-- Exercise specific strings -->
+    <string name="add_exercise">Agregar Ejercicio</string>
+    <string name="add_new_exercise">Agregar Nuevo Ejercicio</string>
+    <string name="exercise_name">Nombre del Ejercicio</string>
+    <string name="exercise_type">Tipo de Ejercicio</string>
+    <string name="strength">Fuerza</string>
+    <string name="cardio">Cardio</string>
+    <string name="bodyweight">Peso Corporal</string>
+    <string name="kcal_per_rep">Kcal por Repetición</string>
+    <string name="kcal_per_minute">Kcal por Minuto</string>
+    <string name="default_weight_kg">Peso por Defecto (kg)</string>
+    <string name="default_reps">Repeticiones por Defecto</string>
+    <string name="default_sets">Series por Defecto</string>
+    <string name="weight_kg">Peso (kg)</string>
+    <string name="reps">Repeticiones</string>
+    <string name="sets">Series</string>
+    <string name="minutes">Minutos</string>
+    <string name="calories_burned">Calorías Quemadas</string>
+    <string name="total_calories">Calorías Totales</string>
+    <string name="max_weight_recorded">Peso Máximo: %1$.1f kg</string>
+    <string name="check_in_exercise_title">Registrar %1$s</string>
+    <string name="select_exercise">Seleccionar Ejercicio</string>
+    <string name="select_existing_exercise">Seleccionar Ejercicio Existente</string>
+    <string name="select_existing_meal">Seleccionar Comida Existente</string>
+    <string name="no_exercises_yet">Aún no hay ejercicios agregados</string>
+    <string name="no_meals_today">No hay comidas hoy</string>
+    <string name="no_exercises_today">No hay ejercicios hoy</string>
+    <string name="meals">Comidas</string>
+    <string name="exercises">Ejercicios</string>
+    <string name="include_exercise_calories">Incluir Calorías de Ejercicio</string>
+    <string name="add">Agregar</string>
+    <string name="delete">Eliminar</string>
+    
+    <!-- Date Navigation -->
+    <string name="today">Hoy</string>
+    <string name="select_date">Seleccionar Fecha</string>
+    <string name="previous_day">Día Anterior</string>
+    <string name="next_day">Día Siguiente</string>
+    <string name="progress_details">Detalles del Progreso</string>
+    
+    <!-- Additional hardcoded strings found -->
+    <string name="meal_name">Nombre de la Comida</string>
+    <string name="calories">Calorías</string>
+    <string name="protein_g">Proteína (g)</string>
+    <string name="carbs_g">Carbohidratos (g)</string>
+    <string name="fat_g">Grasa (g)</string>
+    <string name="fiber_g">Fibra (g)</string>
+    <string name="sodium_mg">Sodio (mg)</string>
+    <string name="set_your_daily_goals">Establecer Tus Metas Diarias</string>
+    <string name="calories_kcal">Calorías (kcal)</string>
+    <string name="carbohydrates_g">Carbohidratos (g)</string>
+    <string name="protein_g_goal">Proteína (g)</string>
+    <string name="fat_g_goal">Grasa (g)</string>
+    <string name="fiber_g_goal">Fibra (g)</string>
+    <string name="sodium_mg_goal">Sodio (mg)</string>
+    <string name="set_goals">Establecer Metas</string>
+    <string name="all">Todo</string>
+    <string name="no_activities_today">No hay actividades hoy</string>
+    <string name="ok">OK</string>
+    <string name="exercise_log_deleted_success">Registro de ejercicio eliminado exitosamente</string>
+    <string name="exercise_log_delete_error">Error al eliminar registro de ejercicio. Por favor, inténtalo de nuevo.</string>
+    <string name="check_in_completed_success">Registro completado exitosamente</string>
+    <string name="check_in_completed_error">Error al completar registro. Por favor, inténtalo de nuevo.</string>
+    <string name="exercise_added_success">Ejercicio agregado exitosamente</string>
+    <string name="exercise_add_error">Error al agregar ejercicio. Por favor, inténtalo de nuevo.</string>
+    <string name="validation_calories_positive">Las calorías deben ser un número positivo.</string>
+    <string name="validation_carbs_non_negative">Los carbohidratos deben ser un número no negativo.</string>
+    <string name="validation_protein_non_negative">La proteína debe ser un número no negativo.</string>
+    <string name="validation_fat_non_negative">La grasa debe ser un número no negativo.</string>
+    <string name="validation_fiber_non_negative">La fibra debe ser un número no negativo.</string>
+    <string name="validation_sodium_non_negative">El sodio debe ser un número no negativo.</string>
+    
+    <!-- Exercise display units -->
+    <string name="kg_unit">kg</string>
+    <string name="min_unit">min</string>
+    <string name="reps_unit">rep</string>
+    <string name="sets_unit">series</string>
 </resources>

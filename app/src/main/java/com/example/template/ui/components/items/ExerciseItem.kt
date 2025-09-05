@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.template.R
 import com.example.template.data.dao.DailyExerciseEntry
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,12 +30,15 @@ fun ExerciseItem(
     exerciseEntry: DailyExerciseEntry,
     onDelete: () -> Unit
 ) {
+    // Map database category to UI exercise type
+    val exerciseType = ExerciseCategoryMapper.getExerciseType(exerciseEntry.exerciseType)
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1F2937)
+            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -41,7 +48,7 @@ fun ExerciseItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Exercise icon
+            // Exercise icon based on exercise type
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -50,7 +57,11 @@ fun ExerciseItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Star,
+                    imageVector = when (exerciseType) {
+                        ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
+                        ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
+                        ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
+                    },
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
@@ -76,9 +87,9 @@ fun ExerciseItem(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Weight (for strength exercises)
-                    if (exerciseEntry.exerciseType == "STRENGTH") {
+                    if (exerciseType == ExerciseType.STRENGTH) {
                         Text(
-                            text = "${exerciseEntry.weight} kg",
+                            text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF9CA3AF)
                         )
@@ -86,18 +97,18 @@ fun ExerciseItem(
                     
                     // Reps
                     Text(
-                        text = when (exerciseEntry.exerciseType) {
-                            "CARDIO" -> "${exerciseEntry.reps} min"
-                            else -> "${exerciseEntry.reps} reps"
+                        text = when (exerciseType) {
+                            ExerciseType.CARDIO -> "${exerciseEntry.reps} ${stringResource(R.string.min_unit)}"
+                            else -> "${exerciseEntry.reps} ${stringResource(R.string.reps_unit)}"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF9CA3AF)
                     )
                     
                     // Sets (for non-cardio exercises)
-                    if (exerciseEntry.exerciseType != "CARDIO") {
+                    if (exerciseType != ExerciseType.CARDIO) {
                         Text(
-                            text = "${exerciseEntry.sets} sets",
+                            text = "${exerciseEntry.sets} ${stringResource(R.string.sets_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF9CA3AF)
                         )

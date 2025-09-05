@@ -59,7 +59,7 @@ interface ExerciseLogDao {
             el.caloriesBurned,
             el.notes,
             e.name as exerciseName,
-            e.exerciseType as exerciseType
+            e.category as exerciseType
         FROM exercise_logs el
         INNER JOIN exercises e ON el.exerciseId = e.id
         WHERE el.logDate = :date

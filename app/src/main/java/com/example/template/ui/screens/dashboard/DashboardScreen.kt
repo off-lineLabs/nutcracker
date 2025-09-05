@@ -14,10 +14,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -27,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
@@ -57,7 +60,7 @@ import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
-import com.example.template.ui.components.SwipeableHistoryView
+import com.example.template.ui.components.FilterableHistoryView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -132,7 +135,8 @@ private fun CaloriesRing(
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
-            val diameter = size.minDimension - (strokeWidthPx * 2)
+            val strokeWidthPx = strokeWidthDp.toPx()
+            val diameter = size.minDimension - strokeWidthPx
             val topLeft = Offset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
@@ -340,6 +344,20 @@ fun DashboardScreen() {
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
+    
+    // Store string resources in variables to avoid calling stringResource in non-composable contexts
+    val exerciseLogDeletedSuccess = stringResource(R.string.exercise_log_deleted_success)
+    val exerciseLogDeleteError = stringResource(R.string.exercise_log_delete_error)
+    val goalSavedSuccess = stringResource(R.string.goal_saved_success)
+    val goalSaveError = stringResource(R.string.goal_save_error)
+    val mealAddedSuccess = stringResource(R.string.meal_added_success)
+    val mealAddError = stringResource(R.string.meal_add_error)
+    val checkInCompletedSuccess = stringResource(R.string.check_in_completed_success)
+    val checkInCompletedError = stringResource(R.string.check_in_completed_error)
+    val exerciseAddedSuccess = stringResource(R.string.exercise_added_success)
+    val exerciseAddError = stringResource(R.string.exercise_add_error)
+    val okText = stringResource(R.string.ok)
+    val cancelText = stringResource(R.string.cancel)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -532,7 +550,7 @@ fun DashboardScreen() {
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Info,
+                            imageVector = Icons.Filled.BarChart,
                             contentDescription = stringResource(R.string.progress_details),
                             tint = Color(0xFFC0C0C0),
                             modifier = Modifier.size(24.dp)
@@ -551,7 +569,7 @@ fun DashboardScreen() {
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = Color(0xFF3B82F6)
                 ) {
-                    Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.add_exercise))
+                    Icon(painterResource(R.drawable.ic_sprint), contentDescription = stringResource(R.string.add_exercise))
                 }
                 
                 // Add Meal FAB
@@ -559,7 +577,7 @@ fun DashboardScreen() {
                     onClick = { showSelectMealDialog = true },
                     containerColor = Color(0xFF10B981)
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_meal))
+                    Icon(Icons.Filled.Restaurant, contentDescription = stringResource(R.string.add_meal))
                 }
             }
         },
@@ -669,8 +687,8 @@ fun DashboardScreen() {
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Use SwipeableHistoryView for both meals and exercises
-                        SwipeableHistoryView(
+                        // Use FilterableHistoryView for both meals and exercises
+                        FilterableHistoryView(
                             mealEntries = dailyMealCheckIns,
                             exerciseEntries = dailyExerciseLogs,
                             onDeleteMeal = { checkIn ->
@@ -716,12 +734,12 @@ fun DashboardScreen() {
                                         foodLogRepository.deleteExerciseLog(exerciseLog)
                                         // Show success message
                                         snackbarHostState.showSnackbar(
-                                            message = "Exercise log deleted successfully"
+                                            message = exerciseLogDeletedSuccess
                                         )
                                     } catch (e: Exception) {
                                         // Show error message
                                         snackbarHostState.showSnackbar(
-                                            message = "Failed to delete exercise log. Please try again."
+                                            message = exerciseLogDeleteError
                                         )
                                     }
                                 }
@@ -742,11 +760,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.upsertUserGoal(updatedGoal)
                         snackbarHostState.showSnackbar(
-                            message = "Goal saved successfully"
+                            message = goalSavedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to save goal. Please try again."
+                            message = goalSaveError
                         )
                     }
                 }
@@ -778,11 +796,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertMeal(newMeal)
                         snackbarHostState.showSnackbar(
-                            message = "Meal added successfully"
+                            message = mealAddedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to add meal. Please try again."
+                            message = mealAddError
                         )
                     }
                 }
@@ -800,11 +818,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         snackbarHostState.showSnackbar(
-                            message = "Check-in completed successfully"
+                            message = checkInCompletedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to complete check-in. Please try again."
+                            message = checkInCompletedError
                         )
                     }
                 }
@@ -836,11 +854,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertExercise(newExercise)
                         snackbarHostState.showSnackbar(
-                            message = "Exercise added successfully"
+                            message = exerciseAddedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to add exercise. Please try again."
+                            message = exerciseAddError
                         )
                     }
                 }
@@ -910,14 +928,14 @@ fun DashboardScreen() {
                         showCalendarDialog = false
                     }
                 ) {
-                    Text("OK", color = Color(0xFF60A5FA))
+                    Text(okText, color = Color(0xFF60A5FA))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showCalendarDialog = false }
                 ) {
-                    Text("Cancel", color = Color(0xFF9CA3AF))
+                    Text(cancelText, color = Color(0xFF9CA3AF))
                 }
             },
             colors = DatePickerDefaults.colors(
