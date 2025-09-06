@@ -23,6 +23,7 @@ import com.example.template.R
 import com.example.template.data.dao.DailyExerciseEntry
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.ExerciseType
+import com.example.template.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -40,7 +41,7 @@ fun ExerciseItem(
             .padding(vertical = 4.dp)
             .clickable { onEdit?.invoke() },
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
+            containerColor = appSurfaceColor() // Use themed surface color
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -50,12 +51,12 @@ fun ExerciseItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Exercise icon based on exercise type
+            // Exercise icon based on exercise type - using your brand red
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF3B82F6)),
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(exerciseItemBackgroundColor()),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -80,7 +81,7 @@ fun ExerciseItem(
                     text = exerciseEntry.exerciseName,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = appTextPrimaryColor()
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -93,7 +94,7 @@ fun ExerciseItem(
                         Text(
                             text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
+                            color = appTextSecondaryColor()
                         )
                     }
                     
@@ -112,7 +113,7 @@ fun ExerciseItem(
                         Text(
                             text = "${exerciseEntry.sets} ${stringResource(R.string.sets_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
+                            color = appTextSecondaryColor()
                         )
                     }
                 }

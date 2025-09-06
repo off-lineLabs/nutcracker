@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
+import com.example.template.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -33,7 +34,7 @@ fun CheckInItem(
             .padding(vertical = 4.dp)
             .clickable { onEdit?.invoke() },
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
+            containerColor = appSurfaceColor() // Use themed surface color
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -44,12 +45,12 @@ fun CheckInItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Meal icon
+            // Meal icon - using your brand gold
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF10B981)), // Green color for meals
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(mealItemBackgroundColor()), // Your brand gold for meals
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -69,7 +70,7 @@ fun CheckInItem(
                     text = checkIn.mealName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = appTextPrimaryColor()
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -83,7 +84,7 @@ fun CheckInItem(
                             checkIn.totalCalories.toInt()
                         ),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF)
+                        color = appTextSecondaryColor()
                     )
                     
                     if (checkIn.servingSize != 1.0) {
@@ -93,7 +94,7 @@ fun CheckInItem(
                                 checkIn.servingSize
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
+                            color = appTextTertiaryColor()
                         )
                     }
                 }
@@ -105,7 +106,7 @@ fun CheckInItem(
                         Text(
                             text = notes,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280),
+                            color = appTextTertiaryColor(),
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                         )
                     }

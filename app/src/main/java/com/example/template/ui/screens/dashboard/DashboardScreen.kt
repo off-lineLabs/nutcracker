@@ -650,24 +650,42 @@ fun DashboardScreen() {
             }
         },
         floatingActionButton = {
-            // Two FABs for Add Meal and Add Exercise
+            // Two FABs for Add Meal and Add Exercise with modern styling
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Add Exercise FAB
+                // Add Exercise FAB - using your brand red
                 FloatingActionButton(
                     onClick = { showSelectExerciseDialog = true },
-                    containerColor = Color(0xFF3B82F6)
+                    containerColor = fabExerciseColor(),
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
                 ) {
-                    Icon(painterResource(R.drawable.ic_sprint), contentDescription = stringResource(R.string.add_exercise))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_sprint), 
+                        contentDescription = stringResource(R.string.add_exercise),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 
-                // Add Meal FAB
+                // Add Meal FAB - using your brand gold
                 FloatingActionButton(
                     onClick = { showSelectMealDialog = true },
-                    containerColor = Color(0xFF10B981)
+                    containerColor = fabMealColor(),
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
                 ) {
-                    Icon(Icons.Filled.Restaurant, contentDescription = stringResource(R.string.add_meal))
+                    Icon(
+                        Icons.Filled.Restaurant, 
+                        contentDescription = stringResource(R.string.add_meal),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         },

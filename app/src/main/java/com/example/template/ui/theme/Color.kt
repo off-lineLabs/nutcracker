@@ -87,6 +87,21 @@ val PillNotTaken = Color(0xFF9E9E9E)      // Gray for not taken pills
 val ExerciseEnabled = Color(0xFF2196F3)   // Blue for enabled exercises
 val ExerciseDisabled = Color(0xFF9E9E9E)  // Gray for disabled exercises
 
+// ===== FAB AND ACTION COLORS =====
+// Colors for Floating Action Buttons and action items
+val FabExercise = Color(0xFFA62934)       // Your brand red for exercise FAB
+val FabExerciseLight = Color(0xFFC73E4A)  // Lighter red for exercise FAB
+val FabMeal = Color(0xFFA66A21)           // Your brand gold for meal FAB
+val FabMealLight = Color(0xFFD9A25F)      // Lighter gold for meal FAB
+
+// Exercise item colors in logs
+val ExerciseItemBackground = Color(0xFFA62934)  // Your brand red for exercise items
+val ExerciseItemBackgroundLight = Color(0xFFC73E4A)  // Lighter red variant
+
+// Meal item colors in logs
+val MealItemBackground = Color(0xFFA66A21)      // Your brand gold for meal items
+val MealItemBackgroundLight = Color(0xFFD9A25F) // Lighter gold variant
+
 // ===== BACKGROUND COLORS =====
 val BackgroundPrimary = Color(0xFF091020) // Your existing splash background
 val BackgroundSecondary = Color(0xFF374151)

@@ -140,6 +140,27 @@ fun exerciseEnabledColor(): Color = ExerciseEnabled
 @Composable
 fun exerciseDisabledColor(): Color = ExerciseDisabled
 
+// ===== THEMED FAB AND ACTION COLORS =====
+@Composable
+fun fabExerciseColor(): Color {
+    return if (isSystemInDarkTheme()) FabExercise else FabExerciseLight
+}
+
+@Composable
+fun fabMealColor(): Color {
+    return if (isSystemInDarkTheme()) FabMeal else FabMealLight
+}
+
+@Composable
+fun exerciseItemBackgroundColor(): Color {
+    return if (isSystemInDarkTheme()) ExerciseItemBackground else ExerciseItemBackgroundLight
+}
+
+@Composable
+fun mealItemBackgroundColor(): Color {
+    return if (isSystemInDarkTheme()) MealItemBackground else MealItemBackgroundLight
+}
+
 // ===== THEMED DIVIDER AND BORDER COLORS =====
 @Composable
 fun appDividerColor(): Color {
