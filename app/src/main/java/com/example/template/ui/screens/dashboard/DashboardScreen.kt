@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import com.example.template.ui.components.PillTracker
 import com.example.template.ui.components.ExerciseToggle
+import com.example.template.ui.components.TEFToggle
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
 import androidx.compose.ui.platform.LocalView
@@ -348,6 +349,7 @@ fun DashboardScreen() {
     var consumedCalories by remember { mutableStateOf(0.0) }
     var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
+    var includeTEFBonus by remember { mutableStateOf(false) }
     
     // Pill tracking state
     var pills by remember { mutableStateOf(emptyList<Pill>()) }
@@ -467,8 +469,8 @@ fun DashboardScreen() {
     }
 
     // Load daily nutrient totals with exercise calories consideration
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = includeExerciseCalories) {
-        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories).collectLatest { totals ->
+    LaunchedEffect(foodLogRepository, selectedDateString, includeExerciseCalories, includeTEFBonus) {
+        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories, includeTEFBonus).collectLatest { totals ->
             dailyTotalsConsumed = totals
             consumedCalories = totals?.totalCalories ?: 0.0
         }
@@ -548,6 +550,19 @@ fun DashboardScreen() {
                 "Exercise bonus calories ON"
             } else {
                 "Exercise bonus calories OFF"
+            }
+            snackbarHostState.showSnackbar(message = message)
+        }
+    }
+
+    // TEF toggle function
+    val onTEFToggle: () -> Unit = {
+        includeTEFBonus = !includeTEFBonus
+        coroutineScope.launch {
+            val message = if (includeTEFBonus) {
+                "TEF bonus calories ON"
+            } else {
+                "TEF bonus calories OFF"
             }
             snackbarHostState.showSnackbar(message = message)
         }
@@ -741,11 +756,10 @@ fun DashboardScreen() {
                                 modifier = Modifier.align(Alignment.CenterStart)
                             )
                             
-                            // Pill tracker - positioned on the right
-                            PillTracker(
-                                isPillTaken = currentPillCheckIn != null,
-                                pillCheckIn = currentPillCheckIn,
-                                onPillToggle = onPillToggle,
+                            // TEF toggle - positioned on the right
+                            TEFToggle(
+                                isEnabled = includeTEFBonus,
+                                onToggle = onTEFToggle,
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             )
                         }
@@ -786,6 +800,18 @@ fun DashboardScreen() {
                         )
                         
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        // Pill tracker - positioned after nutrients box
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            PillTracker(
+                                isPillTaken = currentPillCheckIn != null,
+                                pillCheckIn = currentPillCheckIn,
+                                onPillToggle = onPillToggle
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 

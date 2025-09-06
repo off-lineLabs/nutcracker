@@ -19,6 +19,7 @@ import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 /**
  * Interface for data operations.
@@ -80,7 +81,7 @@ interface FoodLogRepository {
 
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
-    fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true): Flow<DailyTotals?>
+    fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true, includeTEFBonus: Boolean = false): Flow<DailyTotals?>
 }
 
 /**
@@ -169,27 +170,69 @@ class OfflineFoodLogRepository(
         }
     }
 
-    override fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean): Flow<DailyTotals?> {
-        return if (includeExerciseCalories) {
-            combine(
-                getDailyNutrientTotals(date),
-                getDailyExerciseCalories(date)
-            ) { mealTotals, exerciseCalories ->
-                mealTotals?.let { totals ->
-                    // Cap consumed calories at 0 to prevent negative values
-                    val netCalories = (totals.totalCalories - exerciseCalories).coerceAtLeast(0.0)
-                    DailyTotals(
-                        totalCalories = netCalories,
-                        totalCarbohydrates = totals.totalCarbohydrates,
-                        totalProtein = totals.totalProtein,
-                        totalFat = totals.totalFat,
-                        totalFiber = totals.totalFiber,
-                        totalSodium = totals.totalSodium
-                    )
+    override fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean, includeTEFBonus: Boolean): Flow<DailyTotals?> {
+        return when {
+            includeExerciseCalories && includeTEFBonus -> {
+                combine(
+                    getDailyNutrientTotals(date),
+                    getDailyExerciseCalories(date)
+                ) { mealTotals, exerciseCalories ->
+                    mealTotals?.let { totals ->
+                        // Calculate TEF bonus
+                        val tefBonus = com.example.template.utils.TEFCalculator.calculateTEFBonus(totals)
+                        // Apply both exercise and TEF bonuses
+                        val netCalories = (totals.totalCalories - exerciseCalories - tefBonus).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
                 }
             }
-        } else {
-            getDailyNutrientTotals(date)
+            includeExerciseCalories -> {
+                combine(
+                    getDailyNutrientTotals(date),
+                    getDailyExerciseCalories(date)
+                ) { mealTotals, exerciseCalories ->
+                    mealTotals?.let { totals ->
+                        // Cap consumed calories at 0 to prevent negative values
+                        val netCalories = (totals.totalCalories - exerciseCalories).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
+                }
+            }
+            includeTEFBonus -> {
+                getDailyNutrientTotals(date).map { mealTotals ->
+                    mealTotals?.let { totals ->
+                        // Calculate TEF bonus
+                        val tefBonus = com.example.template.utils.TEFCalculator.calculateTEFBonus(totals)
+                        // Apply TEF bonus
+                        val netCalories = (totals.totalCalories - tefBonus).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
+                }
+            }
+            else -> {
+                getDailyNutrientTotals(date)
+            }
         }
     }
 }

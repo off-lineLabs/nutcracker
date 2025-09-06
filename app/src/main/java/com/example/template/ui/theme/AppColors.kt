@@ -135,10 +135,16 @@ fun pillTakenColor(): Color = PillTaken
 fun pillNotTakenColor(): Color = PillNotTaken
 
 @Composable
-fun exerciseEnabledColor(): Color = ExerciseEnabled
+fun exerciseEnabledColor(): Color = BrandRed
 
 @Composable
 fun exerciseDisabledColor(): Color = ExerciseDisabled
+
+@Composable
+fun tefEnabledColor(): Color = BrandGold
+
+@Composable
+fun tefDisabledColor(): Color = ExerciseDisabled
 
 // ===== THEMED FAB AND ACTION COLORS =====
 @Composable
