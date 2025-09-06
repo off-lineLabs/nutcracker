@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -101,12 +103,25 @@ fun SelectExerciseForCheckInDialog(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Exercise icon with brand red background
+                                    // Exercise icon with modern gradient and shadow - brand red
                                     Box(
                                         modifier = Modifier
-                                            .size(48.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(exerciseItemBackgroundColor()),
+                                            .size(52.dp)
+                                            .shadow(
+                                                elevation = 6.dp,
+                                                shape = RoundedCornerShape(16.dp),
+                                                ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
+                                                spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
+                                            )
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        exerciseItemBackgroundColor(),
+                                                        exerciseItemBackgroundColor().copy(alpha = 0.8f)
+                                                    )
+                                                )
+                                            ),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
@@ -117,7 +132,7 @@ fun SelectExerciseForCheckInDialog(
                                             },
                                             contentDescription = null,
                                             tint = Color.White,
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(26.dp)
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
