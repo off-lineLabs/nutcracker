@@ -67,6 +67,7 @@ import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
 import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
+import com.example.template.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -268,12 +269,13 @@ private fun NutrientBox(
     goals: UserGoal,
     isDark: Boolean
 ) {
-    val track = if (isDark) Color(0xFF4B5563) else Color(0xFFE5E7EB)
+    // Use themed colors instead of hardcoded values
+    val track = progressTrackColor()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFF374151).copy(alpha = 0.6f),
+                color = appContainerBackgroundColor(),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -282,8 +284,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.carbohydrates_label),
             consumed = totals?.totalCarbohydrates ?: 0.0,
             goal = goals.carbsGoal_g.toDouble(),
-            barStartColor = Color(0xFF60A5FA),
-            barEndColor = Color(0xFF2563EB),
+            barStartColor = nutrientCarbsColor(),
+            barEndColor = nutrientCarbsColor(),
             trackColor = track,
             unit = "g"
         )
@@ -292,8 +294,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.protein_label),
             consumed = totals?.totalProtein ?: 0.0,
             goal = goals.proteinGoal_g.toDouble(),
-            barStartColor = Color(0xFFF87171),
-            barEndColor = Color(0xFFDC2626),
+            barStartColor = nutrientProteinColor(),
+            barEndColor = nutrientProteinColor(),
             trackColor = track,
             unit = "g"
         )
@@ -302,8 +304,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.fat_label),
             consumed = totals?.totalFat ?: 0.0,
             goal = goals.fatGoal_g.toDouble(),
-            barStartColor = Color(0xFFFBBF24),
-            barEndColor = Color(0xFFD97706),
+            barStartColor = nutrientFatColor(),
+            barEndColor = nutrientFatColor(),
             trackColor = track,
             unit = "g"
         )

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.template.R
 import com.example.template.data.model.PillCheckIn
+import com.example.template.ui.theme.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -40,8 +41,8 @@ fun PillTracker(
                         Modifier.shadow(
                             elevation = 8.dp,
                             shape = CircleShape,
-                            ambientColor = Color(0xFF4CAF50).copy(alpha = 0.3f),
-                            spotColor = Color(0xFF4CAF50).copy(alpha = 0.3f)
+                            ambientColor = pillTakenColor().copy(alpha = 0.3f),
+                            spotColor = pillTakenColor().copy(alpha = 0.3f)
                         )
                     } else {
                         Modifier
@@ -51,7 +52,7 @@ fun PillTracker(
             Icon(
                 painter = painterResource(id = R.drawable.ic_pill_24),
                 contentDescription = "Pill",
-                tint = if (isPillTaken) Color(0xFF4CAF50) else Color(0xFF9E9E9E), // Mint green when taken, grey when not
+                tint = if (isPillTaken) pillTakenColor() else pillNotTakenColor(),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -67,7 +68,7 @@ fun PillTracker(
                     text = pillCheckIn.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF4CAF50)
+                    color = pillTakenColor()
                 )
             }
         }

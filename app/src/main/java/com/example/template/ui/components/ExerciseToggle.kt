@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.template.R
+import com.example.template.ui.theme.*
 
 @Composable
 fun ExerciseToggle(
@@ -34,8 +35,8 @@ fun ExerciseToggle(
                         Modifier.shadow(
                             elevation = 8.dp,
                             shape = CircleShape,
-                            ambientColor = Color(0xFF2196F3).copy(alpha = 0.3f),
-                            spotColor = Color(0xFF2196F3).copy(alpha = 0.3f)
+                            ambientColor = exerciseEnabledColor().copy(alpha = 0.3f),
+                            spotColor = exerciseEnabledColor().copy(alpha = 0.3f)
                         )
                     } else {
                         Modifier
@@ -45,7 +46,7 @@ fun ExerciseToggle(
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_shape_up_stack_24),
                 contentDescription = "Exercise Toggle",
-                tint = if (isEnabled) Color(0xFF2196F3) else Color(0xFF9E9E9E), // Blue when enabled, grey when disabled
+                tint = if (isEnabled) exerciseEnabledColor() else exerciseDisabledColor(),
                 modifier = Modifier.size(24.dp)
             )
         }

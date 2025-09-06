@@ -17,26 +17,72 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
+// Dark theme color scheme using your brand colors
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = BrandNavyLight,           // Your lighter navy blue for main elements
+    onPrimary = Color.White,
+    primaryContainer = BrandNavy,       // Your dark navy blue
+    onPrimaryContainer = BrandGoldLight, // Your light gold for contrast
+    
+    secondary = BrandRed,               // Your brand red
+    onSecondary = Color.White,
+    secondaryContainer = BrandRed.copy(alpha = 0.2f),
+    onSecondaryContainer = BrandRed,
+    
+    tertiary = BrandGold,               // Your brand gold
+    onTertiary = Color.White,
+    tertiaryContainer = BrandGold.copy(alpha = 0.2f),
+    onTertiaryContainer = BrandGold,
+    
+    background = BrandNavy,             // Your dark navy blue background
+    onBackground = Color.White,
+    surface = BrandNavyLight,           // Your lighter navy blue for surfaces
+    onSurface = Color.White,
+    surfaceVariant = NeutralDark300,
+    onSurfaceVariant = NeutralDark600,
+    
+    error = Error,
+    onError = Color.White,
+    errorContainer = Error.copy(alpha = 0.2f),
+    onErrorContainer = ErrorLight,
+    
+    outline = NeutralDark400,
+    outlineVariant = NeutralDark300,
+    scrim = Color.Black.copy(alpha = 0.5f)
 )
 
+// Light theme color scheme using your brand colors
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = BrandNavyLightTheme,      // Your lighter navy blue for light theme
     onPrimary = Color.White,
+    primaryContainer = BrandNavyDarkLightTheme, // Your dark navy blue for light theme
+    onPrimaryContainer = BrandGoldLightTheme,   // Your gold for light theme
+    
+    secondary = BrandRedLightTheme,     // Your brand red for light theme
     onSecondary = Color.White,
+    secondaryContainer = BrandRedLightTheme.copy(alpha = 0.1f),
+    onSecondaryContainer = BrandRedLightTheme,
+    
+    tertiary = BrandGoldLightTheme,     // Your brand gold for light theme
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    tertiaryContainer = BrandGoldLightTheme.copy(alpha = 0.1f),
+    onTertiaryContainer = BrandGoldLightTheme,
+    
+    background = NeutralLight50,        // Light background
+    onBackground = TextPrimary,
+    surface = Color.White,              // White surfaces
+    onSurface = TextPrimary,
+    surfaceVariant = NeutralLight100,
+    onSurfaceVariant = TextSecondary,
+    
+    error = Error,
+    onError = Color.White,
+    errorContainer = Error.copy(alpha = 0.1f),
+    onErrorContainer = ErrorDark,
+    
+    outline = NeutralLight300,
+    outlineVariant = NeutralLight200,
+    scrim = Color.Black.copy(alpha = 0.3f)
 )
 
 @Composable
