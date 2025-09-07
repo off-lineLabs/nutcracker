@@ -153,6 +153,8 @@ private fun formatCheckInTime(dateTimeString: String): String {
         val date = inputFormat.parse(dateTimeString)
         date?.let { outputFormat.format(it) } ?: dateTimeString
     } catch (e: Exception) {
+        // Log the parsing error for debugging
+        com.example.template.util.logger.AppLogger.w("CheckInItem", "Failed to parse date: $dateTimeString", e)
         // Fallback to showing the original string if parsing fails
         dateTimeString
     }

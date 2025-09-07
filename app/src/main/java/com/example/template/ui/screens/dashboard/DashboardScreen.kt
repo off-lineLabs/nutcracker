@@ -69,6 +69,10 @@ import com.example.template.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.example.template.util.logger.AppLogger
+import com.example.template.util.logger.logException
+import com.example.template.util.logger.logUserAction
+import com.example.template.util.logger.safeSuspendExecute
 
 @Composable
 fun NutrientProgressDisplay(
@@ -356,8 +360,6 @@ fun DashboardScreen() {
     var showSelectMealDialog by remember { mutableStateOf(false) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
-    val exerciseLogDeletedSuccess = stringResource(R.string.exercise_log_deleted_success)
-    val exerciseLogDeleteError = stringResource(R.string.exercise_log_delete_error)
     val goalSavedSuccess = stringResource(R.string.goal_saved_success)
     val goalSaveError = stringResource(R.string.goal_save_error)
     val mealAddedSuccess = stringResource(R.string.meal_added_success)
@@ -391,9 +393,6 @@ fun DashboardScreen() {
     val failedToDeleteExercise = stringResource(R.string.failed_to_delete_exercise)
     val defaultPillName = stringResource(R.string.default_pill_name)
     val dateFormatPattern = stringResource(R.string.date_format_pattern)
-    val gramsUnit = stringResource(R.string.grams_unit)
-    val milligramsUnit = stringResource(R.string.milligrams_unit)
-    val kcalUnit = stringResource(R.string.kcal_unit)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -427,13 +426,20 @@ fun DashboardScreen() {
             userGoal = goalFromDb ?: UserGoal.default()
             if (goalFromDb == null) {
                 coroutineScope.launch {
-                    try {
-                        foodLogRepository.upsertUserGoal(UserGoal.default())
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = failedToSaveGoal
-                        )
-                    }
+                    safeSuspendExecute(
+                        operation = "Initialize default user goal",
+                        block = {
+                            foodLogRepository.upsertUserGoal(UserGoal.default())
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to save default user goal", e)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = failedToSaveGoal
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -446,13 +452,20 @@ fun DashboardScreen() {
             if (pillList.isEmpty()) {
                 // Create default pill
                 coroutineScope.launch {
-                    try {
-                        foodLogRepository.insertPill(Pill(name = defaultPillName))
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = failedToCreateDefaultPill
-                        )
-                    }
+                    safeSuspendExecute(
+                        operation = "Create default pill",
+                        block = {
+                            foodLogRepository.insertPill(Pill(name = defaultPillName))
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to create default pill", e)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = failedToCreateDefaultPill
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -509,9 +522,6 @@ fun DashboardScreen() {
     val gradientEndColor = if (isSystemInDarkTheme()) darkGray800 else lightGray100
     val innerContainerBackgroundColor = if (isSystemInDarkTheme()) darkGray800 else Color(0xFFC6C6C7)
 
-    // Calculate remaining calories based on actual data
-    val remainingCalories = (userGoal.caloriesGoal - consumedCalories).toInt()
-
     val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
     val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
     val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
@@ -539,6 +549,8 @@ fun DashboardScreen() {
             try {
                 if (pills.isNotEmpty()) {
                     val defaultPillId = pills.first().id
+                    val isChecked = currentPillCheckIn != null
+                    
                     if (currentPillCheckIn == null) {
                         // Create new pill check-in
                         val newCheckIn = PillCheckIn(
@@ -558,6 +570,10 @@ fun DashboardScreen() {
                     }
                 }
             } catch (e: Exception) {
+                AppLogger.exception("DashboardScreen", "Failed to update pill status", e, mapOf(
+                    "selectedDate" to selectedDateString,
+                    "pillsCount" to pills.size
+                ))
                 snackbarHostState.showSnackbar(
                     message = failedToUpdatePillStatus
                 )
@@ -870,16 +886,31 @@ fun DashboardScreen() {
             onDismiss = { showSetGoalDialog = false },
             onSetGoal = { updatedGoal ->
                 coroutineScope.launch {
-                    try {
-                        foodLogRepository.upsertUserGoal(updatedGoal)
-                        snackbarHostState.showSnackbar(
-                            message = goalSavedSuccess
-                        )
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = goalSaveError
-                        )
-                    }
+                    safeSuspendExecute(
+                        operation = "Update user goal",
+                        block = {
+                            foodLogRepository.upsertUserGoal(updatedGoal)
+                            logUserAction("Goal Updated", mapOf(
+                                "calories" to updatedGoal.caloriesGoal,
+                                "protein" to updatedGoal.proteinGoal_g,
+                                "carbs" to updatedGoal.carbsGoal_g,
+                                "fat" to updatedGoal.fatGoal_g
+                            ))
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to save user goal", e, mapOf(
+                                "goal" to updatedGoal.toString()
+                            ))
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = goalSaveError
+                                )
+                            }
+                        }
+                    )
+                    snackbarHostState.showSnackbar(
+                        message = goalSavedSuccess
+                    )
                 }
                 showSetGoalDialog = false
             }

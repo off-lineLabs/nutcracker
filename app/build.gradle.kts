@@ -60,6 +60,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.androidx.room.compiler) // Use ksp for the annotation processor
     implementation(libs.androidx.room.ktx) // For Kotlin Coroutines support
+    
+    // Logging
+    implementation(libs.timber)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
