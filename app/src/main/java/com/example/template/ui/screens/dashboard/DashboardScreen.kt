@@ -943,6 +943,9 @@ fun DashboardScreen() {
                             message = mealAddedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to add meal", e, mapOf(
+                            "mealName" to newMeal.name
+                        ))
                         snackbarHostState.showSnackbar(
                             message = mealAddError
                         )
@@ -965,6 +968,10 @@ fun DashboardScreen() {
                             message = checkInCompletedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to complete meal check-in", e, mapOf(
+                            "mealId" to mealCheckIn.mealId,
+                            "date" to mealCheckIn.checkInDate
+                        ))
                         snackbarHostState.showSnackbar(
                             message = checkInCompletedError
                         )
@@ -1001,6 +1008,9 @@ fun DashboardScreen() {
                             message = exerciseAddedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to add exercise", e, mapOf(
+                            "exerciseName" to newExercise.name
+                        ))
                         snackbarHostState.showSnackbar(
                             message = exerciseAddError
                         )
@@ -1041,6 +1051,10 @@ fun DashboardScreen() {
                             message = exerciseCheckInCompletedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to complete exercise check-in", e, mapOf(
+                            "exerciseId" to exerciseLog.exerciseId,
+                            "date" to exerciseLog.logDate
+                        ))
                         snackbarHostState.showSnackbar(
                             message = failedToCompleteExerciseCheckIn
                         )
@@ -1131,6 +1145,10 @@ fun DashboardScreen() {
                                 message = mealUpdatedSuccess
                             )
                         } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to update meal", e, mapOf(
+                                "mealId" to existingMealCheckIn.mealId,
+                                "date" to existingMealCheckIn.checkInDate
+                            ))
                             snackbarHostState.showSnackbar(
                                 message = failedToUpdateMeal
                             )
@@ -1146,6 +1164,10 @@ fun DashboardScreen() {
                                 message = mealDeletedSuccess
                             )
                         } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                                "mealId" to existingMealCheckIn.mealId,
+                                "date" to existingMealCheckIn.checkInDate
+                            ))
                             snackbarHostState.showSnackbar(
                                 message = failedToDeleteMeal
                             )
@@ -1188,6 +1210,10 @@ fun DashboardScreen() {
                                 message = exerciseUpdatedSuccess
                             )
                         } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to update exercise", e, mapOf(
+                                "exerciseId" to existingExerciseLog.exerciseId,
+                                "date" to existingExerciseLog.logDate
+                            ))
                             snackbarHostState.showSnackbar(
                                 message = failedToUpdateExercise
                             )
@@ -1203,6 +1229,10 @@ fun DashboardScreen() {
                                 message = exerciseDeletedSuccess
                             )
                         } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
+                                "exerciseId" to existingExerciseLog.exerciseId,
+                                "date" to existingExerciseLog.logDate
+                            ))
                             snackbarHostState.showSnackbar(
                                 message = failedToDeleteExercise
                             )
