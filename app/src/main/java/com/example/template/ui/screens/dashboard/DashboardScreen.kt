@@ -347,6 +347,7 @@ fun DashboardScreen() {
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableStateOf(0.0) }
     var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
+    var tefCaloriesBurned by remember { mutableStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
     var includeTEFBonus by remember { mutableStateOf(false) }
     
@@ -499,6 +500,15 @@ fun DashboardScreen() {
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
         foodLogRepository.getDailyExerciseCalories(selectedDateString).collectLatest { calories ->
             exerciseCaloriesBurned = calories
+        }
+    }
+
+    // Calculate TEF calories from daily totals
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
+            tefCaloriesBurned = totals?.let { 
+                com.example.template.utils.TEFCalculator.calculateTEFBonus(it) 
+            } ?: 0.0
         }
     }
 
@@ -785,6 +795,7 @@ fun DashboardScreen() {
                             ExerciseToggle(
                                 isEnabled = includeExerciseCalories,
                                 onToggle = onExerciseToggle,
+                                exerciseCalories = exerciseCaloriesBurned,
                                 modifier = Modifier.align(Alignment.CenterStart)
                             )
                             
@@ -792,6 +803,7 @@ fun DashboardScreen() {
                             TEFToggle(
                                 isEnabled = includeTEFBonus,
                                 onToggle = onTEFToggle,
+                                tefCalories = tefCaloriesBurned,
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             )
                         }

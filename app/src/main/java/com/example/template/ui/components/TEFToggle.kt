@@ -13,14 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.template.R
 import com.example.template.ui.theme.*
+import java.util.Locale
 
 @Composable
 fun TEFToggle(
     isEnabled: Boolean,
     onToggle: () -> Unit,
+    tefCalories: Double = 0.0,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -46,9 +50,20 @@ fun TEFToggle(
             )
         }
         
-        // Reserve same space as pill tracker to maintain alignment
+        // Always reserve space for calories display to prevent layout shift
         Box(
-            modifier = Modifier.height(20.dp)
-        )
+            modifier = Modifier.height(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Show TEF calories when there are any
+            if (tefCalories > 0) {
+                Text(
+                    text = "${tefCalories.toInt()} kcal",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isEnabled) tefEnabledColor() else tefDisabledColor()
+                )
+            }
+        }
     }
 }
