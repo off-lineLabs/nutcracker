@@ -159,13 +159,22 @@
     <string name="progress_details">Detalles del Progreso</string>
     
     <!-- Additional hardcoded strings found -->
-    <string name="meal_name">Nombre de la Comida</string>
-    <string name="calories">Calorías</string>
-    <string name="protein_g">Proteína (g)</string>
-    <string name="carbs_g">Carbohidratos (g)</string>
-    <string name="fat_g">Grasa (g)</string>
-    <string name="fiber_g">Fibra (g)</string>
-    <string name="sodium_mg">Sodio (mg)</string>
+    <string name="meal_name">Nombre</string>
+    <string name="calories">Kcal</string>
+    <string name="protein_g">Proteínas</string>
+    <string name="carbs_g">Carbohidratos</string>
+    <string name="fat_g">Grasa</string>
+    <string name="fiber_g">Fibra</string>
+    <string name="sodium_mg">Sodio</string>
+    
+    <!-- Placeholder strings for meal fields -->
+    <string name="meal_name_placeholder">Ingresa nombre de comida</string>
+    <string name="calories_placeholder">Ingresa calorías</string>
+    <string name="protein_placeholder">Ingresa proteínas</string>
+    <string name="carbs_placeholder">Ingresa carbohidratos</string>
+    <string name="fat_placeholder">Ingresa grasa</string>
+    <string name="fiber_placeholder">Ingresa fibra</string>
+    <string name="sodium_placeholder">Ingresa sodio</string>
     <string name="set_your_daily_goals">Establecer Tus Metas Diarias</string>
     <string name="calories_kcal">Calorías (kcal)</string>
     <string name="carbohydrates_g">Carbohidratos (g)</string>

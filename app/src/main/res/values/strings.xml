@@ -158,13 +158,22 @@
     <string name="unit_portions">Portions (portion)</string>
     
     <!-- Additional hardcoded strings found -->
-    <string name="meal_name">Meal Name</string>
-    <string name="calories">Calories</string>
-    <string name="protein_g">Protein (g)</string>
-    <string name="carbs_g">Carbs (g)</string>
-    <string name="fat_g">Fat (g)</string>
-    <string name="fiber_g">Fiber (g)</string>
-    <string name="sodium_mg">Sodium (mg)</string>
+    <string name="meal_name">Name</string>
+    <string name="calories">Kcals</string>
+    <string name="protein_g">Proteins</string>
+    <string name="carbs_g">Carbs</string>
+    <string name="fat_g">Fat</string>
+    <string name="fiber_g">Fiber</string>
+    <string name="sodium_mg">Sodium</string>
+    
+    <!-- Placeholder strings for meal fields -->
+    <string name="meal_name_placeholder">Enter meal name</string>
+    <string name="calories_placeholder">Enter calories</string>
+    <string name="protein_placeholder">Enter protein</string>
+    <string name="carbs_placeholder">Enter carbs</string>
+    <string name="fat_placeholder">Enter fat</string>
+    <string name="fiber_placeholder">Enter fiber</string>
+    <string name="sodium_placeholder">Enter sodium</string>
     <string name="set_your_daily_goals">Set Your Daily Goals</string>
     <string name="calories_kcal">Calories (kcal)</string>
     <string name="carbohydrates_g">Carbohydrates (g)</string>
