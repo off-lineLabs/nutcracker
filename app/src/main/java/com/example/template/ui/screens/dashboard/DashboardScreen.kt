@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -372,6 +369,32 @@ fun DashboardScreen() {
     val exerciseAddError = stringResource(R.string.exercise_add_error)
     val okText = stringResource(R.string.ok)
     val cancelText = stringResource(R.string.cancel)
+    
+    // Additional string resources for hardcoded strings
+    val failedToSaveGoal = stringResource(R.string.failed_to_save_goal)
+    val failedToCreateDefaultPill = stringResource(R.string.failed_to_create_default_pill)
+    val dailySupplementTaken = stringResource(R.string.daily_supplement_taken)
+    val dailySupplementRemoved = stringResource(R.string.daily_supplement_removed)
+    val failedToUpdatePillStatus = stringResource(R.string.failed_to_update_pill_status)
+    val exerciseBonusCaloriesOn = stringResource(R.string.exercise_bonus_calories_on)
+    val exerciseBonusCaloriesOff = stringResource(R.string.exercise_bonus_calories_off)
+    val tefBonusCaloriesOn = stringResource(R.string.tef_bonus_calories_on)
+    val tefBonusCaloriesOff = stringResource(R.string.tef_bonus_calories_off)
+    val exerciseCheckInCompletedSuccess = stringResource(R.string.exercise_check_in_completed_success)
+    val failedToCompleteExerciseCheckIn = stringResource(R.string.failed_to_complete_exercise_check_in)
+    val mealUpdatedSuccess = stringResource(R.string.meal_updated_success)
+    val failedToUpdateMeal = stringResource(R.string.failed_to_update_meal)
+    val mealDeletedSuccess = stringResource(R.string.meal_deleted_success)
+    val failedToDeleteMeal = stringResource(R.string.failed_to_delete_meal)
+    val exerciseUpdatedSuccess = stringResource(R.string.exercise_updated_success)
+    val failedToUpdateExercise = stringResource(R.string.failed_to_update_exercise)
+    val exerciseDeletedSuccess = stringResource(R.string.exercise_deleted_success)
+    val failedToDeleteExercise = stringResource(R.string.failed_to_delete_exercise)
+    val defaultPillName = stringResource(R.string.default_pill_name)
+    val dateFormatPattern = stringResource(R.string.date_format_pattern)
+    val gramsUnit = stringResource(R.string.grams_unit)
+    val milligramsUnit = stringResource(R.string.milligrams_unit)
+    val kcalUnit = stringResource(R.string.kcal_unit)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -409,7 +432,7 @@ fun DashboardScreen() {
                         foodLogRepository.upsertUserGoal(UserGoal.default())
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to save goal. Please try again."
+                            message = failedToSaveGoal
                         )
                     }
                 }
@@ -425,10 +448,10 @@ fun DashboardScreen() {
                 // Create default pill
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.insertPill(Pill(name = "default"))
+                        foodLogRepository.insertPill(Pill(name = defaultPillName))
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to create default pill. Please try again."
+                            message = failedToCreateDefaultPill
                         )
                     }
                 }
@@ -437,7 +460,7 @@ fun DashboardScreen() {
     }
 
     val selectedDateString = remember(selectedDate) {
-        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
@@ -524,19 +547,19 @@ fun DashboardScreen() {
                         )
                         foodLogRepository.insertPillCheckIn(newCheckIn)
                         snackbarHostState.showSnackbar(
-                            message = "Daily supplement taken"
+                            message = dailySupplementTaken
                         )
                     } else {
                         // Delete existing pill check-in
                         foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
                         snackbarHostState.showSnackbar(
-                            message = "Daily supplement removed"
+                            message = dailySupplementRemoved
                         )
                     }
                 }
             } catch (e: Exception) {
                 snackbarHostState.showSnackbar(
-                    message = "Failed to update pill status. Please try again."
+                    message = failedToUpdatePillStatus
                 )
             }
         }
@@ -547,9 +570,9 @@ fun DashboardScreen() {
         includeExerciseCalories = !includeExerciseCalories
         coroutineScope.launch {
             val message = if (includeExerciseCalories) {
-                "Exercise bonus calories ON"
+                exerciseBonusCaloriesOn
             } else {
-                "Exercise bonus calories OFF"
+                exerciseBonusCaloriesOff
             }
             snackbarHostState.showSnackbar(message = message)
         }
@@ -560,9 +583,9 @@ fun DashboardScreen() {
         includeTEFBonus = !includeTEFBonus
         coroutineScope.launch {
             val message = if (includeTEFBonus) {
-                "TEF bonus calories ON"
+                tefBonusCaloriesOn
             } else {
-                "TEF bonus calories OFF"
+                tefBonusCaloriesOff
             }
             snackbarHostState.showSnackbar(message = message)
         }
@@ -985,11 +1008,11 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertExerciseLog(exerciseLog)
                         snackbarHostState.showSnackbar(
-                            message = "Exercise check-in completed successfully"
+                            message = exerciseCheckInCompletedSuccess
                         )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
-                            message = "Failed to complete exercise check-in. Please try again."
+                            message = failedToCompleteExerciseCheckIn
                         )
                     }
                 }
@@ -1075,11 +1098,11 @@ fun DashboardScreen() {
                         try {
                             foodLogRepository.updateMealCheckIn(checkInData.mealCheckIn)
                             snackbarHostState.showSnackbar(
-                                message = "Meal updated successfully"
+                                message = mealUpdatedSuccess
                             )
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar(
-                                message = "Failed to update meal. Please try again."
+                                message = failedToUpdateMeal
                             )
                         }
                     }
@@ -1090,11 +1113,11 @@ fun DashboardScreen() {
                         try {
                             foodLogRepository.deleteMealCheckIn(existingMealCheckIn)
                             snackbarHostState.showSnackbar(
-                                message = "Meal deleted successfully"
+                                message = mealDeletedSuccess
                             )
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar(
-                                message = "Failed to delete meal. Please try again."
+                                message = failedToDeleteMeal
                             )
                         }
                     }
@@ -1132,11 +1155,11 @@ fun DashboardScreen() {
                         try {
                             foodLogRepository.updateExerciseLog(checkInData.exerciseLog)
                             snackbarHostState.showSnackbar(
-                                message = "Exercise updated successfully"
+                                message = exerciseUpdatedSuccess
                             )
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar(
-                                message = "Failed to update exercise. Please try again."
+                                message = failedToUpdateExercise
                             )
                         }
                     }
@@ -1147,11 +1170,11 @@ fun DashboardScreen() {
                         try {
                             foodLogRepository.deleteExerciseLog(existingExerciseLog)
                             snackbarHostState.showSnackbar(
-                                message = "Exercise deleted successfully"
+                                message = exerciseDeletedSuccess
                             )
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar(
-                                message = "Failed to delete exercise. Please try again."
+                                message = failedToDeleteExercise
                             )
                         }
                     }

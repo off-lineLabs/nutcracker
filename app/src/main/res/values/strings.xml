@@ -203,4 +203,30 @@
     <string name="min_unit">min</string>
     <string name="reps_unit">reps</string>
     <string name="sets_unit">sets</string>
+    
+    <!-- Additional hardcoded strings from DashboardScreen -->
+    <string name="grams_unit">g</string>
+    <string name="milligrams_unit">mg</string>
+    <string name="kcal_unit">kcal</string>
+    <string name="date_format_pattern">yyyy-MM-dd</string>
+    <string name="default_pill_name">default</string>
+    <string name="daily_supplement_taken">Daily supplement taken</string>
+    <string name="daily_supplement_removed">Daily supplement removed</string>
+    <string name="exercise_bonus_calories_on">Exercise bonus calories ON</string>
+    <string name="exercise_bonus_calories_off">Exercise bonus calories OFF</string>
+    <string name="tef_bonus_calories_on">TEF bonus calories ON</string>
+    <string name="tef_bonus_calories_off">TEF bonus calories OFF</string>
+    <string name="failed_to_save_goal">Failed to save goal. Please try again.</string>
+    <string name="failed_to_create_default_pill">Failed to create default pill. Please try again.</string>
+    <string name="failed_to_update_pill_status">Failed to update pill status. Please try again.</string>
+    <string name="exercise_check_in_completed_success">Exercise check-in completed successfully</string>
+    <string name="failed_to_complete_exercise_check_in">Failed to complete exercise check-in. Please try again.</string>
+    <string name="meal_updated_success">Meal updated successfully</string>
+    <string name="failed_to_update_meal">Failed to update meal. Please try again.</string>
+    <string name="meal_deleted_success">Meal deleted successfully</string>
+    <string name="failed_to_delete_meal">Failed to delete meal. Please try again.</string>
+    <string name="exercise_updated_success">Exercise updated successfully</string>
+    <string name="failed_to_update_exercise">Failed to update exercise. Please try again.</string>
+    <string name="exercise_deleted_success">Exercise deleted successfully</string>
+    <string name="failed_to_delete_exercise">Failed to delete exercise. Please try again.</string>
 </resources>
