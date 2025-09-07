@@ -7,7 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,17 +35,9 @@ fun PillTracker(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .then(
-                    if (isPillTaken) {
-                        Modifier.shadow(
-                            elevation = 8.dp,
-                            shape = CircleShape,
-                            ambientColor = pillTakenColor().copy(alpha = 0.3f),
-                            spotColor = pillTakenColor().copy(alpha = 0.3f)
-                        )
-                    } else {
-                        Modifier
-                    }
+                .glowEffect(
+                    isGlowing = isPillTaken,
+                    glowColor = pillTakenColor()
                 )
         ) {
             Icon(

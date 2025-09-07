@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -34,17 +33,9 @@ fun TEFToggle(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .then(
-                    if (isEnabled) {
-                        Modifier.shadow(
-                            elevation = 8.dp,
-                            shape = CircleShape,
-                            ambientColor = tefEnabledColor().copy(alpha = 0.3f),
-                            spotColor = tefEnabledColor().copy(alpha = 0.3f)
-                        )
-                    } else {
-                        Modifier
-                    }
+                .glowEffect(
+                    isGlowing = isEnabled,
+                    glowColor = tefEnabledColor()
                 )
         ) {
             Icon(

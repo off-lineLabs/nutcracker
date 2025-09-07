@@ -7,8 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.template.R
@@ -30,17 +28,9 @@ fun ExerciseToggle(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .then(
-                    if (isEnabled) {
-                        Modifier.shadow(
-                            elevation = 8.dp,
-                            shape = CircleShape,
-                            ambientColor = exerciseEnabledColor().copy(alpha = 0.3f),
-                            spotColor = exerciseEnabledColor().copy(alpha = 0.3f)
-                        )
-                    } else {
-                        Modifier
-                    }
+                .glowEffect(
+                    isGlowing = isEnabled,
+                    glowColor = exerciseEnabledColor()
                 )
         ) {
             Icon(
