@@ -70,7 +70,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
 import com.example.template.util.logger.AppLogger
-import com.example.template.util.logger.logException
 import com.example.template.util.logger.logUserAction
 import com.example.template.util.logger.safeSuspendExecute
 
@@ -526,12 +525,6 @@ fun DashboardScreen() {
     val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
     val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
     val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
-
-    // Nutrient specific colors (can be themed as well)
-    val nutrientLabelColor = caloriesRemainingLabelColor
-    val nutrientConsumedColor = caloriesConsumedColor
-    val nutrientGoalColor = caloriesGoalColor
-
 
     val view = LocalView.current
     val density = LocalDensity.current
