@@ -552,7 +552,6 @@ fun DashboardScreen() {
             try {
                 if (pills.isNotEmpty()) {
                     val defaultPillId = pills.first().id
-                    val isChecked = currentPillCheckIn != null
                     
                     if (currentPillCheckIn == null) {
                         // Create new pill check-in
