@@ -216,7 +216,7 @@ private fun NutrientBarRow(
     val finalConsumedColor = when {
         consumed > goal && isProteinOrFiber -> proteinFiberColor
         consumed > goal -> exceededColor
-        else -> if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A)
+        else -> appTextPrimaryColor()
     }
     
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -225,7 +225,7 @@ private fun NutrientBarRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = title, fontWeight = FontWeight.SemiBold, color = if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A))
+            Text(text = title, fontWeight = FontWeight.SemiBold, color = appTextPrimaryColor())
             val goalText = String.format(Locale.getDefault(), "%.0f", goal)
             val consumedText = String.format(Locale.getDefault(), "%.0f", consumed)
             Text(
@@ -233,7 +233,7 @@ private fun NutrientBarRow(
                     withStyle(style = SpanStyle(color = finalConsumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                         append(consumedText)
                     }
-                    withStyle(style = SpanStyle(color = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368), fontSize = 12.sp)) {
+                    withStyle(style = SpanStyle(color = appTextSecondaryColor(), fontSize = 12.sp)) {
                         append(" / ${goalText}${unit}")
                     }
                 }
@@ -264,8 +264,7 @@ private fun NutrientBarRow(
 @Composable
 private fun NutrientBox(
     totals: DailyTotals?,
-    goals: UserGoal,
-    isDark: Boolean
+    goals: UserGoal
 ) {
     // Use themed colors instead of hardcoded values
     val track = progressTrackColor()
@@ -314,18 +313,18 @@ private fun NutrientBox(
             consumed = totals?.totalFiber ?: 0.0,
             goal = goals.fiberGoal_g.toDouble(),
             unit = "g",
-            labelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368),
-            valueColor = if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A),
-            goalColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368)
+            labelColor = appTextSecondaryColor(),
+            valueColor = appTextPrimaryColor(),
+            goalColor = appTextSecondaryColor()
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
             consumed = totals?.totalSodium ?: 0.0,
             goal = goals.sodiumGoal_mg.toDouble(),
             unit = "mg",
-            labelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368),
-            valueColor = if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A),
-            goalColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368)
+            labelColor = appTextSecondaryColor(),
+            valueColor = appTextPrimaryColor(),
+            goalColor = appTextSecondaryColor()
         )
     }
 }
@@ -499,23 +498,24 @@ fun DashboardScreen() {
         }
     }
 
+    // Use specific colors for the exact look you want
     val lightGray50 = Color(0xFFFAFBFC)  // Improved softer background
-    val lightGray100 = Color(0xFFF1F3F4) // Improved warmer surface variant
-    val darkGray800 = Color(0xFF1F2937)
-    val darkGray900 = Color(0xFF111827)
-    val textGray200 = Color(0xFFE5E7EB)
+    val lightGray100 = Color(0xFFF3F4F6) // Your specific light gray
+    val darkGray800 = Color(0xFF1F2937)  // Your specific dark gray for container
+    val darkGray900 = Color(0xFF111827)  // Your specific dark background
+    val textGray200 = Color(0xFFE5E7EB)  // Your specific text gray
 
     val gradientStartColor = if (isSystemInDarkTheme()) darkGray900 else lightGray50
     val gradientEndColor = if (isSystemInDarkTheme()) darkGray800 else lightGray100
-    val innerContainerBackgroundColor = if (isSystemInDarkTheme()) darkGray800 else Color(0xFFC6C6C7)
+    val innerContainerBackgroundColor = darkGray800
 
     // Calculate remaining calories based on actual data
     val remainingCalories = (userGoal.caloriesGoal - consumedCalories).toInt()
 
-    val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368)  // Improved light mode
-    val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF1A1A1A)  // Improved light mode
-    val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1A1A1A)  // Improved light mode
-    val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF5F6368)  // Improved light mode
+    val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
+    val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
+    val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
+    val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
 
     // Nutrient specific colors (can be themed as well)
     val nutrientLabelColor = caloriesRemainingLabelColor
@@ -797,7 +797,7 @@ fun DashboardScreen() {
                             Text(
                                 text = stringResource(id = R.string.nutrient_details_title),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A),
+                                color = appTextPrimaryColor(),
                                 textAlign = TextAlign.Center
                             )
                             IconButton(
@@ -809,7 +809,7 @@ fun DashboardScreen() {
                                 Icon(
                                     imageVector = Icons.Filled.Edit,
                                     contentDescription = stringResource(R.string.set_goal),
-                                    tint = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF5F6368),
+                                    tint = appTextSecondaryColor(),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -818,8 +818,7 @@ fun DashboardScreen() {
                         Spacer(modifier = Modifier.height(8.dp))
                         NutrientBox(
                             totals = dailyTotalsConsumed,
-                            goals = userGoal,
-                            isDark = isSystemInDarkTheme()
+                            goals = userGoal
                         )
                         
                         Spacer(modifier = Modifier.height(16.dp))
@@ -841,7 +840,7 @@ fun DashboardScreen() {
                         Text(
                             stringResource(R.string.recent_check_ins),
                             style = MaterialTheme.typography.titleMedium,
-                            color = if (isSystemInDarkTheme()) Color(0xFFE5E7EB) else Color(0xFF1A1A1A)
+                            color = appTextPrimaryColor()
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
