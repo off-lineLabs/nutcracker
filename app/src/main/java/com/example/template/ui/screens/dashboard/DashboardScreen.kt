@@ -507,7 +507,7 @@ fun DashboardScreen() {
 
     val gradientStartColor = if (isSystemInDarkTheme()) darkGray900 else lightGray50
     val gradientEndColor = if (isSystemInDarkTheme()) darkGray800 else lightGray100
-    val innerContainerBackgroundColor = darkGray800
+    val innerContainerBackgroundColor = if (isSystemInDarkTheme()) darkGray800 else Color(0xFFC6C6C7)
 
     // Calculate remaining calories based on actual data
     val remainingCalories = (userGoal.caloriesGoal - consumedCalories).toInt()
