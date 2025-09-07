@@ -13,32 +13,32 @@ val BrandGold = Color(0xFFA66A21)        // Goldish yellow - details
 val BrandGoldLight = Color(0xFFD9A25F)   // Lighter yellow - highlights
 
 // Light theme brand colors
-val BrandNavyLightTheme = Color(0xFFA3AFBF)  // Lighter navy blue
-val BrandRedLightTheme = Color(0xFF59161C)   // Red
-val BrandNavyDarkLightTheme = Color(0xFFAAB1BF) // Dark navy blue
-val BrandGoldLightTheme = Color(0xFF403426)  // Goldish yellow
-val BrandGoldLightLightTheme = Color(0xFF736A60) // Lighter yellow
+val BrandNavyLightTheme = Color(0xFF2C3E50)  // Rich deep blue-gray
+val BrandRedLightTheme = Color(0xFFC0392B)   // Vibrant warm red
+val BrandNavyDarkLightTheme = Color(0xFF34495E) // Darker navy blue
+val BrandGoldLightTheme = Color(0xFFE67E22)  // Warm energetic orange-gold
+val BrandGoldLightLightTheme = Color(0xFFF39C12) // Bright cheerful yellow-gold
 
 // ===== SEMANTIC COLORS =====
 // Success colors (using your brand green-ish tones)
-val Success = Color(0xFF10B981)
-val SuccessLight = Color(0xFF34D399)
-val SuccessDark = Color(0xFF059669)
+val Success = Color(0xFF0D8043)          // Deeper green for better contrast
+val SuccessLight = Color(0xFF34D399)     // Keep light variant
+val SuccessDark = Color(0xFF059669)      // Keep dark variant
 
 // Warning colors (using your brand gold tones)
-val Warning = Color(0xFFA66A21)          // Your brand gold
-val WarningLight = Color(0xFFD9A25F)     // Your brand light gold
-val WarningDark = Color(0xFF8B5A1C)
+val Warning = Color(0xFFEA8600)          // Warmer orange for light mode
+val WarningLight = Color(0xFFD9A25F)     // Keep light variant
+val WarningDark = Color(0xFF8B5A1C)      // Keep dark variant
 
 // Error colors (using your brand red)
-val Error = Color(0xFFA62934)            // Your brand red
-val ErrorLight = Color(0xFFC73E4A)
-val ErrorDark = Color(0xFF8B1F2A)
+val Error = Color(0xFFD93025)            // Clearer red for light mode
+val ErrorLight = Color(0xFFC73E4A)       // Keep light variant
+val ErrorDark = Color(0xFF8B1F2A)        // Keep dark variant
 
 // Info colors (using your brand navy)
-val Info = Color(0xFF283D59)             // Your brand navy light
-val InfoLight = Color(0xFF3A4F6B)
-val InfoDark = Color(0xFF1A2A3F)
+val Info = Color(0xFF1A73E8)             // Vibrant blue for light mode
+val InfoLight = Color(0xFF3A4F6B)       // Keep light variant
+val InfoDark = Color(0xFF1A2A3F)        // Keep dark variant
 
 // ===== NEUTRAL COLORS =====
 // Dark theme neutrals (based on your brand colors)
@@ -54,16 +54,16 @@ val NeutralDark800 = Color(0xFF8F9FB6)
 val NeutralDark900 = Color(0xFFA0AFC5)
 
 // Light theme neutrals
-val NeutralLight50 = Color(0xFFF8F9FA)
-val NeutralLight100 = Color(0xFFE9ECEF)
-val NeutralLight200 = Color(0xFFDEE2E6)
-val NeutralLight300 = Color(0xFFCED4DA)
-val NeutralLight400 = Color(0xFFAAB1BF)  // Your brand navy dark light theme
-val NeutralLight500 = Color(0xFF6C757D)
-val NeutralLight600 = Color(0xFF495057)
-val NeutralLight700 = Color(0xFF343A40)
-val NeutralLight800 = Color(0xFF212529)
-val NeutralLight900 = Color(0xFF121416)
+val NeutralLight50 = Color(0xFFFAFBFC)   // Softer background
+val NeutralLight100 = Color(0xFFF1F3F4)  // Warmer surface variant
+val NeutralLight200 = Color(0xFFE1E5E9)  // Softer border/divider
+val NeutralLight300 = Color(0xFFD1D5DB)  // Medium neutral
+val NeutralLight400 = Color(0xFF9CA3AF)  // Updated neutral
+val NeutralLight500 = Color(0xFF6B7280)  // Medium text
+val NeutralLight600 = Color(0xFF5F6368)  // Better contrast secondary text
+val NeutralLight700 = Color(0xFF374151)  // Darker text
+val NeutralLight800 = Color(0xFF1F2937)  // Very dark text
+val NeutralLight900 = Color(0xFF1A1A1A)  // Warmest dark text
 
 // ===== EXISTING COLORS (PRESERVED) =====
 // Keep your existing calorie ring and nutrient colors exactly as they are
@@ -108,10 +108,10 @@ val BackgroundSecondary = Color(0xFF374151)
 val BackgroundTertiary = Color(0xFF4B5563)
 
 // ===== TEXT COLORS =====
-val TextPrimary = Color(0xFF111827)
-val TextSecondary = Color(0xFF6B7280)
-val TextTertiary = Color(0xFF9CA3AF)
-val TextInverse = Color(0xFFFFFFFF)
+val TextPrimary = Color(0xFF1A1A1A)      // Warmer dark text
+val TextSecondary = Color(0xFF5F6368)    // Better contrast secondary
+val TextTertiary = Color(0xFF9CA3AF)     // Keep tertiary as is
+val TextInverse = Color(0xFFFFFFFF)      // Keep white as is
 
 // ===== LEGACY COLORS (for backward compatibility) =====
 // Keep these for now to avoid breaking existing code
