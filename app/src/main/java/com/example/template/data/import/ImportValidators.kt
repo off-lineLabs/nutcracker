@@ -335,9 +335,9 @@ object ImportValidators {
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         
-        // Exercise ID validation
+        // Exercise ID validation - only validate if present
         val exerciseId = row.getLongValue("exerciseId")
-        if (exerciseId == null || exerciseId <= 0) {
+        if (exerciseId != null && exerciseId <= 0) {
             errors.add(ImportError(
                 tableName = "exercise_logs",
                 rowNumber = row.rowNumber,
@@ -379,9 +379,9 @@ object ImportValidators {
             }
         }
         
-        // Numeric validations
+        // Numeric validations - allow empty values, but validate format if present
         val weight = row.getDoubleValue("weight")
-        if (weight == null || weight < 0) {
+        if (weight != null && weight < 0) {
             errors.add(ImportError(
                 tableName = "exercise_logs",
                 rowNumber = row.rowNumber,
@@ -392,7 +392,7 @@ object ImportValidators {
         }
         
         val reps = row.getIntValue("reps")
-        if (reps == null || reps < 0) {
+        if (reps != null && reps < 0) {
             errors.add(ImportError(
                 tableName = "exercise_logs",
                 rowNumber = row.rowNumber,
@@ -403,7 +403,7 @@ object ImportValidators {
         }
         
         val sets = row.getIntValue("sets")
-        if (sets == null || sets < 0) {
+        if (sets != null && sets < 0) {
             errors.add(ImportError(
                 tableName = "exercise_logs",
                 rowNumber = row.rowNumber,
@@ -414,7 +414,7 @@ object ImportValidators {
         }
         
         val caloriesBurned = row.getDoubleValue("caloriesBurned")
-        if (caloriesBurned == null || caloriesBurned < 0) {
+        if (caloriesBurned != null && caloriesBurned < 0) {
             errors.add(ImportError(
                 tableName = "exercise_logs",
                 rowNumber = row.rowNumber,
