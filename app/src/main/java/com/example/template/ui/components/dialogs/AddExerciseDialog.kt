@@ -18,12 +18,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExerciseDialog(
+    externalExercise: ExternalExercise? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit
 ) {
@@ -35,6 +37,54 @@ fun AddExerciseDialog(
     var defaultReps by remember { mutableStateOf("") }
     var defaultSets by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+
+    // Pre-populate fields when external exercise is provided
+    LaunchedEffect(externalExercise) {
+        externalExercise?.let { exercise ->
+            name = exercise.name
+            exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+            
+            // Set default values based on exercise type and category
+            when (exerciseType) {
+                ExerciseType.STRENGTH -> {
+                    defaultWeight = when (exercise.equipment?.lowercase()) {
+                        "barbell", "dumbbell", "kettlebells" -> "20.0"
+                        "body only" -> "0.0"
+                        else -> "0.0"
+                    }
+                    defaultReps = when (exercise.category.lowercase()) {
+                        "strength", "strongman", "olympic weightlifting" -> "8"
+                        else -> "8"
+                    }
+                    defaultSets = when (exercise.category.lowercase()) {
+                        "strength", "strongman", "olympic weightlifting" -> "3"
+                        else -> "3"
+                    }
+                }
+                ExerciseType.CARDIO -> {
+                    // Default kcal per minute for cardio
+                    kcalPerMinute = "8.0"
+                }
+                ExerciseType.BODYWEIGHT -> {
+                    defaultReps = when (exercise.category.lowercase()) {
+                        "stretching" -> "1"
+                        "cardio", "plyometrics" -> "10"
+                        else -> "10"
+                    }
+                    defaultSets = when (exercise.category.lowercase()) {
+                        "stretching" -> "1"
+                        "cardio", "plyometrics" -> "1"
+                        else -> "1"
+                    }
+                }
+            }
+            
+            // Set notes from instructions
+            if (exercise.instructions.isNotEmpty()) {
+                notes = exercise.instructions.joinToString("\n\n")
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,

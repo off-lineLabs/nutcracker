@@ -406,6 +406,7 @@ fun DashboardScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
+    var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
     
     // Edit dialog state variables
@@ -1027,45 +1028,42 @@ fun DashboardScreen(
                 showCheckInExerciseDialog = exercise
             },
             onImportExternalExercise = { externalExercise ->
-                coroutineScope.launch {
-                    try {
-                        // First insert the exercise to get an ID
-                        val internalExercise = externalExercise.toInternalExercise()
-                        val exerciseId = foodLogRepository.insertExercise(internalExercise)
-                        
-                        // Download and save the first image if available
-                        var imagePath: String? = null
-                        if (externalExercise.images.isNotEmpty()) {
-                            val firstImageUrl = externalExerciseService.getImageUrl(externalExercise.images.first())
-                            imagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
-                        }
-                        
-                        // Update the exercise with the image path if we got one
-                        if (imagePath != null) {
-                            val updatedExercise = internalExercise.copy(id = exerciseId, imagePath = imagePath)
-                            foodLogRepository.updateExercise(updatedExercise)
-                        }
-                        
-                        snackbarHostState.showSnackbar(
-                            message = "Exercise imported successfully"
-                        )
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = "Failed to import exercise"
-                        )
-                    }
-                }
+                // Store the external exercise for pre-populating the AddExerciseDialog
+                selectedExternalExercise = externalExercise
+                showSelectExerciseDialog = false
+                showAddExerciseDialog = true
             }
         )
     }
 
     if (showAddExerciseDialog) {
         AddExerciseDialog(
-            onDismiss = { showAddExerciseDialog = false },
+            externalExercise = selectedExternalExercise,
+            onDismiss = { 
+                showAddExerciseDialog = false
+                selectedExternalExercise = null
+            },
             onAddExercise = { newExercise ->
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.insertExercise(newExercise)
+                        // First insert the exercise to get an ID
+                        val exerciseId = foodLogRepository.insertExercise(newExercise)
+                        
+                        // Download and save the first image if available
+                        var imagePath: String? = null
+                        selectedExternalExercise?.let { externalExercise ->
+                            if (externalExercise.images.isNotEmpty()) {
+                                val firstImageUrl = externalExerciseService.getImageUrl(externalExercise.images.first())
+                                imagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
+                            }
+                        }
+                        
+                        // Update the exercise with the image path if we got one
+                        if (imagePath != null) {
+                            val updatedExercise = newExercise.copy(id = exerciseId, imagePath = imagePath)
+                            foodLogRepository.updateExercise(updatedExercise)
+                        }
+                        
                         snackbarHostState.showSnackbar(
                             message = exerciseAddedSuccess
                         )
@@ -1079,6 +1077,7 @@ fun DashboardScreen(
                     }
                 }
                 showAddExerciseDialog = false
+                selectedExternalExercise = null
             }
         )
     }

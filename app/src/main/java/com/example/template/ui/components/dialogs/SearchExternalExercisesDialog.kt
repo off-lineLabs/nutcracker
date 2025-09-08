@@ -13,9 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 
@@ -40,6 +43,7 @@ fun SearchExternalExercisesDialog(
     var showEquipmentFilter by remember { mutableStateOf(false) }
     var showMuscleFilter by remember { mutableStateOf(false) }
     var showCategoryFilter by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     
     AlertDialog(
         onDismissRequest = onBack,
@@ -361,8 +365,32 @@ fun SearchExternalExercisesDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onBack) {
-                Text("Cancel")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Provided by ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+                TextButton(
+                    onClick = { 
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Text(
+                        text = "Yuhonas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = onBack) {
+                    Text("Cancel")
+                }
             }
         }
     )
