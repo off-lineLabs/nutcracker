@@ -43,24 +43,47 @@ fun EnhancedSelectExerciseDialog(
     var searchResults by remember { mutableStateOf<List<ExternalExercise>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
+    var currentFilterCount by remember { mutableStateOf(0) }
     
     val keyboardController = LocalSoftwareKeyboardController.current
     
-    // Debounced search
+    // Smart search with filter count trigger
     LaunchedEffect(searchQuery, selectedEquipment, selectedMuscle, selectedCategory) {
-        if (searchQuery.length >= 3) {
-            isLoading = true
-            delay(300) // Debounce
-            searchResults = externalExerciseService.searchExercises(
-                query = searchQuery,
-                equipment = selectedEquipment,
-                primaryMuscle = selectedMuscle,
-                category = selectedCategory
-            )
-            isLoading = false
-        } else {
-            searchResults = emptyList()
+        isLoading = true
+        delay(300) // Debounce
+        
+        // Get all exercises first
+        val allExercises = externalExerciseService.getAllExercises()
+        
+        // Apply filters
+        val filteredExercises = allExercises.filter { exercise ->
+            val matchesQuery = searchQuery.isEmpty() || 
+                exercise.name.contains(searchQuery, ignoreCase = true) ||
+                exercise.primaryMuscles.any { it.contains(searchQuery, ignoreCase = true) } ||
+                exercise.equipment?.contains(searchQuery, ignoreCase = true) == true ||
+                exercise.secondaryMuscles.any { it.contains(searchQuery, ignoreCase = true) }
+            
+            val matchesEquipment = selectedEquipment.isNullOrEmpty() || 
+                exercise.equipment?.equals(selectedEquipment, ignoreCase = true) == true
+            
+            val matchesMuscle = selectedMuscle.isNullOrEmpty() || 
+                exercise.primaryMuscles.any { it.equals(selectedMuscle, ignoreCase = true) }
+            
+            val matchesCategory = selectedCategory.isNullOrEmpty() || 
+                exercise.category.equals(selectedCategory, ignoreCase = true)
+            
+            matchesQuery && matchesEquipment && matchesMuscle && matchesCategory
         }
+        
+        // Update filter count
+        currentFilterCount = filteredExercises.size
+        
+        // Show results if we have a reasonable number (15 or fewer)
+        // OR if user has typed 3+ characters
+        val shouldShowResults = filteredExercises.size <= 15 || searchQuery.length >= 3
+        
+        searchResults = if (shouldShowResults) filteredExercises else emptyList()
+        isLoading = false
     }
     
     when (dialogState) {
@@ -86,6 +109,7 @@ fun EnhancedSelectExerciseDialog(
                 onCategoryChange = { selectedCategory = it },
                 searchResults = searchResults,
                 isLoading = isLoading,
+                currentFilterCount = currentFilterCount,
                 onBack = { 
                     dialogState = DialogState.MAIN
                     searchQuery = ""

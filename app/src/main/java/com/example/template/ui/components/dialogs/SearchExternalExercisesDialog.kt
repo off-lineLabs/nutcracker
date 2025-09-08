@@ -32,6 +32,7 @@ fun SearchExternalExercisesDialog(
     onCategoryChange: (String?) -> Unit,
     searchResults: List<ExternalExercise>,
     isLoading: Boolean,
+    currentFilterCount: Int,
     onBack: () -> Unit,
     onSelectExternalExercise: (ExternalExercise) -> Unit,
     keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
@@ -255,10 +256,26 @@ fun SearchExternalExercisesDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Search results
-                if (searchQuery.length < 3) {
+                // Filter count info
+                if (currentFilterCount > 0) {
                     Text(
-                        text = "Type at least 3 characters to search",
+                        text = "Found $currentFilterCount exercises matching your filters",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                
+                // Search results
+                if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount > 15) {
+                    Text(
+                        text = "Too many results ($currentFilterCount). Use more filters or type 3+ characters to narrow down.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount == 0) {
+                    Text(
+                        text = "Use filters or type 3+ characters to search",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
