@@ -851,13 +851,13 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
     Column {
         DatabaseButton(
             title = stringResource(R.string.export_database),
-            icon = Icons.Filled.FileDownload,
+            icon = Icons.Filled.FileUpload,
             onClick = exportHandler.onStartExport,
             enabled = !exportHandler.isExporting
         )
         DatabaseButton(
             title = stringResource(R.string.import_database),
-            icon = Icons.Filled.FileUpload,
+            icon = Icons.Filled.FileDownload,
             onClick = {
                 if (!isImporting) {
                     filePickerLauncher.launch("application/zip")
