@@ -87,37 +87,133 @@ fun SearchExternalExercisesDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Filter chips
-                Row(
+                // Filter dropdowns - stacked vertically for better space usage
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
-                        onClick = { showEquipmentFilter = !showEquipmentFilter },
-                        label = { Text("Equipment") },
-                        selected = selectedEquipment != null,
-                        leadingIcon = if (selectedEquipment != null) {
-                            { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                        } else null
-                    )
+                    // Equipment filter
+                    ExposedDropdownMenuBox(
+                        expanded = showEquipmentFilter,
+                        onExpandedChange = { showEquipmentFilter = !showEquipmentFilter }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedEquipment ?: "All Equipment",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Equipment") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showEquipmentFilter)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showEquipmentFilter,
+                            onDismissRequest = { showEquipmentFilter = false }
+                        ) {
+                            val equipmentOptions = listOf(
+                                "body only", "dumbbell", "barbell", "kettlebells", "machine", 
+                                "cable", "bands", "medicine ball", "exercise ball", "foam roll", 
+                                "e-z curl bar", "other"
+                            )
+                            equipmentOptions.forEach { equipment ->
+                                DropdownMenuItem(
+                                    text = { Text(equipment.replaceFirstChar { it.uppercase() }) },
+                                    onClick = {
+                                        onEquipmentChange(if (equipment == selectedEquipment) null else equipment)
+                                        showEquipmentFilter = false
+                                    },
+                                    leadingIcon = if (equipment == selectedEquipment) {
+                                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                                    } else null
+                                )
+                            }
+                        }
+                    }
                     
-                    FilterChip(
-                        onClick = { showMuscleFilter = !showMuscleFilter },
-                        label = { Text("Muscle") },
-                        selected = selectedMuscle != null,
-                        leadingIcon = if (selectedMuscle != null) {
-                            { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                        } else null
-                    )
+                    // Muscle filter
+                    ExposedDropdownMenuBox(
+                        expanded = showMuscleFilter,
+                        onExpandedChange = { showMuscleFilter = !showMuscleFilter }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedMuscle ?: "All Muscles",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Primary Muscle") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showMuscleFilter)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showMuscleFilter,
+                            onDismissRequest = { showMuscleFilter = false }
+                        ) {
+                            val muscleOptions = listOf(
+                                "abdominals", "abductors", "adductors", "biceps", "calves", 
+                                "chest", "forearms", "glutes", "hamstrings", "lats", 
+                                "lower back", "middle back", "neck", "quadriceps", 
+                                "shoulders", "traps", "triceps"
+                            )
+                            muscleOptions.forEach { muscle ->
+                                DropdownMenuItem(
+                                    text = { Text(muscle.replaceFirstChar { it.uppercase() }) },
+                                    onClick = {
+                                        onMuscleChange(if (muscle == selectedMuscle) null else muscle)
+                                        showMuscleFilter = false
+                                    },
+                                    leadingIcon = if (muscle == selectedMuscle) {
+                                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                                    } else null
+                                )
+                            }
+                        }
+                    }
                     
-                    FilterChip(
-                        onClick = { showCategoryFilter = !showCategoryFilter },
-                        label = { Text("Category") },
-                        selected = selectedCategory != null,
-                        leadingIcon = if (selectedCategory != null) {
-                            { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                        } else null
-                    )
+                    // Category filter
+                    ExposedDropdownMenuBox(
+                        expanded = showCategoryFilter,
+                        onExpandedChange = { showCategoryFilter = !showCategoryFilter }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedCategory ?: "All Categories",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Category") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryFilter)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showCategoryFilter,
+                            onDismissRequest = { showCategoryFilter = false }
+                        ) {
+                            val categoryOptions = listOf(
+                                "strength", "stretching", "strongman", "plyometrics", 
+                                "cardio", "olympic weightlifting"
+                            )
+                            categoryOptions.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category.replaceFirstChar { it.uppercase() }) },
+                                    onClick = {
+                                        onCategoryChange(if (category == selectedCategory) null else category)
+                                        showCategoryFilter = false
+                                    },
+                                    leadingIcon = if (category == selectedCategory) {
+                                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                                    } else null
+                                )
+                            }
+                        }
+                    }
                 }
                 
                 // Show selected filters
@@ -253,123 +349,5 @@ fun SearchExternalExercisesDialog(
         }
     )
     
-    // Equipment filter dropdown
-    if (showEquipmentFilter) {
-        EquipmentFilterDropdown(
-            selectedEquipment = selectedEquipment,
-            onEquipmentSelected = { equipment ->
-                onEquipmentChange(if (equipment == selectedEquipment) null else equipment)
-                showEquipmentFilter = false
-            },
-            onDismiss = { showEquipmentFilter = false }
-        )
-    }
-    
-    // Muscle filter dropdown
-    if (showMuscleFilter) {
-        MuscleFilterDropdown(
-            selectedMuscle = selectedMuscle,
-            onMuscleSelected = { muscle ->
-                onMuscleChange(if (muscle == selectedMuscle) null else muscle)
-                showMuscleFilter = false
-            },
-            onDismiss = { showMuscleFilter = false }
-        )
-    }
-    
-    // Category filter dropdown
-    if (showCategoryFilter) {
-        CategoryFilterDropdown(
-            selectedCategory = selectedCategory,
-            onCategorySelected = { category ->
-                onCategoryChange(if (category == selectedCategory) null else category)
-                showCategoryFilter = false
-            },
-            onDismiss = { showCategoryFilter = false }
-        )
-    }
 }
 
-@Composable
-private fun EquipmentFilterDropdown(
-    selectedEquipment: String?,
-    onEquipmentSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val equipmentOptions = listOf(
-        "body only", "dumbbell", "barbell", "kettlebells", "machine", 
-        "cable", "bands", "medicine ball", "exercise ball", "foam roll", 
-        "e-z curl bar", "other"
-    )
-    
-    DropdownMenu(
-        expanded = true,
-        onDismissRequest = onDismiss
-    ) {
-        equipmentOptions.forEach { equipment ->
-            DropdownMenuItem(
-                text = { Text(equipment.replaceFirstChar { it.uppercase() }) },
-                onClick = { onEquipmentSelected(equipment) },
-                leadingIcon = if (equipment == selectedEquipment) {
-                    { Icon(Icons.Filled.Check, contentDescription = null) }
-                } else null
-            )
-        }
-    }
-}
-
-@Composable
-private fun MuscleFilterDropdown(
-    selectedMuscle: String?,
-    onMuscleSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val muscleOptions = listOf(
-        "abdominals", "abductors", "adductors", "biceps", "calves", 
-        "chest", "forearms", "glutes", "hamstrings", "lats", 
-        "lower back", "middle back", "neck", "quadriceps", 
-        "shoulders", "traps", "triceps"
-    )
-    
-    DropdownMenu(
-        expanded = true,
-        onDismissRequest = onDismiss
-    ) {
-        muscleOptions.forEach { muscle ->
-            DropdownMenuItem(
-                text = { Text(muscle.replaceFirstChar { it.uppercase() }) },
-                onClick = { onMuscleSelected(muscle) },
-                leadingIcon = if (muscle == selectedMuscle) {
-                    { Icon(Icons.Filled.Check, contentDescription = null) }
-                } else null
-            )
-        }
-    }
-}
-
-@Composable
-private fun CategoryFilterDropdown(
-    selectedCategory: String?,
-    onCategorySelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val categoryOptions = listOf(
-        "strength", "stretching", "strongman", "plyometrics", 
-        "cardio", "olympic weightlifting"
-    )
-    
-    DropdownMenu(
-        expanded = true,
-        onDismissRequest = onDismiss
-    ) {
-        categoryOptions.forEach { category ->
-            DropdownMenuItem(
-                text = { Text(category.replaceFirstChar { it.uppercase() }) },
-                onClick = { onCategorySelected(category) },
-                leadingIcon = if (category == selectedCategory) {
-                    { Icon(Icons.Filled.Check, contentDescription = null) }
-                } else null
-            )
-        }
-    }
-}
