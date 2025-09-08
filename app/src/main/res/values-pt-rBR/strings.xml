@@ -106,4 +106,31 @@
     <string name="unit_units">Unidades (unit)</string>
     <string name="unit_servings">Porções (serving)</string>
     <string name="unit_portions">Porções (portion)</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings">Configurações</string>
+    <string name="theme">Tema</string>
+    <string name="language">Idioma</string>
+    <string name="dark_theme">Tema Escuro</string>
+    <string name="light_theme">Tema Claro</string>
+    <string name="system_theme">Tema do Sistema</string>
+    <string name="english">Inglês</string>
+    <string name="portuguese">Português (Brasil)</string>
+    <string name="spanish">Espanhol</string>
+    <string name="export_database">Exportar Banco de Dados</string>
+    <string name="import_database">Importar Banco de Dados</string>
+    <string name="app_version">Versão do App</string>
+    <string name="version_info">Versão %1$s (%2$d)</string>
+    <string name="legal_information">Informações Legais</string>
+    <string name="publisher_brand">OFFLINE LABS</string>
+    <string name="license_info">Licença: GNU GPL 3</string>
+    <string name="terms_of_use">Termos de Uso</string>
+    <string name="terms_of_use_text">Ao usar este app você concorda com os termos de uso</string>
+    <string name="github_repo">Repositório do GitHub</string>
+    <string name="donate">Doar</string>
+    <string name="donate_message">Apoie o desenvolvimento deste app</string>
+    <string name="terms_of_use_dialog_title">Termos de Uso</string>
+    <string name="terms_of_use_dialog_content">Nutcracker – Termos de Uso\n\nNutcracker é um aplicativo gratuito e de código aberto lançado pela Offline Labs sob a Licença Pública Geral GNU v3 (GPLv3). Ao baixar, instalar ou usar este aplicativo, você concorda com os seguintes termos:\n\n\nLICENÇA E LIBERDADE\n• Nutcracker está licenciado sob GNU GPL v3.\n• Você é livre para usar, estudar, compartilhar e modificar o aplicativo de acordo com a licença.\n• Qualquer versão distribuída do Nutcracker deve permanecer gratuita e sem publicidade, de acordo com esta licença.\n\n\nSEM GARANTIAS\n• Nutcracker é um projeto beta. Pode parar de funcionar, perder dados ou conter erros a qualquer momento.\n• Não há garantia de que o aplicativo será mantido, atualizado ou suportado no futuro.\n• Você não deve confiar no Nutcracker para nada crítico. Use-o inteiramente por sua conta e risco.\n\n\nISENÇÃO DE RESPONSABILIDADE\n• Offline Labs e os desenvolvedores não se responsabilizam por quaisquer problemas, perdas, danos ou custos causados pelo uso deste aplicativo.\n• Isso inclui (mas não se limita a) perda de dados, falha do dispositivo, corrupção de arquivos ou qualquer dano indireto ou direto.\n• Ao usar o Nutcracker, você aceita total responsabilidade por quaisquer consequências.\n\n\nSUPORTE E PROBLEMAS\n• Este é um projeto comunitário. Não há suporte oficial.\n• Para bugs, solicitações ou problemas técnicos, por favor abra uma issue no repositório do GitHub.\n• Para qualquer outra coisa, você pode nos contatar em offlinelabs@duck.com.\n\n\nGERAL\n• Ao usar o Nutcracker, você concorda que estes termos se aplicam independentemente de onde ou como você acessa o aplicativo.\n• Estes termos podem mudar a qualquer momento sem aviso prévio.</string>
+    <string name="close">Fechar</string>
+    <string name="settings_icon_description">Configurações</string>
 </resources>

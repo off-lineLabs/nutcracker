@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -334,7 +335,10 @@ private fun NutrientBox(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    onNavigateToSettings: () -> Unit = {},
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
     val coroutineScope = rememberCoroutineScope()
@@ -527,14 +531,14 @@ fun DashboardScreen() {
     val darkGray900 = Color(0xFF111827)  // Your specific dark background
     val textGray200 = Color(0xFFE5E7EB)  // Your specific text gray
 
-    val gradientStartColor = if (isSystemInDarkTheme()) darkGray900 else lightGray50
-    val gradientEndColor = if (isSystemInDarkTheme()) darkGray800 else lightGray100
-    val innerContainerBackgroundColor = if (isSystemInDarkTheme()) darkGray800 else Color(0xFFC6C6C7)
+    val gradientStartColor = if (isDarkTheme) darkGray900 else lightGray50
+    val gradientEndColor = if (isDarkTheme) darkGray800 else lightGray100
+    val innerContainerBackgroundColor = if (isDarkTheme) darkGray800 else Color(0xFFC6C6C7)
 
-    val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
-    val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
-    val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
-    val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
+    val caloriesRemainingLabelColor = if (isDarkTheme) Color(0xFF9CA3AF) else Color(0xFF6B7280)
+    val caloriesRemainingValueColor = if (isDarkTheme) Color.White else Color(0xFF111827)
+    val caloriesConsumedColor = if (isDarkTheme) textGray200 else Color(0xFF1F2937)
+    val caloriesGoalColor = if (isDarkTheme) Color(0xFF6B7280) else Color(0xFF9CA3AF)
 
     val view = LocalView.current
     val density = LocalDensity.current
@@ -690,17 +694,35 @@ fun DashboardScreen() {
                         }
                     }
                     
-                    // Progress bar button on the right
-                    IconButton(
-                        onClick = { /* TODO: Implement progress bar functionality */ },
-                        modifier = Modifier.size(48.dp)
+                    // Settings and Progress bar buttons on the right
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.BarChart,
-                            contentDescription = stringResource(R.string.progress_details),
-                            tint = Color(0xFFC0C0C0),
-                            modifier = Modifier.size(24.dp)
-                        )
+                        // Settings button
+                        IconButton(
+                            onClick = onNavigateToSettings,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = stringResource(R.string.settings_icon_description),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        // Progress bar button
+                        IconButton(
+                            onClick = { /* TODO: Implement progress bar functionality */ },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.BarChart,
+                                contentDescription = stringResource(R.string.progress_details),
+                                tint = Color(0xFFC0C0C0),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }
