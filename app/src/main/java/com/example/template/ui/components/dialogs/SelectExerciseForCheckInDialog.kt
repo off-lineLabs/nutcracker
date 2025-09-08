@@ -1,9 +1,13 @@
 package com.example.template.ui.components.dialogs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -13,6 +17,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +26,7 @@ import com.example.template.R
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.ExerciseType
+import com.example.template.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,16 +103,38 @@ fun SelectExerciseForCheckInDialog(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
-                                            ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
-                                            ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
-                                            ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
-                                        },
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    // Exercise icon with modern gradient and shadow - brand red
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .shadow(
+                                                elevation = 6.dp,
+                                                shape = RoundedCornerShape(16.dp),
+                                                ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
+                                                spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
+                                            )
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        exerciseItemBackgroundColor(),
+                                                        exerciseItemBackgroundColor().copy(alpha = 0.8f)
+                                                    )
+                                                )
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+                                                ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
+                                                ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
+                                                ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
+                                            },
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(26.dp)
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(

@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -41,6 +38,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import com.example.template.ui.components.PillTracker
+import com.example.template.ui.components.ExerciseToggle
+import com.example.template.ui.components.TEFToggle
+import com.example.template.data.model.Pill
+import com.example.template.data.model.PillCheckIn
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import com.example.template.FoodLogApplication
@@ -60,10 +62,16 @@ import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
+import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
+import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
+import com.example.template.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.example.template.util.logger.AppLogger
+import com.example.template.util.logger.logUserAction
+import com.example.template.util.logger.safeSuspendExecute
 
 @Composable
 fun NutrientProgressDisplay(
@@ -211,7 +219,7 @@ private fun NutrientBarRow(
     val finalConsumedColor = when {
         consumed > goal && isProteinOrFiber -> proteinFiberColor
         consumed > goal -> exceededColor
-        else -> Color(0xFFE5E7EB)
+        else -> appTextPrimaryColor()
     }
     
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -220,7 +228,7 @@ private fun NutrientBarRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = title, fontWeight = FontWeight.SemiBold, color = Color(0xFFE5E7EB))
+            Text(text = title, fontWeight = FontWeight.SemiBold, color = appTextPrimaryColor())
             val goalText = String.format(Locale.getDefault(), "%.0f", goal)
             val consumedText = String.format(Locale.getDefault(), "%.0f", consumed)
             Text(
@@ -228,7 +236,7 @@ private fun NutrientBarRow(
                     withStyle(style = SpanStyle(color = finalConsumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
                         append(consumedText)
                     }
-                    withStyle(style = SpanStyle(color = Color(0xFF9CA3AF), fontSize = 12.sp)) {
+                    withStyle(style = SpanStyle(color = appTextSecondaryColor(), fontSize = 12.sp)) {
                         append(" / ${goalText}${unit}")
                     }
                 }
@@ -259,15 +267,15 @@ private fun NutrientBarRow(
 @Composable
 private fun NutrientBox(
     totals: DailyTotals?,
-    goals: UserGoal,
-    isDark: Boolean
+    goals: UserGoal
 ) {
-    val track = if (isDark) Color(0xFF4B5563) else Color(0xFFE5E7EB)
+    // Use themed colors instead of hardcoded values
+    val track = progressTrackColor()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFF374151).copy(alpha = 0.6f),
+                color = appContainerBackgroundColor(),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -276,8 +284,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.carbohydrates_label),
             consumed = totals?.totalCarbohydrates ?: 0.0,
             goal = goals.carbsGoal_g.toDouble(),
-            barStartColor = Color(0xFF60A5FA),
-            barEndColor = Color(0xFF2563EB),
+            barStartColor = nutrientCarbsColor(),
+            barEndColor = nutrientCarbsColor(),
             trackColor = track,
             unit = "g"
         )
@@ -286,8 +294,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.protein_label),
             consumed = totals?.totalProtein ?: 0.0,
             goal = goals.proteinGoal_g.toDouble(),
-            barStartColor = Color(0xFFF87171),
-            barEndColor = Color(0xFFDC2626),
+            barStartColor = nutrientProteinColor(),
+            barEndColor = nutrientProteinColor(),
             trackColor = track,
             unit = "g"
         )
@@ -296,8 +304,8 @@ private fun NutrientBox(
             title = stringResource(id = R.string.fat_label),
             consumed = totals?.totalFat ?: 0.0,
             goal = goals.fatGoal_g.toDouble(),
-            barStartColor = Color(0xFFFBBF24),
-            barEndColor = Color(0xFFD97706),
+            barStartColor = nutrientFatColor(),
+            barEndColor = nutrientFatColor(),
             trackColor = track,
             unit = "g"
         )
@@ -308,18 +316,18 @@ private fun NutrientBox(
             consumed = totals?.totalFiber ?: 0.0,
             goal = goals.fiberGoal_g.toDouble(),
             unit = "g",
-            labelColor = Color(0xFF9CA3AF),
-            valueColor = Color(0xFFE5E7EB),
-            goalColor = Color(0xFF9CA3AF)
+            labelColor = appTextSecondaryColor(),
+            valueColor = appTextPrimaryColor(),
+            goalColor = appTextSecondaryColor()
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
             consumed = totals?.totalSodium ?: 0.0,
             goal = goals.sodiumGoal_mg.toDouble(),
             unit = "mg",
-            labelColor = Color(0xFF9CA3AF),
-            valueColor = Color(0xFFE5E7EB),
-            goalColor = Color(0xFF9CA3AF)
+            labelColor = appTextSecondaryColor(),
+            valueColor = appTextPrimaryColor(),
+            goalColor = appTextSecondaryColor()
         )
     }
 }
@@ -337,17 +345,21 @@ fun DashboardScreen() {
     var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
-    var consumedCalories by remember { mutableStateOf(0.0) }
-    var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
+    var consumedCalories by remember { mutableDoubleStateOf(0.0) }
+    var exerciseCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
+    var tefCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
+    var includeTEFBonus by remember { mutableStateOf(false) }
+    
+    // Pill tracking state
+    var pills by remember { mutableStateOf(emptyList<Pill>()) }
+    var currentPillCheckIn by remember { mutableStateOf<PillCheckIn?>(null) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
-    val exerciseLogDeletedSuccess = stringResource(R.string.exercise_log_deleted_success)
-    val exerciseLogDeleteError = stringResource(R.string.exercise_log_delete_error)
     val goalSavedSuccess = stringResource(R.string.goal_saved_success)
     val goalSaveError = stringResource(R.string.goal_save_error)
     val mealAddedSuccess = stringResource(R.string.meal_added_success)
@@ -358,11 +370,38 @@ fun DashboardScreen() {
     val exerciseAddError = stringResource(R.string.exercise_add_error)
     val okText = stringResource(R.string.ok)
     val cancelText = stringResource(R.string.cancel)
+    
+    // Additional string resources for hardcoded strings
+    val failedToSaveGoal = stringResource(R.string.failed_to_save_goal)
+    val failedToCreateDefaultPill = stringResource(R.string.failed_to_create_default_pill)
+    val dailySupplementTaken = stringResource(R.string.daily_supplement_taken)
+    val dailySupplementRemoved = stringResource(R.string.daily_supplement_removed)
+    val failedToUpdatePillStatus = stringResource(R.string.failed_to_update_pill_status)
+    val exerciseBonusCaloriesOn = stringResource(R.string.exercise_bonus_calories_on)
+    val exerciseBonusCaloriesOff = stringResource(R.string.exercise_bonus_calories_off)
+    val tefBonusCaloriesOn = stringResource(R.string.tef_bonus_calories_on)
+    val tefBonusCaloriesOff = stringResource(R.string.tef_bonus_calories_off)
+    val exerciseCheckInCompletedSuccess = stringResource(R.string.exercise_check_in_completed_success)
+    val failedToCompleteExerciseCheckIn = stringResource(R.string.failed_to_complete_exercise_check_in)
+    val mealUpdatedSuccess = stringResource(R.string.meal_updated_success)
+    val failedToUpdateMeal = stringResource(R.string.failed_to_update_meal)
+    val mealDeletedSuccess = stringResource(R.string.meal_deleted_success)
+    val failedToDeleteMeal = stringResource(R.string.failed_to_delete_meal)
+    val exerciseUpdatedSuccess = stringResource(R.string.exercise_updated_success)
+    val failedToUpdateExercise = stringResource(R.string.failed_to_update_exercise)
+    val exerciseDeletedSuccess = stringResource(R.string.exercise_deleted_success)
+    val failedToDeleteExercise = stringResource(R.string.failed_to_delete_exercise)
+    val defaultPillName = stringResource(R.string.default_pill_name)
+    val dateFormatPattern = stringResource(R.string.date_format_pattern)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
+    
+    // Edit dialog state variables
+    var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
+    var showEditExerciseDialog by remember { mutableStateOf<DailyExerciseEntry?>(null) }
     
     // Date navigation state - always start with today
     var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
@@ -387,20 +426,53 @@ fun DashboardScreen() {
             userGoal = goalFromDb ?: UserGoal.default()
             if (goalFromDb == null) {
                 coroutineScope.launch {
-                    try {
-                        foodLogRepository.upsertUserGoal(UserGoal.default())
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = "Failed to save goal. Please try again."
-                        )
-                    }
+                    safeSuspendExecute(
+                        operation = "Initialize default user goal",
+                        block = {
+                            foodLogRepository.upsertUserGoal(UserGoal.default())
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to save default user goal", e)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = failedToSaveGoal
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    // Load pills and initialize default pill if none exist
+    LaunchedEffect(key1 = foodLogRepository) {
+        foodLogRepository.getAllPills().collectLatest { pillList ->
+            pills = pillList
+            if (pillList.isEmpty()) {
+                // Create default pill
+                coroutineScope.launch {
+                    safeSuspendExecute(
+                        operation = "Create default pill",
+                        block = {
+                            foodLogRepository.insertPill(Pill(name = defaultPillName))
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to create default pill", e)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = failedToCreateDefaultPill
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }
     }
 
     val selectedDateString = remember(selectedDate) {
-        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
@@ -415,43 +487,54 @@ fun DashboardScreen() {
         }
     }
 
+    // Check for pill check-in on selected date
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = pills) {
+        if (pills.isNotEmpty()) {
+            val defaultPillId = pills.first().id
+            foodLogRepository.getPillCheckInByPillIdAndDate(defaultPillId, selectedDateString).collectLatest { checkIn ->
+                currentPillCheckIn = checkIn
+            }
+        }
+    }
+
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
         foodLogRepository.getDailyExerciseCalories(selectedDateString).collectLatest { calories ->
             exerciseCaloriesBurned = calories
         }
     }
 
+    // Calculate TEF calories from daily totals
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
+            tefCaloriesBurned = totals?.let { 
+                com.example.template.utils.TEFCalculator.calculateTEFBonus(it) 
+            } ?: 0.0
+        }
+    }
+
     // Load daily nutrient totals with exercise calories consideration
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = includeExerciseCalories) {
-        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories).collectLatest { totals ->
+    LaunchedEffect(foodLogRepository, selectedDateString, includeExerciseCalories, includeTEFBonus) {
+        foodLogRepository.getDailyCombinedTotals(selectedDateString, includeExerciseCalories, includeTEFBonus).collectLatest { totals ->
             dailyTotalsConsumed = totals
             consumedCalories = totals?.totalCalories ?: 0.0
         }
     }
 
-    val lightGray50 = Color(0xFFF9FAFB)
-    val lightGray100 = Color(0xFFF3F4F6)
-    val darkGray800 = Color(0xFF1F2937)
-    val darkGray900 = Color(0xFF111827)
-    val textGray200 = Color(0xFFE5E7EB)
+    // Use specific colors for the exact look you want
+    val lightGray50 = Color(0xFFFAFBFC)  // Improved softer background
+    val lightGray100 = Color(0xFFF3F4F6) // Your specific light gray
+    val darkGray800 = Color(0xFF1F2937)  // Your specific dark gray for container
+    val darkGray900 = Color(0xFF111827)  // Your specific dark background
+    val textGray200 = Color(0xFFE5E7EB)  // Your specific text gray
 
     val gradientStartColor = if (isSystemInDarkTheme()) darkGray900 else lightGray50
     val gradientEndColor = if (isSystemInDarkTheme()) darkGray800 else lightGray100
-    val innerContainerBackgroundColor = darkGray800
-
-    // Calculate remaining calories based on actual data
-    val remainingCalories = (userGoal.caloriesGoal - consumedCalories).toInt()
+    val innerContainerBackgroundColor = if (isSystemInDarkTheme()) darkGray800 else Color(0xFFC6C6C7)
 
     val caloriesRemainingLabelColor = if (isSystemInDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
     val caloriesRemainingValueColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF111827)
     val caloriesConsumedColor = if (isSystemInDarkTheme()) textGray200 else Color(0xFF1F2937)
     val caloriesGoalColor = if (isSystemInDarkTheme()) Color(0xFF6B7280) else Color(0xFF9CA3AF)
-
-    // Nutrient specific colors (can be themed as well)
-    val nutrientLabelColor = caloriesRemainingLabelColor
-    val nutrientConsumedColor = caloriesConsumedColor
-    val nutrientGoalColor = caloriesGoalColor
-
 
     val view = LocalView.current
     val density = LocalDensity.current
@@ -461,6 +544,69 @@ fun DashboardScreen() {
         WindowInsetsCompat.Type.statusBars().let { insets ->
             view.rootWindowInsets?.getInsets(insets)?.top ?: 0
         }.toDp()
+    }
+
+    // Pill toggle function
+    val onPillToggle: () -> Unit = {
+        coroutineScope.launch {
+            try {
+                if (pills.isNotEmpty()) {
+                    val defaultPillId = pills.first().id
+                    
+                    if (currentPillCheckIn == null) {
+                        // Create new pill check-in
+                        val newCheckIn = PillCheckIn(
+                            pillId = defaultPillId,
+                            timestamp = java.time.LocalDateTime.now()
+                        )
+                        foodLogRepository.insertPillCheckIn(newCheckIn)
+                        snackbarHostState.showSnackbar(
+                            message = dailySupplementTaken
+                        )
+                    } else {
+                        // Delete existing pill check-in
+                        foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
+                        snackbarHostState.showSnackbar(
+                            message = dailySupplementRemoved
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.exception("DashboardScreen", "Failed to update pill status", e, mapOf(
+                    "selectedDate" to selectedDateString,
+                    "pillsCount" to pills.size
+                ))
+                snackbarHostState.showSnackbar(
+                    message = failedToUpdatePillStatus
+                )
+            }
+        }
+    }
+
+    // Exercise toggle function
+    val onExerciseToggle: () -> Unit = {
+        includeExerciseCalories = !includeExerciseCalories
+        coroutineScope.launch {
+            val message = if (includeExerciseCalories) {
+                exerciseBonusCaloriesOn
+            } else {
+                exerciseBonusCaloriesOff
+            }
+            snackbarHostState.showSnackbar(message = message)
+        }
+    }
+
+    // TEF toggle function
+    val onTEFToggle: () -> Unit = {
+        includeTEFBonus = !includeTEFBonus
+        coroutineScope.launch {
+            val message = if (includeTEFBonus) {
+                tefBonusCaloriesOn
+            } else {
+                tefBonusCaloriesOff
+            }
+            snackbarHostState.showSnackbar(message = message)
+        }
     }
 
     Scaffold(
@@ -560,24 +706,42 @@ fun DashboardScreen() {
             }
         },
         floatingActionButton = {
-            // Two FABs for Add Meal and Add Exercise
+            // Two FABs for Add Meal and Add Exercise with modern styling
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Add Exercise FAB
+                // Add Exercise FAB - using your brand red
                 FloatingActionButton(
                     onClick = { showSelectExerciseDialog = true },
-                    containerColor = Color(0xFF3B82F6)
+                    containerColor = fabExerciseColor(),
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
                 ) {
-                    Icon(painterResource(R.drawable.ic_sprint), contentDescription = stringResource(R.string.add_exercise))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_sprint), 
+                        contentDescription = stringResource(R.string.add_exercise),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 
-                // Add Meal FAB
+                // Add Meal FAB - using your brand gold
                 FloatingActionButton(
                     onClick = { showSelectMealDialog = true },
-                    containerColor = Color(0xFF10B981)
+                    containerColor = fabMealColor(),
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
                 ) {
-                    Icon(Icons.Filled.Restaurant, contentDescription = stringResource(R.string.add_meal))
+                    Icon(
+                        Icons.Filled.Restaurant, 
+                        contentDescription = stringResource(R.string.add_meal),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         },
@@ -611,32 +775,35 @@ fun DashboardScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
-                        // Calories ring section
-                        CaloriesRing(
-                            consumedCalories = consumedCalories,
-                            goalCalories = userGoal.caloriesGoal.toDouble(),
-                            labelColor = caloriesRemainingLabelColor,
-                            valueColor = caloriesRemainingValueColor,
-                            consumedColor = caloriesConsumedColor,
-                            goalColor = caloriesGoalColor
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Exercise calories toggle
-                        Row(
+                        // Calories ring section with symmetrical toggles
+                        Box(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = stringResource(R.string.include_exercise_calories),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = textGray200
+                            // Calories ring - centered as before
+                            CaloriesRing(
+                                consumedCalories = consumedCalories,
+                                goalCalories = userGoal.caloriesGoal.toDouble(),
+                                labelColor = caloriesRemainingLabelColor,
+                                valueColor = caloriesRemainingValueColor,
+                                consumedColor = caloriesConsumedColor,
+                                goalColor = caloriesGoalColor
                             )
-                            Switch(
-                                checked = includeExerciseCalories,
-                                onCheckedChange = { includeExerciseCalories = it }
+                            
+                            // Exercise toggle - positioned on the left
+                            ExerciseToggle(
+                                isEnabled = includeExerciseCalories,
+                                onToggle = onExerciseToggle,
+                                exerciseCalories = exerciseCaloriesBurned,
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                            
+                            // TEF toggle - positioned on the right
+                            TEFToggle(
+                                isEnabled = includeTEFBonus,
+                                onToggle = onTEFToggle,
+                                tefCalories = tefCaloriesBurned,
+                                modifier = Modifier.align(Alignment.CenterEnd)
                             )
                         }
 
@@ -650,7 +817,7 @@ fun DashboardScreen() {
                             Text(
                                 text = stringResource(id = R.string.nutrient_details_title),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = textGray200,
+                                color = appTextPrimaryColor(),
                                 textAlign = TextAlign.Center
                             )
                             IconButton(
@@ -662,7 +829,7 @@ fun DashboardScreen() {
                                 Icon(
                                     imageVector = Icons.Filled.Edit,
                                     contentDescription = stringResource(R.string.set_goal),
-                                    tint = Color(0xFF9CA3AF),
+                                    tint = appTextSecondaryColor(),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -671,18 +838,29 @@ fun DashboardScreen() {
                         Spacer(modifier = Modifier.height(8.dp))
                         NutrientBox(
                             totals = dailyTotalsConsumed,
-                            goals = userGoal,
-                            isDark = isSystemInDarkTheme()
+                            goals = userGoal
                         )
                         
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        // Pill tracker - positioned after nutrients box
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            PillTracker(
+                                isPillTaken = currentPillCheckIn != null,
+                                pillCheckIn = currentPillCheckIn,
+                                onPillToggle = onPillToggle
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
                             stringResource(R.string.recent_check_ins),
                             style = MaterialTheme.typography.titleMedium,
-                            color = textGray200
+                            color = appTextPrimaryColor()
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
@@ -691,58 +869,13 @@ fun DashboardScreen() {
                         FilterableHistoryView(
                             mealEntries = dailyMealCheckIns,
                             exerciseEntries = dailyExerciseLogs,
-                            onDeleteMeal = { checkIn ->
-                                coroutineScope.launch {
-                                    try {
-                                        // Convert DailyNutritionEntry to MealCheckIn for deletion
-                                        val mealCheckIn = MealCheckIn(
-                                            id = checkIn.checkInId,
-                                            mealId = checkIn.mealId,
-                                            checkInDate = checkIn.checkInDate,
-                                            checkInDateTime = checkIn.checkInDateTime,
-                                            servingSize = checkIn.servingSize,
-                                            notes = checkIn.notes
-                                        )
-                                        foodLogRepository.deleteMealCheckIn(mealCheckIn)
-                                        // Show success message
-                                        snackbarHostState.showSnackbar(
-                                            message = "Check-in deleted successfully"
-                                        )
-                                    } catch (e: Exception) {
-                                        // Show error message
-                                        snackbarHostState.showSnackbar(
-                                            message = "Failed to delete check-in. Please try again."
-                                        )
-                                    }
-                                }
+                            onDeleteMeal = { }, // No longer used - delete only available in edit dialog
+                            onDeleteExercise = { }, // No longer used - delete only available in edit dialog
+                            onEditMeal = { checkIn ->
+                                showEditMealDialog = checkIn
                             },
-                            onDeleteExercise = { exerciseEntry ->
-                                coroutineScope.launch {
-                                    try {
-                                        // Convert DailyExerciseEntry to ExerciseLog for deletion
-                                        val exerciseLog = ExerciseLog(
-                                            id = exerciseEntry.logId,
-                                            exerciseId = exerciseEntry.exerciseId,
-                                            logDate = exerciseEntry.logDate,
-                                            logDateTime = exerciseEntry.logDateTime,
-                                            weight = exerciseEntry.weight,
-                                            reps = exerciseEntry.reps,
-                                            sets = exerciseEntry.sets,
-                                            caloriesBurned = exerciseEntry.caloriesBurned,
-                                            notes = exerciseEntry.notes
-                                        )
-                                        foodLogRepository.deleteExerciseLog(exerciseLog)
-                                        // Show success message
-                                        snackbarHostState.showSnackbar(
-                                            message = exerciseLogDeletedSuccess
-                                        )
-                                    } catch (e: Exception) {
-                                        // Show error message
-                                        snackbarHostState.showSnackbar(
-                                            message = exerciseLogDeleteError
-                                        )
-                                    }
-                                }
+                            onEditExercise = { exerciseEntry ->
+                                showEditExerciseDialog = exerciseEntry
                             }
                         )
                     }
@@ -757,16 +890,31 @@ fun DashboardScreen() {
             onDismiss = { showSetGoalDialog = false },
             onSetGoal = { updatedGoal ->
                 coroutineScope.launch {
-                    try {
-                        foodLogRepository.upsertUserGoal(updatedGoal)
-                        snackbarHostState.showSnackbar(
-                            message = goalSavedSuccess
-                        )
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            message = goalSaveError
-                        )
-                    }
+                    safeSuspendExecute(
+                        operation = "Update user goal",
+                        block = {
+                            foodLogRepository.upsertUserGoal(updatedGoal)
+                            logUserAction("Goal Updated", mapOf(
+                                "calories" to updatedGoal.caloriesGoal,
+                                "protein" to updatedGoal.proteinGoal_g,
+                                "carbs" to updatedGoal.carbsGoal_g,
+                                "fat" to updatedGoal.fatGoal_g
+                            ))
+                        },
+                        onError = { e ->
+                            AppLogger.exception("DashboardScreen", "Failed to save user goal", e, mapOf(
+                                "goal" to updatedGoal.toString()
+                            ))
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = goalSaveError
+                                )
+                            }
+                        }
+                    )
+                    snackbarHostState.showSnackbar(
+                        message = goalSavedSuccess
+                    )
                 }
                 showSetGoalDialog = false
             }
@@ -799,6 +947,9 @@ fun DashboardScreen() {
                             message = mealAddedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to add meal", e, mapOf(
+                            "mealName" to newMeal.name
+                        ))
                         snackbarHostState.showSnackbar(
                             message = mealAddError
                         )
@@ -821,6 +972,10 @@ fun DashboardScreen() {
                             message = checkInCompletedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to complete meal check-in", e, mapOf(
+                            "mealId" to mealCheckIn.mealId,
+                            "date" to mealCheckIn.checkInDate
+                        ))
                         snackbarHostState.showSnackbar(
                             message = checkInCompletedError
                         )
@@ -857,6 +1012,9 @@ fun DashboardScreen() {
                             message = exerciseAddedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to add exercise", e, mapOf(
+                            "exerciseName" to newExercise.name
+                        ))
                         snackbarHostState.showSnackbar(
                             message = exerciseAddError
                         )
@@ -894,11 +1052,15 @@ fun DashboardScreen() {
                     try {
                         foodLogRepository.insertExerciseLog(exerciseLog)
                         snackbarHostState.showSnackbar(
-                            message = "Exercise check-in completed successfully"
+                            message = exerciseCheckInCompletedSuccess
                         )
                     } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to complete exercise check-in", e, mapOf(
+                            "exerciseId" to exerciseLog.exerciseId,
+                            "date" to exerciseLog.logDate
+                        ))
                         snackbarHostState.showSnackbar(
-                            message = "Failed to complete exercise check-in. Please try again."
+                            message = failedToCompleteExerciseCheckIn
                         )
                     }
                 }
@@ -958,6 +1120,133 @@ fun DashboardScreen() {
             DatePicker(
                 state = datePickerState,
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+    
+    // Edit Meal Dialog
+    showEditMealDialog?.let { checkIn ->
+        // Find the corresponding meal
+        val meal = meals.find { it.id == checkIn.mealId }
+        if (meal != null) {
+            // Convert DailyNutritionEntry to MealCheckIn for editing
+            val existingMealCheckIn = MealCheckIn(
+                id = checkIn.checkInId,
+                mealId = checkIn.mealId,
+                checkInDate = checkIn.checkInDate,
+                checkInDateTime = checkIn.checkInDateTime,
+                servingSize = checkIn.servingSize,
+                notes = checkIn.notes
+            )
+            
+            UnifiedCheckInDialog<CheckInData.Meal>(
+                onDismiss = { showEditMealDialog = null },
+                onCheckIn = { checkInData ->
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.updateMealCheckIn(checkInData.mealCheckIn)
+                            snackbarHostState.showSnackbar(
+                                message = mealUpdatedSuccess
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to update meal", e, mapOf(
+                                "mealId" to existingMealCheckIn.mealId,
+                                "date" to existingMealCheckIn.checkInDate
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = failedToUpdateMeal
+                            )
+                        }
+                    }
+                    showEditMealDialog = null
+                },
+                onDelete = {
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteMealCheckIn(existingMealCheckIn)
+                            snackbarHostState.showSnackbar(
+                                message = mealDeletedSuccess
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                                "mealId" to existingMealCheckIn.mealId,
+                                "date" to existingMealCheckIn.checkInDate
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = failedToDeleteMeal
+                            )
+                        }
+                    }
+                    showEditMealDialog = null
+                },
+                isEditMode = true,
+                meal = meal,
+                existingMealCheckIn = existingMealCheckIn
+            )
+        }
+    }
+    
+    // Edit Exercise Dialog
+    showEditExerciseDialog?.let { exerciseEntry ->
+        // Find the corresponding exercise
+        val exercise = exercises.find { it.id == exerciseEntry.exerciseId }
+        if (exercise != null) {
+            // Convert DailyExerciseEntry to ExerciseLog for editing
+            val existingExerciseLog = ExerciseLog(
+                id = exerciseEntry.logId,
+                exerciseId = exerciseEntry.exerciseId,
+                logDate = exerciseEntry.logDate,
+                logDateTime = exerciseEntry.logDateTime,
+                weight = exerciseEntry.weight,
+                reps = exerciseEntry.reps,
+                sets = exerciseEntry.sets,
+                caloriesBurned = exerciseEntry.caloriesBurned,
+                notes = exerciseEntry.notes
+            )
+            
+            UnifiedCheckInDialog<CheckInData.Exercise>(
+                onDismiss = { showEditExerciseDialog = null },
+                onCheckIn = { checkInData ->
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.updateExerciseLog(checkInData.exerciseLog)
+                            snackbarHostState.showSnackbar(
+                                message = exerciseUpdatedSuccess
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to update exercise", e, mapOf(
+                                "exerciseId" to existingExerciseLog.exerciseId,
+                                "date" to existingExerciseLog.logDate
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = failedToUpdateExercise
+                            )
+                        }
+                    }
+                    showEditExerciseDialog = null
+                },
+                onDelete = {
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteExerciseLog(existingExerciseLog)
+                            snackbarHostState.showSnackbar(
+                                message = exerciseDeletedSuccess
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
+                                "exerciseId" to existingExerciseLog.exerciseId,
+                                "date" to existingExerciseLog.logDate
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = failedToDeleteExercise
+                            )
+                        }
+                    }
+                    showEditExerciseDialog = null
+                },
+                isEditMode = true,
+                exercise = exercise,
+                existingExerciseLog = existingExerciseLog
             )
         }
     }

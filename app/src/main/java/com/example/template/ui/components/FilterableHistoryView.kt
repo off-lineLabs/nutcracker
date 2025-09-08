@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,7 +47,9 @@ fun FilterableHistoryView(
     mealEntries: List<DailyNutritionEntry>,
     exerciseEntries: List<DailyExerciseEntry>,
     onDeleteMeal: (DailyNutritionEntry) -> Unit,
-    onDeleteExercise: (DailyExerciseEntry) -> Unit
+    onDeleteExercise: (DailyExerciseEntry) -> Unit,
+    onEditMeal: (DailyNutritionEntry) -> Unit,
+    onEditExercise: (DailyExerciseEntry) -> Unit
 ) {
     var selectedFilter by remember { mutableStateOf(HistoryFilter.ALL) }
     
@@ -92,7 +96,7 @@ fun FilterableHistoryView(
                 isSelected = selectedFilter == HistoryFilter.EXERCISES,
                 onClick = { selectedFilter = HistoryFilter.EXERCISES },
                 modifier = Modifier.size(48.dp),
-                icon = Icons.Filled.FitnessCenter
+                painter = painterResource(R.drawable.ic_sprint)
             )
             
             // All filter (center)
@@ -140,13 +144,13 @@ fun FilterableHistoryView(
                         is HistoryItem.MealItem -> {
                             CheckInItem(
                                 checkIn = item.entry,
-                                onDelete = { onDeleteMeal(item.entry) }
+                                onEdit = { onEditMeal(item.entry) }
                             )
                         }
                         is HistoryItem.ExerciseItem -> {
                             ExerciseItem(
                                 exerciseEntry = item.entry,
-                                onDelete = { onDeleteExercise(item.entry) }
+                                onEdit = { onEditExercise(item.entry) }
                             )
                         }
                     }
@@ -162,7 +166,8 @@ private fun FilterBubble(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
+    icon: ImageVector? = null,
+    painter: Painter? = null
 ) {
     val backgroundColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
@@ -204,6 +209,14 @@ private fun FilterBubble(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+                painter?.let {
+                    Icon(
+                        painter = it,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
                 Text(
                     text = text,
                     style = MaterialTheme.typography.bodyMedium,
@@ -216,6 +229,14 @@ private fun FilterBubble(
             icon?.let {
                 Icon(
                     imageVector = it,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            painter?.let {
+                Icon(
+                    painter = it,
                     contentDescription = null,
                     tint = contentColor,
                     modifier = Modifier.size(24.dp)

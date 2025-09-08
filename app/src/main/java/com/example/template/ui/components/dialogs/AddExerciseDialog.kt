@@ -1,10 +1,19 @@
 package com.example.template.ui.components.dialogs
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.template.R
@@ -53,30 +62,60 @@ fun AddExerciseDialog(
 
                 // Exercise type
                 Column {
-                    Text(
-                        text = stringResource(R.string.exercise_type),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.exercise_type),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = when (exerciseType) {
+                                ExerciseType.STRENGTH -> stringResource(R.string.strength)
+                                ExerciseType.CARDIO -> stringResource(R.string.cardio)
+                                ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ExerciseType.values().forEach { type ->
-                            FilterChip(
-                                selected = exerciseType == type,
-                                onClick = { exerciseType = type },
-                                label = {
-                                    Text(
-                                        when (type) {
-                                            ExerciseType.STRENGTH -> stringResource(R.string.strength)
-                                            ExerciseType.CARDIO -> stringResource(R.string.cardio)
-                                            ExerciseType.BODYWEIGHT -> stringResource(R.string.bodyweight)
-                                        }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (exerciseType == type) 
+                                            MaterialTheme.colorScheme.primary 
+                                        else 
+                                            MaterialTheme.colorScheme.surfaceVariant
                                     )
-                                }
-                            )
+                                    .clickable { exerciseType = type }
+                                    .padding(12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = when (type) {
+                                        ExerciseType.CARDIO -> Icons.Filled.Favorite
+                                        ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics
+                                        ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter
+                                    },
+                                    contentDescription = null,
+                                    tint = if (exerciseType == type) 
+                                        Color.White 
+                                    else 
+                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -87,7 +126,7 @@ fun AddExerciseDialog(
                         OutlinedTextField(
                             value = kcalPerRep,
                             onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_rep)) },
+                            label = { Text(stringResource(R.string.kcal_per_set)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -123,15 +162,15 @@ fun AddExerciseDialog(
 
                 // Default values (for strength exercises)
                 if (exerciseType == ExerciseType.STRENGTH) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedTextField(
                             value = defaultWeight,
                             onValueChange = { defaultWeight = it },
                             label = { Text(stringResource(R.string.default_weight_kg)) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
@@ -141,7 +180,7 @@ fun AddExerciseDialog(
                             value = defaultReps,
                             onValueChange = { defaultReps = it },
                             label = { Text(stringResource(R.string.default_reps)) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
@@ -151,7 +190,7 @@ fun AddExerciseDialog(
                             value = defaultSets,
                             onValueChange = { defaultSets = it },
                             label = { Text(stringResource(R.string.default_sets)) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Template" parent="Theme.MaterialComponents.DayNight.DarkActionBar" />
+    <style name="Theme.Template" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Simple dark background for system splash screen -->
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>

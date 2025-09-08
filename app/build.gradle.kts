@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.template"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -60,6 +60,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.androidx.room.compiler) // Use ksp for the annotation processor
     implementation(libs.androidx.room.ktx) // For Kotlin Coroutines support
+    
+    // Logging
+    implementation(libs.timber)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

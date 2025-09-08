@@ -5,6 +5,8 @@ import com.example.template.data.dao.MealCheckInDao
 import com.example.template.data.dao.UserGoalDao
 import com.example.template.data.dao.ExerciseDao
 import com.example.template.data.dao.ExerciseLogDao
+import com.example.template.data.dao.PillDao
+import com.example.template.data.dao.PillCheckInDao
 import com.example.template.data.dao.DailyTotals
 import com.example.template.data.dao.DailyNutritionEntry
 import com.example.template.data.dao.DailyExerciseEntry
@@ -13,8 +15,11 @@ import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.Pill
+import com.example.template.data.model.PillCheckIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 /**
  * Interface for data operations.
@@ -34,6 +39,7 @@ interface FoodLogRepository {
 
     // MealCheckIn operations
     suspend fun insertMealCheckIn(mealCheckIn: MealCheckIn): Long
+    suspend fun updateMealCheckIn(mealCheckIn: MealCheckIn)
     suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn)
     fun getCheckInsByDate(date: String): Flow<List<DailyNutritionEntry>>
     fun getRecentCheckIns(limit: Int = 10): Flow<List<MealCheckIn>>
@@ -49,6 +55,7 @@ interface FoodLogRepository {
 
     // ExerciseLog operations
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
+    suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
     fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>>
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
@@ -56,9 +63,25 @@ interface FoodLogRepository {
     fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?>
     fun getDailyExerciseCalories(date: String): Flow<Double>
 
+    // Pill operations
+    fun getAllPills(): Flow<List<Pill>>
+    fun getPillById(pillId: Long): Flow<Pill?>
+    suspend fun insertPill(pill: Pill): Long
+    suspend fun updatePill(pill: Pill)
+    suspend fun deletePill(pill: Pill)
+    suspend fun deleteAllPills()
+
+    // PillCheckIn operations
+    suspend fun insertPillCheckIn(pillCheckIn: PillCheckIn): Long
+    suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn)
+    suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn)
+    fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>>
+    fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?>
+    suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String)
+
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
-    fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true): Flow<DailyTotals?>
+    fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true, includeTEFBonus: Boolean = false): Flow<DailyTotals?>
 }
 
 /**
@@ -69,7 +92,9 @@ class OfflineFoodLogRepository(
     private val userGoalDao: UserGoalDao,
     private val mealCheckInDao: MealCheckInDao,
     private val exerciseDao: ExerciseDao,
-    private val exerciseLogDao: ExerciseLogDao
+    private val exerciseLogDao: ExerciseLogDao,
+    private val pillDao: PillDao,
+    private val pillCheckInDao: PillCheckInDao
 ) : FoodLogRepository {
 
     // Meal operations
@@ -86,6 +111,7 @@ class OfflineFoodLogRepository(
 
     // MealCheckIn operations
     override suspend fun insertMealCheckIn(mealCheckIn: MealCheckIn): Long = mealCheckInDao.insertMealCheckIn(mealCheckIn)
+    override suspend fun updateMealCheckIn(mealCheckIn: MealCheckIn) = mealCheckInDao.updateMealCheckIn(mealCheckIn)
     override suspend fun deleteMealCheckIn(mealCheckIn: MealCheckIn) = mealCheckInDao.deleteMealCheckIn(mealCheckIn)
     override fun getCheckInsByDate(date: String): Flow<List<DailyNutritionEntry>> = mealCheckInDao.getDailyNutritionSummary(date)
     override fun getRecentCheckIns(limit: Int): Flow<List<MealCheckIn>> = mealCheckInDao.getRecentCheckIns(limit)
@@ -101,12 +127,29 @@ class OfflineFoodLogRepository(
 
     // ExerciseLog operations
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
+    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
     override fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>> = exerciseLogDao.getDailyExerciseSummary(date)
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
+
+    // Pill operations
+    override fun getAllPills(): Flow<List<Pill>> = pillDao.getAllPills()
+    override fun getPillById(pillId: Long): Flow<Pill?> = pillDao.getPillById(pillId)
+    override suspend fun insertPill(pill: Pill): Long = pillDao.insertPill(pill)
+    override suspend fun updatePill(pill: Pill) = pillDao.updatePill(pill)
+    override suspend fun deletePill(pill: Pill) = pillDao.deletePill(pill)
+    override suspend fun deleteAllPills() = pillDao.deleteAllPills()
+
+    // PillCheckIn operations
+    override suspend fun insertPillCheckIn(pillCheckIn: PillCheckIn): Long = pillCheckInDao.insertPillCheckIn(pillCheckIn)
+    override suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.updatePillCheckIn(pillCheckIn)
+    override suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.deletePillCheckIn(pillCheckIn)
+    override fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>> = pillCheckInDao.getPillCheckInsByDate(date)
+    override fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?> = pillCheckInDao.getPillCheckInByPillIdAndDate(pillId, date)
+    override suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String) = pillCheckInDao.deletePillCheckInByPillIdAndDate(pillId, date)
 
     // Combined operations for dashboard
     override fun getDailyCombinedSummary(date: String): Flow<List<Any>> {
@@ -127,27 +170,69 @@ class OfflineFoodLogRepository(
         }
     }
 
-    override fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean): Flow<DailyTotals?> {
-        return if (includeExerciseCalories) {
-            combine(
-                getDailyNutrientTotals(date),
-                getDailyExerciseCalories(date)
-            ) { mealTotals, exerciseCalories ->
-                mealTotals?.let { totals ->
-                    // Cap consumed calories at 0 to prevent negative values
-                    val netCalories = (totals.totalCalories - exerciseCalories).coerceAtLeast(0.0)
-                    DailyTotals(
-                        totalCalories = netCalories,
-                        totalCarbohydrates = totals.totalCarbohydrates,
-                        totalProtein = totals.totalProtein,
-                        totalFat = totals.totalFat,
-                        totalFiber = totals.totalFiber,
-                        totalSodium = totals.totalSodium
-                    )
+    override fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean, includeTEFBonus: Boolean): Flow<DailyTotals?> {
+        return when {
+            includeExerciseCalories && includeTEFBonus -> {
+                combine(
+                    getDailyNutrientTotals(date),
+                    getDailyExerciseCalories(date)
+                ) { mealTotals, exerciseCalories ->
+                    mealTotals?.let { totals ->
+                        // Calculate TEF bonus
+                        val tefBonus = com.example.template.utils.TEFCalculator.calculateTEFBonus(totals)
+                        // Apply both exercise and TEF bonuses
+                        val netCalories = (totals.totalCalories - exerciseCalories - tefBonus).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
                 }
             }
-        } else {
-            getDailyNutrientTotals(date)
+            includeExerciseCalories -> {
+                combine(
+                    getDailyNutrientTotals(date),
+                    getDailyExerciseCalories(date)
+                ) { mealTotals, exerciseCalories ->
+                    mealTotals?.let { totals ->
+                        // Cap consumed calories at 0 to prevent negative values
+                        val netCalories = (totals.totalCalories - exerciseCalories).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
+                }
+            }
+            includeTEFBonus -> {
+                getDailyNutrientTotals(date).map { mealTotals ->
+                    mealTotals?.let { totals ->
+                        // Calculate TEF bonus
+                        val tefBonus = com.example.template.utils.TEFCalculator.calculateTEFBonus(totals)
+                        // Apply TEF bonus
+                        val netCalories = (totals.totalCalories - tefBonus).coerceAtLeast(0.0)
+                        DailyTotals(
+                            totalCalories = netCalories,
+                            totalCarbohydrates = totals.totalCarbohydrates,
+                            totalProtein = totals.totalProtein,
+                            totalFat = totals.totalFat,
+                            totalFiber = totals.totalFiber,
+                            totalSodium = totals.totalSodium
+                        )
+                    }
+                }
+            }
+            else -> {
+                getDailyNutrientTotals(date)
+            }
         }
     }
 }

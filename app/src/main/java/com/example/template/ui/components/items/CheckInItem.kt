@@ -1,8 +1,11 @@
 package com.example.template.ui.components.items
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Restaurant
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.dao.DailyNutritionEntry
+import com.example.template.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -24,16 +28,24 @@ import java.util.Locale
 @Composable
 fun CheckInItem(
     checkIn: DailyNutritionEntry,
-    onDelete: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onEdit?.invoke() }
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(12.dp),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                spotColor = Color.Black.copy(alpha = 0.1f)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
+            containerColor = appSurfaceColor() // Use themed surface color
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -42,19 +54,32 @@ fun CheckInItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Meal icon
+            // Meal icon with modern gradient and shadow - using your brand gold
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF10B981)), // Green color for meals
+                    .size(52.dp)
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = mealItemBackgroundColor().copy(alpha = 0.3f),
+                        spotColor = mealItemBackgroundColor().copy(alpha = 0.3f)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                mealItemBackgroundColor(),
+                                mealItemBackgroundColor().copy(alpha = 0.8f)
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Restaurant,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
@@ -67,7 +92,7 @@ fun CheckInItem(
                     text = checkIn.mealName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = appTextPrimaryColor()
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -81,7 +106,7 @@ fun CheckInItem(
                             checkIn.totalCalories.toInt()
                         ),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF)
+                        color = appTextSecondaryColor()
                     )
                     
                     if (checkIn.servingSize != 1.0) {
@@ -91,7 +116,7 @@ fun CheckInItem(
                                 checkIn.servingSize
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
+                            color = appTextTertiaryColor()
                         )
                     }
                 }
@@ -103,7 +128,7 @@ fun CheckInItem(
                         Text(
                             text = notes,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280),
+                            color = appTextTertiaryColor(),
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                         )
                     }
@@ -117,21 +142,6 @@ fun CheckInItem(
                     color = Color(0xFF6B7280)
                 )
             }
-            
-            // Delete button if provided
-            onDelete?.let { deleteCallback ->
-                IconButton(
-                    onClick = deleteCallback,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete_check_in),
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
         }
     }
 }
@@ -143,6 +153,8 @@ private fun formatCheckInTime(dateTimeString: String): String {
         val date = inputFormat.parse(dateTimeString)
         date?.let { outputFormat.format(it) } ?: dateTimeString
     } catch (e: Exception) {
+        // Log the parsing error for debugging
+        com.example.template.util.logger.AppLogger.w("CheckInItem", "Failed to parse date: $dateTimeString", e)
         // Fallback to showing the original string if parsing fails
         dateTimeString
     }

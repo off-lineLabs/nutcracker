@@ -89,8 +89,7 @@ fun SwipeableHistoryView(
                         Column {
                             mealEntries.take(5).forEach { entry ->
                                 CheckInItem(
-                                    checkIn = entry,
-                                    onDelete = { onDeleteMeal(entry) }
+                                    checkIn = entry
                                 )
                             }
                         }
@@ -115,8 +114,7 @@ fun SwipeableHistoryView(
                         Column {
                             exerciseEntries.take(5).forEach { entry ->
                                 ExerciseItem(
-                                    exerciseEntry = entry,
-                                    onDelete = { onDeleteExercise(entry) }
+                                    exerciseEntry = entry
                                 )
                             }
                         }

@@ -13,6 +13,7 @@ material = "1.13.0"
 ksp = "2.2.10-2.0.2" # Latest KSP version for Kotlin 2.2.10
 room = "2.7.2" # Updated Room version for better Kotlin 2.2.10 compatibility
 hiltAndroid = "2.57.1"
+timber = "5.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,7 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" } # Added Room compiler
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }            # Added Room KTX
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

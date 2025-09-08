@@ -6,9 +6,13 @@
   <group>
     <clip-path
         android:pathData="M-176,-46h1726v1751h-1726z"/>
+    
+    <!-- Main background rectangle (rect88) -->
     <path
         android:pathData="M1,736L1376,736L1376,1350Q1376,1374 1352,1374L25,1374Q1,1374 1,1350L1,736Z"
         android:fillColor="#9e2528"/>
+    
+    <!-- Top triangle (path90) -->
     <path
         android:pathData="M687,821 L287.7,1374L1086.3,1374Z"
         android:strokeLineJoin="miter"
@@ -16,34 +20,67 @@
         android:fillColor="#dbad5e"
         android:strokeColor="#6b191b"
         android:fillType="nonZero"/>
+    
+    <!-- Middle triangle (path92) -->
     <path
         android:pathData="m687,919 l-328.5,455h656.9z"
         android:strokeWidth="0"
         android:fillColor="#233350"
         android:strokeColor="#00000000"/>
+    
+    <!-- Top rectangle (rect96) -->
     <path
         android:pathData="M1,614L1,24Q1,0 25,0L1352,0Q1376,0 1376,24L1376,614L1,614Z"
         android:fillColor="#233350"/>
+    
+    <!-- Bottom rectangle with shadow (rect98) - elevated effect -->
     <path
         android:pathData="M0,602h1374v134h-1374z"
         android:fillColor="#091020"/>
+    
+    <!-- Shadow for rect98 (bottom rectangle) -->
+    <path
+        android:pathData="M0,736h1374v8h-1374z"
+        android:fillColor="#20000000"/>
+    
+    <!-- Button (path100) -->
     <path
         android:pathData="m604.5,603.3c0,-15.4 12.5,-27.8 27.8,-27.8h111.3c15.4,0 27.8,12.5 27.8,27.8v121.3c0,15.4 -12.5,27.8 -27.8,27.8h-111.3c-15.4,0 -27.8,-12.5 -27.8,-27.8z"
         android:strokeWidth="6.875"
         android:fillColor="#dbad5e"
         android:fillType="evenOdd"
         android:strokeColor="#aa7922"/>
+    
+    <!-- Shadow for button -->
+    <path
+        android:pathData="m604.5,724.6c0,-15.4 12.5,-27.8 27.8,-27.8h111.3c15.4,0 27.8,12.5 27.8,27.8v121.3c0,15.4 -12.5,27.8 -27.8,27.8h-111.3c-15.4,0 -27.8,-12.5 -27.8,-27.8z"
+        android:fillColor="#15000000"/>
+    
+    <!-- Top circle with shadow (path102) - elevated effect -->
     <path
         android:pathData="m620.5,154.5c0,-37 30,-67 67,-67 37,0 67,30 67,67 0,37 -30,67 -67,67 -37,0 -67,-30 -67,-67z"
         android:strokeWidth="6.875"
         android:fillColor="#dbad5e"
         android:fillType="evenOdd"
         android:strokeColor="#aa7922"/>
+    
+    <!-- Shadow for top circle (path102) -->
+    <path
+        android:pathData="m620.5,221.5c0,-37 30,-67 67,-67 37,0 67,30 67,67 0,37 -30,67 -67,67 -37,0 -67,-30 -67,-67z"
+        android:fillColor="#20000000"/>
+    
+    <!-- Middle circle with shadow (path104) - elevated effect -->
     <path
         android:pathData="m618.5,398.5c0,-37 29.8,-67 66.5,-67 36.7,0 66.5,30 66.5,67 0,37 -29.8,67 -66.5,67 -36.7,0 -66.5,-30 -66.5,-67z"
         android:strokeWidth="6.875"
         android:fillColor="#dbad5e"
         android:fillType="evenOdd"
         android:strokeColor="#aa7922"/>
+    
+    <!-- Shadow for middle circle (path104) -->
+    <path
+        android:pathData="m618.5,465.5c0,-37 29.8,-67 66.5,-67 36.7,0 66.5,30 66.5,67 0,37 -29.8,67 -66.5,67 -36.7,0 -66.5,-30 -66.5,-67z"
+        android:fillColor="#20000000"/>
+        
   </group>
 </vector>

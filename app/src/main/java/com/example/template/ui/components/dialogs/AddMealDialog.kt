@@ -52,42 +52,30 @@ fun AddMealDialog(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.meal_name)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-
-                OutlinedTextField(
-                    value = calories,
-                    onValueChange = { calories = it },
-                    label = { Text(stringResource(R.string.calories)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-
+                // Name | Kcals row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedTextField(
-                        value = protein,
-                        onValueChange = { protein = it },
-                        label = { Text(stringResource(R.string.protein_g)) },
-                        modifier = Modifier.weight(1f)
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(stringResource(R.string.meal_name)) },
+                        placeholder = { Text(stringResource(R.string.meal_name_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.6f)
                     )
                     OutlinedTextField(
-                        value = carbs,
-                        onValueChange = { carbs = it },
-                        label = { Text(stringResource(R.string.carbs_g)) },
-                        modifier = Modifier.weight(1f)
+                        value = calories,
+                        onValueChange = { calories = it },
+                        label = { Text(stringResource(R.string.calories)) },
+                        placeholder = { Text(stringResource(R.string.calories_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.4f)
                     )
                 }
 
+                // Carbs | Fat row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,23 +83,55 @@ fun AddMealDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedTextField(
+                        value = carbs,
+                        onValueChange = { carbs = it },
+                        label = { Text(stringResource(R.string.carbs_g)) },
+                        placeholder = { Text(stringResource(R.string.carbs_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.6f)
+                    )
+                    OutlinedTextField(
                         value = fat,
                         onValueChange = { fat = it },
                         label = { Text(stringResource(R.string.fat_g)) },
-                        modifier = Modifier.weight(1f)
+                        placeholder = { Text(stringResource(R.string.fat_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.4f)
                     )
+                }
+
+                // Fiber | Sodium row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     OutlinedTextField(
                         value = fiber,
                         onValueChange = { fiber = it },
                         label = { Text(stringResource(R.string.fiber_g)) },
-                        modifier = Modifier.weight(1f)
+                        placeholder = { Text(stringResource(R.string.fiber_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.6f)
+                    )
+                    OutlinedTextField(
+                        value = sodium,
+                        onValueChange = { sodium = it },
+                        label = { Text(stringResource(R.string.sodium_mg)) },
+                        placeholder = { Text(stringResource(R.string.sodium_placeholder)) },
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.4f)
                     )
                 }
 
+                // Proteins row (full width)
                 OutlinedTextField(
-                    value = sodium,
-                    onValueChange = { sodium = it },
-                    label = { Text(stringResource(R.string.sodium_mg)) },
+                    value = protein,
+                    onValueChange = { protein = it },
+                    label = { Text(stringResource(R.string.protein_g)) },
+                    placeholder = { Text(stringResource(R.string.protein_placeholder)) },
+                    textStyle = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp)
@@ -128,21 +148,22 @@ fun AddMealDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Serving size value input
+                    // Serving size value input (40% of width)
                     OutlinedTextField(
                         value = servingSizeValue,
                         onValueChange = { servingSizeValue = it },
                         label = { Text(stringResource(R.string.serving_size_value_label)) },
                         placeholder = { Text(stringResource(R.string.serving_size_placeholder)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f)
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.4f)
                     )
                     
-                    // Unit dropdown
+                    // Unit dropdown (60% of width)
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(0.6f)
                     ) {
                         OutlinedTextField(
                             value = stringResource(selectedUnit.stringResourceId),

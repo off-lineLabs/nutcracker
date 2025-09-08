@@ -1,8 +1,11 @@
 package com.example.template.ui.components.items
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -22,13 +25,14 @@ import com.example.template.R
 import com.example.template.data.dao.DailyExerciseEntry
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.ExerciseType
+import com.example.template.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun ExerciseItem(
     exerciseEntry: DailyExerciseEntry,
-    onDelete: () -> Unit
+    onEdit: (() -> Unit)? = null
 ) {
     // Map database category to UI exercise type
     val exerciseType = ExerciseCategoryMapper.getExerciseType(exerciseEntry.exerciseType)
@@ -36,11 +40,19 @@ fun ExerciseItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onEdit?.invoke() }
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(12.dp),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                spotColor = Color.Black.copy(alpha = 0.1f)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF555968) // Lighter background for better contrast with main background
+            containerColor = appSurfaceColor() // Use themed surface color
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -48,12 +60,25 @@ fun ExerciseItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Exercise icon based on exercise type
+            // Exercise icon with modern gradient and shadow - using your brand red
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF3B82F6)),
+                    .size(52.dp)
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
+                        spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                exerciseItemBackgroundColor(),
+                                exerciseItemBackgroundColor().copy(alpha = 0.8f)
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -64,7 +89,7 @@ fun ExerciseItem(
                     },
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
@@ -78,7 +103,7 @@ fun ExerciseItem(
                     text = exerciseEntry.exerciseName,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = appTextPrimaryColor()
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -86,31 +111,31 @@ fun ExerciseItem(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Weight (for strength exercises)
-                    if (exerciseType == ExerciseType.STRENGTH) {
+                    // Sets (for non-cardio exercises) - First
+                    if (exerciseType != ExerciseType.CARDIO) {
                         Text(
-                            text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
+                            text = "${exerciseEntry.sets} ${stringResource(R.string.sets_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
+                            color = appTextSecondaryColor()
                         )
                     }
                     
-                    // Reps
+                    // Reps - Second
                     Text(
                         text = when (exerciseType) {
                             ExerciseType.CARDIO -> "${exerciseEntry.reps} ${stringResource(R.string.min_unit)}"
                             else -> "${exerciseEntry.reps} ${stringResource(R.string.reps_unit)}"
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF)
+                        color = appTextSecondaryColor()
                     )
                     
-                    // Sets (for non-cardio exercises)
-                    if (exerciseType != ExerciseType.CARDIO) {
+                    // Weight (for strength exercises) - Last, with distinguished color
+                    if (exerciseType == ExerciseType.STRENGTH) {
                         Text(
-                            text = "${exerciseEntry.sets} ${stringResource(R.string.sets_unit)}",
+                            text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
+                            color = appTextTertiaryColor() // Distinguished lighter color
                         )
                     }
                 }
@@ -131,19 +156,6 @@ fun ExerciseItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF6B7280),
                     fontSize = 12.sp
-                )
-            }
-
-            // Delete button
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.delete),
-                    tint = Color(0xFFEF4444),
-                    modifier = Modifier.size(20.dp)
                 )
             }
         }

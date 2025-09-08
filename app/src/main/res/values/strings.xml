@@ -78,6 +78,7 @@
     <string name="serving_size_display">%1$.1fx</string>
     <string name="notes_optional">Notes (optional)</string>
     <string name="check_in">Check In</string>
+    <string name="update">Update</string>
     <string name="cancel">Cancel</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="delete_check_in">Delete check-in</string>
@@ -99,6 +100,7 @@
     <string name="cardio">Cardio</string>
     <string name="bodyweight">Bodyweight</string>
     <string name="kcal_per_rep">Kcal per Rep</string>
+    <string name="kcal_per_set">Kcal per Set</string>
     <string name="kcal_per_minute">Kcal per Minute</string>
     <string name="default_weight_kg">Default Weight (kg)</string>
     <string name="default_reps">Default Reps</string>
@@ -156,13 +158,22 @@
     <string name="unit_portions">Portions (portion)</string>
     
     <!-- Additional hardcoded strings found -->
-    <string name="meal_name">Meal Name</string>
-    <string name="calories">Calories</string>
-    <string name="protein_g">Protein (g)</string>
-    <string name="carbs_g">Carbs (g)</string>
-    <string name="fat_g">Fat (g)</string>
-    <string name="fiber_g">Fiber (g)</string>
-    <string name="sodium_mg">Sodium (mg)</string>
+    <string name="meal_name">Name</string>
+    <string name="calories">Kcals</string>
+    <string name="protein_g">Proteins</string>
+    <string name="carbs_g">Carbs</string>
+    <string name="fat_g">Fat</string>
+    <string name="fiber_g">Fiber</string>
+    <string name="sodium_mg">Sodium</string>
+    
+    <!-- Placeholder strings for meal fields -->
+    <string name="meal_name_placeholder">Enter meal name</string>
+    <string name="calories_placeholder">Enter calories</string>
+    <string name="protein_placeholder">Enter protein</string>
+    <string name="carbs_placeholder">Enter carbs</string>
+    <string name="fat_placeholder">Enter fat</string>
+    <string name="fiber_placeholder">Enter fiber</string>
+    <string name="sodium_placeholder">Enter sodium</string>
     <string name="set_your_daily_goals">Set Your Daily Goals</string>
     <string name="calories_kcal">Calories (kcal)</string>
     <string name="carbohydrates_g">Carbohydrates (g)</string>
@@ -192,4 +203,30 @@
     <string name="min_unit">min</string>
     <string name="reps_unit">reps</string>
     <string name="sets_unit">sets</string>
+    
+    <!-- Additional hardcoded strings from DashboardScreen -->
+    <string name="grams_unit">g</string>
+    <string name="milligrams_unit">mg</string>
+    <string name="kcal_unit">kcal</string>
+    <string name="date_format_pattern">yyyy-MM-dd</string>
+    <string name="default_pill_name">default</string>
+    <string name="daily_supplement_taken">Daily supplement taken</string>
+    <string name="daily_supplement_removed">Daily supplement removed</string>
+    <string name="exercise_bonus_calories_on">Exercise bonus calories ON</string>
+    <string name="exercise_bonus_calories_off">Exercise bonus calories OFF</string>
+    <string name="tef_bonus_calories_on">TEF bonus calories ON</string>
+    <string name="tef_bonus_calories_off">TEF bonus calories OFF</string>
+    <string name="failed_to_save_goal">Failed to save goal. Please try again.</string>
+    <string name="failed_to_create_default_pill">Failed to create default pill. Please try again.</string>
+    <string name="failed_to_update_pill_status">Failed to update pill status. Please try again.</string>
+    <string name="exercise_check_in_completed_success">Exercise check-in completed successfully</string>
+    <string name="failed_to_complete_exercise_check_in">Failed to complete exercise check-in. Please try again.</string>
+    <string name="meal_updated_success">Meal updated successfully</string>
+    <string name="failed_to_update_meal">Failed to update meal. Please try again.</string>
+    <string name="meal_deleted_success">Meal deleted successfully</string>
+    <string name="failed_to_delete_meal">Failed to delete meal. Please try again.</string>
+    <string name="exercise_updated_success">Exercise updated successfully</string>
+    <string name="failed_to_update_exercise">Failed to update exercise. Please try again.</string>
+    <string name="exercise_deleted_success">Exercise deleted successfully</string>
+    <string name="failed_to_delete_exercise">Failed to delete exercise. Please try again.</string>
 </resources>
