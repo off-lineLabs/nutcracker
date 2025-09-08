@@ -93,7 +93,7 @@ fun ExerciseImageIcon(
                 bitmap = imageBitmap!!,
                 contentDescription = "Exercise image for ${exercise.name}",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds // Changed from Crop to FillBounds
+                contentScale = ContentScale.Crop // Show cropped version instead of stretched
             )
         } else {
             // Display the fallback icon with background
