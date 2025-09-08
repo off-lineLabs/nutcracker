@@ -43,22 +43,30 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.alpha
 import com.example.template.R
 import com.example.template.data.AppLanguage
 import com.example.template.data.SettingsManager
 import com.example.template.data.ThemeMode
+import com.example.template.data.AppDatabase
 import com.example.template.ui.theme.*
+import com.example.template.ui.screens.settings.DatabaseExportHandler
+import com.example.template.ui.screens.settings.rememberDatabaseExportHandler
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    settingsManager: SettingsManager
+    settingsManager: SettingsManager,
+    database: AppDatabase
 ) {
     val context = LocalContext.current
     var showTermsDialog by remember { mutableStateOf(false) }
     var showLanguageChangeDialog by remember { mutableStateOf(false) }
+    
+    // Database export handler
+    val exportHandler = rememberDatabaseExportHandler(database)
     
     // Get current settings from the manager
     val currentTheme = settingsManager.currentThemeMode
@@ -190,7 +198,7 @@ fun SettingsScreen(
                             title = "Database",
                             icon = Icons.Filled.Settings
                         ) {
-                            DatabaseSettings()
+                            DatabaseSettings(exportHandler)
                         }
                     }
                     
@@ -304,6 +312,40 @@ fun SettingsScreen(
             containerColor = if (isDarkTheme) Color(0xFF374151) else Color.White,
             titleContentColor = appTextPrimaryColor(),
             textContentColor = appTextSecondaryColor()
+        )
+    }
+    
+    // Export message dialog
+    if (exportHandler.showMessage) {
+        AlertDialog(
+            onDismissRequest = exportHandler.onDismissMessage,
+            title = {
+                Text(
+                    text = "Database Export",
+                    color = appTextPrimaryColor(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = exportHandler.exportMessage ?: "",
+                    color = appTextPrimaryColor(),
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = exportHandler.onDismissMessage,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF2196F3) // Use a blue color instead of appAccentColor
+                    )
+                ) {
+                    Text("OK")
+                }
+            },
+            containerColor = appSurfaceColor(),
+            shape = RoundedCornerShape(12.dp)
         )
     }
 }
@@ -482,12 +524,13 @@ private fun LanguageSelector(
 
 
 @Composable
-private fun DatabaseSettings() {
+private fun DatabaseSettings(exportHandler: DatabaseExportHandler) {
     Column {
         DatabaseButton(
             title = stringResource(R.string.export_database),
             icon = Icons.Filled.FileDownload,
-            onClick = { /* TODO: Implement export functionality */ }
+            onClick = exportHandler.onStartExport,
+            enabled = !exportHandler.isExporting
         )
         DatabaseButton(
             title = stringResource(R.string.import_database),
@@ -501,25 +544,27 @@ private fun DatabaseSettings() {
 private fun DatabaseButton(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 8.dp),
+            .clickable(enabled = enabled) { onClick() }
+            .padding(vertical = 8.dp)
+            .alpha(if (enabled) 1f else 0.6f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = appTextSecondaryColor(),
+            tint = if (enabled) appTextSecondaryColor() else appTextSecondaryColor().copy(alpha = 0.6f),
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = title,
-            color = appTextPrimaryColor(),
+            color = if (enabled) appTextPrimaryColor() else appTextPrimaryColor().copy(alpha = 0.6f),
             fontSize = 14.sp
         )
     }

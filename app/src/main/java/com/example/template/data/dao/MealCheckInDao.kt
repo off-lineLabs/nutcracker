@@ -32,6 +32,9 @@ interface MealCheckInDao {
 
     @Query("DELETE FROM meal_check_ins")
     suspend fun deleteAllCheckIns()
+    
+    @Query("SELECT * FROM meal_check_ins ORDER BY checkInDateTime DESC")
+    fun getAllMealCheckIns(): Flow<List<MealCheckIn>>
 
     // Complex query to get daily calorie consumption with meal details
     @Transaction

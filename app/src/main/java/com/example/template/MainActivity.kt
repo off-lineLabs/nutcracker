@@ -68,6 +68,8 @@ fun AppContent() {
 
 @Composable
 fun AppNavigation(settingsManager: SettingsManager) {
+    val context = LocalContext.current
+    val database = (context.applicationContext as FoodLogApplication).database
     var currentScreen by remember { mutableStateOf("dashboard") }
     
     // Handle system back button
@@ -82,7 +84,8 @@ fun AppNavigation(settingsManager: SettingsManager) {
         )
         "settings" -> SettingsScreen(
             onNavigateBack = { currentScreen = "dashboard" },
-            settingsManager = settingsManager
+            settingsManager = settingsManager,
+            database = database
         )
     }
 }
