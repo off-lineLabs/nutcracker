@@ -6,11 +6,14 @@ import com.example.template.data.SettingsManager
 import com.example.template.data.repo.FoodLogRepository
 import com.example.template.data.repo.OfflineFoodLogRepository
 import com.example.template.data.service.ExternalExerciseService
+import com.example.template.data.service.ExerciseImageService
 import com.example.template.util.logger.AppLogger
 
 class FoodLogApplication : Application() {
 
     val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
+    
+    val exerciseImageService: ExerciseImageService by lazy { ExerciseImageService(this) }
     
     val foodLogRepository: FoodLogRepository by lazy {
         OfflineFoodLogRepository(
@@ -20,7 +23,8 @@ class FoodLogApplication : Application() {
             database.exerciseDao(),
             database.exerciseLogDao(),
             database.pillDao(),
-            database.pillCheckInDao()
+            database.pillCheckInDao(),
+            exerciseImageService
         )
     }
     

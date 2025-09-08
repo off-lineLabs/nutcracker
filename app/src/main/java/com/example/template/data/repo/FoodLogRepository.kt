@@ -17,6 +17,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
+import com.example.template.data.service.ExerciseImageService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -94,7 +95,8 @@ class OfflineFoodLogRepository(
     private val exerciseDao: ExerciseDao,
     private val exerciseLogDao: ExerciseLogDao,
     private val pillDao: PillDao,
-    private val pillCheckInDao: PillCheckInDao
+    private val pillCheckInDao: PillCheckInDao,
+    private val exerciseImageService: ExerciseImageService? = null
 ) : FoodLogRepository {
 
     // Meal operations
@@ -122,7 +124,11 @@ class OfflineFoodLogRepository(
     override fun getExerciseById(exerciseId: Long): Flow<Exercise?> = exerciseDao.getExerciseById(exerciseId)
     override suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.upsertExercise(exercise)
     override suspend fun updateExercise(exercise: Exercise) = exerciseDao.updateExercise(exercise)
-    override suspend fun deleteExercise(exercise: Exercise) = exerciseDao.deleteExercise(exercise)
+    override suspend fun deleteExercise(exercise: Exercise) {
+        // Delete the associated image if it exists
+        exerciseImageService?.deleteImage(exercise.imagePath)
+        exerciseDao.deleteExercise(exercise)
+    }
     override suspend fun deleteAllExercises() = exerciseDao.deleteAllExercises()
 
     // ExerciseLog operations

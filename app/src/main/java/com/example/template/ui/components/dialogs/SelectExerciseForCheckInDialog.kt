@@ -27,6 +27,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.ExerciseType
 import com.example.template.ui.theme.*
+import com.example.template.ui.components.ExerciseImageIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,38 +104,12 @@ fun SelectExerciseForCheckInDialog(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Exercise icon with modern gradient and shadow - brand red
-                                    Box(
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .shadow(
-                                                elevation = 6.dp,
-                                                shape = RoundedCornerShape(16.dp),
-                                                ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
-                                                spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
-                                            )
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(
-                                                brush = Brush.verticalGradient(
-                                                    colors = listOf(
-                                                        exerciseItemBackgroundColor(),
-                                                        exerciseItemBackgroundColor().copy(alpha = 0.8f)
-                                                    )
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
-                                                ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
-                                                ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
-                                                ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
-                                            },
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(26.dp)
-                                        )
-                                    }
+                                    // Exercise image or icon
+                                    ExerciseImageIcon(
+                                        exercise = exercise,
+                                        size = 52.dp,
+                                        showShadow = true
+                                    )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(

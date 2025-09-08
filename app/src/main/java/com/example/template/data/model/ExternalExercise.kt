@@ -15,7 +15,7 @@ data class ExternalExercise(
 )
 
 // Extension function to convert external exercise to internal
-fun ExternalExercise.toInternalExercise(): Exercise {
+fun ExternalExercise.toInternalExercise(imagePath: String? = null): Exercise {
     return Exercise(
         name = this.name,
         category = mapCategory(this.category),
@@ -26,7 +26,8 @@ fun ExternalExercise.toInternalExercise(): Exercise {
         notes = this.instructions.joinToString("\n\n"),
         defaultWeight = getDefaultWeightForExercise(this),
         defaultReps = getDefaultRepsForExercise(this),
-        defaultSets = getDefaultSetsForExercise(this)
+        defaultSets = getDefaultSetsForExercise(this),
+        imagePath = imagePath
     )
 }
 

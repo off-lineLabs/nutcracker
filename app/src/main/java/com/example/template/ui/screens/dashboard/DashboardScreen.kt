@@ -345,6 +345,7 @@ fun DashboardScreen(
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
     val externalExerciseService = (context.applicationContext as FoodLogApplication).externalExerciseService
+    val exerciseImageService = (context.applicationContext as FoodLogApplication).exerciseImageService
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
@@ -1028,8 +1029,23 @@ fun DashboardScreen(
             onImportExternalExercise = { externalExercise ->
                 coroutineScope.launch {
                     try {
+                        // First insert the exercise to get an ID
                         val internalExercise = externalExercise.toInternalExercise()
-                        foodLogRepository.insertExercise(internalExercise)
+                        val exerciseId = foodLogRepository.insertExercise(internalExercise)
+                        
+                        // Download and save the first image if available
+                        var imagePath: String? = null
+                        if (externalExercise.images.isNotEmpty()) {
+                            val firstImageUrl = externalExerciseService.getImageUrl(externalExercise.images.first())
+                            imagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
+                        }
+                        
+                        // Update the exercise with the image path if we got one
+                        if (imagePath != null) {
+                            val updatedExercise = internalExercise.copy(id = exerciseId, imagePath = imagePath)
+                            foodLogRepository.updateExercise(updatedExercise)
+                        }
+                        
                         snackbarHostState.showSnackbar(
                             message = "Exercise imported successfully"
                         )

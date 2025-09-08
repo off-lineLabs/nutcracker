@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
+import com.example.template.ui.components.ExerciseImageIcon
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,10 +238,10 @@ private fun MainExerciseSelectionDialog(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.FitnessCenter,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
+                                    ExerciseImageIcon(
+                                        exercise = exercise,
+                                        size = 24.dp,
+                                        showShadow = false
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
