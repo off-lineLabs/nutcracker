@@ -198,7 +198,7 @@ fun SettingsScreen(
                             title = "Database",
                             icon = Icons.Filled.Settings
                         ) {
-                            DatabaseSettings(exportHandler)
+                            DatabaseSettings(exportHandler, database)
                         }
                     }
                     
@@ -524,7 +524,7 @@ private fun LanguageSelector(
 
 
 @Composable
-private fun DatabaseSettings(exportHandler: DatabaseExportHandler) {
+private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: AppDatabase) {
     Column {
         DatabaseButton(
             title = stringResource(R.string.export_database),
@@ -532,10 +532,11 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler) {
             onClick = exportHandler.onStartExport,
             enabled = !exportHandler.isExporting
         )
-        DatabaseButton(
-            title = stringResource(R.string.import_database),
-            icon = Icons.Filled.FileUpload,
-            onClick = { /* TODO: Implement import functionality */ }
+        DatabaseImportHandler(
+            database = database,
+            onImportComplete = { result ->
+                // Handle import completion if needed
+            }
         )
     }
 }
