@@ -2,6 +2,7 @@ package com.example.template
 
 import android.app.Application
 import com.example.template.data.AppDatabase
+import com.example.template.data.SettingsManager
 import com.example.template.data.repo.FoodLogRepository
 import com.example.template.data.repo.OfflineFoodLogRepository
 import com.example.template.util.logger.AppLogger
@@ -21,6 +22,8 @@ class FoodLogApplication : Application() {
             database.pillCheckInDao()
         )
     }
+    
+    val settingsManager: SettingsManager by lazy { SettingsManager(this) }
 
     override fun onCreate() {
         super.onCreate()

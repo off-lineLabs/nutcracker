@@ -106,4 +106,31 @@
     <string name="unit_units">Unidades (unit)</string>
     <string name="unit_servings">Porções (serving)</string>
     <string name="unit_portions">Porções (portion)</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings">Configurações</string>
+    <string name="theme">Tema</string>
+    <string name="language">Idioma</string>
+    <string name="dark_theme">Tema Escuro</string>
+    <string name="light_theme">Tema Claro</string>
+    <string name="system_theme">Tema do Sistema</string>
+    <string name="english">Inglês</string>
+    <string name="portuguese">Português (Brasil)</string>
+    <string name="spanish">Espanhol</string>
+    <string name="export_database">Exportar Banco de Dados</string>
+    <string name="import_database">Importar Banco de Dados</string>
+    <string name="app_version">Versão do App</string>
+    <string name="version_info">Versão %1$s (%2$d)</string>
+    <string name="legal_information">Informações Legais</string>
+    <string name="publisher_brand">OFFLINE LABS</string>
+    <string name="license_info">Licença: GNU GPL 3</string>
+    <string name="terms_of_use">Termos de Uso</string>
+    <string name="terms_of_use_text">Ao usar este app você concorda com os termos de uso</string>
+    <string name="github_repo">Repositório do GitHub</string>
+    <string name="donate">Doar</string>
+    <string name="donate_message">Apoie o desenvolvimento deste app</string>
+    <string name="terms_of_use_dialog_title">Termos de Uso</string>
+    <string name="terms_of_use_dialog_content">Este é um placeholder para os termos de uso. Os termos reais serão adicionados mais tarde.</string>
+    <string name="close">Fechar</string>
+    <string name="settings_icon_description">Configurações</string>
 </resources>

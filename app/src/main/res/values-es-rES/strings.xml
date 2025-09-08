@@ -204,4 +204,31 @@
     <string name="min_unit">min</string>
     <string name="reps_unit">rep</string>
     <string name="sets_unit">series</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings">Configuración</string>
+    <string name="theme">Tema</string>
+    <string name="language">Idioma</string>
+    <string name="dark_theme">Tema Oscuro</string>
+    <string name="light_theme">Tema Claro</string>
+    <string name="system_theme">Tema del Sistema</string>
+    <string name="english">Inglés</string>
+    <string name="portuguese">Português (Brasil)</string>
+    <string name="spanish">Español</string>
+    <string name="export_database">Exportar Base de Datos</string>
+    <string name="import_database">Importar Base de Datos</string>
+    <string name="app_version">Versión de la App</string>
+    <string name="version_info">Versión %1$s (%2$d)</string>
+    <string name="legal_information">Información Legal</string>
+    <string name="publisher_brand">OFFLINE LABS</string>
+    <string name="license_info">Licencia: GNU GPL 3</string>
+    <string name="terms_of_use">Términos de Uso</string>
+    <string name="terms_of_use_text">Al usar esta app aceptas los términos de uso</string>
+    <string name="github_repo">Repositorio de GitHub</string>
+    <string name="donate">Donar</string>
+    <string name="donate_message">Apoya el desarrollo de esta app</string>
+    <string name="terms_of_use_dialog_title">Términos de Uso</string>
+    <string name="terms_of_use_dialog_content">Este es un marcador de posición para los términos de uso. Los términos reales se agregarán más tarde.</string>
+    <string name="close">Cerrar</string>
+    <string name="settings_icon_description">Configuración</string>
 </resources>
