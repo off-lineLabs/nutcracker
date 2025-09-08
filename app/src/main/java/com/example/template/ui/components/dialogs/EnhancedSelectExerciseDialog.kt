@@ -235,15 +235,15 @@ private fun MainExerciseSelectionDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     ExerciseImageIcon(
                                         exercise = exercise,
-                                        size = 24.dp,
-                                        showShadow = false
+                                        size = 48.dp,
+                                        showShadow = true
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(16.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = exercise.name,

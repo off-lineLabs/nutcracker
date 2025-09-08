@@ -76,7 +76,7 @@ fun ExerciseImageIcon(
                 if (showShadow) {
                     Modifier.shadow(
                         elevation = 6.dp,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(8.dp),
                         ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
                         spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
                     )
@@ -84,43 +84,43 @@ fun ExerciseImageIcon(
                     Modifier
                 }
             )
-            .clip(RoundedCornerShape(16.dp))
-            .then(
-                if (imageBitmap == null) {
-                    Modifier.background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                exerciseItemBackgroundColor(),
-                                exerciseItemBackgroundColor().copy(alpha = 0.8f)
-                            )
-                        )
-                    )
-                } else {
-                    Modifier.background(Color.Transparent)
-                }
-            ),
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         if (imageBitmap != null) {
-            // Display the exercise image
+            // Display the exercise image filling the entire box
             androidx.compose.foundation.Image(
                 bitmap = imageBitmap!!,
                 contentDescription = "Exercise image for ${exercise.name}",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.FillBounds // Changed from Crop to FillBounds
             )
         } else {
-            // Display the fallback icon
-            Icon(
-                imageVector = when (exerciseType) {
-                    ExerciseType.CARDIO -> Icons.Filled.Favorite
-                    ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics
-                    ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter
-                },
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(size * 0.5f)
-            )
+            // Display the fallback icon with background
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                exerciseItemBackgroundColor(),
+                                exerciseItemBackgroundColor().copy(alpha = 0.3f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when (exerciseType) {
+                        ExerciseType.CARDIO -> Icons.Filled.Favorite
+                        ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics
+                        ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter
+                    },
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(size * 0.5f)
+                )
+            }
         }
     }
 }
