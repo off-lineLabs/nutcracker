@@ -5,6 +5,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,6 +22,8 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -226,10 +231,19 @@ fun SettingsScreen(
                 )
             },
             text = {
-                Text(
-                    text = stringResource(R.string.terms_of_use_dialog_content),
-                    color = appTextSecondaryColor()
-                )
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 400.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.terms_of_use_dialog_content),
+                            color = appTextPrimaryColor(),
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
@@ -390,54 +404,82 @@ private fun LanguageSelector(
     selectedLanguage: AppLanguage,
     onLanguageSelected: (AppLanguage) -> Unit
 ) {
-    Column {
-        LanguageOption(
-            title = stringResource(R.string.english),
-            isSelected = selectedLanguage == AppLanguage.ENGLISH,
-            onClick = { onLanguageSelected(AppLanguage.ENGLISH) }
-        )
-        LanguageOption(
-            title = stringResource(R.string.portuguese),
-            isSelected = selectedLanguage == AppLanguage.PORTUGUESE,
-            onClick = { onLanguageSelected(AppLanguage.PORTUGUESE) }
-        )
-        LanguageOption(
-            title = stringResource(R.string.spanish),
-            isSelected = selectedLanguage == AppLanguage.SPANISH,
-            onClick = { onLanguageSelected(AppLanguage.SPANISH) }
-        )
+    var expanded by remember { mutableStateOf(false) }
+    
+    val languages = listOf(
+        AppLanguage.ENGLISH to stringResource(R.string.english),
+        AppLanguage.PORTUGUESE to stringResource(R.string.portuguese),
+        AppLanguage.SPANISH to stringResource(R.string.spanish)
+    )
+    
+    val selectedLanguageName = languages.find { it.first == selectedLanguage }?.second ?: stringResource(R.string.english)
+    
+    Box {
+        OutlinedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true },
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = appSurfaceColor()
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp, 
+                if (expanded) Color(0xFF60A5FA) else appTextSecondaryColor().copy(alpha = 0.3f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = selectedLanguageName,
+                    color = appTextPrimaryColor(),
+                    fontSize = 14.sp
+                )
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = appTextSecondaryColor(),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = appSurfaceColor(),
+                    shape = RoundedCornerShape(8.dp)
+                )
+        ) {
+            languages.forEach { (language, name) ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = name,
+                            color = appTextPrimaryColor(),
+                            fontSize = 14.sp
+                        )
+                    },
+                    onClick = {
+                        onLanguageSelected(language)
+                        expanded = false
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = appTextPrimaryColor()
+                    )
+                )
+            }
+        }
     }
 }
 
-@Composable
-private fun LanguageOption(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = Color(0xFF60A5FA),
-                unselectedColor = appTextSecondaryColor()
-            )
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            color = appTextPrimaryColor(),
-            fontSize = 14.sp
-        )
-    }
-}
 
 @Composable
 private fun DatabaseSettings() {
@@ -529,7 +571,7 @@ private fun LegalInformation(
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = appTextSecondaryColor())) {
-                    append("By using this app you agree with the ")
+                    append("By using this app you agree with the\n")
                 }
                 withStyle(
                     style = SpanStyle(
@@ -541,7 +583,10 @@ private fun LegalInformation(
                 }
             },
             fontSize = 12.sp,
-            modifier = Modifier.clickable { onTermsClick() }
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTermsClick() }
         )
     }
 }
