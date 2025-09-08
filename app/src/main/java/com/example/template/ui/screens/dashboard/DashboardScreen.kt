@@ -55,6 +55,8 @@ import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.ExternalExercise
+import com.example.template.data.model.toInternalExercise
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
@@ -62,6 +64,7 @@ import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
+import com.example.template.ui.components.dialogs.EnhancedSelectExerciseDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
 import com.example.template.data.model.CheckInData
@@ -341,6 +344,7 @@ fun DashboardScreen(
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
+    val externalExerciseService = (context.applicationContext as FoodLogApplication).externalExerciseService
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
@@ -1009,8 +1013,9 @@ fun DashboardScreen(
     }
 
     if (showSelectExerciseDialog) {
-        SelectExerciseForCheckInDialog(
+        EnhancedSelectExerciseDialog(
             exercises = exercises,
+            externalExerciseService = externalExerciseService,
             onDismiss = { showSelectExerciseDialog = false },
             onAddExercise = {
                 showSelectExerciseDialog = false
@@ -1019,6 +1024,21 @@ fun DashboardScreen(
             onSelectExercise = { exercise ->
                 showSelectExerciseDialog = false
                 showCheckInExerciseDialog = exercise
+            },
+            onImportExternalExercise = { externalExercise ->
+                coroutineScope.launch {
+                    try {
+                        val internalExercise = externalExercise.toInternalExercise()
+                        foodLogRepository.insertExercise(internalExercise)
+                        snackbarHostState.showSnackbar(
+                            message = "Exercise imported successfully"
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to import exercise"
+                        )
+                    }
+                }
             }
         )
     }
