@@ -221,47 +221,11 @@ fun SearchExternalExercisesDialog(
                     }
                 }
                 
-                // Show selected filters
-                if (selectedEquipment != null || selectedMuscle != null || selectedCategory != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        selectedEquipment?.let { equipment ->
-                            AssistChip(
-                                onClick = { onEquipmentChange(null) },
-                                label = { Text(equipment) },
-                                trailingIcon = {
-                                    Icon(Icons.Filled.Close, contentDescription = "Remove filter", modifier = Modifier.size(16.dp))
-                                }
-                            )
-                        }
-                        selectedMuscle?.let { muscle ->
-                            AssistChip(
-                                onClick = { onMuscleChange(null) },
-                                label = { Text(muscle) },
-                                trailingIcon = {
-                                    Icon(Icons.Filled.Close, contentDescription = "Remove filter", modifier = Modifier.size(16.dp))
-                                }
-                            )
-                        }
-                        selectedCategory?.let { category ->
-                            AssistChip(
-                                onClick = { onCategoryChange(null) },
-                                label = { Text(category) },
-                                trailingIcon = {
-                                    Icon(Icons.Filled.Close, contentDescription = "Remove filter", modifier = Modifier.size(16.dp))
-                                }
-                            )
-                        }
-                    }
-                }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Filter count info
-                if (currentFilterCount > 0) {
+                // Filter count info - only show when there are many results
+                if (currentFilterCount > 15) {
                     Text(
                         text = "Found $currentFilterCount exercises matching your filters",
                         style = MaterialTheme.typography.bodySmall,
@@ -305,13 +269,6 @@ fun SearchExternalExercisesDialog(
                         )
                     }
                 } else {
-                    Text(
-                        text = "Found ${searchResults.size} exercises",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 300.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -366,29 +323,38 @@ fun SearchExternalExercisesDialog(
         },
         confirmButton = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Provided by ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                )
-                TextButton(
-                    onClick = { 
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
-                        context.startActivity(intent)
-                    }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Yuhonas",
+                        text = "Provided by ",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
+                    TextButton(
+                        onClick = { 
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
+                            context.startActivity(intent)
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            text = "Yuhonas",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = onBack) {
+                TextButton(
+                    onClick = onBack,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
                     Text("Cancel")
                 }
             }

@@ -50,7 +50,7 @@ fun ExerciseImageIcon(
     
     // Load image if path exists
     LaunchedEffect(exercise.imagePath) {
-        AppLogger.i("ExerciseImageIcon", "LaunchedEffect triggered for exercise: ${exercise.name}, imagePath: ${exercise.imagePath}")
+        AppLogger.i("ExerciseImageIcon", "LaunchedEffect triggered for exercise: ${exercise.name} (ID: ${exercise.id}), imagePath: ${exercise.imagePath}")
         
         if (!exercise.imagePath.isNullOrBlank() && !imageLoadError) {
             AppLogger.i("ExerciseImageIcon", "Attempting to load image from path: ${exercise.imagePath}")
@@ -132,6 +132,10 @@ private suspend fun loadImageFromPath(imagePath: String): ImageBitmap? = withCon
     try {
         AppLogger.i("ExerciseImageIcon", "Loading image from path: $imagePath")
         val file = File(imagePath)
+        
+        AppLogger.i("ExerciseImageIcon", "File absolute path: ${file.absolutePath}")
+        AppLogger.i("ExerciseImageIcon", "File exists: ${file.exists()}")
+        AppLogger.i("ExerciseImageIcon", "File is readable: ${file.canRead()}")
         
         if (file.exists()) {
             AppLogger.i("ExerciseImageIcon", "File exists, size: ${file.length()} bytes")

@@ -21,6 +21,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.util.logger.AppLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun AddExerciseDialog(
 
     // Pre-populate fields when external exercise is provided
     LaunchedEffect(externalExercise) {
+        AppLogger.i("AddExerciseDialog", "LaunchedEffect triggered with externalExercise: ${externalExercise?.name}")
         externalExercise?.let { exercise ->
             name = exercise.name
             exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
@@ -263,6 +265,7 @@ fun AddExerciseDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
                     val exercise = Exercise(
                         name = name.trim(),
                         category = ExerciseCategoryMapper.getCategory(exerciseType),

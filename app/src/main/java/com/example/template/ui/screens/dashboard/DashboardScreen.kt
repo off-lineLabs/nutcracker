@@ -1046,22 +1046,45 @@ fun DashboardScreen(
             onAddExercise = { newExercise ->
                 coroutineScope.launch {
                     try {
-                        // First insert the exercise to get an ID
-                        val exerciseId = foodLogRepository.insertExercise(newExercise)
+                        // Capture the external exercise before it might be cleared
+                        val externalExercise = selectedExternalExercise
+                        AppLogger.i("DashboardScreen", "onAddExercise called with externalExercise: ${externalExercise?.name}")
                         
-                        // Download and save the first image if available
-                        var imagePath: String? = null
-                        selectedExternalExercise?.let { externalExercise ->
-                            if (externalExercise.images.isNotEmpty()) {
-                                val firstImageUrl = externalExerciseService.getImageUrl(externalExercise.images.first())
-                                imagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
+                        // Download and save the image first if available
+                        var localImagePath: String? = null
+                        externalExercise?.let { exercise ->
+                            if (exercise.images.isNotEmpty()) {
+                                val externalImagePath = exercise.images.first()
+                                val firstImageUrl = externalExerciseService.getImageUrl(externalImagePath)
+                                AppLogger.i("DashboardScreen", "External exercise image path: $externalImagePath")
+                                AppLogger.i("DashboardScreen", "Constructed URL: $firstImageUrl")
+                                AppLogger.i("DashboardScreen", "Downloading image for exercise: ${newExercise.name}")
+                                
+                                // Insert exercise first to get an ID
+                                val exerciseId = foodLogRepository.insertExercise(newExercise)
+                                AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
+                                
+                                // Download image with the exercise ID
+                                localImagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
+                                
+                                if (localImagePath != null) {
+                                    AppLogger.i("DashboardScreen", "Image downloaded successfully: $localImagePath")
+                                    // Update the exercise with the image path
+                                    val updatedExercise = newExercise.copy(id = exerciseId, imagePath = localImagePath)
+                                    foodLogRepository.updateExercise(updatedExercise)
+                                    AppLogger.i("DashboardScreen", "Exercise updated with image path: $localImagePath")
+                                } else {
+                                    AppLogger.w("DashboardScreen", "Failed to download image for exercise ID: $exerciseId")
+                                }
+                            } else {
+                                // No images available, just insert the exercise
+                                val exerciseId = foodLogRepository.insertExercise(newExercise)
+                                AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId (no images)")
                             }
-                        }
-                        
-                        // Update the exercise with the image path if we got one
-                        if (imagePath != null) {
-                            val updatedExercise = newExercise.copy(id = exerciseId, imagePath = imagePath)
-                            foodLogRepository.updateExercise(updatedExercise)
+                        } ?: run {
+                            // No external exercise, just insert
+                            val exerciseId = foodLogRepository.insertExercise(newExercise)
+                            AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId (no external exercise)")
                         }
                         
                         snackbarHostState.showSnackbar(
@@ -1074,10 +1097,12 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(
                             message = exerciseAddError
                         )
+                    } finally {
+                        // Clear the external exercise after processing
+                        selectedExternalExercise = null
                     }
                 }
                 showAddExerciseDialog = false
-                selectedExternalExercise = null
             }
         )
     }

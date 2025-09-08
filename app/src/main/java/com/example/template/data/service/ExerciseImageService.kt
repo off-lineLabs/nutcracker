@@ -42,8 +42,12 @@ class ExerciseImageService(private val context: Context) {
             val fileName = "exercise_${exerciseId}.jpg"
             val localFile = File(imageDir, fileName)
             
+            Log.d(TAG, "Attempting to download image from URL: $imageUrl")
+            Log.d(TAG, "Will save as: $fileName in directory: ${imageDir.absolutePath}")
+            
             // If file already exists, return the path
             if (localFile.exists()) {
+                Log.d(TAG, "File already exists, returning existing path: ${localFile.absolutePath}")
                 return@withContext localFile.absolutePath
             }
             
@@ -79,6 +83,7 @@ class ExerciseImageService(private val context: Context) {
             outputStream.close()
             
             Log.d(TAG, "Successfully saved image: ${localFile.absolutePath}")
+            Log.d(TAG, "File exists after save: ${localFile.exists()}, size: ${localFile.length()} bytes")
             return@withContext localFile.absolutePath
             
         } catch (e: Exception) {
