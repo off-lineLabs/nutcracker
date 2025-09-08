@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.template.data.AppLanguage
 import com.example.template.data.SettingsManager
@@ -68,6 +69,11 @@ fun AppContent() {
 @Composable
 fun AppNavigation(settingsManager: SettingsManager) {
     var currentScreen by remember { mutableStateOf("dashboard") }
+    
+    // Handle system back button
+    BackHandler(enabled = currentScreen == "settings") {
+        currentScreen = "dashboard"
+    }
     
     when (currentScreen) {
         "dashboard" -> DashboardScreen(
