@@ -345,9 +345,9 @@ fun DashboardScreen() {
     var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
-    var consumedCalories by remember { mutableStateOf(0.0) }
-    var exerciseCaloriesBurned by remember { mutableStateOf(0.0) }
-    var tefCaloriesBurned by remember { mutableStateOf(0.0) }
+    var consumedCalories by remember { mutableDoubleStateOf(0.0) }
+    var exerciseCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
+    var tefCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
     var includeTEFBonus by remember { mutableStateOf(false) }
     
