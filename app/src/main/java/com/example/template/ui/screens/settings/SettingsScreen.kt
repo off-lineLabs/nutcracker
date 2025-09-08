@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Balance
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.size
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
+import android.content.Intent
 import kotlinx.coroutines.launch
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -935,6 +937,8 @@ private fun AppVersionInfo() {
 private fun LegalInformation(
     onTermsClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    
     Column {
         LegalItem(
             title = stringResource(R.string.publisher_brand),
@@ -942,13 +946,16 @@ private fun LegalInformation(
         )
         LegalItem(
             title = stringResource(R.string.license_info),
-            icon = Icons.Filled.Gavel
+            icon = Icons.Filled.Balance
         )
         LegalItem(
             title = stringResource(R.string.github_repo),
             icon = Icons.Filled.Code,
             isClickable = true,
-            onClick = { /* TODO: Open GitHub repository */ }
+            onClick = { 
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/JnCoe/offline-calorie-calculator"))
+                context.startActivity(intent)
+            }
         )
         LegalItem(
             title = stringResource(R.string.donate),
