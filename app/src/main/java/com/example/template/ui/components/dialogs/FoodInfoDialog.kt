@@ -184,9 +184,6 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             nutrition.sugars?.let { 
                 NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake)
             }
-            nutrition.salt?.let { 
-                NutritionRow("Salt", "${String.format("%.1f", it)}g", Icons.Filled.Water)
-            }
             nutrition.saturatedFat?.let { 
                 NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
             }

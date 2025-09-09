@@ -157,7 +157,6 @@ data class NutritionInfo(
     val sodium: Double?, // mg per 100g
     val fiber: Double?, // g per 100g
     val sugars: Double?, // g per 100g
-    val salt: Double?, // g per 100g
     val cholesterol: Double?, // mg per 100g
     val vitaminC: Double?, // mg per 100g
     val calcium: Double?, // mg per 100g

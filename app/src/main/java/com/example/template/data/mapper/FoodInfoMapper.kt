@@ -76,10 +76,6 @@ object FoodInfoMapper {
                 primary = nutriments.sugars100g,
                 fallback = nutriments.sugars
             ),
-            salt = getPer100gValue(
-                primary = nutriments.salt100g,
-                fallback = nutriments.salt
-            ),
             cholesterol = getPer100gValue(
                 primary = nutriments.cholesterol100g,
                 fallback = nutriments.cholesterol
@@ -133,7 +129,6 @@ object FoodInfoMapper {
             sodium = null,
             fiber = null,
             sugars = null,
-            salt = null,
             cholesterol = null,
             vitaminC = null,
             calcium = null,
