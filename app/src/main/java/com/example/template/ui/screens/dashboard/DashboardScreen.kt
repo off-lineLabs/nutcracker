@@ -128,8 +128,12 @@ fun NutrientProgressDisplay(
 
 @Composable
 private fun CaloriesRing(
-    consumedCalories: Double,
+    foodCalories: Double,
     goalCalories: Double,
+    exerciseCalories: Double = 0.0,
+    tefCalories: Double = 0.0,
+    includeExercise: Boolean = false,
+    includeTEF: Boolean = false,
     labelColor: Color,
     valueColor: Color,
     consumedColor: Color,
@@ -139,8 +143,14 @@ private fun CaloriesRing(
     sizeDp: Dp = 160.dp,
     strokeWidthDp: Dp = 12.dp
 ) {
-    val remaining = goalCalories - consumedCalories
-    val progress = if (goalCalories > 0) (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
+    // Calculate booster bonuses
+    val exerciseBonus = if (includeExercise) exerciseCalories else 0.0
+    val tefBonus = if (includeTEF) tefCalories else 0.0
+    val totalBonus = exerciseBonus + tefBonus
+    
+    // Remaining calories = goal - food calories + booster bonuses
+    val remaining = goalCalories - foodCalories + totalBonus
+    val progress = if (goalCalories > 0) (foodCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
     val exceededColor = Color(0xFFB65755)
     val finalValueColor = if (remaining < 0) exceededColor else valueColor
 
@@ -192,7 +202,7 @@ private fun CaloriesRing(
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(color = consumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
-                        append(String.format(Locale.getDefault(), "%.0f", consumedCalories))
+                        append(String.format(Locale.getDefault(), "%.0f", foodCalories))
                     }
                     withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                         append(" / ")
@@ -355,6 +365,7 @@ fun DashboardScreen(
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableDoubleStateOf(0.0) }
+    var foodCalories by remember { mutableDoubleStateOf(0.0) }
     var exerciseCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var tefCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
@@ -520,6 +531,13 @@ fun DashboardScreen(
             tefCaloriesBurned = totals?.let { 
                 com.example.template.utils.TEFCalculator.calculateTEFBonus(it) 
             } ?: 0.0
+        }
+    }
+
+    // Load raw food calories (without any booster adjustments)
+    LaunchedEffect(foodLogRepository, selectedDateString) {
+        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
+            foodCalories = totals?.totalCalories ?: 0.0
         }
     }
 
@@ -811,8 +829,12 @@ fun DashboardScreen(
                         ) {
                             // Calories ring - centered as before
                             CaloriesRing(
-                                consumedCalories = consumedCalories,
+                                foodCalories = foodCalories,
                                 goalCalories = userGoal.caloriesGoal.toDouble(),
+                                exerciseCalories = exerciseCaloriesBurned,
+                                tefCalories = tefCaloriesBurned,
+                                includeExercise = includeExerciseCalories,
+                                includeTEF = includeTEFBonus,
                                 labelColor = caloriesRemainingLabelColor,
                                 valueColor = caloriesRemainingValueColor,
                                 consumedColor = caloriesConsumedColor,
