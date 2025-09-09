@@ -221,7 +221,6 @@ fun SearchExternalExercisesDialog(
                     }
                 }
                 
-                
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Filter count info - only show when there are many results
@@ -319,13 +318,17 @@ fun SearchExternalExercisesDialog(
                         }
                     }
                 }
+                
             }
         },
         confirmButton = {
+            // Empty confirm button to satisfy AlertDialog signature
+        },
+        dismissButton = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -342,7 +345,7 @@ fun SearchExternalExercisesDialog(
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
                             context.startActivity(intent)
                         },
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
                     ) {
                         Text(
                             text = "Yuhonas",
@@ -353,13 +356,11 @@ fun SearchExternalExercisesDialog(
                 }
                 TextButton(
                     onClick = onBack,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
                     Text("Cancel")
                 }
             }
         }
     )
-    
 }
-
