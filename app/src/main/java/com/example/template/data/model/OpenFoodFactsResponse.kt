@@ -96,6 +96,10 @@ data class Nutriments(
     val salt100g: Double?,
     @SerializedName("salt")
     val salt: Double?,
+    @SerializedName("sodium_value")
+    val sodiumValue: Double?,
+    @SerializedName("salt_value")
+    val saltValue: Double?,
     
     // Fiber - prioritize per 100g
     @SerializedName("fiber_100g")
@@ -112,14 +116,20 @@ data class Nutriments(
     val vitaminC100g: Double?,
     @SerializedName("vitamin-c")
     val vitaminC: Double?,
+    @SerializedName("vitamin-c_value")
+    val vitaminCValue: Double?,
     @SerializedName("calcium_100g")
     val calcium100g: Double?,
     @SerializedName("calcium")
     val calcium: Double?,
+    @SerializedName("calcium_value")
+    val calciumValue: Double?,
     @SerializedName("iron_100g")
     val iron100g: Double?,
     @SerializedName("iron")
-    val iron: Double?
+    val iron: Double?,
+    @SerializedName("iron_value")
+    val ironValue: Double?
 )
 
 data class FoodInfo(
