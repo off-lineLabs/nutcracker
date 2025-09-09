@@ -1,6 +1,7 @@
 package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -74,6 +75,11 @@ fun FoodInfoDialog(
                         greenScore = foodInfo.greenScore,
                         nutriscore = foodInfo.nutriscore
                     )
+                }
+                
+                // Attribution
+                item {
+                    AttributionCard()
                 }
                 
             }
@@ -349,6 +355,31 @@ private fun ClassificationRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun AttributionCard() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Provided by ",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "© Open Food Facts contributors",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clickable {
+                // TODO: Open Open Food Facts website
+            }
+        )
     }
 }
 
