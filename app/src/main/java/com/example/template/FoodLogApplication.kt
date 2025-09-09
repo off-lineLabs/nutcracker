@@ -35,8 +35,18 @@ class FoodLogApplication : Application() {
     val externalExerciseService: ExternalExerciseService by lazy { ExternalExerciseService() }
     
     val openFoodFactsService: OpenFoodFactsService by lazy {
+        val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("User-Agent", "OfflineCalorieCalculator/1.0 (Android; ${android.os.Build.MODEL})")
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+            
         val retrofit = Retrofit.Builder()
             .baseUrl("https://world.openfoodfacts.org/")
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val api = retrofit.create(OpenFoodFactsApi::class.java)

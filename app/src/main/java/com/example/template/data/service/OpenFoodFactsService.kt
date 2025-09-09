@@ -12,6 +12,11 @@ interface OpenFoodFactsApi {
 
 class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
     
+    /**
+     * Fetches product information by barcode from Open Food Facts API.
+     * The response includes nutrition data in various units, but our mapper
+     * prioritizes per-100g/100ml values for consistency and comparability.
+     */
     suspend fun getProductByBarcode(barcode: String): Result<OpenFoodFactsResponse> {
         return try {
             val response = api.getProductByBarcode(barcode)

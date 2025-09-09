@@ -76,10 +76,6 @@ fun FoodInfoDialog(
                     )
                 }
                 
-                // Additional information
-                item {
-                    AdditionalInfoCard(foodInfo = foodInfo)
-                }
             }
         },
         confirmButton = {
@@ -116,15 +112,22 @@ private fun FoodImageCard(imageUrl: String) {
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = "Food product image",
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .padding(8.dp),
-            contentScale = ContentScale.Fit
-        )
+                .padding(8.dp)
+                .clip(RoundedCornerShape(8.dp))
+        ) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Food product image",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 
@@ -143,9 +146,14 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Nutrition Facts (per 100g)",
+                text = "Nutrition Facts (per 100g/100ml)",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "All values are standardized per 100g or 100ml for easy comparison",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             nutrition.calories?.let { 
@@ -171,6 +179,21 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             }
             nutrition.salt?.let { 
                 NutritionRow("Salt", "${String.format("%.1f", it)}g", Icons.Filled.Water)
+            }
+            nutrition.saturatedFat?.let { 
+                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
+            }
+            nutrition.cholesterol?.let { 
+                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite)
+            }
+            nutrition.vitaminC?.let { 
+                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy)
+            }
+            nutrition.calcium?.let { 
+                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink)
+            }
+            nutrition.iron?.let { 
+                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build)
             }
         }
     }
@@ -237,7 +260,7 @@ private fun ClassificationCard(
             // Nova Classification
             ClassificationRow(
                 label = "NOVA Classification",
-                value = "Group ${novaClassification.group}",
+                value = novaClassification.group.toString(),
                 description = novaClassification.description,
                 color = when (novaClassification.group) {
                     1 -> Color(0xFF4CAF50) // Green
@@ -329,61 +352,3 @@ private fun ClassificationRow(
     }
 }
 
-@Composable
-private fun AdditionalInfoCard(foodInfo: FoodInfo) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Additional Information",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            foodInfo.brand?.let { 
-                DetailRow("Brand", it)
-            }
-            foodInfo.categories?.let { 
-                DetailRow("Categories", it)
-            }
-            foodInfo.quantity?.let { 
-                DetailRow("Quantity", it)
-            }
-            foodInfo.servingSize?.let { 
-                DetailRow("Serving Size", it)
-            }
-            foodInfo.ingredients?.let { 
-                DetailRow("Ingredients", it.take(200) + if (it.length > 200) "..." else "")
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f),
-            maxLines = 3
-        )
-    }
-}

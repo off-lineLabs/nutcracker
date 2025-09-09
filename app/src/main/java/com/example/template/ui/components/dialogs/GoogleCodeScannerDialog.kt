@@ -54,6 +54,11 @@ fun GoogleCodeScannerDialog(
                 barcodeResult = result
                 errorMessage = error
                 isScanning = false
+                // Automatically process the barcode when detected
+                if (result != null) {
+                    onBarcodeScanned(result)
+                    onDismiss()
+                }
             }
         }
     }
@@ -66,6 +71,11 @@ fun GoogleCodeScannerDialog(
                 barcodeResult = result
                 errorMessage = error
                 isScanning = false
+                // Automatically process the barcode when detected
+                if (result != null) {
+                    onBarcodeScanned(result)
+                    onDismiss()
+                }
             }
         }
     }
@@ -153,16 +163,7 @@ fun GoogleCodeScannerDialog(
             }
         },
         confirmButton = {
-            if (barcodeResult != null) {
-                Button(
-                    onClick = {
-                        onBarcodeScanned(barcodeResult!!)
-                        onDismiss()
-                    }
-                ) {
-                    Text("Use This Barcode")
-                }
-            }
+            // No confirm button needed - barcode is processed automatically
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
