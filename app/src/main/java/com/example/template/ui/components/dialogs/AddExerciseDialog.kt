@@ -18,12 +18,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.util.logger.AppLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExerciseDialog(
+    externalExercise: ExternalExercise? = null,
+    existingExercise: Exercise? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit
 ) {
@@ -36,11 +40,73 @@ fun AddExerciseDialog(
     var defaultSets by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    // Pre-populate fields when external exercise or existing exercise is provided
+    LaunchedEffect(externalExercise, existingExercise) {
+        AppLogger.i("AddExerciseDialog", "LaunchedEffect triggered with externalExercise: ${externalExercise?.name}, existingExercise: ${existingExercise?.name}")
+        // Handle existing exercise (edit mode)
+        existingExercise?.let { exercise ->
+            name = exercise.name
+            exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+            kcalPerRep = exercise.kcalBurnedPerRep?.toString() ?: ""
+            kcalPerMinute = exercise.kcalBurnedPerMinute?.toString() ?: ""
+            defaultWeight = exercise.defaultWeight.toString()
+            defaultReps = exercise.defaultReps.toString()
+            defaultSets = exercise.defaultSets.toString()
+            notes = exercise.notes ?: ""
+        }
+        
+        // Handle external exercise (import mode)
+        externalExercise?.let { exercise ->
+            name = exercise.name
+            exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+            
+            // Set default values based on exercise type and category
+            when (exerciseType) {
+                ExerciseType.STRENGTH -> {
+                    defaultWeight = when (exercise.equipment?.lowercase()) {
+                        "barbell", "dumbbell", "kettlebells" -> "20.0"
+                        "body only" -> "0.0"
+                        else -> "0.0"
+                    }
+                    defaultReps = when (exercise.category.lowercase()) {
+                        "strength", "strongman", "olympic weightlifting" -> "8"
+                        else -> "8"
+                    }
+                    defaultSets = when (exercise.category.lowercase()) {
+                        "strength", "strongman", "olympic weightlifting" -> "3"
+                        else -> "3"
+                    }
+                }
+                ExerciseType.CARDIO -> {
+                    // Default kcal per minute for cardio
+                    kcalPerMinute = "8.0"
+                }
+                ExerciseType.BODYWEIGHT -> {
+                    defaultReps = when (exercise.category.lowercase()) {
+                        "stretching" -> "1"
+                        "cardio", "plyometrics" -> "10"
+                        else -> "10"
+                    }
+                    defaultSets = when (exercise.category.lowercase()) {
+                        "stretching" -> "1"
+                        "cardio", "plyometrics" -> "1"
+                        else -> "1"
+                    }
+                }
+            }
+            
+            // Set notes from instructions
+            if (exercise.instructions.isNotEmpty()) {
+                notes = exercise.instructions.joinToString("\n\n")
+            }
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.add_exercise),
+                text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -213,6 +279,7 @@ fun AddExerciseDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
                     val exercise = Exercise(
                         name = name.trim(),
                         category = ExerciseCategoryMapper.getCategory(exerciseType),
@@ -227,7 +294,7 @@ fun AddExerciseDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(stringResource(R.string.add))
+                Text(if (existingExercise != null) stringResource(R.string.update) else stringResource(R.string.add))
             }
         },
         dismissButton = {

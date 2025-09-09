@@ -5,11 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SportsGymnastics
@@ -20,13 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.example.template.R
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.ExerciseType
 import com.example.template.ui.theme.*
+import com.example.template.ui.components.ExerciseImageIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,14 +39,17 @@ fun SelectExerciseForCheckInDialog(
     exercises: List<Exercise>,
     onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
-    onSelectExercise: (Exercise) -> Unit
+    onSelectExercise: (Exercise) -> Unit,
+    onEditExercise: (Exercise) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.select_exercise),
-                style = MaterialTheme.typography.headlineSmall
+                text = stringResource(R.string.my_exercises),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
         },
         text = {
@@ -59,12 +67,12 @@ fun SelectExerciseForCheckInDialog(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        painter = painterResource(R.drawable.ic_ballot),
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.add_new_exercise))
+                    Text(stringResource(R.string.type_information))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -77,12 +85,6 @@ fun SelectExerciseForCheckInDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
-                    Text(
-                        text = stringResource(R.string.select_existing_exercise),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
                     
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 300.dp),
@@ -100,42 +102,16 @@ fun SelectExerciseForCheckInDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(vertical = 12.dp, horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Exercise icon with modern gradient and shadow - brand red
-                                    Box(
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .shadow(
-                                                elevation = 6.dp,
-                                                shape = RoundedCornerShape(16.dp),
-                                                ambientColor = exerciseItemBackgroundColor().copy(alpha = 0.3f),
-                                                spotColor = exerciseItemBackgroundColor().copy(alpha = 0.3f)
-                                            )
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(
-                                                brush = Brush.verticalGradient(
-                                                    colors = listOf(
-                                                        exerciseItemBackgroundColor(),
-                                                        exerciseItemBackgroundColor().copy(alpha = 0.8f)
-                                                    )
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
-                                                ExerciseType.CARDIO -> Icons.Filled.Favorite // ECG heart icon
-                                                ExerciseType.BODYWEIGHT -> Icons.Filled.SportsGymnastics // Sports gymnastics icon
-                                                ExerciseType.STRENGTH -> Icons.Filled.FitnessCenter // Exercise icon
-                                            },
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(26.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    // Exercise image or icon
+                                    ExerciseImageIcon(
+                                        exercise = exercise,
+                                        size = 56.dp,
+                                        showShadow = true
+                                    )
+                                    Spacer(modifier = Modifier.width(16.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = exercise.name,
@@ -150,6 +126,19 @@ fun SelectExerciseForCheckInDialog(
                                             },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    
+                                    // Edit button with pencil icon on the right
+                                    IconButton(
+                                        onClick = { onEditExercise(exercise) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = stringResource(R.string.edit_exercise),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
                                 }

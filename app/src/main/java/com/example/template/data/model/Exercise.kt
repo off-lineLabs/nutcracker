@@ -21,7 +21,8 @@ data class Exercise(
     val primaryMuscles: List<String> = emptyList(), // Primary muscles worked
     val secondaryMuscles: List<String> = emptyList(), // Secondary muscles worked
     val force: String? = null, // Force type: static, pull, push
-    val notes: String? = null // Optional notes
+    val notes: String? = null, // Optional notes
+    val imagePath: String? = null // Local path to the first exercise image
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

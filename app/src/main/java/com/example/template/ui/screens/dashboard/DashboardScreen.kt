@@ -55,6 +55,8 @@ import com.example.template.data.model.Meal
 import com.example.template.data.model.MealCheckIn
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
+import com.example.template.data.model.ExternalExercise
+import com.example.template.data.model.toInternalExercise
 import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
@@ -62,6 +64,7 @@ import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
+import com.example.template.ui.components.dialogs.EnhancedSelectExerciseDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
 import com.example.template.data.model.CheckInData
@@ -125,8 +128,12 @@ fun NutrientProgressDisplay(
 
 @Composable
 private fun CaloriesRing(
-    consumedCalories: Double,
+    foodCalories: Double,
     goalCalories: Double,
+    exerciseCalories: Double = 0.0,
+    tefCalories: Double = 0.0,
+    includeExercise: Boolean = false,
+    includeTEF: Boolean = false,
     labelColor: Color,
     valueColor: Color,
     consumedColor: Color,
@@ -136,8 +143,14 @@ private fun CaloriesRing(
     sizeDp: Dp = 160.dp,
     strokeWidthDp: Dp = 12.dp
 ) {
-    val remaining = goalCalories - consumedCalories
-    val progress = if (goalCalories > 0) (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
+    // Calculate booster bonuses
+    val exerciseBonus = if (includeExercise) exerciseCalories else 0.0
+    val tefBonus = if (includeTEF) tefCalories else 0.0
+    val totalBonus = exerciseBonus + tefBonus
+    
+    // Remaining calories = goal - food calories + booster bonuses
+    val remaining = goalCalories - foodCalories + totalBonus
+    val progress = if (goalCalories > 0) (foodCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
     val exceededColor = Color(0xFFB65755)
     val finalValueColor = if (remaining < 0) exceededColor else valueColor
 
@@ -189,7 +202,7 @@ private fun CaloriesRing(
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(color = consumedColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
-                        append(String.format(Locale.getDefault(), "%.0f", consumedCalories))
+                        append(String.format(Locale.getDefault(), "%.0f", foodCalories))
                     }
                     withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                         append(" / ")
@@ -341,6 +354,8 @@ fun DashboardScreen(
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
+    val externalExerciseService = (context.applicationContext as FoodLogApplication).externalExerciseService
+    val exerciseImageService = (context.applicationContext as FoodLogApplication).exerciseImageService
     val coroutineScope = rememberCoroutineScope()
 
     var meals by remember { mutableStateOf(emptyList<Meal>()) }
@@ -350,6 +365,7 @@ fun DashboardScreen(
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableDoubleStateOf(0.0) }
+    var foodCalories by remember { mutableDoubleStateOf(0.0) }
     var exerciseCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var tefCaloriesBurned by remember { mutableDoubleStateOf(0.0) }
     var includeExerciseCalories by remember { mutableStateOf(true) }
@@ -401,6 +417,8 @@ fun DashboardScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
+    var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
+    var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
     
     // Edit dialog state variables
@@ -513,6 +531,13 @@ fun DashboardScreen(
             tefCaloriesBurned = totals?.let { 
                 com.example.template.utils.TEFCalculator.calculateTEFBonus(it) 
             } ?: 0.0
+        }
+    }
+
+    // Load raw food calories (without any booster adjustments)
+    LaunchedEffect(foodLogRepository, selectedDateString) {
+        foodLogRepository.getDailyNutrientTotals(selectedDateString).collectLatest { totals ->
+            foodCalories = totals?.totalCalories ?: 0.0
         }
     }
 
@@ -804,8 +829,12 @@ fun DashboardScreen(
                         ) {
                             // Calories ring - centered as before
                             CaloriesRing(
-                                consumedCalories = consumedCalories,
+                                foodCalories = foodCalories,
                                 goalCalories = userGoal.caloriesGoal.toDouble(),
+                                exerciseCalories = exerciseCaloriesBurned,
+                                tefCalories = tefCaloriesBurned,
+                                includeExercise = includeExerciseCalories,
+                                includeTEF = includeTEFBonus,
                                 labelColor = caloriesRemainingLabelColor,
                                 valueColor = caloriesRemainingValueColor,
                                 consumedColor = caloriesConsumedColor,
@@ -1009,8 +1038,9 @@ fun DashboardScreen(
     }
 
     if (showSelectExerciseDialog) {
-        SelectExerciseForCheckInDialog(
+        EnhancedSelectExerciseDialog(
             exercises = exercises,
+            externalExerciseService = externalExerciseService,
             onDismiss = { showSelectExerciseDialog = false },
             onAddExercise = {
                 showSelectExerciseDialog = false
@@ -1019,27 +1049,101 @@ fun DashboardScreen(
             onSelectExercise = { exercise ->
                 showSelectExerciseDialog = false
                 showCheckInExerciseDialog = exercise
+            },
+            onImportExternalExercise = { externalExercise ->
+                // Store the external exercise for pre-populating the AddExerciseDialog
+                selectedExternalExercise = externalExercise
+                showSelectExerciseDialog = false
+                showAddExerciseDialog = true
+            },
+            onEditExercise = { exercise ->
+                showSelectExerciseDialog = false
+                selectedExerciseForEdit = exercise
+                showAddExerciseDialog = true
             }
         )
     }
 
     if (showAddExerciseDialog) {
         AddExerciseDialog(
-            onDismiss = { showAddExerciseDialog = false },
+            externalExercise = selectedExternalExercise,
+            existingExercise = selectedExerciseForEdit,
+            onDismiss = { 
+                showAddExerciseDialog = false
+                selectedExternalExercise = null
+                selectedExerciseForEdit = null
+            },
             onAddExercise = { newExercise ->
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.insertExercise(newExercise)
-                        snackbarHostState.showSnackbar(
-                            message = exerciseAddedSuccess
-                        )
+                        val existingExercise = selectedExerciseForEdit
+                        val externalExercise = selectedExternalExercise
+                        
+                        if (existingExercise != null) {
+                            // Update existing exercise
+                            val updatedExercise = newExercise.copy(id = existingExercise.id, imagePath = existingExercise.imagePath)
+                            foodLogRepository.updateExercise(updatedExercise)
+                            AppLogger.i("DashboardScreen", "Exercise updated: ${updatedExercise.name}")
+                            
+                            snackbarHostState.showSnackbar(
+                                message = exerciseUpdatedSuccess
+                            )
+                        } else {
+                            // Add new exercise
+                            AppLogger.i("DashboardScreen", "onAddExercise called with externalExercise: ${externalExercise?.name}")
+                            
+                            // Download and save the image first if available
+                            var localImagePath: String? = null
+                            externalExercise?.let { exercise ->
+                                if (exercise.images.isNotEmpty()) {
+                                    val externalImagePath = exercise.images.first()
+                                    val firstImageUrl = externalExerciseService.getImageUrl(externalImagePath)
+                                    AppLogger.i("DashboardScreen", "External exercise image path: $externalImagePath")
+                                    AppLogger.i("DashboardScreen", "Constructed URL: $firstImageUrl")
+                                    AppLogger.i("DashboardScreen", "Downloading image for exercise: ${newExercise.name}")
+                                    
+                                    // Insert exercise first to get an ID
+                                    val exerciseId = foodLogRepository.insertExercise(newExercise)
+                                    AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
+                                    
+                                    // Download image with the exercise ID
+                                    localImagePath = exerciseImageService.downloadAndSaveImage(firstImageUrl, exerciseId)
+                                    
+                                    if (localImagePath != null) {
+                                        AppLogger.i("DashboardScreen", "Image downloaded successfully: $localImagePath")
+                                        // Update the exercise with the image path
+                                        val updatedExercise = newExercise.copy(id = exerciseId, imagePath = localImagePath)
+                                        foodLogRepository.updateExercise(updatedExercise)
+                                        AppLogger.i("DashboardScreen", "Exercise updated with image path: $localImagePath")
+                                    } else {
+                                        AppLogger.w("DashboardScreen", "Failed to download image for exercise ID: $exerciseId")
+                                    }
+                                } else {
+                                    // No images available, just insert the exercise
+                                    val exerciseId = foodLogRepository.insertExercise(newExercise)
+                                    AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId (no images)")
+                                }
+                            } ?: run {
+                                // No external exercise, just insert
+                                val exerciseId = foodLogRepository.insertExercise(newExercise)
+                                AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId (no external exercise)")
+                            }
+                            
+                            snackbarHostState.showSnackbar(
+                                message = exerciseAddedSuccess
+                            )
+                        }
                     } catch (e: Exception) {
-                        AppLogger.exception("DashboardScreen", "Failed to add exercise", e, mapOf(
+                        AppLogger.exception("DashboardScreen", "Failed to ${if (selectedExerciseForEdit != null) "update" else "add"} exercise", e, mapOf(
                             "exerciseName" to newExercise.name
                         ))
                         snackbarHostState.showSnackbar(
-                            message = exerciseAddError
+                            message = if (selectedExerciseForEdit != null) failedToUpdateExercise else exerciseAddError
                         )
+                    } finally {
+                        // Clear the external exercise and selected exercise after processing
+                        selectedExternalExercise = null
+                        selectedExerciseForEdit = null
                     }
                 }
                 showAddExerciseDialog = false
