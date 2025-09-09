@@ -242,20 +242,6 @@ private fun MainExerciseSelectionDialog(
                                         .padding(vertical = 12.dp, horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Edit button with pencil icon outside the box
-                                    IconButton(
-                                        onClick = { onEditExercise(exercise) },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Edit,
-                                            contentDescription = stringResource(R.string.edit_exercise),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    
                                     ExerciseImageIcon(
                                         exercise = exercise,
                                         size = 48.dp,
@@ -272,6 +258,19 @@ private fun MainExerciseSelectionDialog(
                                             text = exercise.category,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    
+                                    // Edit button with pencil icon on the right
+                                    IconButton(
+                                        onClick = { onEditExercise(exercise) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = stringResource(R.string.edit_exercise),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
                                 }
