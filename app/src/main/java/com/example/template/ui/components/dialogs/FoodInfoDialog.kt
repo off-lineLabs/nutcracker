@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalUriHandler
 import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
@@ -360,6 +361,8 @@ private fun ClassificationRow(
 
 @Composable
 private fun AttributionCard() {
+    val uriHandler = LocalUriHandler.current
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -375,9 +378,9 @@ private fun AttributionCard() {
         Text(
             text = "© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {
-                // TODO: Open Open Food Facts website
+                uriHandler.openUri("https://world.openfoodfacts.org/")
             }
         )
     }
