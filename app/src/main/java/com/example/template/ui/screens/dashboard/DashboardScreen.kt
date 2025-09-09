@@ -58,12 +58,15 @@ import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.toInternalExercise
 import com.example.template.data.model.UserGoal
+import com.example.template.data.model.FoodInfo
+import com.example.template.data.mapper.FoodInfoMapper
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
 import com.example.template.ui.components.dialogs.BarcodeScanDialog
 import com.example.template.ui.components.dialogs.SimpleBarcodeScanDialog
 import com.example.template.ui.components.dialogs.GoogleCodeScannerDialog
+import com.example.template.ui.components.dialogs.FoodInfoDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
@@ -382,6 +385,7 @@ fun DashboardScreen(
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
+    var showFoodInfoDialog by remember { mutableStateOf<FoodInfo?>(null) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
     val goalSavedSuccess = stringResource(R.string.goal_saved_success)
@@ -1393,14 +1397,58 @@ fun DashboardScreen(
         GoogleCodeScannerDialog(
             onDismiss = { showBarcodeScanDialog = false },
             onBarcodeScanned = { barcode ->
-                // TODO: Handle the scanned barcode
-                // For now, just show a snackbar with the barcode
+                // Fetch food information from Open Food Facts API
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = "Barcode scanned: $barcode"
-                    )
+                    try {
+                        val response = (context.applicationContext as FoodLogApplication).openFoodFactsService.getProductByBarcode(barcode)
+                        response.fold(
+                            onSuccess = { apiResponse ->
+                                val foodInfo = FoodInfoMapper.mapToFoodInfo(apiResponse)
+                                if (foodInfo != null) {
+                                    showFoodInfoDialog = foodInfo
+                                } else {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Food information not found for this barcode"
+                                    )
+                                }
+                            },
+                            onFailure = { error ->
+                                AppLogger.exception("DashboardScreen", "Failed to fetch food info", error, mapOf(
+                                    "barcode" to barcode
+                                ))
+                                snackbarHostState.showSnackbar(
+                                    message = "Failed to fetch food information: ${error.message}"
+                                )
+                            }
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Unexpected error fetching food info", e, mapOf(
+                            "barcode" to barcode
+                        ))
+                        snackbarHostState.showSnackbar(
+                            message = "An error occurred while fetching food information"
+                        )
+                    }
                 }
                 showBarcodeScanDialog = false
+            }
+        )
+    }
+
+    // Food Info Dialog
+    showFoodInfoDialog?.let { foodInfo ->
+        FoodInfoDialog(
+            foodInfo = foodInfo,
+            onBack = { showFoodInfoDialog = null },
+            onAddToMeals = {
+                // TODO: Implement adding food to meals
+                // For now, just close the dialog and show a message
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Adding food to meals feature coming soon!"
+                    )
+                }
+                showFoodInfoDialog = null
             }
         )
     }
