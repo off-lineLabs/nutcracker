@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,7 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
+import com.example.template.R
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
@@ -34,7 +39,8 @@ fun EnhancedSelectExerciseDialog(
     onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
-    onImportExternalExercise: (ExternalExercise) -> Unit
+    onImportExternalExercise: (ExternalExercise) -> Unit,
+    onEditExercise: (Exercise) -> Unit
 ) {
     var dialogState by remember { mutableStateOf(DialogState.MAIN) }
     var searchQuery by remember { mutableStateOf("") }
@@ -94,6 +100,7 @@ fun EnhancedSelectExerciseDialog(
                 onDismiss = onDismiss,
                 onAddExercise = onAddExercise,
                 onSelectExercise = onSelectExercise,
+                onEditExercise = onEditExercise,
                 onSearchExternal = { dialogState = DialogState.SEARCH }
             )
         }
@@ -150,14 +157,17 @@ private fun MainExerciseSelectionDialog(
     onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
+    onEditExercise: (Exercise) -> Unit,
     onSearchExternal: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Select Exercise",
-                style = MaterialTheme.typography.headlineSmall
+                text = stringResource(R.string.my_exercises),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         },
         text = {
@@ -180,7 +190,7 @@ private fun MainExerciseSelectionDialog(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Search Exercise Database")
+                    Text(stringResource(R.string.search_exercise_database))
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -194,12 +204,12 @@ private fun MainExerciseSelectionDialog(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        painter = painterResource(R.drawable.ic_ballot),
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add New Exercise")
+                    Text(stringResource(R.string.type_information))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -207,17 +217,11 @@ private fun MainExerciseSelectionDialog(
                 // Existing exercises list
                 if (exercises.isEmpty()) {
                     Text(
-                        text = "No exercises yet",
+                        text = stringResource(R.string.no_exercises_yet),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
-                    Text(
-                        text = "Select existing exercise",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
                     
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 200.dp),
@@ -238,6 +242,20 @@ private fun MainExerciseSelectionDialog(
                                         .padding(vertical = 12.dp, horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // Edit button with pencil icon outside the box
+                                    IconButton(
+                                        onClick = { onEditExercise(exercise) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = stringResource(R.string.edit_exercise),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    
                                     ExerciseImageIcon(
                                         exercise = exercise,
                                         size = 48.dp,
@@ -265,7 +283,7 @@ private fun MainExerciseSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

@@ -27,6 +27,7 @@ import com.example.template.util.logger.AppLogger
 @Composable
 fun AddExerciseDialog(
     externalExercise: ExternalExercise? = null,
+    existingExercise: Exercise? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit
 ) {
@@ -39,9 +40,22 @@ fun AddExerciseDialog(
     var defaultSets by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
-    // Pre-populate fields when external exercise is provided
-    LaunchedEffect(externalExercise) {
-        AppLogger.i("AddExerciseDialog", "LaunchedEffect triggered with externalExercise: ${externalExercise?.name}")
+    // Pre-populate fields when external exercise or existing exercise is provided
+    LaunchedEffect(externalExercise, existingExercise) {
+        AppLogger.i("AddExerciseDialog", "LaunchedEffect triggered with externalExercise: ${externalExercise?.name}, existingExercise: ${existingExercise?.name}")
+        // Handle existing exercise (edit mode)
+        existingExercise?.let { exercise ->
+            name = exercise.name
+            exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+            kcalPerRep = exercise.kcalBurnedPerRep?.toString() ?: ""
+            kcalPerMinute = exercise.kcalBurnedPerMinute?.toString() ?: ""
+            defaultWeight = exercise.defaultWeight.toString()
+            defaultReps = exercise.defaultReps.toString()
+            defaultSets = exercise.defaultSets.toString()
+            notes = exercise.notes ?: ""
+        }
+        
+        // Handle external exercise (import mode)
         externalExercise?.let { exercise ->
             name = exercise.name
             exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
@@ -92,7 +106,7 @@ fun AddExerciseDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.add_exercise),
+                text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -280,7 +294,7 @@ fun AddExerciseDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text(stringResource(R.string.add))
+                Text(if (existingExercise != null) stringResource(R.string.update) else stringResource(R.string.add))
             }
         },
         dismissButton = {
