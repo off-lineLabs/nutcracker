@@ -61,6 +61,9 @@ import com.example.template.data.model.UserGoal
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
+import com.example.template.ui.components.dialogs.BarcodeScanDialog
+import com.example.template.ui.components.dialogs.SimpleBarcodeScanDialog
+import com.example.template.ui.components.dialogs.GoogleCodeScannerDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
@@ -378,6 +381,7 @@ fun DashboardScreen(
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
+    var showBarcodeScanDialog by remember { mutableStateOf(false) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
     val goalSavedSuccess = stringResource(R.string.goal_saved_success)
@@ -983,6 +987,14 @@ fun DashboardScreen(
             onSelectMeal = { meal ->
                 showSelectMealDialog = false
                 showCheckInMealDialog = meal
+            },
+            onSearchMeal = {
+                // TODO: Implement search functionality
+                showSelectMealDialog = false
+            },
+            onScanBarcode = {
+                showSelectMealDialog = false
+                showBarcodeScanDialog = true
             }
         )
     }
@@ -1375,5 +1387,21 @@ fun DashboardScreen(
                 existingExerciseLog = existingExerciseLog
             )
         }
+    }
+
+    if (showBarcodeScanDialog) {
+        GoogleCodeScannerDialog(
+            onDismiss = { showBarcodeScanDialog = false },
+            onBarcodeScanned = { barcode ->
+                // TODO: Handle the scanned barcode
+                // For now, just show a snackbar with the barcode
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Barcode scanned: $barcode"
+                    )
+                }
+                showBarcodeScanDialog = false
+            }
+        )
     }
 }

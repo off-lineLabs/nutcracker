@@ -4,6 +4,9 @@
 
     <!-- Internet permission for fetching exercise data -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Camera permission for barcode scanning -->
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:name=".FoodLogApplication"
@@ -15,6 +18,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Template">
+        
+        <!-- ML Kit Barcode Scanning dependencies -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui"/>
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"

@@ -67,6 +67,9 @@
     <string name="your_meals">Tus Comidas</string>
     <string name="no_meals_added">Aún no hay comidas agregadas</string>
     <string name="check_in_meal">Registrar Comida</string>
+    <string name="registrar_comida">Registrar comida</string>
+    <string name="scan_barcode">Escanear código de barras</string>
+    <string name="search_meal_database">Buscar en Base de Datos de Comidas</string>
     <string name="recent_check_ins">Registros Recientes</string>
     <string name="no_check_ins_yet">Aún no hay registros</string>
     
