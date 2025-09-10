@@ -19,7 +19,15 @@ data class Meal(
     val sodium_mg: Double,
     val servingSize_value: Double, // Changed to Double for more precision
     val servingSize_unit: ServingSizeUnit, // Now using enum instead of String
-    val notes: String? = null // Optional notes
+    val notes: String? = null, // Optional notes
+    
+    // Additional nutrition fields from Open Food Facts
+    val saturatedFat_g: Double? = null,
+    val sugars_g: Double? = null,
+    val cholesterol_mg: Double? = null,
+    val vitaminC_mg: Double? = null,
+    val calcium_mg: Double? = null,
+    val iron_mg: Double? = null
 )
 
 /**

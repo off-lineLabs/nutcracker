@@ -53,12 +53,24 @@ interface MealCheckInDao {
             m.fat_g as mealFat,
             m.fiber_g as mealFiber,
             m.sodium_mg as mealSodium,
+            m.saturatedFat_g as mealSaturatedFat,
+            m.sugars_g as mealSugars,
+            m.cholesterol_mg as mealCholesterol,
+            m.vitaminC_mg as mealVitaminC,
+            m.calcium_mg as mealCalcium,
+            m.iron_mg as mealIron,
             (m.calories * mci.servingSize) as totalCalories,
             (m.carbohydrates_g * mci.servingSize) as totalCarbs,
             (m.protein_g * mci.servingSize) as totalProtein,
             (m.fat_g * mci.servingSize) as totalFat,
             (m.fiber_g * mci.servingSize) as totalFiber,
-            (m.sodium_mg * mci.servingSize) as totalSodium
+            (m.sodium_mg * mci.servingSize) as totalSodium,
+            (m.saturatedFat_g * mci.servingSize) as totalSaturatedFat,
+            (m.sugars_g * mci.servingSize) as totalSugars,
+            (m.cholesterol_mg * mci.servingSize) as totalCholesterol,
+            (m.vitaminC_mg * mci.servingSize) as totalVitaminC,
+            (m.calcium_mg * mci.servingSize) as totalCalcium,
+            (m.iron_mg * mci.servingSize) as totalIron
         FROM meal_check_ins mci
         INNER JOIN meals m ON mci.mealId = m.id
         WHERE mci.checkInDate = :date
@@ -74,7 +86,13 @@ interface MealCheckInDao {
             COALESCE(SUM(m.protein_g * mci.servingSize), 0.0) as totalProtein,
             COALESCE(SUM(m.fat_g * mci.servingSize), 0.0) as totalFat,
             COALESCE(SUM(m.fiber_g * mci.servingSize), 0.0) as totalFiber,
-            COALESCE(SUM(m.sodium_mg * mci.servingSize), 0.0) as totalSodium
+            COALESCE(SUM(m.sodium_mg * mci.servingSize), 0.0) as totalSodium,
+            COALESCE(SUM(m.saturatedFat_g * mci.servingSize), 0.0) as totalSaturatedFat,
+            COALESCE(SUM(m.sugars_g * mci.servingSize), 0.0) as totalSugars,
+            COALESCE(SUM(m.cholesterol_mg * mci.servingSize), 0.0) as totalCholesterol,
+            COALESCE(SUM(m.vitaminC_mg * mci.servingSize), 0.0) as totalVitaminC,
+            COALESCE(SUM(m.calcium_mg * mci.servingSize), 0.0) as totalCalcium,
+            COALESCE(SUM(m.iron_mg * mci.servingSize), 0.0) as totalIron
         FROM meal_check_ins mci
         INNER JOIN meals m ON mci.mealId = m.id
         WHERE mci.checkInDate = :date
@@ -97,12 +115,24 @@ data class DailyNutritionEntry(
     val mealFat: Double,
     val mealFiber: Double,
     val mealSodium: Double,
+    val mealSaturatedFat: Double?,
+    val mealSugars: Double?,
+    val mealCholesterol: Double?,
+    val mealVitaminC: Double?,
+    val mealCalcium: Double?,
+    val mealIron: Double?,
     val totalCalories: Double,
     val totalCarbs: Double,
     val totalProtein: Double,
     val totalFat: Double,
     val totalFiber: Double,
-    val totalSodium: Double
+    val totalSodium: Double,
+    val totalSaturatedFat: Double?,
+    val totalSugars: Double?,
+    val totalCholesterol: Double?,
+    val totalVitaminC: Double?,
+    val totalCalcium: Double?,
+    val totalIron: Double?
 )
 
 // Data class for daily nutrient totals
@@ -112,5 +142,11 @@ data class DailyTotals(
     val totalProtein: Double,
     val totalFat: Double,
     val totalFiber: Double,
-    val totalSodium: Double
+    val totalSodium: Double,
+    val totalSaturatedFat: Double?,
+    val totalSugars: Double?,
+    val totalCholesterol: Double?,
+    val totalVitaminC: Double?,
+    val totalCalcium: Double?,
+    val totalIron: Double?
 )

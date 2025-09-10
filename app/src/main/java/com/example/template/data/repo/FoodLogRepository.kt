@@ -194,7 +194,13 @@ class OfflineFoodLogRepository(
                             totalProtein = totals.totalProtein,
                             totalFat = totals.totalFat,
                             totalFiber = totals.totalFiber,
-                            totalSodium = totals.totalSodium
+                            totalSodium = totals.totalSodium,
+                            totalSaturatedFat = totals.totalSaturatedFat,
+                            totalSugars = totals.totalSugars,
+                            totalCholesterol = totals.totalCholesterol,
+                            totalVitaminC = totals.totalVitaminC,
+                            totalCalcium = totals.totalCalcium,
+                            totalIron = totals.totalIron
                         )
                     }
                 }
@@ -213,7 +219,13 @@ class OfflineFoodLogRepository(
                             totalProtein = totals.totalProtein,
                             totalFat = totals.totalFat,
                             totalFiber = totals.totalFiber,
-                            totalSodium = totals.totalSodium
+                            totalSodium = totals.totalSodium,
+                            totalSaturatedFat = totals.totalSaturatedFat,
+                            totalSugars = totals.totalSugars,
+                            totalCholesterol = totals.totalCholesterol,
+                            totalVitaminC = totals.totalVitaminC,
+                            totalCalcium = totals.totalCalcium,
+                            totalIron = totals.totalIron
                         )
                     }
                 }
@@ -231,7 +243,13 @@ class OfflineFoodLogRepository(
                             totalProtein = totals.totalProtein,
                             totalFat = totals.totalFat,
                             totalFiber = totals.totalFiber,
-                            totalSodium = totals.totalSodium
+                            totalSodium = totals.totalSodium,
+                            totalSaturatedFat = totals.totalSaturatedFat,
+                            totalSugars = totals.totalSugars,
+                            totalCholesterol = totals.totalCholesterol,
+                            totalVitaminC = totals.totalVitaminC,
+                            totalCalcium = totals.totalCalcium,
+                            totalIron = totals.totalIron
                         )
                     }
                 }

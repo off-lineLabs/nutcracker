@@ -59,6 +59,7 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.toInternalExercise
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.FoodInfo
+import com.example.template.data.model.OpenFoodFactsResponse
 import com.example.template.data.mapper.FoodInfoMapper
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
@@ -67,6 +68,7 @@ import com.example.template.ui.components.dialogs.BarcodeScanDialog
 import com.example.template.ui.components.dialogs.SimpleBarcodeScanDialog
 import com.example.template.ui.components.dialogs.GoogleCodeScannerDialog
 import com.example.template.ui.components.dialogs.FoodInfoDialog
+import com.example.template.ui.components.dialogs.FoodSearchDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
@@ -385,6 +387,7 @@ fun DashboardScreen(
     var showAddMealDialog by remember { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
+    var showFoodSearchDialog by remember { mutableStateOf(false) }
     var showFoodInfoDialog by remember { mutableStateOf<FoodInfo?>(null) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
@@ -993,8 +996,8 @@ fun DashboardScreen(
                 showCheckInMealDialog = meal
             },
             onSearchMeal = {
-                // TODO: Implement search functionality
                 showSelectMealDialog = false
+                showFoodSearchDialog = true
             },
             onScanBarcode = {
                 showSelectMealDialog = false
@@ -1391,6 +1394,33 @@ fun DashboardScreen(
                 existingExerciseLog = existingExerciseLog
             )
         }
+    }
+
+    if (showFoodSearchDialog) {
+        FoodSearchDialog(
+            onDismiss = { showFoodSearchDialog = false },
+            onProductSelected = { product ->
+                // Convert Product to FoodInfo and show the food info dialog
+                val foodInfo = FoodInfoMapper.mapToFoodInfo(
+                    OpenFoodFactsResponse(
+                        status = 1,
+                        statusVerbose = "found",
+                        product = product
+                    )
+                )
+                if (foodInfo != null) {
+                    showFoodInfoDialog = foodInfo
+                } else {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Unable to process food information"
+                        )
+                    }
+                }
+            },
+            openFoodFactsService = (context.applicationContext as FoodLogApplication).openFoodFactsService,
+            currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
+        )
     }
 
     if (showBarcodeScanDialog) {

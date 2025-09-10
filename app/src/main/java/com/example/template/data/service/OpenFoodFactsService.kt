@@ -1,14 +1,26 @@
 package com.example.template.data.service
 
 import com.example.template.data.model.OpenFoodFactsResponse
+import com.example.template.data.model.SearchResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.Query
 import android.util.Log
 
 interface OpenFoodFactsApi {
     @GET("api/v0/product/{barcode}.json")
     suspend fun getProductByBarcode(@Path("barcode") barcode: String): Response<OpenFoodFactsResponse>
+    
+    @GET("cgi/search.pl")
+    suspend fun searchProducts(
+        @Query("search_terms") searchTerms: String,
+        @Query("search_simple") searchSimple: Int = 1,
+        @Query("action") action: String = "process",
+        @Query("json") json: Int = 1,
+        @Query("page_size") pageSize: Int = 20,
+        @Query("lc") languageCode: String? = null
+    ): Response<SearchResponse>
 }
 
 class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
@@ -40,6 +52,34 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
                 Result.failure(Exception("API request failed: ${response.code()} ${response.message()}"))
             }
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Searches for products by text query from Open Food Facts API.
+     * Supports multilingual search and returns paginated results.
+     */
+    suspend fun searchProducts(
+        searchTerms: String,
+        pageSize: Int = 20,
+        languageCode: String? = null
+    ): Result<SearchResponse> {
+        return try {
+            val response = api.searchProducts(
+                searchTerms = searchTerms,
+                pageSize = pageSize,
+                languageCode = languageCode
+            )
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                Log.d("OpenFoodFactsService", "Search successful for '$searchTerms': ${body.count} results found")
+                Result.success(body)
+            } else {
+                Result.failure(Exception("Search request failed: ${response.code()} ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Log.e("OpenFoodFactsService", "Search failed for '$searchTerms'", e)
             Result.failure(e)
         }
     }

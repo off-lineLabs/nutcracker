@@ -16,6 +16,10 @@ data class Product(
     val productName: String?,
     @SerializedName("product_name_en")
     val productNameEn: String?,
+    @SerializedName("product_name_es")
+    val productNameEs: String?,
+    @SerializedName("product_name_pt")
+    val productNamePt: String?,
     @SerializedName("brands")
     val brands: String?,
     @SerializedName("image_url")
@@ -42,6 +46,10 @@ data class Product(
     val ingredientsText: String?,
     @SerializedName("ingredients_text_en")
     val ingredientsTextEn: String?,
+    @SerializedName("ingredients_text_es")
+    val ingredientsTextEs: String?,
+    @SerializedName("ingredients_text_pt")
+    val ingredientsTextPt: String?,
     @SerializedName("categories")
     val categories: String?,
     @SerializedName("quantity")
@@ -194,4 +202,32 @@ data class Nutriscore(
 ) {
     val displayName: String
         get() = "Nutri-Score: $grade"
+}
+
+data class SearchResponse(
+    @SerializedName("products")
+    val products: List<Product>,
+    @SerializedName("count")
+    val count: Int,
+    @SerializedName("page")
+    val page: Int,
+    @SerializedName("page_size")
+    val pageSize: Int
+)
+
+// Extension functions for language-aware display
+fun Product.getLocalizedProductName(userLanguage: com.example.template.data.AppLanguage): String {
+    return when (userLanguage) {
+        com.example.template.data.AppLanguage.SPANISH -> productNameEs ?: productNameEn ?: productName ?: "Unknown"
+        com.example.template.data.AppLanguage.PORTUGUESE -> productNamePt ?: productNameEn ?: productName ?: "Unknown"
+        com.example.template.data.AppLanguage.ENGLISH -> productNameEn ?: productName ?: "Unknown"
+    }
+}
+
+fun Product.getLocalizedIngredientsText(userLanguage: com.example.template.data.AppLanguage): String? {
+    return when (userLanguage) {
+        com.example.template.data.AppLanguage.SPANISH -> ingredientsTextEs ?: ingredientsTextEn ?: ingredientsText
+        com.example.template.data.AppLanguage.PORTUGUESE -> ingredientsTextPt ?: ingredientsTextEn ?: ingredientsText
+        com.example.template.data.AppLanguage.ENGLISH -> ingredientsTextEn ?: ingredientsText
+    }
 }
