@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,6 +97,15 @@ fun CheckInItem(
                     color = appTextPrimaryColor()
                 )
                 
+                // Show brand if available
+                checkIn.mealBrand?.let { brand ->
+                    Text(
+                        text = brand,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = appTextSecondaryColor()
+                    )
+                }
+                
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Row(
@@ -118,6 +129,44 @@ fun CheckInItem(
                             style = MaterialTheme.typography.bodySmall,
                             color = appTextTertiaryColor()
                         )
+                    }
+                }
+                
+                // Source indicator
+                if (checkIn.mealSource != "manual") {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        when (checkIn.mealSource) {
+                            "barcode" -> {
+                                Icon(
+                                    Icons.Filled.QrCodeScanner,
+                                    contentDescription = "Scanned",
+                                    modifier = Modifier.size(10.dp),
+                                    tint = appTextTertiaryColor()
+                                )
+                                Text(
+                                    text = "Scanned",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = appTextTertiaryColor()
+                                )
+                            }
+                            "search" -> {
+                                Icon(
+                                    Icons.Filled.Search,
+                                    contentDescription = "Searched",
+                                    modifier = Modifier.size(10.dp),
+                                    tint = appTextTertiaryColor()
+                                )
+                                Text(
+                                    text = "Searched",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = appTextTertiaryColor()
+                                )
+                            }
+                        }
                     }
                 }
                 

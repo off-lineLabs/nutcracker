@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.example.template.R
 import com.example.template.data.model.Meal
+import com.example.template.ui.components.items.MealItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +47,44 @@ fun SelectMealForCheckInDialog(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             ) {
+                // Show existing meals if any
+                if (meals.isNotEmpty()) {
+                    Text(
+                        text = "Your Meals",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(meals) { meal ->
+                            MealItem(
+                                meal = meal,
+                                onCheckInClick = onSelectMeal
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    HorizontalDivider()
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                
+                // Action buttons
+                Text(
+                    text = "Add New Meal",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
                 // Scan barcode button
                 Button(
                     onClick = onScanBarcode,
@@ -63,7 +102,7 @@ fun SelectMealForCheckInDialog(
                     Text(stringResource(R.string.scan_barcode))
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Search meal database button
                 Button(
@@ -82,7 +121,7 @@ fun SelectMealForCheckInDialog(
                     Text(stringResource(R.string.search_meal_database))
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Type information button (previously "Add new meal")
                 Button(

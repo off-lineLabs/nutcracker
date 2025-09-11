@@ -60,7 +60,10 @@ import com.example.template.data.model.toInternalExercise
 import com.example.template.data.model.UserGoal
 import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.OpenFoodFactsResponse
+import com.example.template.data.model.ServingSizeUnit
+import com.example.template.data.service.ImageDownloadService
 import com.example.template.data.mapper.FoodInfoMapper
+import com.example.template.data.mapper.FoodInfoToMealMapper
 import com.example.template.ui.components.dialogs.AddMealDialog
 import com.example.template.ui.components.dialogs.CheckInMealDialog
 import com.example.template.ui.components.dialogs.SelectMealForCheckInDialog
@@ -69,6 +72,7 @@ import com.example.template.ui.components.dialogs.SimpleBarcodeScanDialog
 import com.example.template.ui.components.dialogs.GoogleCodeScannerDialog
 import com.example.template.ui.components.dialogs.FoodInfoDialog
 import com.example.template.ui.components.dialogs.FoodSearchDialog
+import com.example.template.ui.components.dialogs.ServingSizeDialog
 import com.example.template.ui.components.dialogs.AddExerciseDialog
 import com.example.template.ui.components.dialogs.CheckInExerciseDialog
 import com.example.template.ui.components.dialogs.SelectExerciseForCheckInDialog
@@ -362,6 +366,7 @@ fun DashboardScreen(
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
+    val imageDownloadService = remember { ImageDownloadService(context) }
     val externalExerciseService = (context.applicationContext as FoodLogApplication).externalExerciseService
     val exerciseImageService = (context.applicationContext as FoodLogApplication).exerciseImageService
     val coroutineScope = rememberCoroutineScope()
@@ -389,6 +394,8 @@ fun DashboardScreen(
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
     var showFoodSearchDialog by remember { mutableStateOf(false) }
     var showFoodInfoDialog by remember { mutableStateOf<FoodInfo?>(null) }
+    var showServingSizeDialog by remember { mutableStateOf<FoodInfo?>(null) }
+    var currentBarcode by remember { mutableStateOf<String?>(null) }
     
     // Store string resources in variables to avoid calling stringResource in non-composable contexts
     val goalSavedSuccess = stringResource(R.string.goal_saved_success)
@@ -1427,6 +1434,8 @@ fun DashboardScreen(
         GoogleCodeScannerDialog(
             onDismiss = { showBarcodeScanDialog = false },
             onBarcodeScanned = { barcode ->
+                // Store barcode for later use
+                currentBarcode = barcode
                 // Fetch food information from Open Food Facts API
                 coroutineScope.launch {
                     try {
@@ -1471,14 +1480,58 @@ fun DashboardScreen(
             foodInfo = foodInfo,
             onBack = { showFoodInfoDialog = null },
             onAddToMeals = {
-                // TODO: Implement adding food to meals
-                // For now, just close the dialog and show a message
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = "Adding food to meals feature coming soon!"
-                    )
-                }
                 showFoodInfoDialog = null
+                showServingSizeDialog = foodInfo
+            }
+        )
+    }
+    
+    // Serving Size Dialog
+    showServingSizeDialog?.let { foodInfo ->
+        ServingSizeDialog(
+            foodInfo = foodInfo,
+            barcode = currentBarcode,
+            onDismiss = { 
+                showServingSizeDialog = null
+                currentBarcode = null
+            },
+            onConfirm = { servingSizeValue, servingSizeUnit ->
+                coroutineScope.launch {
+                    try {
+                        // Convert FoodInfo to Meal
+                        val meal = FoodInfoToMealMapper.mapToMeal(
+                            foodInfo = foodInfo,
+                            servingSizeValue = servingSizeValue,
+                            servingSizeUnit = servingSizeUnit,
+                            barcode = currentBarcode,
+                            source = if (currentBarcode != null) "barcode" else "search"
+                        )
+                        
+                        // Download image if available
+                        val localImagePath = if (foodInfo.imageUrl != null) {
+                            imageDownloadService.downloadAndSaveImage(foodInfo.imageUrl)
+                        } else null
+                        
+                        // Update meal with local image path
+                        val finalMeal = meal.copy(localImagePath = localImagePath)
+                        
+                        // Insert meal into database
+                        foodLogRepository.insertMeal(finalMeal)
+                        
+                        snackbarHostState.showSnackbar(
+                            message = "Meal added successfully!"
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to add meal from food info", e, mapOf(
+                            "foodName" to foodInfo.name
+                        ))
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to add meal: ${e.message}"
+                        )
+                    }
+                }
+                showServingSizeDialog = null
+                currentBarcode = null
             }
         )
     }
