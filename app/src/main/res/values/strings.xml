@@ -67,6 +67,9 @@
     <string name="your_meals">Your Meals</string>
     <string name="no_meals_added">No meals added yet</string>
     <string name="check_in_meal">Check In Meal</string>
+    <string name="registrar_comida">Registrar comida</string>
+    <string name="scan_barcode">Scan barcode</string>
+    <string name="search_meal_database">Search Meal Database</string>
     <string name="recent_check_ins">Recent Check-ins</string>
     <string name="no_check_ins_yet">No check-ins yet</string>
     

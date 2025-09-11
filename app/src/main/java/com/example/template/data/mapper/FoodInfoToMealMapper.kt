@@ -1,0 +1,167 @@
+package com.example.template.data.mapper
+
+import com.example.template.data.model.*
+import android.util.Log
+
+object FoodInfoToMealMapper {
+    
+    /**
+     * Converts FoodInfo to Meal entity
+     * @param foodInfo The FoodInfo from Open Food Facts
+     * @param servingSizeValue The serving size value (e.g., 100.0 for 100g)
+     * @param servingSizeUnit The serving size unit (e.g., GRAMS)
+     * @param barcode The barcode if scanned (optional)
+     * @param source The source of the food ("search" or "barcode")
+     * @return Meal entity ready for database insertion
+     */
+    fun mapToMeal(
+        foodInfo: FoodInfo,
+        servingSizeValue: Double = 100.0,
+        servingSizeUnit: ServingSizeUnit = ServingSizeUnit.GRAMS,
+        barcode: String? = null,
+        source: String = "search"
+    ): Meal {
+        val nutrition = foodInfo.nutrition
+        
+        return Meal(
+            name = foodInfo.name,
+            brand = foodInfo.brand,
+            calories = nutrition.calories?.toInt() ?: 0,
+            carbohydrates_g = nutrition.carbohydrates ?: 0.0,
+            protein_g = nutrition.proteins ?: 0.0,
+            fat_g = nutrition.fat ?: 0.0,
+            fiber_g = nutrition.fiber ?: 0.0,
+            sodium_mg = nutrition.sodium ?: 0.0,
+            servingSize_value = servingSizeValue,
+            servingSize_unit = servingSizeUnit,
+            notes = null,
+            
+            // Additional nutrition fields
+            saturatedFat_g = nutrition.saturatedFat,
+            sugars_g = nutrition.sugars,
+            cholesterol_mg = nutrition.cholesterol,
+            vitaminC_mg = nutrition.vitaminC,
+            calcium_mg = nutrition.calcium,
+            iron_mg = nutrition.iron,
+            
+            // Open Food Facts specific fields
+            imageUrl = foodInfo.imageUrl,
+            localImagePath = null, // Will be set after image download
+            novaClassification = foodInfo.novaClassification,
+            greenScore = foodInfo.greenScore,
+            nutriscore = foodInfo.nutriscore,
+            ingredients = foodInfo.ingredients,
+            categories = foodInfo.categories,
+            quantity = foodInfo.quantity,
+            servingSize = foodInfo.servingSize,
+            barcode = barcode,
+            source = source
+        )
+    }
+    
+    /**
+     * Parses serving size from Open Food Facts serving size string
+     * @param servingSizeString The serving size string (e.g., "1 cup (240ml)")
+     * @return Pair of (value, unit) or null if parsing fails
+     */
+    fun parseServingSize(servingSizeString: String?): Pair<Double, ServingSizeUnit>? {
+        if (servingSizeString.isNullOrBlank()) {
+            return null
+        }
+        
+        return try {
+            // Common patterns to match:
+            // "100g", "1 cup (240ml)", "1 slice (30g)", "1 serving (150g)"
+            val patterns = listOf(
+                // Weight patterns
+                Regex("""(\d+(?:\.\d+)?)\s*g""", RegexOption.IGNORE_CASE) to ServingSizeUnit.GRAMS,
+                Regex("""(\d+(?:\.\d+)?)\s*kg""", RegexOption.IGNORE_CASE) to ServingSizeUnit.KILOGRAMS,
+                Regex("""(\d+(?:\.\d+)?)\s*oz""", RegexOption.IGNORE_CASE) to ServingSizeUnit.OUNCES,
+                Regex("""(\d+(?:\.\d+)?)\s*lb""", RegexOption.IGNORE_CASE) to ServingSizeUnit.POUNDS,
+                
+                // Volume patterns
+                Regex("""(\d+(?:\.\d+)?)\s*ml""", RegexOption.IGNORE_CASE) to ServingSizeUnit.MILLILITERS,
+                Regex("""(\d+(?:\.\d+)?)\s*l""", RegexOption.IGNORE_CASE) to ServingSizeUnit.LITERS,
+                Regex("""(\d+(?:\.\d+)?)\s*fl\s*oz""", RegexOption.IGNORE_CASE) to ServingSizeUnit.FLUID_OUNCES,
+                Regex("""(\d+(?:\.\d+)?)\s*cup""", RegexOption.IGNORE_CASE) to ServingSizeUnit.CUPS,
+                Regex("""(\d+(?:\.\d+)?)\s*tbsp""", RegexOption.IGNORE_CASE) to ServingSizeUnit.TABLESPOONS,
+                Regex("""(\d+(?:\.\d+)?)\s*tsp""", RegexOption.IGNORE_CASE) to ServingSizeUnit.TEASPOONS,
+                
+                // Count patterns
+                Regex("""(\d+(?:\.\d+)?)\s*slice""", RegexOption.IGNORE_CASE) to ServingSizeUnit.SLICES,
+                Regex("""(\d+(?:\.\d+)?)\s*piece""", RegexOption.IGNORE_CASE) to ServingSizeUnit.PIECES,
+                Regex("""(\d+(?:\.\d+)?)\s*serving""", RegexOption.IGNORE_CASE) to ServingSizeUnit.SERVINGS,
+                Regex("""(\d+(?:\.\d+)?)\s*portion""", RegexOption.IGNORE_CASE) to ServingSizeUnit.PORTIONS
+            )
+            
+            for ((pattern, unit) in patterns) {
+                val match = pattern.find(servingSizeString)
+                if (match != null) {
+                    val value = match.groupValues[1].toDouble()
+                    return Pair(value, unit)
+                }
+            }
+            
+            // If no pattern matches, try to extract just a number
+            val numberPattern = Regex("""(\d+(?:\.\d+)?)""")
+            val numberMatch = numberPattern.find(servingSizeString)
+            if (numberMatch != null) {
+                val value = numberMatch.groupValues[1].toDouble()
+                return Pair(value, ServingSizeUnit.UNITS)
+            }
+            
+            null
+        } catch (e: Exception) {
+            Log.e("FoodInfoToMealMapper", "Error parsing serving size: $servingSizeString", e)
+            null
+        }
+    }
+    
+    /**
+     * Gets a user-friendly serving size suggestion based on the food type
+     */
+    fun getSuggestedServingSize(foodInfo: FoodInfo): Pair<Double, ServingSizeUnit> {
+        val categories = foodInfo.categories?.lowercase() ?: ""
+        val name = foodInfo.name.lowercase()
+        
+        return when {
+            // Beverages
+            categories.contains("beverage") || categories.contains("drink") || 
+            name.contains("juice") || name.contains("soda") || name.contains("water") -> {
+                Pair(250.0, ServingSizeUnit.MILLILITERS) // 1 cup
+            }
+            
+            // Dairy products
+            categories.contains("dairy") || categories.contains("milk") || 
+            name.contains("milk") || name.contains("yogurt") -> {
+                Pair(250.0, ServingSizeUnit.MILLILITERS) // 1 cup
+            }
+            
+            // Bread and baked goods
+            categories.contains("bread") || categories.contains("bakery") || 
+            name.contains("bread") || name.contains("toast") -> {
+                Pair(1.0, ServingSizeUnit.SLICES) // 1 slice
+            }
+            
+            // Fruits
+            categories.contains("fruit") || name.contains("apple") || 
+            name.contains("banana") || name.contains("orange") -> {
+                Pair(1.0, ServingSizeUnit.PIECES) // 1 piece
+            }
+            
+            // Cereals
+            categories.contains("cereal") || name.contains("cereal") -> {
+                Pair(30.0, ServingSizeUnit.GRAMS) // 30g serving
+            }
+            
+            // Nuts and seeds
+            categories.contains("nut") || categories.contains("seed") || 
+            name.contains("nut") || name.contains("seed") -> {
+                Pair(30.0, ServingSizeUnit.GRAMS) // 30g serving
+            }
+            
+            // Default to 100g
+            else -> Pair(100.0, ServingSizeUnit.GRAMS)
+        }
+    }
+}
