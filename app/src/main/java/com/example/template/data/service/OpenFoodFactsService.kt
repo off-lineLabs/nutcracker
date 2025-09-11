@@ -1,6 +1,7 @@
 package com.example.template.data.service
 
 import com.example.template.data.model.OpenFoodFactsResponse
+import com.example.template.data.model.Product
 import com.example.template.data.model.SearchResponse
 import retrofit2.Response
 import retrofit2.http.GET
@@ -19,7 +20,12 @@ interface OpenFoodFactsApi {
         @Query("action") action: String = "process",
         @Query("json") json: Int = 1,
         @Query("page_size") pageSize: Int = 20,
-        @Query("lc") languageCode: String? = null
+        @Query("lc") languageCode: String? = null,
+        @Query("sort_by") sortBy: String? = "popularity",
+        @Query("page") page: Int = 1,
+        @Query("tagtype_0") tagType: String? = null,
+        @Query("tag_contains_0") tagContains: String? = null,
+        @Query("tag_0") tagValue: String? = null
     ): Response<SearchResponse>
 }
 
@@ -58,29 +64,161 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
     
     /**
      * Searches for products by text query from Open Food Facts API.
-     * Supports multilingual search and returns paginated results.
+     * Supports multilingual search, popularity sorting, and whole foods filtering.
      */
     suspend fun searchProducts(
         searchTerms: String,
         pageSize: Int = 20,
-        languageCode: String? = null
+        languageCode: String? = null,
+        wholeFoodsOnly: Boolean = false
     ): Result<SearchResponse> {
         return try {
+            // Get more results when filtering to ensure we have enough after filtering
+            val searchPageSize = if (wholeFoodsOnly) pageSize * 3 else pageSize
+            
             val response = api.searchProducts(
                 searchTerms = searchTerms,
-                pageSize = pageSize,
-                languageCode = languageCode
+                pageSize = searchPageSize,
+                languageCode = languageCode,
+                sortBy = "popularity"
             )
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
-                Log.d("OpenFoodFactsService", "Search successful for '$searchTerms': ${body.count} results found")
-                Result.success(body)
+                
+                // Apply client-side filtering for whole foods using NOVA classification
+                val filteredProducts = if (wholeFoodsOnly) {
+                    body.products.filter { product ->
+                        isWholeFood(product)
+                    }.take(pageSize)
+                } else {
+                    body.products.take(pageSize)
+                }
+                
+                val filteredResponse = body.copy(products = filteredProducts)
+                Log.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
+                Result.success(filteredResponse)
             } else {
                 Result.failure(Exception("Search request failed: ${response.code()} ${response.message()}"))
             }
         } catch (e: Exception) {
             Log.e("OpenFoodFactsService", "Search failed for '$searchTerms'", e)
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Determines if a product is considered a "whole food" based on NOVA classification
+     * and specific category tags. Combines both approaches for maximum accuracy.
+     */
+    private fun isWholeFood(product: Product): Boolean {
+        // Primary check: NOVA classification
+        product.novaGroup?.let { novaGroup ->
+            // NOVA Group 1: Unprocessed or minimally processed foods
+            // NOVA Group 2: Processed culinary ingredients (also considered whole foods)
+            if (novaGroup == 1 || novaGroup == 2) {
+                return true
+            }
+            // NOVA Group 3: Processed foods
+            // NOVA Group 4: Ultra-processed foods
+            // Both should be excluded from whole foods
+            if (novaGroup == 3 || novaGroup == 4) {
+                return false
+            }
+        }
+        
+        // Secondary check: Specific whole food category tags
+        product.categoriesTags?.let { categoryTags ->
+            val wholeFoodCategories = setOf(
+                // Fruits and vegetables
+                "en:fruits",
+                "en:vegetables", 
+                "en:fresh-foods",
+                
+                // Nuts and seeds
+                "en:nuts",
+                "en:seeds",
+                
+                // Legumes
+                "en:legumes",
+                "en:pulses",
+                
+                // Whole grains (unprocessed)
+                "en:whole-grains",
+                
+                // Meat and fish
+                "en:meat",
+                "en:fish",
+                "en:seafood",
+                
+                // Dairy (basic only - exclude processed dairy products)
+                "en:dairy",
+                "en:milk",
+                
+                // Eggs
+                "en:eggs"
+            )
+            
+            // Check if any category tag matches whole food categories
+            val hasWholeFoodCategory = categoryTags.any { tag -> 
+                wholeFoodCategories.any { wholeFoodTag -> tag.startsWith(wholeFoodTag) }
+            }
+            
+            // But exclude processed foods even if they have whole food categories
+            val processedFoodCategories = setOf(
+                "en:breakfast-cereals",
+                "en:cereals-and-potatoes",
+                "en:snacks",
+                "en:beverages",
+                "en:fruit-juices",
+                "en:processed-foods",
+                "en:frozen-foods",
+                "en:canned-foods",
+                "en:desserts",
+                "en:dairy-desserts",
+                "en:fermented-dairy-desserts",
+                "en:yogurts-with-fruits",
+                "en:flavored-yogurts",
+                "en:chocolate-products",
+                "en:sweetened-products"
+            )
+            
+            val hasProcessedCategory = categoryTags.any { tag ->
+                processedFoodCategories.any { processedTag -> tag.startsWith(processedTag) }
+            }
+            
+            return hasWholeFoodCategory && !hasProcessedCategory
+        }
+        
+        // Last resort: Raw categories with processed food exclusion
+        val categories = product.categories?.lowercase() ?: ""
+        
+        // Exclude processed foods
+        val processedKeywords = listOf(
+            "cereales", "cereals", "granola", "muesli", "desayunos", "breakfast",
+            "snacks", "bocadillos", "bebidas", "beverages", "jugos", "juices",
+            "procesado", "processed", "enlatado", "canned", "congelado", "frozen",
+            "pan", "bread", "pasta", "galletas", "cookies",
+            "postres", "desserts", "yogures de frutas", "yogurts with fruits",
+            "chocolate", "sweetened", "edulcorado", "flavored", "saborizado"
+        )
+        
+        val isProcessed = processedKeywords.any { keyword -> 
+            categories.contains(keyword) 
+        }
+        
+        if (isProcessed) {
+            return false
+        }
+        
+        // Include whole foods
+        val wholeFoodKeywords = listOf(
+            "fruits", "frutas", "vegetables", "verduras", "fresh", "fresco",
+            "nuts", "nueces", "seeds", "semillas", "legumes", "legumbres",
+            "meat", "carne", "fish", "pescado", "dairy", "lacteos", "eggs", "huevos"
+        )
+        
+        return wholeFoodKeywords.any { keyword ->
+            categories.contains(keyword)
         }
     }
 }

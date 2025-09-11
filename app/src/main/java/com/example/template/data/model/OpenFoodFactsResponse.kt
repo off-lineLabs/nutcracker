@@ -52,6 +52,8 @@ data class Product(
     val ingredientsTextPt: String?,
     @SerializedName("categories")
     val categories: String?,
+    @SerializedName("categories_tags")
+    val categoriesTags: List<String>?,
     @SerializedName("quantity")
     val quantity: String?,
     @SerializedName("serving_size")

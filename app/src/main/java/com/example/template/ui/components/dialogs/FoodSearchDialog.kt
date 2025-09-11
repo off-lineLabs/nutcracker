@@ -49,12 +49,13 @@ fun FoodSearchDialog(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var hasSearched by remember { mutableStateOf(false) }
+    var wholeFoodsOnly by remember { mutableStateOf(false) }
     
     val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     
     // Debounced search effect
-    LaunchedEffect(searchQuery) {
+    LaunchedEffect(searchQuery, wholeFoodsOnly) {
         if (searchQuery.isNotBlank() && searchQuery.length >= 2) {
             delay(500) // 500ms debounce
             isLoading = true
@@ -68,7 +69,8 @@ fun FoodSearchDialog(
                         AppLanguage.SPANISH -> "es"
                         AppLanguage.PORTUGUESE -> "pt"
                         AppLanguage.ENGLISH -> "en"
-                    }
+                    },
+                    wholeFoodsOnly = wholeFoodsOnly
                 )
                 
                 result.fold(
@@ -180,6 +182,36 @@ fun FoodSearchDialog(
                     )
                 )
                 
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Whole Foods Filter Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = when (currentLanguage) {
+                            AppLanguage.SPANISH -> "Solo alimentos naturales"
+                            AppLanguage.PORTUGUESE -> "Apenas alimentos naturais"
+                            AppLanguage.ENGLISH -> "Whole foods only"
+                        },
+                        color = appTextPrimaryColor(),
+                        fontSize = 14.sp
+                    )
+                    
+                    Switch(
+                        checked = wholeFoodsOnly,
+                        onCheckedChange = { wholeFoodsOnly = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF60A5FA),
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = appTextSecondaryColor().copy(alpha = 0.3f)
+                        )
+                    )
+                }
+                
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Content area
@@ -272,6 +304,44 @@ fun FoodSearchDialog(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // Filter indicator
+                            if (wholeFoodsOnly) {
+                                item {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 0.dp, vertical = 4.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color(0xFF60A5FA).copy(alpha = 0.1f)
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.FilterList,
+                                                contentDescription = null,
+                                                tint = Color(0xFF60A5FA),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = when (currentLanguage) {
+                                                    AppLanguage.SPANISH -> "Mostrando solo alimentos naturales"
+                                                    AppLanguage.PORTUGUESE -> "Mostrando apenas alimentos naturais"
+                                                    AppLanguage.ENGLISH -> "Showing whole foods only"
+                                                },
+                                                color = Color(0xFF60A5FA),
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            
                             items(searchResults) { product ->
                                 ProductSearchResultItem(
                                     product = product,
