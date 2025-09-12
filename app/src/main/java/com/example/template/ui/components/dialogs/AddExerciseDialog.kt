@@ -21,6 +21,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.toInternalExercise
 import com.example.template.util.logger.AppLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -278,16 +279,32 @@ fun AddExerciseDialog(
             Button(
                 onClick = {
                     AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
-                    val exercise = Exercise(
-                        name = name.trim(),
-                        category = ExerciseCategoryMapper.getCategory(exerciseType),
-                        kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                        kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
-                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                        defaultReps = defaultReps.toIntOrNull() ?: 0,
-                        defaultSets = defaultSets.toIntOrNull() ?: 0,
-                        notes = notes.takeIf { it.isNotBlank() }
-                    )
+                    val exercise = if (existingExercise != null) {
+                        // When editing, preserve all non-editable fields from the existing exercise
+                        existingExercise.copy(
+                            name = name.trim(),
+                            category = ExerciseCategoryMapper.getCategory(exerciseType),
+                            kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
+                            kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                            defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                            defaultReps = defaultReps.toIntOrNull() ?: 0,
+                            defaultSets = defaultSets.toIntOrNull() ?: 0,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    } else {
+                        // When creating new exercise, use the provided external exercise data if available
+                        val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
+                        baseExercise.copy(
+                            name = name.trim(),
+                            category = ExerciseCategoryMapper.getCategory(exerciseType),
+                            kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
+                            kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                            defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                            defaultReps = defaultReps.toIntOrNull() ?: 0,
+                            defaultSets = defaultSets.toIntOrNull() ?: 0,
+                            notes = notes.takeIf { it.isNotBlank() }
+                        )
+                    }
                     onAddExercise(exercise)
                 },
                 enabled = name.isNotBlank()

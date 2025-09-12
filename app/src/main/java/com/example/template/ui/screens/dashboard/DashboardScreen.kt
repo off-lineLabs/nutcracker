@@ -84,6 +84,7 @@ import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
 import com.example.template.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 import com.example.template.util.logger.AppLogger
@@ -439,6 +440,9 @@ fun DashboardScreen(
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
+    var selectedExerciseForCheckIn by remember { mutableStateOf<Exercise?>(null) }
+    var lastExerciseLog by remember { mutableStateOf<ExerciseLog?>(null) }
+    var maxExerciseWeight by remember { mutableStateOf<Double?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
     
     // Edit dialog state variables
@@ -1183,38 +1187,27 @@ fun DashboardScreen(
     }
 
     showCheckInExerciseDialog?.let { exerciseToCheckIn ->
-        var lastLog by remember { mutableStateOf<ExerciseLog?>(null) }
-        var maxWeight by remember { mutableStateOf<Double?>(null) }
-        
-        // Load last log and max weight for this exercise
-        LaunchedEffect(exerciseToCheckIn.id) {
-            foodLogRepository.getLastLogForExercise(exerciseToCheckIn.id).collectLatest { log ->
-                lastLog = log
-            }
-        }
-        
-        LaunchedEffect(exerciseToCheckIn.id) {
-            foodLogRepository.getMaxWeightForExercise(exerciseToCheckIn.id).collectLatest { weight ->
-                maxWeight = weight
-            }
-        }
-        
-        CheckInExerciseDialog(
+        UnifiedCheckInDialog<CheckInData.Exercise>(
             exercise = exerciseToCheckIn,
-            lastLog = lastLog,
-            maxWeight = maxWeight,
-            onDismiss = { showCheckInExerciseDialog = null },
-            onCheckIn = { exerciseLog ->
+            lastLog = lastExerciseLog,
+            maxWeight = maxExerciseWeight,
+            onDismiss = { 
+                showCheckInExerciseDialog = null
+                selectedExerciseForCheckIn = null
+                lastExerciseLog = null
+                maxExerciseWeight = null
+            },
+            onCheckIn = { checkInData ->
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.insertExerciseLog(exerciseLog)
+                        foodLogRepository.insertExerciseLog(checkInData.exerciseLog)
                         snackbarHostState.showSnackbar(
                             message = exerciseCheckInCompletedSuccess
                         )
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to complete exercise check-in", e, mapOf(
-                            "exerciseId" to exerciseLog.exerciseId,
-                            "date" to exerciseLog.logDate
+                            "exerciseId" to checkInData.exerciseLog.exerciseId,
+                            "date" to checkInData.exerciseLog.logDate
                         ))
                         snackbarHostState.showSnackbar(
                             message = failedToCompleteExerciseCheckIn
@@ -1222,6 +1215,9 @@ fun DashboardScreen(
                     }
                 }
                 showCheckInExerciseDialog = null
+                selectedExerciseForCheckIn = null
+                lastExerciseLog = null
+                maxExerciseWeight = null
             }
         )
     }
@@ -1554,6 +1550,27 @@ fun DashboardScreen(
                 showUnifiedExerciseDetailDialog = null
                 selectedExerciseForEdit = exercise
                 showAddExerciseDialog = true
+            },
+            onCheckIn = {
+                showUnifiedExerciseDetailDialog = null
+                // Launch check-in dialog for this exercise
+                coroutineScope.launch {
+                    try {
+                        val lastLog = foodLogRepository.getLastLogForExercise(exercise.id).first()
+                        val maxWeight = foodLogRepository.getMaxWeightForExercise(exercise.id).first()
+                        
+                        // Set up the check-in dialog state
+                        selectedExerciseForCheckIn = exercise
+                        lastExerciseLog = lastLog
+                        maxExerciseWeight = maxWeight
+                        showCheckInExerciseDialog = exercise
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to get exercise data for check-in", e)
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to load exercise data"
+                        )
+                    }
+                }
             }
         )
     }

@@ -33,7 +33,8 @@ fun UnifiedExerciseDetailsDialog(
     externalExerciseService: ExternalExerciseService? = null,
     exerciseImageService: ExerciseImageService? = null,
     onBack: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onCheckIn: () -> Unit
 ) {
     val imagePaths = exercise.imagePaths
     val pagerState = rememberPagerState { imagePaths.size }
@@ -86,14 +87,19 @@ fun UnifiedExerciseDetailsDialog(
                     }
                 }
                 
+                // Personal Data card (moved from swipable content)
+                item {
+                    PersonalDataCard(exercise = exercise)
+                }
+                
                 // Exercise details
                 item {
                     ExerciseDetailsCard(exercise = exercise)
                 }
                 
-                // Swipable content: Instructions vs Personal Data
+                // Instructions card (simplified from swipable content)
                 item {
-                    SwipableContentCard(exercise = exercise)
+                    InstructionsCard(exercise.instructions)
                 }
             }
         },
@@ -105,18 +111,18 @@ fun UnifiedExerciseDetailsDialog(
                     Text("Close")
                 }
                 Button(
-                    onClick = onEdit,
+                    onClick = onCheckIn,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Edit Exercise")
+                    Text("Check-in Exercise")
                 }
             }
         }
@@ -236,9 +242,7 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
 }
 
 @Composable
-private fun SwipableContentCard(exercise: Exercise) {
-    var currentTab by remember { mutableStateOf(0) }
-    
+private fun PersonalDataCard(exercise: Exercise) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -249,77 +253,54 @@ private fun SwipableContentCard(exercise: Exercise) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Tab indicators
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TabButton(
-                    text = "Instructions",
-                    isSelected = currentTab == 0,
-                    onClick = { currentTab = 0 },
-                    modifier = Modifier.weight(1f)
-                )
-                TabButton(
-                    text = "Personal Data",
-                    isSelected = currentTab == 1,
-                    onClick = { currentTab = 1 },
-                    modifier = Modifier.weight(1f)
-                )
+            Text(
+                text = "Personal Data",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg")
+            PersonalDataRow("Default Reps", exercise.defaultReps.toString())
+            PersonalDataRow("Default Sets", exercise.defaultSets.toString())
+            
+            exercise.kcalBurnedPerRep?.let { 
+                PersonalDataRow("Kcal per Rep", it.toString()) 
+            }
+            exercise.kcalBurnedPerMinute?.let { 
+                PersonalDataRow("Kcal per Minute", it.toString()) 
             }
             
-            // Content based on selected tab
-            Box(
-                modifier = Modifier.height(200.dp)
-            ) {
-                when (currentTab) {
-                    0 -> InstructionsContent(exercise.instructions)
-                    1 -> PersonalDataContent(exercise)
-                }
+            exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Notes:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = notes,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TabButton(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (isSelected) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.surface
-            )
-            .clickable { onClick() }
-            .padding(vertical = 8.dp, horizontal = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isSelected) 
-                MaterialTheme.colorScheme.onPrimary 
-            else 
-                MaterialTheme.colorScheme.onSurface,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+private fun InstructionsCard(instructions: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
-    }
-}
-
-@Composable
-private fun InstructionsContent(instructions: List<String>) {
-    if (instructions.isNotEmpty()) {
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -328,77 +309,36 @@ private fun InstructionsContent(instructions: List<String>) {
                 fontWeight = FontWeight.Bold
             )
             
-            instructions.forEachIndexed { index, instruction ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "${index + 1}.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = instruction,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
+            if (instructions.isNotEmpty()) {
+                instructions.forEachIndexed { index, instruction ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = "${index + 1}.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = instruction,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
+            } else {
+                Text(
+                    text = "No instructions available",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        }
-    } else {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No instructions available",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
 
-@Composable
-private fun PersonalDataContent(exercise: Exercise) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Personal Data",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        
-        PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg")
-        PersonalDataRow("Default Reps", exercise.defaultReps.toString())
-        PersonalDataRow("Default Sets", exercise.defaultSets.toString())
-        
-        exercise.kcalBurnedPerRep?.let { 
-            PersonalDataRow("Kcal per Rep", it.toString()) 
-        }
-        exercise.kcalBurnedPerMinute?.let { 
-            PersonalDataRow("Kcal per Minute", it.toString()) 
-        }
-        
-        exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Notes:",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = notes,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
 
 @Composable
 private fun PersonalDataRow(label: String, value: String) {
