@@ -127,7 +127,8 @@ fun EnhancedSelectExerciseDialog(
                     selectedExternalExercise = exercise
                     dialogState = DialogState.EXTERNAL_DETAILS
                 },
-                keyboardController = keyboardController
+                keyboardController = keyboardController,
+                externalExerciseService = externalExerciseService
             )
         }
         

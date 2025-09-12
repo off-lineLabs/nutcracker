@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.net.Uri
+import coil.compose.AsyncImage
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 
@@ -38,7 +40,8 @@ fun SearchExternalExercisesDialog(
     currentFilterCount: Int,
     onBack: () -> Unit,
     onSelectExternalExercise: (ExternalExercise) -> Unit,
-    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
+    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
+    externalExerciseService: ExternalExerciseService
 ) {
     var showEquipmentFilter by remember { mutableStateOf(false) }
     var showMuscleFilter by remember { mutableStateOf(false) }
@@ -287,12 +290,22 @@ fun SearchExternalExercisesDialog(
                                         .padding(vertical = 12.dp, horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.FitnessCenter,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
+                                    // Show exercise image if available, otherwise fallback to icon
+                                    if (exercise.images.isNotEmpty()) {
+                                        AsyncImage(
+                                            model = externalExerciseService.getImageUrl(exercise.images.first()),
+                                            contentDescription = "Exercise image",
+                                            modifier = Modifier.size(48.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Filled.FitnessCenter,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(48.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
