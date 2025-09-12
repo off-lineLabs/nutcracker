@@ -95,10 +95,8 @@ fun AddExerciseDialog(
                 }
             }
             
-            // Set notes from instructions
-            if (exercise.instructions.isNotEmpty()) {
-                notes = exercise.instructions.joinToString("\n\n")
-            }
+            // Don't copy instructions to notes - let user add their own notes
+            // Instructions will be stored separately in the instructions field
         }
     }
 

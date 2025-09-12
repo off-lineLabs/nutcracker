@@ -126,7 +126,9 @@ class OfflineFoodLogRepository(
     override suspend fun updateExercise(exercise: Exercise) = exerciseDao.updateExercise(exercise)
     override suspend fun deleteExercise(exercise: Exercise) {
         // Delete the associated image if it exists
-        exerciseImageService?.deleteImage(exercise.imagePath)
+        exercise.imagePaths.forEach { imagePath ->
+            exerciseImageService?.deleteImage(imagePath)
+        }
         exerciseDao.deleteExercise(exercise)
     }
     override suspend fun deleteAllExercises() = exerciseDao.deleteAllExercises()
