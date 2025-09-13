@@ -31,6 +31,31 @@ fun SelectMealForCheckInDialog(
     onSearchMeal: () -> Unit = {},
     onScanBarcode: () -> Unit = {}
 ) {
+    var selectedMeal by remember { mutableStateOf<Meal?>(null) }
+    var showUnifiedDialog by remember { mutableStateOf(false) }
+    
+    // Show unified dialog when a meal is selected
+    selectedMeal?.let { meal ->
+        if (showUnifiedDialog) {
+            UnifiedMealDetailsDialog(
+                meal = meal,
+                onBack = {
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                },
+                onEdit = {
+                    // TODO: Implement edit functionality
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                },
+                onCheckIn = {
+                    onSelectMeal(meal)
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                }
+            )
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -65,7 +90,10 @@ fun SelectMealForCheckInDialog(
                         items(meals) { meal ->
                             MealItem(
                                 meal = meal,
-                                onCheckInClick = onSelectMeal
+                                onMealClick = { 
+                                    selectedMeal = meal
+                                    showUnifiedDialog = true
+                                }
                             )
                         }
                     }

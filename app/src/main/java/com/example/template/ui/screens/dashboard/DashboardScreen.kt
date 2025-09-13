@@ -80,6 +80,7 @@ import com.example.template.ui.components.dialogs.EnhancedSelectExerciseDialog
 import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
 import com.example.template.ui.components.dialogs.UnifiedExerciseDetailsDialog
+import com.example.template.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
 import com.example.template.ui.theme.*
@@ -438,6 +439,7 @@ fun DashboardScreen(
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
+    var showUnifiedMealDetailDialog by remember { mutableStateOf<Meal?>(null) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
     var selectedExerciseForCheckIn by remember { mutableStateOf<Exercise?>(null) }
@@ -1519,6 +1521,9 @@ fun DashboardScreen(
                         // Insert meal into database
                         foodLogRepository.insertMeal(finalMeal)
                         
+                        // Show unified dialog with the added meal
+                        showUnifiedMealDetailDialog = finalMeal
+                        
                         snackbarHostState.showSnackbar(
                             message = "Meal added successfully!"
                         )
@@ -1571,6 +1576,24 @@ fun DashboardScreen(
                         )
                     }
                 }
+            }
+        )
+    }
+
+    // Unified Meal Detail Dialog
+    showUnifiedMealDetailDialog?.let { meal ->
+        UnifiedMealDetailsDialog(
+            meal = meal,
+            onBack = {
+                showUnifiedMealDetailDialog = null
+            },
+            onEdit = {
+                // TODO: Implement edit functionality
+                showUnifiedMealDetailDialog = null
+            },
+            onCheckIn = {
+                showUnifiedMealDetailDialog = null
+                showCheckInMealDialog = meal
             }
         )
     }
