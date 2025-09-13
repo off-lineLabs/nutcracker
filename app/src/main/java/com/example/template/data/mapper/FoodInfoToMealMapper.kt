@@ -118,50 +118,13 @@ object FoodInfoToMealMapper {
     }
     
     /**
-     * Gets a user-friendly serving size suggestion based on the food type
+     * Gets a default serving size suggestion.
+     * Always returns 100g as the standard nutrition label reference.
+     * Users can easily adjust this using the ServingSizeDialog.
      */
     fun getSuggestedServingSize(foodInfo: FoodInfo): Pair<Double, ServingSizeUnit> {
-        val categories = foodInfo.categories?.lowercase() ?: ""
-        val name = foodInfo.name.lowercase()
-        
-        return when {
-            // Beverages
-            categories.contains("beverage") || categories.contains("drink") || 
-            name.contains("juice") || name.contains("soda") || name.contains("water") -> {
-                Pair(250.0, ServingSizeUnit.MILLILITERS) // 1 cup
-            }
-            
-            // Dairy products
-            categories.contains("dairy") || categories.contains("milk") || 
-            name.contains("milk") || name.contains("yogurt") -> {
-                Pair(250.0, ServingSizeUnit.MILLILITERS) // 1 cup
-            }
-            
-            // Bread and baked goods
-            categories.contains("bread") || categories.contains("bakery") || 
-            name.contains("bread") || name.contains("toast") -> {
-                Pair(1.0, ServingSizeUnit.SLICES) // 1 slice
-            }
-            
-            // Fruits
-            categories.contains("fruit") || name.contains("apple") || 
-            name.contains("banana") || name.contains("orange") -> {
-                Pair(1.0, ServingSizeUnit.PIECES) // 1 piece
-            }
-            
-            // Cereals
-            categories.contains("cereal") || name.contains("cereal") -> {
-                Pair(30.0, ServingSizeUnit.GRAMS) // 30g serving
-            }
-            
-            // Nuts and seeds
-            categories.contains("nut") || categories.contains("seed") || 
-            name.contains("nut") || name.contains("seed") -> {
-                Pair(30.0, ServingSizeUnit.GRAMS) // 30g serving
-            }
-            
-            // Default to 100g
-            else -> Pair(100.0, ServingSizeUnit.GRAMS)
-        }
+        // Always default to 100g - the standard nutrition label reference
+        // This is simple, predictable, and users can easily adjust it
+        return Pair(100.0, ServingSizeUnit.GRAMS)
     }
 }
