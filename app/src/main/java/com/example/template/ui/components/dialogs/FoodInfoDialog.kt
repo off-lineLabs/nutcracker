@@ -56,11 +56,22 @@ fun FoodInfoDialog(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
-                Text(
-                    text = foodInfo.name,
-                    style = MaterialTheme.typography.headlineSmall,
+                Column(
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    Text(
+                        text = foodInfo.name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    foodInfo.brand?.let { brand ->
+                        Text(
+                            text = brand,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
             }
         },
         text = {
