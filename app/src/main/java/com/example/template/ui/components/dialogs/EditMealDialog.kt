@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,7 +22,8 @@ import com.example.template.data.model.ServingSizeUnit
 fun EditMealDialog(
     meal: Meal,
     onDismiss: () -> Unit,
-    onUpdateMeal: (Meal) -> Unit
+    onUpdateMeal: (Meal) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     // Initialize state with existing meal data
     var name by remember { mutableStateOf(meal.name) }
@@ -200,32 +203,54 @@ fun EditMealDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            val servingSize = servingSizeValue.toDoubleOrNull() ?: meal.servingSize_value
-                            // Create updated meal preserving all additional fields
-                            val updatedMeal = meal.copy(
-                                name = name,
-                                calories = calories.toIntOrNull() ?: meal.calories,
-                                carbohydrates_g = carbs.toDoubleOrNull() ?: meal.carbohydrates_g,
-                                protein_g = protein.toDoubleOrNull() ?: meal.protein_g,
-                                fat_g = fat.toDoubleOrNull() ?: meal.fat_g,
-                                fiber_g = fiber.toDoubleOrNull() ?: meal.fiber_g,
-                                sodium_mg = sodium.toDoubleOrNull() ?: meal.sodium_mg,
-                                servingSize_value = servingSize,
-                                servingSize_unit = selectedUnit
+                    // Delete button (only when onDelete is provided) - positioned at bottom-left
+                    if (onDelete != null) {
+                        IconButton(
+                            onClick = onDelete,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error
                             )
-                            onUpdateMeal(updatedMeal)
-                        },
-                        enabled = name.isNotBlank() && calories.isNotBlank() && servingSizeValue.isNotBlank()
+                        }
+                    } else {
+                        // Empty space to maintain layout when no delete button
+                        Spacer(modifier = Modifier.size(48.dp))
+                    }
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text("Update Meal")
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                val servingSize = servingSizeValue.toDoubleOrNull() ?: meal.servingSize_value
+                                // Create updated meal preserving all additional fields
+                                val updatedMeal = meal.copy(
+                                    name = name,
+                                    calories = calories.toIntOrNull() ?: meal.calories,
+                                    carbohydrates_g = carbs.toDoubleOrNull() ?: meal.carbohydrates_g,
+                                    protein_g = protein.toDoubleOrNull() ?: meal.protein_g,
+                                    fat_g = fat.toDoubleOrNull() ?: meal.fat_g,
+                                    fiber_g = fiber.toDoubleOrNull() ?: meal.fiber_g,
+                                    sodium_mg = sodium.toDoubleOrNull() ?: meal.sodium_mg,
+                                    servingSize_value = servingSize,
+                                    servingSize_unit = selectedUnit
+                                )
+                                onUpdateMeal(updatedMeal)
+                            },
+                            enabled = name.isNotBlank() && calories.isNotBlank() && servingSizeValue.isNotBlank()
+                        ) {
+                            Text("Update Meal")
+                        }
                     }
                 }
             }

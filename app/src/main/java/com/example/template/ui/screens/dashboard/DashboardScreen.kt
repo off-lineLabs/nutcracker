@@ -1190,7 +1190,30 @@ fun DashboardScreen(
                     }
                 }
                 showAddExerciseDialog = false
-            }
+            },
+            onDelete = if (selectedExerciseForEdit != null) {
+                {
+                    val exerciseToDelete = selectedExerciseForEdit!!
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteExercise(exerciseToDelete)
+                            snackbarHostState.showSnackbar(
+                                message = "Exercise deleted successfully!"
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
+                                "exerciseId" to exerciseToDelete.id.toString(),
+                                "exerciseName" to exerciseToDelete.name
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = "Failed to delete exercise: ${e.message}"
+                            )
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExerciseForEdit = null
+                }
+            } else null
         )
     }
 
@@ -1636,6 +1659,25 @@ fun DashboardScreen(
                         )
                     }
                 }
+            },
+            onDelete = {
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.deleteMeal(meal)
+                        snackbarHostState.showSnackbar(
+                            message = "Meal deleted successfully!"
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                            "mealId" to meal.id.toString(),
+                            "mealName" to meal.name
+                        ))
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to delete meal: ${e.message}"
+                        )
+                    }
+                }
+                showEditMealDefinitionDialog = null
             }
         )
     }

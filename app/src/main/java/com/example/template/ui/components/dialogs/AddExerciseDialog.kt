@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.SportsGymnastics
@@ -30,7 +31,8 @@ fun AddExerciseDialog(
     externalExercise: ExternalExercise? = null,
     existingExercise: Exercise? = null,
     onDismiss: () -> Unit,
-    onAddExercise: (Exercise) -> Unit
+    onAddExercise: (Exercise) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.STRENGTH) }
@@ -313,8 +315,31 @@ fun AddExerciseDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Delete button (only in edit mode when onDelete is provided) - positioned at bottom-left
+                if (existingExercise != null && onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                } else {
+                    // Empty space to maintain layout when no delete button
+                    Spacer(modifier = Modifier.size(48.dp))
+                }
+                
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     )
