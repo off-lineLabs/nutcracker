@@ -422,19 +422,24 @@ private fun MealCheckInContent(
 
                 // Manual serving size input
                 var manualInput by remember { mutableStateOf("") }
+                var isUserTyping by remember { mutableStateOf(false) }
                 
-                // Update manual input when slider changes
+                // Update manual input when slider changes (only if user is not typing)
                 LaunchedEffect(servingSize) {
-                    val currentAmount = servingSize * meal.servingSize_value
-                    manualInput = currentAmount.toString()
+                    if (!isUserTyping) {
+                        val currentAmount = servingSize * meal.servingSize_value
+                        // Format to 1 decimal place to avoid float precision issues
+                        manualInput = String.format("%.1f", currentAmount)
+                    }
                 }
                 
                 OutlinedTextField(
                     value = manualInput,
-                    onValueChange = { 
-                        manualInput = it
+                    onValueChange = { newValue ->
+                        isUserTyping = true
+                        manualInput = newValue
                         // Convert manual input to serving size multiplier
-                        val inputValue = it.toDoubleOrNull()
+                        val inputValue = newValue.toDoubleOrNull()
                         if (inputValue != null && inputValue > 0) {
                             // Calculate multiplier based on meal's base serving size
                             val baseServing = meal.servingSize_value
@@ -465,6 +470,18 @@ private fun MealCheckInContent(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
                     )
                 )
+                
+                // Reset typing flag after a delay to allow formatting
+                LaunchedEffect(manualInput) {
+                    if (isUserTyping) {
+                        kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
+                        isUserTyping = false
+                        val inputValue = manualInput.toDoubleOrNull()
+                        if (inputValue != null && inputValue > 0) {
+                            manualInput = String.format("%.1f", inputValue)
+                        }
+                    }
+                }
 
                 // Total calories display (matching exercise style)
                 Card(
