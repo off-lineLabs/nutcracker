@@ -28,6 +28,7 @@ fun SelectMealForCheckInDialog(
     onDismiss: () -> Unit,
     onAddMeal: () -> Unit,
     onSelectMeal: (Meal) -> Unit,
+    onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
     onScanBarcode: () -> Unit = {}
 ) {
@@ -43,10 +44,10 @@ fun SelectMealForCheckInDialog(
                     showUnifiedDialog = false
                     selectedMeal = null
                 },
-                onEdit = {
-                    // TODO: Implement edit functionality
+                onEdit = { mealToEdit ->
                     showUnifiedDialog = false
                     selectedMeal = null
+                    onEditMeal(mealToEdit)
                 },
                 onCheckIn = {
                     onSelectMeal(meal)

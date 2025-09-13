@@ -43,7 +43,7 @@ private fun getContrastingTextColor(backgroundColor: Color): Color {
 fun UnifiedMealDetailsDialog(
     meal: Meal,
     onBack: () -> Unit,
-    onEdit: () -> Unit,
+    onEdit: (Meal) -> Unit,
     onCheckIn: () -> Unit
 ) {
     AlertDialog(
@@ -72,7 +72,7 @@ fun UnifiedMealDetailsDialog(
                         )
                     }
                 }
-                IconButton(onClick = onEdit) {
+                IconButton(onClick = { onEdit(meal) }) {
                     Icon(Icons.Filled.Edit, contentDescription = "Edit Meal")
                 }
             }

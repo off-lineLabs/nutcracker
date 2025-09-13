@@ -81,6 +81,7 @@ import com.example.template.ui.components.dialogs.SetGoalDialog
 import com.example.template.ui.components.dialogs.UnifiedCheckInDialog
 import com.example.template.ui.components.dialogs.UnifiedExerciseDetailsDialog
 import com.example.template.ui.components.dialogs.UnifiedMealDetailsDialog
+import com.example.template.ui.components.dialogs.EditMealDialog
 import com.example.template.data.model.CheckInData
 import com.example.template.ui.components.FilterableHistoryView
 import com.example.template.ui.theme.*
@@ -440,6 +441,7 @@ fun DashboardScreen(
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedMealDetailDialog by remember { mutableStateOf<Meal?>(null) }
+    var showEditMealDefinitionDialog by remember { mutableStateOf<Meal?>(null) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
     var selectedExerciseForCheckIn by remember { mutableStateOf<Exercise?>(null) }
@@ -1009,6 +1011,10 @@ fun DashboardScreen(
             onSelectMeal = { meal ->
                 showSelectMealDialog = false
                 showCheckInMealDialog = meal
+            },
+            onEditMeal = { meal ->
+                showSelectMealDialog = false
+                showEditMealDefinitionDialog = meal
             },
             onSearchMeal = {
                 showSelectMealDialog = false
@@ -1587,13 +1593,42 @@ fun DashboardScreen(
             onBack = {
                 showUnifiedMealDetailDialog = null
             },
-            onEdit = {
-                // TODO: Implement edit functionality
+            onEdit = { mealToEdit ->
                 showUnifiedMealDetailDialog = null
+                showEditMealDefinitionDialog = mealToEdit
             },
             onCheckIn = {
                 showUnifiedMealDetailDialog = null
                 showCheckInMealDialog = meal
+            }
+        )
+    }
+
+    // Edit Meal Definition Dialog
+    showEditMealDefinitionDialog?.let { meal ->
+        EditMealDialog(
+            meal = meal,
+            onDismiss = {
+                showEditMealDefinitionDialog = null
+            },
+            onUpdateMeal = { updatedMeal ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.updateMeal(updatedMeal)
+                        snackbarHostState.showSnackbar(
+                            message = "Meal updated successfully!"
+                        )
+                        showEditMealDefinitionDialog = null
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to update meal", e, mapOf(
+                            "mealId" to updatedMeal.id.toString(),
+                            "mealName" to updatedMeal.name
+                        ))
+                        snackbarHostState.showSnackbar(
+                            message = "Failed to update meal: ${e.message}"
+                        )
+                    }
+                }
             }
         )
     }
