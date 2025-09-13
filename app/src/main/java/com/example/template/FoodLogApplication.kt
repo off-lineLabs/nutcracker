@@ -36,6 +36,9 @@ class FoodLogApplication : Application() {
     
     val openFoodFactsService: OpenFoodFactsService by lazy {
         val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .addHeader("User-Agent", "OfflineCalorieCalculator/1.0 (Android; ${android.os.Build.MODEL})")

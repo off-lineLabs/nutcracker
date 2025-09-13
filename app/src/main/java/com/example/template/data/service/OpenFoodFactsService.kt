@@ -65,6 +65,7 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
     /**
      * Searches for products by text query from Open Food Facts API.
      * Supports multilingual search, popularity sorting, and whole foods filtering.
+     * Includes retry logic for network timeouts and connection issues.
      */
     suspend fun searchProducts(
         searchTerms: String,
@@ -72,38 +73,58 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
         languageCode: String? = null,
         wholeFoodsOnly: Boolean = false
     ): Result<SearchResponse> {
-        return try {
-            // Get more results when filtering to ensure we have enough after filtering
-            val searchPageSize = if (wholeFoodsOnly) pageSize * 3 else pageSize
-            
-            val response = api.searchProducts(
-                searchTerms = searchTerms,
-                pageSize = searchPageSize,
-                languageCode = languageCode,
-                sortBy = "popularity"
-            )
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
+        var lastException: Exception? = null
+        
+        // Retry up to 3 times for network issues
+        for (attempt in 0 until 3) {
+            try {
+                // Get more results when filtering to ensure we have enough after filtering
+                val searchPageSize = if (wholeFoodsOnly) pageSize * 3 else pageSize
                 
-                // Apply client-side filtering for whole foods using NOVA classification
-                val filteredProducts = if (wholeFoodsOnly) {
-                    body.products.filter { product ->
-                        isWholeFood(product)
-                    }.take(pageSize)
+                val response = api.searchProducts(
+                    searchTerms = searchTerms,
+                    pageSize = searchPageSize,
+                    languageCode = languageCode,
+                    sortBy = "popularity"
+                )
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+                    
+                    // Apply client-side filtering for whole foods using NOVA classification
+                    val filteredProducts = if (wholeFoodsOnly) {
+                        body.products.filter { product ->
+                            isWholeFood(product)
+                        }.take(pageSize)
+                    } else {
+                        body.products.take(pageSize)
+                    }
+                    
+                    val filteredResponse = body.copy(products = filteredProducts)
+                    Log.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
+                    return Result.success(filteredResponse)
                 } else {
-                    body.products.take(pageSize)
+                    lastException = Exception("Search request failed: ${response.code()} ${response.message()}")
+                }
+            } catch (e: Exception) {
+                lastException = e
+                Log.w("OpenFoodFactsService", "Search attempt ${attempt + 1} failed for '$searchTerms'", e)
+                
+                // Don't retry for non-network errors
+                if (e.message?.contains("timeout") != true && 
+                    e.message?.contains("connect") != true &&
+                    e.message?.contains("network") != true) {
+                    break
                 }
                 
-                val filteredResponse = body.copy(products = filteredProducts)
-                Log.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
-                Result.success(filteredResponse)
-            } else {
-                Result.failure(Exception("Search request failed: ${response.code()} ${response.message()}"))
+                // Wait before retrying (exponential backoff)
+                if (attempt < 2) {
+                    kotlinx.coroutines.delay(1000L * (attempt + 1))
+                }
             }
-        } catch (e: Exception) {
-            Log.e("OpenFoodFactsService", "Search failed for '$searchTerms'", e)
-            Result.failure(e)
         }
+        
+        Log.e("OpenFoodFactsService", "Search failed for '$searchTerms' after all retries", lastException)
+        return Result.failure(lastException ?: Exception("Unknown error"))
     }
     
     /**
