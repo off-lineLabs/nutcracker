@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,18 @@ import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
+
+/**
+ * Determines the appropriate text color (black or white) based on the background color's luminance.
+ * Uses a threshold of 0.5 - if the background is lighter than this, use black text, otherwise white.
+ */
+private fun getContrastingTextColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -243,6 +256,13 @@ private fun ClassificationCard(
     greenScore: GreenScore?,
     nutriscore: Nutriscore?
 ) {
+    // Check if we have any valid classifications to show
+    val hasValidClassifications = novaClassification.group > 0 || greenScore != null || nutriscore != null
+    
+    if (!hasValidClassifications) {
+        return // Don't show the card if no valid classifications
+    }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -261,21 +281,23 @@ private fun ClassificationCard(
                 fontWeight = FontWeight.Bold
             )
             
-            // Nova Classification
-            ClassificationRow(
-                label = "NOVA Classification",
-                value = novaClassification.group.toString(),
-                description = novaClassification.description,
-                color = when (novaClassification.group) {
-                    1 -> Color(0xFF4CAF50) // Green
-                    2 -> Color(0xFF8BC34A) // Light Green
-                    3 -> Color(0xFFFF9800) // Orange
-                    4 -> Color(0xFFF44336) // Red
-                    else -> Color(0xFF9E9E9E) // Gray
-                }
-            )
+            // Nova Classification - only show if group > 0 (not unknown)
+            if (novaClassification.group > 0) {
+                ClassificationRow(
+                    label = "NOVA Classification",
+                    value = novaClassification.group.toString(),
+                    description = novaClassification.description,
+                    color = when (novaClassification.group) {
+                        1 -> Color(0xFF4CAF50) // Green
+                        2 -> Color(0xFF8BC34A) // Light Green
+                        3 -> Color(0xFFFF9800) // Orange
+                        4 -> Color(0xFFF44336) // Red
+                        else -> Color(0xFF9E9E9E) // Gray
+                    }
+                )
+            }
             
-            // Green Score (Eco-Score)
+            // Green Score (Eco-Score) - only show if not null
             greenScore?.let { score ->
                 ClassificationRow(
                     label = score.displayName,
@@ -292,7 +314,7 @@ private fun ClassificationCard(
                 )
             }
             
-            // Nutri-Score
+            // Nutri-Score - only show if not null
             nutriscore?.let { score ->
                 ClassificationRow(
                     label = score.displayName,
@@ -334,7 +356,7 @@ private fun ClassificationRow(
             Text(
                 text = value,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                color = getContrastingTextColor(color),
                 fontWeight = FontWeight.Bold
             )
         }

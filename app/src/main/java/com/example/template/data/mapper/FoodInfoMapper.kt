@@ -16,10 +16,14 @@ object FoodInfoMapper {
             nutrition = mapNutritionInfo(product.nutriments),
             novaClassification = NovaClassification.fromGroup(product.novaGroup),
             greenScore = product.ecoscoreGrade?.let { grade ->
-                GreenScore(grade.uppercase(), product.ecoscoreScore)
+                if (grade.uppercase() != "UNKNOWN" && grade.isNotBlank()) {
+                    GreenScore(grade.uppercase(), product.ecoscoreScore)
+                } else null
             },
             nutriscore = product.nutriscoreGrade?.let { grade ->
-                Nutriscore(grade.uppercase(), product.nutriscoreScore)
+                if (grade.uppercase() != "UNKNOWN" && grade.isNotBlank()) {
+                    Nutriscore(grade.uppercase(), product.nutriscoreScore)
+                } else null
             },
             ingredients = product.ingredientsTextEn ?: product.ingredientsText,
             categories = product.categories,
