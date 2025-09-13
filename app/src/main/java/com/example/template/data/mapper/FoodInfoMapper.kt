@@ -5,11 +5,18 @@ import android.util.Log
 
 object FoodInfoMapper {
     
-    fun mapToFoodInfo(response: OpenFoodFactsResponse): FoodInfo? {
+    fun mapToFoodInfo(response: OpenFoodFactsResponse, currentLanguage: com.example.template.data.AppLanguage? = null): FoodInfo? {
         val product = response.product ?: return null
         
+        // Use localized name if language is provided, otherwise fall back to English
+        val productName = if (currentLanguage != null) {
+            product.getLocalizedProductName(currentLanguage)
+        } else {
+            product.productNameEn ?: product.productName ?: "Unknown Product"
+        }
+        
         return FoodInfo(
-            name = product.productNameEn ?: product.productName ?: "Unknown Product",
+            name = productName,
             brand = product.brands,
             imageUrl = product.imageFrontUrl ?: product.imageUrl,
             nutritionImageUrl = product.imageNutritionUrl,

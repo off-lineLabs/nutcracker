@@ -1445,7 +1445,8 @@ fun DashboardScreen(
                         status = 1,
                         statusVerbose = "found",
                         product = product
-                    )
+                    ),
+                    currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
                 )
                 if (foodInfo != null) {
                     showFoodInfoDialog = foodInfo
@@ -1476,7 +1477,10 @@ fun DashboardScreen(
                         response.fold(
                             onSuccess = { apiResponse ->
                                 AppLogger.d("DashboardScreen", "API call successful for barcode: $barcode")
-                                val foodInfo = FoodInfoMapper.mapToFoodInfo(apiResponse)
+                                val foodInfo = FoodInfoMapper.mapToFoodInfo(
+                                    apiResponse,
+                                    currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
+                                )
                                 if (foodInfo != null) {
                                     AppLogger.d("DashboardScreen", "FoodInfo created successfully, showing FoodInfoDialog")
                                     showFoodInfoDialog = foodInfo
