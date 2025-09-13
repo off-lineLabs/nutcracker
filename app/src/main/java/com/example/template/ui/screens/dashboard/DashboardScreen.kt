@@ -1524,11 +1524,14 @@ fun DashboardScreen(
                         // Update meal with local image path
                         val finalMeal = meal.copy(localImagePath = localImagePath)
                         
-                        // Insert meal into database
-                        foodLogRepository.insertMeal(finalMeal)
+                        // Insert meal into database and get the new mealId
+                        val newMealId = foodLogRepository.insertMeal(finalMeal)
                         
-                        // Show unified dialog with the added meal
-                        showUnifiedMealDetailDialog = finalMeal
+                        // Update the meal with the new ID from database
+                        val mealWithId = finalMeal.copy(id = newMealId)
+                        
+                        // Show unified dialog with the added meal (now with correct ID)
+                        showUnifiedMealDetailDialog = mealWithId
                         
                         snackbarHostState.showSnackbar(
                             message = "Meal added successfully!"
