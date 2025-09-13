@@ -16,7 +16,7 @@ object FoodInfoMapper {
             nutrition = mapNutritionInfo(product.nutriments),
             novaClassification = NovaClassification.fromGroup(product.novaGroup),
             greenScore = product.ecoscoreGrade?.let { grade ->
-                if (grade.uppercase() != "UNKNOWN" && grade.isNotBlank()) {
+                if (grade.uppercase() != "UNKNOWN" && grade.uppercase() != "NOT-APPLICABLE" && grade.isNotBlank()) {
                     GreenScore(grade.uppercase(), product.ecoscoreScore)
                 } else null
             },
