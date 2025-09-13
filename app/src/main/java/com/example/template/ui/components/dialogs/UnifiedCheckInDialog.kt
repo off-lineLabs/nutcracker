@@ -470,6 +470,13 @@ private fun MealCheckInContent(
                             )
                         )
                     },
+                    suffix = {
+                        Text(
+                            text = meal.servingSize_unit.abbreviation,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
