@@ -422,10 +422,15 @@ private fun MealCheckInContent(
 
                 // Manual serving size input
                 var manualInput by remember { mutableStateOf("") }
-                var showManualInput by remember { mutableStateOf(false) }
+                
+                // Update manual input when slider changes
+                LaunchedEffect(servingSize) {
+                    val currentAmount = servingSize * meal.servingSize_value
+                    manualInput = currentAmount.toString()
+                }
                 
                 OutlinedTextField(
-                    value = if (showManualInput) manualInput else "",
+                    value = manualInput,
                     onValueChange = { 
                         manualInput = it
                         // Convert manual input to serving size multiplier
@@ -458,40 +463,8 @@ private fun MealCheckInContent(
                     singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                    ),
-                    trailingIcon = {
-                        if (showManualInput) {
-                            TextButton(
-                                onClick = { 
-                                    showManualInput = false
-                                    manualInput = ""
-                                }
-                            ) {
-                                Text(stringResource(R.string.cancel))
-                            }
-                        }
-                    }
+                    )
                 )
-                
-                // Toggle button to show/hide manual input
-                if (!showManualInput) {
-                    TextButton(
-                        onClick = { 
-                            showManualInput = true
-                            // Pre-fill with current serving size in actual units
-                            val currentAmount = servingSize * meal.servingSize_value
-                            manualInput = currentAmount.toString()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            stringResource(
-                                R.string.enter_manual_serving_size,
-                                meal.servingSize_unit.abbreviation
-                            )
-                        )
-                    }
-                }
 
                 // Total calories display (matching exercise style)
                 Card(
