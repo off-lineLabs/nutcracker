@@ -388,24 +388,30 @@ private fun MealCheckInContent(
                         style = MaterialTheme.typography.labelLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Calculate dynamic range based on current serving size
+                    val minRange = 0.1f
+                    val maxRange = maxOf(3.0f, (servingSize * 1.2f).toFloat()) // Expand range by 20% above current value
+                    val currentValue = servingSize.toFloat().coerceIn(minRange, maxRange)
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "0.5x",
+                            text = "${minRange}x",
                             style = MaterialTheme.typography.bodySmall
                         )
                         Slider(
-                            value = servingSize.toFloat(),
+                            value = currentValue,
                             onValueChange = { servingSize = it.toDouble() },
-                            valueRange = 0.5f..3.0f,
-                            steps = 24, // 0.1 increments
+                            valueRange = minRange..maxRange,
+                            steps = ((maxRange - minRange) / 0.1f).toInt() - 1, // Dynamic steps based on range
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "3.0x",
+                            text = "${String.format("%.1f", maxRange)}x",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -444,8 +450,8 @@ private fun MealCheckInContent(
                             // Calculate multiplier based on meal's base serving size
                             val baseServing = meal.servingSize_value
                             val multiplier = inputValue / baseServing
-                            // Clamp to slider range
-                            servingSize = multiplier.coerceIn(0.5, 3.0)
+                            // No artificial cap - let users input any reasonable value
+                            servingSize = maxOf(0.1, multiplier) // Only prevent negative values
                         }
                     },
                     label = { 
