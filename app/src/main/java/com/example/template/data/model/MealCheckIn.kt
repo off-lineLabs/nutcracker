@@ -15,7 +15,7 @@ import java.util.Locale
             entity = Meal::class,
             parentColumns = ["id"],
             childColumns = ["mealId"],
-            onDelete = ForeignKey.CASCADE // If meal is deleted, check-ins are also deleted
+            onDelete = ForeignKey.RESTRICT // Prevent deletion of meals that have check-ins
         )
     ],
     indices = [Index("mealId"), Index("checkInDate")] // Index for better query performance

@@ -21,6 +21,7 @@ data class Meal(
     val servingSize_value: Double, // Changed to Double for more precision
     val servingSize_unit: ServingSizeUnit, // Now using enum instead of String
     val notes: String? = null, // Optional notes
+    val isVisible: Boolean = true, // Soft delete field - true means visible in My Meals
     
     // Additional nutrition fields from Open Food Facts
     val saturatedFat_g: Double? = null,

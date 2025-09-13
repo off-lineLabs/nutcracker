@@ -25,7 +25,8 @@ data class Exercise(
     val mechanic: String? = null, // Exercise mechanic: compound, isolation
     val instructions: List<String> = emptyList(), // Exercise instructions
     val notes: String? = null, // Optional notes
-    val imagePaths: List<String> = emptyList() // Local paths to exercise images
+    val imagePaths: List<String> = emptyList(), // Local paths to exercise images
+    val isVisible: Boolean = true // Soft delete field - true means visible in My Exercises
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

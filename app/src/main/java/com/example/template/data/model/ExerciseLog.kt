@@ -15,7 +15,7 @@ import java.util.Locale
             entity = Exercise::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.RESTRICT // Prevent deletion of exercises that have logs
         )
     ],
     indices = [Index("exerciseId"), Index("logDate")]
