@@ -1612,13 +1612,17 @@ fun DashboardScreen(
                 showEditMealDefinitionDialog = null
             },
             onUpdateMeal = { updatedMeal ->
+                // Close the edit dialog immediately
+                showEditMealDefinitionDialog = null
+                showUnifiedMealDetailDialog = updatedMeal
+                
+                // Perform database update in background
                 coroutineScope.launch {
                     try {
                         foodLogRepository.updateMeal(updatedMeal)
                         snackbarHostState.showSnackbar(
                             message = "Meal updated successfully!"
                         )
-                        showEditMealDefinitionDialog = null
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to update meal", e, mapOf(
                             "mealId" to updatedMeal.id.toString(),
