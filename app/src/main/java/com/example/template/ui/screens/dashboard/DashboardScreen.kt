@@ -1468,16 +1468,20 @@ fun DashboardScreen(
             onBarcodeScanned = { barcode ->
                 // Store barcode for later use
                 currentBarcode = barcode
+                AppLogger.d("DashboardScreen", "Barcode scanned and stored: $barcode")
                 // Fetch food information from Open Food Facts API
                 coroutineScope.launch {
                     try {
                         val response = (context.applicationContext as FoodLogApplication).openFoodFactsService.getProductByBarcode(barcode)
                         response.fold(
                             onSuccess = { apiResponse ->
+                                AppLogger.d("DashboardScreen", "API call successful for barcode: $barcode")
                                 val foodInfo = FoodInfoMapper.mapToFoodInfo(apiResponse)
                                 if (foodInfo != null) {
+                                    AppLogger.d("DashboardScreen", "FoodInfo created successfully, showing FoodInfoDialog")
                                     showFoodInfoDialog = foodInfo
                                 } else {
+                                    AppLogger.d("DashboardScreen", "FoodInfo is null, showing error message")
                                     snackbarHostState.showSnackbar(
                                         message = "Food information not found for this barcode"
                                     )
@@ -1508,18 +1512,26 @@ fun DashboardScreen(
 
     // Food Info Dialog
     showFoodInfoDialog?.let { foodInfo ->
+        AppLogger.d("DashboardScreen", "Showing FoodInfoDialog for: ${foodInfo.name}")
         FoodInfoDialog(
             foodInfo = foodInfo,
-            onBack = { showFoodInfoDialog = null },
+            onBack = { 
+                AppLogger.d("DashboardScreen", "FoodInfoDialog dismissed via back button")
+                showFoodInfoDialog = null
+                // Don't reset currentBarcode here - it should persist through the flow
+            },
             onAddToMeals = {
+                AppLogger.d("DashboardScreen", "Transitioning from FoodInfoDialog to ServingSizeDialog, currentBarcode: $currentBarcode")
                 showFoodInfoDialog = null
                 showServingSizeDialog = foodInfo
+                // currentBarcode should still be set from the barcode scan
             }
         )
     }
     
     // Serving Size Dialog
     showServingSizeDialog?.let { foodInfo ->
+        AppLogger.d("DashboardScreen", "Showing ServingSizeDialog for: ${foodInfo.name}, currentBarcode: $currentBarcode")
         ServingSizeDialog(
             foodInfo = foodInfo,
             barcode = currentBarcode,
@@ -1528,6 +1540,10 @@ fun DashboardScreen(
                 currentBarcode = null
             },
             onConfirm = { servingSizeValue, servingSizeUnit ->
+                // Store the barcode before it gets reset by onDismiss
+                val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "Creating meal with currentBarcode: $barcodeToUse")
+                
                 coroutineScope.launch {
                     try {
                         // Convert FoodInfo to Meal
@@ -1535,8 +1551,8 @@ fun DashboardScreen(
                             foodInfo = foodInfo,
                             servingSizeValue = servingSizeValue,
                             servingSizeUnit = servingSizeUnit,
-                            barcode = currentBarcode,
-                            source = if (currentBarcode != null) "barcode" else "search"
+                            barcode = barcodeToUse,
+                            source = if (barcodeToUse != null) "barcode" else "search"
                         )
                         
                         // Download image if available
