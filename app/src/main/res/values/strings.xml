@@ -259,7 +259,6 @@
     <string name="scan_again">Scan Again</string>
     <string name="use_this_barcode">Use This Barcode</string>
     <string name="add_to_my_meals">Add to My Meals</string>
-    <string name="serving_size">Serving Size</string>
     <string name="amount">Amount</string>
     <string name="select_unit">Select Unit</string>
     <string name="nutrition_preview">Nutrition Preview</string>
@@ -273,9 +272,6 @@
     <string name="personal_data">Personal Data</string>
     <string name="instructions">Instructions</string>
     <string name="no_instructions_available">No instructions available</string>
-    <string name="your_meals">Your Meals</string>
-    <string name="add_new_meal">Add New Meal</string>
-    <string name="search_exercise_database">Search Exercise Database</string>
     <string name="no_exercises_found">No exercises found</string>
     <string name="yuhonas">Yuhonas</string>
     <string name="edit_meal">Edit Meal</string>

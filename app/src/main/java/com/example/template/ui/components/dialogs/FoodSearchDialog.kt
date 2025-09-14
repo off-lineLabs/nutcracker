@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +36,8 @@ import com.example.template.ui.theme.appTextPrimaryColor
 import com.example.template.ui.theme.appTextSecondaryColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
 
 @Composable
 fun FoodSearchDialog(
@@ -287,7 +289,7 @@ fun FoodSearchDialog(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = when (currentLanguage) {
-                                        AppLanguage.SPANISH -> "Intenta con otros términos de búsqueda"
+                                        AppLanguage.SPANISH -> "Intenta con otros tÃ©rminos de bÃºsqueda"
                                         AppLanguage.PORTUGUESE -> "Tente outros termos de busca"
                                         AppLanguage.ENGLISH -> "Try different search terms"
                                     },
@@ -459,7 +461,7 @@ private fun ProductSearchResultItem(
                         }
                         nutriments.proteins100g?.let { proteins ->
                             Text(
-                                text = " • ${proteins.toInt()}g protein",
+                                text = " â€¢ ${proteins.toInt()}g protein",
                                 color = appTextSecondaryColor(),
                                 fontSize = 12.sp
                             )
@@ -478,3 +480,5 @@ private fun ProductSearchResultItem(
         }
     }
 }
+
+

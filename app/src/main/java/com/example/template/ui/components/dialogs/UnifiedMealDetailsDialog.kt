@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,12 +23,15 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalUriHandler
+import com.example.template.R
 import com.example.template.data.model.Meal
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
+import androidx.compose.ui.res.stringResource
 
 /**
  * Determines the appropriate text color (black or white) based on the background color's luminance.
@@ -524,7 +527,7 @@ private fun AttributionCard() {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "© Open Food Facts contributors",
+            text = "Â© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {
@@ -549,3 +552,4 @@ private fun hasClassifications(meal: Meal): Boolean {
            meal.greenScore != null || 
            meal.nutriscore != null
 }
+

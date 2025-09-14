@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +26,8 @@ import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
 
 /**
  * Determines the appropriate text color (black or white) based on the background color's luminance.
@@ -406,7 +408,7 @@ private fun AttributionCard() {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "© Open Food Facts contributors",
+            text = "Â© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {
@@ -415,4 +417,5 @@ private fun AttributionCard() {
         )
     }
 }
+
 

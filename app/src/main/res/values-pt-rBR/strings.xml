@@ -142,7 +142,6 @@
     <string name="scan_again">Escanear Novamente</string>
     <string name="use_this_barcode">Usar Este Código de Barras</string>
     <string name="add_to_my_meals">Adicionar às Minhas Refeições</string>
-    <string name="serving_size">Tamanho da Porção</string>
     <string name="amount">Quantidade</string>
     <string name="select_unit">Selecionar Unidade</string>
     <string name="nutrition_preview">Visualização de Nutrição</string>
@@ -156,8 +155,6 @@
     <string name="personal_data">Dados Pessoais</string>
     <string name="instructions">Instruções</string>
     <string name="no_instructions_available">Nenhuma instrução disponível</string>
-    <string name="your_meals">Suas Refeições</string>
-    <string name="add_new_meal">Adicionar Nova Refeição</string>
     <string name="search_exercise_database">Buscar na Base de Dados de Exercícios</string>
     <string name="no_exercises_found">Nenhum exercício encontrado</string>
     <string name="yuhonas">Yuhonas</string>

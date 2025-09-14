@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.ServingSizeUnit
 import com.example.template.data.mapper.FoodInfoToMealMapper
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -271,23 +273,24 @@ private fun UnitItem(
     }
 }
 
-@Composable
 private fun getUnitDescription(unit: ServingSizeUnit): String {
     return when (unit) {
-        ServingSizeUnit.GRAMS -> stringResource(R.string.grams)
-        ServingSizeUnit.KILOGRAMS -> stringResource(R.string.kilograms)
-        ServingSizeUnit.POUNDS -> stringResource(R.string.pounds)
-        ServingSizeUnit.OUNCES -> stringResource(R.string.ounces)
-        ServingSizeUnit.MILLILITERS -> stringResource(R.string.milliliters)
-        ServingSizeUnit.LITERS -> stringResource(R.string.liters)
-        ServingSizeUnit.CUPS -> stringResource(R.string.cups)
-        ServingSizeUnit.FLUID_OUNCES -> stringResource(R.string.fluid_ounces)
-        ServingSizeUnit.TABLESPOONS -> stringResource(R.string.tablespoons)
-        ServingSizeUnit.TEASPOONS -> stringResource(R.string.teaspoons)
-        ServingSizeUnit.PIECES -> stringResource(R.string.pieces)
-        ServingSizeUnit.SLICES -> stringResource(R.string.slices)
-        ServingSizeUnit.UNITS -> stringResource(R.string.units)
-        ServingSizeUnit.SERVINGS -> stringResource(R.string.servings)
-        ServingSizeUnit.PORTIONS -> stringResource(R.string.portions)
+        ServingSizeUnit.GRAMS -> "Grams"
+        ServingSizeUnit.KILOGRAMS -> "Kilograms"
+        ServingSizeUnit.POUNDS -> "Pounds"
+        ServingSizeUnit.OUNCES -> "Ounces"
+        ServingSizeUnit.MILLILITERS -> "Milliliters"
+        ServingSizeUnit.LITERS -> "Liters"
+        ServingSizeUnit.CUPS -> "Cups"
+        ServingSizeUnit.FLUID_OUNCES -> "Fluid Ounces"
+        ServingSizeUnit.TABLESPOONS -> "Tablespoons"
+        ServingSizeUnit.TEASPOONS -> "Teaspoons"
+        ServingSizeUnit.PIECES -> "Pieces"
+        ServingSizeUnit.SLICES -> "Slices"
+        ServingSizeUnit.UNITS -> "Units"
+        ServingSizeUnit.SERVINGS -> "Servings"
+        ServingSizeUnit.PORTIONS -> "Portions"
     }
 }
+
+

@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +24,8 @@ import android.net.Uri
 import coil.compose.AsyncImage
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -315,7 +317,7 @@ fun SearchExternalExercisesDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
+                                            text = "${exercise.category} â€¢ ${exercise.equipment ?: "No equipment"}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -378,3 +380,4 @@ fun SearchExternalExercisesDialog(
         }
     )
 }
+
