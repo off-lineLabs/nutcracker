@@ -118,17 +118,21 @@ fun UnifiedMealDetailsDialog(
                     }
                 }
                 
-                // Ingredients (if available)
+                // Ingredients (if available and not empty)
                 meal.ingredients?.let { ingredients ->
-                    item {
-                        IngredientsCard(ingredients = ingredients)
+                    if (ingredients.isNotBlank()) {
+                        item {
+                            IngredientsCard(ingredients = ingredients)
+                        }
                     }
                 }
                 
-                // Categories (if available)
+                // Categories (if available and not empty)
                 meal.categories?.let { categories ->
-                    item {
-                        CategoriesCard(categories = categories)
+                    if (categories.isNotBlank()) {
+                        item {
+                            CategoriesCard(categories = categories)
+                        }
                     }
                 }
                 

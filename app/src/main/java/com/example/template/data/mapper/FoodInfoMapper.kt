@@ -32,7 +32,11 @@ object FoodInfoMapper {
                     Nutriscore(grade.uppercase(), product.nutriscoreScore)
                 } else null
             },
-            ingredients = product.ingredientsTextEn ?: product.ingredientsText,
+            ingredients = if (currentLanguage != null) {
+                product.getLocalizedIngredientsText(currentLanguage)
+            } else {
+                product.ingredientsTextEn ?: product.ingredientsText
+            },
             categories = product.categories,
             quantity = product.quantity,
             servingSize = product.servingSize
