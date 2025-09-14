@@ -18,12 +18,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,13 +68,13 @@ fun SimpleBarcodeScanDialog(
             
             // For testing, let's simulate finding a barcode after a few attempts
             scanAttempts++
-            Log.d("SimpleBarcodeScan", "Scan attempt $scanAttempts")
+            AppLogger.d("SimpleBarcodeScan", "Scan attempt $scanAttempts")
             
             if (scanAttempts >= 3) {
                 // Simulate finding a barcode
                 barcodeResult = "1234567890123"
                 isScanning = false
-                Log.d("SimpleBarcodeScan", "Simulated barcode found: $barcodeResult")
+                AppLogger.d("SimpleBarcodeScan", "Simulated barcode found: $barcodeResult")
             } else {
                 isScanning = false
             }
@@ -99,7 +100,7 @@ fun SimpleBarcodeScanDialog(
             ) {
                 if (!hasCameraPermission) {
                     Text(
-                        text = "Camera permission is required to scan barcodes",
+                        text = stringResource(R.string.camera_permission_required),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -169,7 +170,7 @@ fun SimpleBarcodeScanDialog(
                                     scanAttempts = 0
                                 }
                             ) {
-                                Text("Scan Again")
+                                Text(stringResource(R.string.scan_again))
                             }
                         }
                     }
@@ -184,13 +185,16 @@ fun SimpleBarcodeScanDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Use This Barcode")
+                    Text(stringResource(R.string.use_this_barcode))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )

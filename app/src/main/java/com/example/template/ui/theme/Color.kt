@@ -87,6 +87,10 @@ val PillNotTaken = Color(0xFF9E9E9E)      // Gray for not taken pills
 val ExerciseEnabled = Color(0xFF2196F3)   // Blue for enabled exercises
 val ExerciseDisabled = Color(0xFF9E9E9E)  // Gray for disabled exercises
 
+// Dashboard-specific colors
+val ExceededColor = Color(0xFFB65755)     // Red for exceeded nutrient/goal values
+val ProteinFiberColor = Color(0xFF5D916D) // Green for protein/fiber when exceeded
+
 // ===== FAB AND ACTION COLORS =====
 // Colors for Floating Action Buttons and action items
 val FabExercise = Color(0xFFA62934)       // Your brand red for exercise FAB
@@ -112,6 +116,15 @@ val TextPrimary = Color(0xFF1A1A1A)      // Warmer dark text
 val TextSecondary = Color(0xFF5F6368)    // Better contrast secondary
 val TextTertiary = Color(0xFF9CA3AF)     // Keep tertiary as is
 val TextInverse = Color(0xFFFFFFFF)      // Keep white as is
+
+// ===== ORIGINAL DASHBOARD COLORS (from commit 563f6b1) =====
+// These were the hardcoded colors that provided the desired visual effect
+val OriginalLightGray50 = Color(0xFFFAFBFC)  // Improved softer background
+val OriginalLightGray100 = Color(0xFFF3F4F6) // Specific light gray
+val OriginalDarkGray800 = Color(0xFF1F2937)  // Specific dark gray for container
+val OriginalDarkGray900 = Color(0xFF111827)  // Specific dark background
+val OriginalTextGray200 = Color(0xFFE5E7EB)  // Specific text gray
+val OriginalContainerGray = Color(0xFFC6C6C7) // Light theme container color
 
 // ===== LEGACY COLORS (for backward compatibility) =====
 // Keep these for now to avoid breaking existing code

@@ -52,7 +52,7 @@ fun EditMealDialog(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Edit Meal",
+                    text = stringResource(R.string.edit_meal),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -249,7 +249,7 @@ fun EditMealDialog(
                             },
                             enabled = name.isNotBlank() && calories.isNotBlank() && servingSizeValue.isNotBlank()
                         ) {
-                            Text("Update Meal")
+                            Text(stringResource(R.string.update_meal))
                         }
                     }
                 }

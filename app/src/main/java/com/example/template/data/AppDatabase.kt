@@ -66,7 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
                     INSTANCE = instance
                     instance
                 } catch (e: Exception) {
-                    android.util.Log.e("AppDatabase", "Database initialization failed", e)
+                    com.example.template.util.logger.AppLogger.e("AppDatabase", "Database initialization failed", e)
                     throw e
                 }
             }

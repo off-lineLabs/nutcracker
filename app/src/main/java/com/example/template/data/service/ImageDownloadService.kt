@@ -3,7 +3,7 @@ package com.example.template.data.service
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -18,7 +18,6 @@ class ImageDownloadService(private val context: Context) {
     companion object {
         private const val TAG = "ImageDownloadService"
         private const val IMAGES_DIR = "food_images"
-        private const val MAX_IMAGE_SIZE = 1024 * 1024 // 1MB max
         private const val MAX_IMAGE_DIMENSION = 800 // Max width/height
     }
     
@@ -30,7 +29,7 @@ class ImageDownloadService(private val context: Context) {
     suspend fun downloadAndSaveImage(imageUrl: String): String? {
         return withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "Starting image download from: $imageUrl")
+                AppLogger.d(TAG, "Starting image download from: $imageUrl")
                 
                 // Create images directory if it doesn't exist
                 val imagesDir = File(context.filesDir, IMAGES_DIR)
@@ -52,14 +51,14 @@ class ImageDownloadService(private val context: Context) {
                     // Save to local file
                     saveBitmapToFile(resizedBitmap, localFile)
                     
-                    Log.d(TAG, "Image saved successfully to: ${localFile.absolutePath}")
+                    AppLogger.d(TAG, "Image saved successfully to: ${localFile.absolutePath}")
                     localFile.absolutePath
                 } else {
-                    Log.e(TAG, "Failed to download image from: $imageUrl")
+                    AppLogger.e(TAG, "Failed to download image from: $imageUrl")
                     null
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error downloading image from: $imageUrl", e)
+                AppLogger.e(TAG, "Error downloading image from: $imageUrl", e)
                 null
             }
         }
@@ -85,12 +84,12 @@ class ImageDownloadService(private val context: Context) {
                     connection.disconnect()
                     bitmap
                 } else {
-                    Log.e(TAG, "HTTP error: ${connection.responseCode}")
+                    AppLogger.e(TAG, "HTTP error: ${connection.responseCode}")
                     connection.disconnect()
                     null
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error downloading image", e)
+                AppLogger.e(TAG, "Error downloading image", e)
                 null
             }
         }
@@ -152,10 +151,10 @@ class ImageDownloadService(private val context: Context) {
                     val file = File(localPath)
                     if (file.exists()) {
                         file.delete()
-                        Log.d(TAG, "Deleted local image: $localPath")
+                        AppLogger.d(TAG, "Deleted local image: $localPath")
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error deleting local image: $localPath", e)
+                    AppLogger.e(TAG, "Error deleting local image: $localPath", e)
                 }
             }
         }

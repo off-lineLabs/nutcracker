@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.example.template.data.model.FoodInfo
 import com.example.template.data.model.ServingSizeUnit
 import com.example.template.data.mapper.FoodInfoToMealMapper
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +42,7 @@ fun ServingSizeDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Add to My Meals",
+                text = stringResource(R.string.add_to_my_meals),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -65,7 +68,7 @@ fun ServingSizeDialog(
                 
                 // Serving size input
                 Text(
-                    text = "Serving Size",
+                    text = stringResource(R.string.serving_size),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -78,7 +81,7 @@ fun ServingSizeDialog(
                     OutlinedTextField(
                         value = servingSizeValue,
                         onValueChange = { servingSizeValue = it },
-                        label = { Text("Amount") },
+                        label = { Text(stringResource(R.string.amount)) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
@@ -89,7 +92,7 @@ fun ServingSizeDialog(
                         onClick = { showUnitSelector = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(selectedUnit?.abbreviation ?: "Select Unit")
+                        Text(selectedUnit?.abbreviation ?: stringResource(R.string.select_unit))
                     }
                 }
                 
@@ -105,7 +108,7 @@ fun ServingSizeDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Nutrition Preview",
+                            text = stringResource(R.string.nutrition_preview),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium
                         )
@@ -132,24 +135,23 @@ fun ServingSizeDialog(
             }
         },
         confirmButton = {
+            val parsedValue = servingSizeValue.toDoubleOrNull()
             Button(
                 onClick = {
-                    val value = servingSizeValue.toDoubleOrNull() ?: 0.0
+                    val value = parsedValue ?: 0.0
                     val unit = selectedUnit ?: ServingSizeUnit.GRAMS
                     if (value > 0) {
                         onConfirm(value, unit)
                     }
                 },
-                enabled = servingSizeValue.toDoubleOrNull() != null && 
-                         servingSizeValue.toDoubleOrNull()!! > 0 && 
-                         selectedUnit != null
+                enabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
             ) {
-                Text("Add to My Meals")
+                Text(stringResource(R.string.add_to_my_meals))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -173,7 +175,7 @@ private fun UnitSelectorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Unit") },
+        title = { Text(stringResource(R.string.select_unit)) },
         text = {
             LazyColumn(
                 modifier = Modifier.heightIn(max = 400.dp)
@@ -181,7 +183,7 @@ private fun UnitSelectorDialog(
                 // Common units
                 item {
                     Text(
-                        text = "Common Units",
+                        text = stringResource(R.string.common_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -197,7 +199,7 @@ private fun UnitSelectorDialog(
                 // Weight units
                 item {
                     Text(
-                        text = "Weight Units",
+                        text = stringResource(R.string.weight_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -213,7 +215,7 @@ private fun UnitSelectorDialog(
                 // Volume units
                 item {
                     Text(
-                        text = "Volume Units",
+                        text = stringResource(R.string.volume_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -229,7 +231,10 @@ private fun UnitSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )
@@ -291,3 +296,5 @@ private fun getUnitDescription(unit: ServingSizeUnit): String {
         ServingSizeUnit.PORTIONS -> "Portions"
     }
 }
+
+

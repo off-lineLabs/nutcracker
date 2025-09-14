@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +24,8 @@ import android.net.Uri
 import coil.compose.AsyncImage
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +62,7 @@ fun SearchExternalExercisesDialog(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
                 Text(
-                    text = "Search Exercise Database",
+                    text = stringResource(R.string.search_exercise_database),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
@@ -110,7 +112,7 @@ fun SearchExternalExercisesDialog(
                             value = selectedEquipment ?: "All Equipment",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Equipment") },
+                            label = { Text(stringResource(R.string.equipment)) },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = showEquipmentFilter)
                             },
@@ -151,7 +153,7 @@ fun SearchExternalExercisesDialog(
                             value = selectedMuscle ?: "All Muscles",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Primary Muscle") },
+                            label = { Text(stringResource(R.string.primary_muscle)) },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = showMuscleFilter)
                             },
@@ -193,7 +195,7 @@ fun SearchExternalExercisesDialog(
                             value = selectedCategory ?: "All Categories",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Category") },
+                            label = { Text(stringResource(R.string.category)) },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryFilter)
                             },
@@ -266,7 +268,7 @@ fun SearchExternalExercisesDialog(
                         )
                     } else {
                         Text(
-                            text = "No exercises found",
+                            text = stringResource(R.string.no_exercises_found),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -315,7 +317,7 @@ fun SearchExternalExercisesDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
+                                            text = "${exercise.category} â€¢ ${exercise.equipment ?: "No equipment"}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -350,7 +352,7 @@ fun SearchExternalExercisesDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Provided by ",
+                        text = stringResource(R.string.provided_by),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -362,7 +364,7 @@ fun SearchExternalExercisesDialog(
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
                     ) {
                         Text(
-                            text = "Yuhonas",
+                            text = stringResource(R.string.yuhonas),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                         )
@@ -372,9 +374,10 @@ fun SearchExternalExercisesDialog(
                     onClick = onBack,
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         }
     )
 }
+

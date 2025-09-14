@@ -1,130 +1,137 @@
 package com.example.template.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 
 /**
  * App-specific color utilities that provide themed colors
  * Use these instead of hardcoded colors throughout your app
  * 
- * This system uses your brand colors and provides automatic dark/light theme support
+ * This system uses your brand colors and respects the app's theme setting
  */
 
 // ===== THEMED BRAND COLORS =====
 @Composable
 fun brandPrimaryColor(): Color {
-    return if (isSystemInDarkTheme()) BrandNavyLight else BrandNavyLightTheme
+    return if (isDarkTheme()) BrandNavyLight else BrandNavyLightTheme
+}
+
+@Composable
+private fun isDarkTheme(): Boolean {
+    val currentBackground = MaterialTheme.colorScheme.background
+    return currentBackground == BrandNavy
 }
 
 @Composable
 fun brandSecondaryColor(): Color {
-    return if (isSystemInDarkTheme()) BrandRed else BrandRedLightTheme
+    return if (isDarkTheme()) BrandRed else BrandRedLightTheme
 }
 
 @Composable
 fun brandAccentColor(): Color {
-    return if (isSystemInDarkTheme()) BrandGold else BrandGoldLightTheme
+    return if (isDarkTheme()) BrandGold else BrandGoldLightTheme
 }
 
 @Composable
 fun brandHighlightColor(): Color {
-    return if (isSystemInDarkTheme()) BrandGoldLight else BrandGoldLightLightTheme
+    return if (isDarkTheme()) BrandGoldLight else BrandGoldLightLightTheme
 }
 
 // ===== THEMED BACKGROUND COLORS =====
 @Composable
 fun appBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) BrandNavy else NeutralLight50
+    return if (isDarkTheme()) OriginalDarkGray900 else OriginalLightGray50
 }
 
 @Composable
 fun appSurfaceColor(): Color {
-    return if (isSystemInDarkTheme()) BrandNavyLight else Color.White
+    return if (isDarkTheme()) OriginalDarkGray800 else OriginalContainerGray
 }
 
 @Composable
 fun appSurfaceVariantColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark300 else NeutralLight100
+    return if (isDarkTheme()) OriginalDarkGray800 else OriginalLightGray100
 }
 
 @Composable
 fun appContainerBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) {
-        BrandNavyLight.copy(alpha = 0.6f)
+    return if (isDarkTheme()) {
+        MaterialTheme.colorScheme.surface
     } else {
-        NeutralLight100.copy(alpha = 0.6f)
+        OriginalContainerGray
     }
 }
 
 @Composable
 fun appCardBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) BrandNavyLight else Color.White
+    return if (isDarkTheme()) BrandNavyLight else Color.White
 }
 
 // ===== THEMED TEXT COLORS =====
 @Composable
 fun appTextPrimaryColor(): Color {
-    return if (isSystemInDarkTheme()) TextInverse else TextPrimary
+    return if (isDarkTheme()) Color.White else Color(0xFF111827)
 }
 
 @Composable
 fun appTextSecondaryColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark600 else TextSecondary
+    return if (isDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
 }
 
 @Composable
 fun appTextTertiaryColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark500 else TextTertiary
+    return if (isDarkTheme()) NeutralDark500 else TextTertiary
 }
 
 @Composable
 fun appTextInverseColor(): Color {
-    return if (isSystemInDarkTheme()) TextPrimary else TextInverse
+    return if (isDarkTheme()) TextPrimary else TextInverse
 }
 
 // ===== THEMED SEMANTIC COLORS =====
 @Composable
 fun successColor(): Color {
-    return if (isSystemInDarkTheme()) SuccessLight else Success
+    return if (isDarkTheme()) SuccessLight else Success
 }
 
 @Composable
 fun warningColor(): Color {
-    return if (isSystemInDarkTheme()) WarningLight else Warning
+    return if (isDarkTheme()) WarningLight else Warning
 }
 
 @Composable
 fun errorColor(): Color {
-    return if (isSystemInDarkTheme()) ErrorLight else Error
+    return if (isDarkTheme()) ErrorLight else Error
 }
 
 @Composable
 fun infoColor(): Color {
-    return if (isSystemInDarkTheme()) InfoLight else Info
+    return if (isDarkTheme()) InfoLight else Info
 }
 
 // ===== THEMED NUTRIENT COLORS (PRESERVED) =====
 // These keep your existing nutrient colors exactly as they are
 @Composable
 fun nutrientCarbsColor(): Color {
-    return if (isSystemInDarkTheme()) NutrientCarbs else NutrientCarbsDark
+    return if (isDarkTheme()) NutrientCarbs else NutrientCarbsDark
 }
 
 @Composable
 fun nutrientProteinColor(): Color {
-    return if (isSystemInDarkTheme()) NutrientProtein else NutrientProteinDark
+    return if (isDarkTheme()) NutrientProtein else NutrientProteinDark
 }
 
 @Composable
 fun nutrientFatColor(): Color {
-    return if (isSystemInDarkTheme()) NutrientFat else NutrientFatDark
+    return if (isDarkTheme()) NutrientFat else NutrientFatDark
 }
 
 @Composable
 fun nutrientFiberColor(): Color {
-    return if (isSystemInDarkTheme()) NutrientFiber else NutrientFiberDark
+    return if (isDarkTheme()) NutrientFiber else NutrientFiberDark
 }
 
 // ===== THEMED COMPONENT COLORS =====
@@ -149,44 +156,44 @@ fun tefDisabledColor(): Color = ExerciseDisabled
 // ===== THEMED FAB AND ACTION COLORS =====
 @Composable
 fun fabExerciseColor(): Color {
-    return if (isSystemInDarkTheme()) FabExercise else FabExerciseLight
+    return if (isDarkTheme()) FabExercise else FabExerciseLight
 }
 
 @Composable
 fun fabMealColor(): Color {
-    return if (isSystemInDarkTheme()) FabMeal else FabMealLight
+    return if (isDarkTheme()) FabMeal else FabMealLight
 }
 
 @Composable
 fun exerciseItemBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) ExerciseItemBackground else ExerciseItemBackgroundLight
+    return if (isDarkTheme()) ExerciseItemBackground else ExerciseItemBackgroundLight
 }
 
 @Composable
 fun mealItemBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) MealItemBackground else MealItemBackgroundLight
+    return if (isDarkTheme()) MealItemBackground else MealItemBackgroundLight
 }
 
 // ===== THEMED DIVIDER AND BORDER COLORS =====
 @Composable
 fun appDividerColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark400 else NeutralLight300
+    return if (isDarkTheme()) NeutralDark400 else NeutralLight300
 }
 
 @Composable
 fun appBorderColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark300 else NeutralLight200
+    return if (isDarkTheme()) NeutralDark300 else NeutralLight200
 }
 
 // ===== THEMED PROGRESS COLORS =====
 @Composable
 fun progressTrackColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark400 else NeutralLight300
+    return if (isDarkTheme()) NeutralDark400 else NeutralLight300
 }
 
 @Composable
 fun progressBackgroundColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark300 else NeutralLight200
+    return if (isDarkTheme()) NeutralDark300 else NeutralLight200
 }
 
 // ===== THEMED CALORIE RING COLORS (PRESERVED) =====
@@ -200,7 +207,7 @@ fun calorieRingProgressColor(): Color = CalorieRingProgress
 // ===== THEMED ELEVATION COLORS =====
 @Composable
 fun appElevationColor(): Color {
-    return if (isSystemInDarkTheme()) {
+    return if (isDarkTheme()) {
         Color.Black.copy(alpha = 0.3f)
     } else {
         Color.Black.copy(alpha = 0.1f)
@@ -210,7 +217,7 @@ fun appElevationColor(): Color {
 // ===== THEMED OVERLAY COLORS =====
 @Composable
 fun appOverlayColor(): Color {
-    return if (isSystemInDarkTheme()) {
+    return if (isDarkTheme()) {
         Color.Black.copy(alpha = 0.5f)
     } else {
         Color.Black.copy(alpha = 0.3f)
@@ -223,8 +230,51 @@ fun appOverlayColor(): Color {
  */
 @Composable
 fun Color.withThemeOpacity(lightOpacity: Float = 0.1f, darkOpacity: Float = 0.2f): Color {
-    val opacity = if (isSystemInDarkTheme()) darkOpacity else lightOpacity
+    val opacity = if (isDarkTheme()) darkOpacity else lightOpacity
     return this.copy(alpha = opacity)
+}
+
+/**
+ * Determines the appropriate text color (black or white) based on the background color's luminance.
+ * Uses a threshold of 0.5 - if the background is lighter than this, use black text, otherwise white.
+ */
+@Composable
+fun getContrastingTextColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
+}
+
+/**
+ * Get a softer contrasting color for icons - provides contrast but with reduced intensity
+ * This is useful for icons that need to be visible but not as prominent as text
+ */
+@Composable
+fun getContrastingIconColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        // For light backgrounds, use a dark gray instead of pure black
+        Color(0xFF424242) // Dark gray
+    } else {
+        // For dark backgrounds, use a light gray instead of pure white
+        Color(0xFFBDBDBD) // Light gray
+    }
+}
+
+/**
+ * Get a contrasting color for UI elements like sliders - provides good contrast
+ * but with a slight blue tint for better visual appeal
+ */
+@Composable
+fun getContrastingSliderColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        // For light backgrounds, use a dark blue-gray
+        Color(0xFF1976D2) // Material Blue 700
+    } else {
+        // For dark backgrounds, use a light blue
+        Color(0xFF64B5F6) // Material Blue 300
+    }
 }
 
 /**
@@ -232,7 +282,7 @@ fun Color.withThemeOpacity(lightOpacity: Float = 0.1f, darkOpacity: Float = 0.2f
  */
 @Composable
 fun getContrastingTextColor(): Color {
-    return if (isSystemInDarkTheme()) TextInverse else TextPrimary
+    return if (isDarkTheme()) TextInverse else TextPrimary
 }
 
 /**
@@ -240,5 +290,5 @@ fun getContrastingTextColor(): Color {
  */
 @Composable
 fun getSecondaryTextColor(): Color {
-    return if (isSystemInDarkTheme()) NeutralDark600 else TextSecondary
+    return if (isDarkTheme()) NeutralDark600 else TextSecondary
 }

@@ -320,7 +320,8 @@ fun AddExerciseDialog(
                                     defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
                                     defaultReps = defaultReps.toIntOrNull() ?: 0,
                                     defaultSets = defaultSets.toIntOrNull() ?: 0,
-                                    notes = notes.takeIf { it.isNotBlank() }
+                                    notes = notes.takeIf { it.isNotBlank() },
+                                    imagePaths = existingExercise.imagePaths // Preserve existing image paths
                                 )
                             } else {
                                 // When creating new exercise, use the provided external exercise data if available

@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,12 +18,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.template.R
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +103,7 @@ fun ExternalExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
                 Button(
                     onClick = onImport,
@@ -114,7 +117,7 @@ fun ExternalExerciseDetailsDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add to My Exercises")
+                    Text(stringResource(R.string.add_to_my_exercises))
                 }
             }
         }
@@ -192,7 +195,7 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Exercise Details",
+                text = stringResource(R.string.exercise_details),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -229,7 +232,7 @@ private fun InstructionsCard(instructions: List<String>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Instructions",
+                text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -274,3 +277,4 @@ private fun DetailRow(label: String, value: String) {
         )
     }
 }
+

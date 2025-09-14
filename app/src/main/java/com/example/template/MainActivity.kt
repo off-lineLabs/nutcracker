@@ -58,8 +58,7 @@ fun AppContent() {
     // Use the theme mode as a key to force recomposition when theme changes
     key(currentThemeMode) {
         FoodLogTheme(
-            darkTheme = settingsManager.isDarkTheme(context),
-            dynamicColor = true // Re-enable dynamic colors for modern practices
+            darkTheme = settingsManager.isDarkTheme(context)
         ) {
             AppNavigation(settingsManager)
         }

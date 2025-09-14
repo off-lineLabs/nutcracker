@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +26,9 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.data.service.ExerciseImageService
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +112,10 @@ fun UnifiedExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Close")
+                    Text(
+                        text = stringResource(R.string.close),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
                 Button(
                     onClick = onCheckIn,
@@ -207,10 +213,13 @@ private fun ExerciseImageSlideshow(
 
 @Composable
 private fun ExerciseDetailsCard(exercise: Exercise) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -220,23 +229,24 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Exercise Details",
+                text = stringResource(R.string.exercise_details),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
-            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() })
-            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }) }
-            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }) }
-            exercise.level?.let { DetailRow("Level", it.replaceFirstChar { it.uppercase() }) }
-            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }) }
+            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.level?.let { DetailRow("Level", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } })
+                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } })
+                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
         }
     }
@@ -244,10 +254,13 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
 
 @Composable
 private fun PersonalDataCard(exercise: Exercise) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -257,20 +270,21 @@ private fun PersonalDataCard(exercise: Exercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Personal Data",
+                text = stringResource(R.string.personal_data),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
-            PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg")
-            PersonalDataRow("Default Reps", exercise.defaultReps.toString())
-            PersonalDataRow("Default Sets", exercise.defaultSets.toString())
+            PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg", contrastingTextColor)
+            PersonalDataRow("Default Reps", exercise.defaultReps.toString(), contrastingTextColor)
+            PersonalDataRow("Default Sets", exercise.defaultSets.toString(), contrastingTextColor)
             
             exercise.kcalBurnedPerRep?.let { 
-                PersonalDataRow("Kcal per Rep", it.toString()) 
+                PersonalDataRow("Kcal per Rep", it.toString(), contrastingTextColor) 
             }
             exercise.kcalBurnedPerMinute?.let { 
-                PersonalDataRow("Kcal per Minute", it.toString()) 
+                PersonalDataRow("Kcal per Minute", it.toString(), contrastingTextColor) 
             }
             
             exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
@@ -279,11 +293,12 @@ private fun PersonalDataCard(exercise: Exercise) {
                     text = "Notes:",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = contrastingTextColor.copy(alpha = 0.7f)
                 )
                 Text(
                     text = notes,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = contrastingTextColor
                 )
             }
         }
@@ -292,10 +307,13 @@ private fun PersonalDataCard(exercise: Exercise) {
 
 @Composable
 private fun InstructionsCard(instructions: List<String>) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -305,9 +323,10 @@ private fun InstructionsCard(instructions: List<String>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Instructions",
+                text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
             if (instructions.isNotEmpty()) {
@@ -320,20 +339,22 @@ private fun InstructionsCard(instructions: List<String>) {
                             text = "${index + 1}.",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
+                            color = contrastingTextColor,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
                             text = instruction,
                             style = MaterialTheme.typography.bodyMedium,
+                            color = contrastingTextColor,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
             } else {
                 Text(
-                    text = "No instructions available",
+                    text = stringResource(R.string.no_instructions_available),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = contrastingTextColor.copy(alpha = 0.7f)
                 )
             }
         }
@@ -342,7 +363,7 @@ private fun InstructionsCard(instructions: List<String>) {
 
 
 @Composable
-private fun PersonalDataRow(label: String, value: String) {
+private fun PersonalDataRow(label: String, value: String, contrastingTextColor: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -351,17 +372,18 @@ private fun PersonalDataRow(label: String, value: String) {
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contrastingTextColor.copy(alpha = 0.7f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = contrastingTextColor
         )
     }
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(label: String, value: String, contrastingTextColor: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -370,11 +392,14 @@ private fun DetailRow(label: String, value: String) {
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contrastingTextColor.copy(alpha = 0.7f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = contrastingTextColor
         )
     }
 }
+
+

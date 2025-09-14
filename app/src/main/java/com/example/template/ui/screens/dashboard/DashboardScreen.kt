@@ -103,13 +103,12 @@ fun NutrientProgressDisplay(
     valueColor: Color,
     goalColor: Color
 ) {
-    val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF5D916D)
+    val proteinFiberColor = ProteinFiberColor
     val fiberLabel = stringResource(R.string.fiber_label)
     val isFiber = nutrientName == fiberLabel
     val finalValueColor = when {
         consumed > goal && isFiber -> proteinFiberColor
-        consumed > goal -> exceededColor
+        consumed > goal -> ExceededColor
         else -> valueColor
     }
     
@@ -167,8 +166,7 @@ private fun CaloriesRing(
     // Remaining calories = goal - food calories + booster bonuses
     val remaining = goalCalories - foodCalories + totalBonus
     val progress = if (goalCalories > 0) (foodCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
-    val exceededColor = Color(0xFFB65755)
-    val finalValueColor = if (remaining < 0) exceededColor else valueColor
+    val finalValueColor = if (remaining < 0) ExceededColor else valueColor
 
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
@@ -241,14 +239,13 @@ private fun NutrientBarRow(
     trackColor: Color,
     unit: String
 ) {
-    val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF5D916D)
+    val proteinFiberColor = ProteinFiberColor
     val proteinLabel = stringResource(R.string.protein_label)
     val fiberLabel = stringResource(R.string.fiber_label)
     val isProteinOrFiber = title == proteinLabel || title == fiberLabel
     val finalConsumedColor = when {
         consumed > goal && isProteinOrFiber -> proteinFiberColor
-        consumed > goal -> exceededColor
+        consumed > goal -> ExceededColor
         else -> appTextPrimaryColor()
     }
     
@@ -366,7 +363,7 @@ private fun NutrientBox(
 @Composable
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
-    isDarkTheme: Boolean = isSystemInDarkTheme()
+    isDarkTheme: Boolean
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
@@ -577,21 +574,15 @@ fun DashboardScreen(
         }
     }
 
-    // Use specific colors for the exact look you want
-    val lightGray50 = Color(0xFFFAFBFC)  // Improved softer background
-    val lightGray100 = Color(0xFFF3F4F6) // Your specific light gray
-    val darkGray800 = Color(0xFF1F2937)  // Your specific dark gray for container
-    val darkGray900 = Color(0xFF111827)  // Your specific dark background
-    val textGray200 = Color(0xFFE5E7EB)  // Your specific text gray
+    // Use theme-aware colors for consistent theming
+    val gradientStartColor = appBackgroundColor()
+    val gradientEndColor = appSurfaceVariantColor()
+    val innerContainerBackgroundColor = appSurfaceColor()
 
-    val gradientStartColor = if (isDarkTheme) darkGray900 else lightGray50
-    val gradientEndColor = if (isDarkTheme) darkGray800 else lightGray100
-    val innerContainerBackgroundColor = if (isDarkTheme) darkGray800 else Color(0xFFC6C6C7)
-
-    val caloriesRemainingLabelColor = if (isDarkTheme) Color(0xFF9CA3AF) else Color(0xFF6B7280)
-    val caloriesRemainingValueColor = if (isDarkTheme) Color.White else Color(0xFF111827)
-    val caloriesConsumedColor = if (isDarkTheme) textGray200 else Color(0xFF1F2937)
-    val caloriesGoalColor = if (isDarkTheme) Color(0xFF6B7280) else Color(0xFF9CA3AF)
+    val caloriesRemainingLabelColor = appTextSecondaryColor()
+    val caloriesRemainingValueColor = appTextPrimaryColor()
+    val caloriesConsumedColor = appTextPrimaryColor()
+    val caloriesGoalColor = appTextSecondaryColor()
 
     val view = LocalView.current
     val density = LocalDensity.current
@@ -687,7 +678,7 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Filled.DateRange,
                             contentDescription = stringResource(R.string.select_date),
-                            tint = Color(0xFFC0C0C0),
+                            tint = appTextSecondaryColor(),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -707,7 +698,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                 contentDescription = stringResource(R.string.previous_day),
-                                tint = Color(0xFFC0C0C0),
+                                tint = appTextSecondaryColor(),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -727,7 +718,7 @@ fun DashboardScreen(
                              text = dateText,
                              fontSize = 20.sp,
                              fontWeight = FontWeight.Bold,
-                             color = Color(0xFFC0C0C0),
+                             color = appTextPrimaryColor(),
                              textAlign = TextAlign.Center
                          )
                         
@@ -741,7 +732,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = stringResource(R.string.next_day),
-                                tint = Color(0xFFC0C0C0),
+                                tint = appTextSecondaryColor(),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -759,7 +750,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Filled.Settings,
                                 contentDescription = stringResource(R.string.settings_icon_description),
-                                tint = Color(0xFFC0C0C0),
+                                tint = appTextSecondaryColor(),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -772,7 +763,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Filled.BarChart,
                                 contentDescription = stringResource(R.string.progress_details),
-                                tint = Color(0xFFC0C0C0),
+                                tint = appTextSecondaryColor(),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -789,7 +780,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = fabExerciseColor(),
-                    contentColor = Color.White,
+                    contentColor = appTextInverseColor(),
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -806,7 +797,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectMealDialog = true },
                     containerColor = fabMealColor(),
-                    contentColor = Color.White,
+                    contentColor = appTextInverseColor(),
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -1120,8 +1111,11 @@ fun DashboardScreen(
                         val externalExercise = selectedExternalExercise
                         
                         if (existingExercise != null) {
-                            // Update existing exercise
-                            val updatedExercise = newExercise.copy(id = existingExercise.id)
+                            // Update existing exercise - preserve existing image paths
+                            val updatedExercise = newExercise.copy(
+                                id = existingExercise.id,
+                                imagePaths = existingExercise.imagePaths // Preserve existing image paths
+                            )
                             foodLogRepository.updateExercise(updatedExercise)
                             AppLogger.i("DashboardScreen", "Exercise updated: ${updatedExercise.name}")
                             
@@ -1176,6 +1170,10 @@ fun DashboardScreen(
                                 message = exerciseAddedSuccess
                             )
                         }
+                        
+                        // Clear the external exercise and selected exercise after successful processing
+                        selectedExternalExercise = null
+                        selectedExerciseForEdit = null
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to ${if (selectedExerciseForEdit != null) "update" else "add"} exercise", e, mapOf(
                             "exerciseName" to newExercise.name
@@ -1183,8 +1181,7 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(
                             message = if (selectedExerciseForEdit != null) failedToUpdateExercise else exerciseAddError
                         )
-                    } finally {
-                        // Clear the external exercise and selected exercise after processing
+                        // Clear state after error handling is complete
                         selectedExternalExercise = null
                         selectedExerciseForEdit = null
                     }
@@ -1274,31 +1271,31 @@ fun DashboardScreen(
                         showCalendarDialog = false
                     }
                 ) {
-                    Text(okText, color = Color(0xFF60A5FA))
+                    Text(okText, color = brandPrimaryColor())
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showCalendarDialog = false }
                 ) {
-                    Text(cancelText, color = Color(0xFF9CA3AF))
+                    Text(cancelText, color = appTextSecondaryColor())
                 }
             },
             colors = DatePickerDefaults.colors(
-                containerColor = Color(0xFF374151),
-                titleContentColor = Color(0xFFE5E7EB),
-                headlineContentColor = Color(0xFFE5E7EB),
-                weekdayContentColor = Color(0xFF9CA3AF),
-                subheadContentColor = Color(0xFFE5E7EB),
-                yearContentColor = Color(0xFFE5E7EB),
-                currentYearContentColor = Color(0xFF60A5FA),
-                selectedYearContentColor = Color.White,
-                selectedYearContainerColor = Color(0xFF60A5FA),
-                dayContentColor = Color(0xFFE5E7EB),
-                selectedDayContentColor = Color.White,
-                selectedDayContainerColor = Color(0xFF60A5FA),
-                todayContentColor = Color(0xFF60A5FA),
-                todayDateBorderColor = Color(0xFF60A5FA)
+                containerColor = appSurfaceColor(),
+                titleContentColor = appTextPrimaryColor(),
+                headlineContentColor = appTextPrimaryColor(),
+                weekdayContentColor = appTextSecondaryColor(),
+                subheadContentColor = appTextPrimaryColor(),
+                yearContentColor = appTextPrimaryColor(),
+                currentYearContentColor = brandPrimaryColor(),
+                selectedYearContentColor = appTextInverseColor(),
+                selectedYearContainerColor = brandPrimaryColor(),
+                dayContentColor = appTextPrimaryColor(),
+                selectedDayContentColor = appTextInverseColor(),
+                selectedDayContainerColor = brandPrimaryColor(),
+                todayContentColor = brandPrimaryColor(),
+                todayDateBorderColor = brandPrimaryColor()
             )
         ) {
             DatePicker(

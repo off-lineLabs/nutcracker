@@ -44,7 +44,7 @@ fun CheckInItem(
                 spotColor = Color.Black.copy(alpha = 0.1f)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = appSurfaceColor() // Use themed surface color
+            containerColor = appContainerBackgroundColor() // Use themed container color
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

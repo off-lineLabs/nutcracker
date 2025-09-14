@@ -1,4 +1,4 @@
-package com.example.template.ui.components.dialogs
+﻿package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,24 +23,18 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalUriHandler
+import com.example.template.R
 import com.example.template.data.model.Meal
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
+import androidx.compose.ui.res.stringResource
+import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.getContrastingIconColor
 
-/**
- * Determines the appropriate text color (black or white) based on the background color's luminance.
- * Uses a threshold of 0.5 - if the background is lighter than this, use black text, otherwise white.
- */
-private fun getContrastingTextColor(backgroundColor: Color): Color {
-    return if (backgroundColor.luminance() > 0.5f) {
-        Color.Black
-    } else {
-        Color.White
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,7 +139,10 @@ fun UnifiedMealDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Close")
+                    Text(
+                        text = stringResource(R.string.close),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
                 Button(
                     onClick = onCheckIn,
@@ -195,10 +192,13 @@ private fun MealImageCard(imagePath: String? = null, imageUrl: String? = null) {
 
 @Composable
 private fun BasicNutritionCard(meal: Meal) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -210,25 +210,29 @@ private fun BasicNutritionCard(meal: Meal) {
             Text(
                 text = "Nutrition Facts (per ${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation})",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
-            NutritionRow("Calories", "${meal.calories} kcal", Icons.Filled.LocalFireDepartment)
-            NutritionRow("Carbs", "${String.format("%.1f", meal.carbohydrates_g)}g", Icons.Filled.Grain)
-            NutritionRow("Proteins", "${String.format("%.1f", meal.protein_g)}g", Icons.Filled.FitnessCenter)
-            NutritionRow("Fat", "${String.format("%.1f", meal.fat_g)}g", Icons.Filled.OilBarrel)
-            NutritionRow("Fiber", "${String.format("%.1f", meal.fiber_g)}g", Icons.Filled.Park)
-            NutritionRow("Sodium", "${String.format("%.1f", meal.sodium_mg)}mg", Icons.Filled.Water)
+            NutritionRow("Calories", "${meal.calories} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Carbs", "${String.format("%.1f", meal.carbohydrates_g)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Proteins", "${String.format("%.1f", meal.protein_g)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Fat", "${String.format("%.1f", meal.fat_g)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Fiber", "${String.format("%.1f", meal.fiber_g)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Sodium", "${String.format("%.1f", meal.sodium_mg)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
         }
     }
 }
 
 @Composable
 private fun ExtendedNutritionCard(meal: Meal) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -238,28 +242,29 @@ private fun ExtendedNutritionCard(meal: Meal) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Additional Nutrition",
+                text = stringResource(R.string.additional_nutrition),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
             meal.saturatedFat_g?.let { 
-                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
+                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             meal.sugars_g?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake)
+                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             meal.cholesterol_mg?.let { 
-                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite)
+                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             meal.vitaminC_mg?.let { 
-                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy)
+                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             meal.calcium_mg?.let { 
-                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink)
+                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             meal.iron_mg?.let { 
-                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build)
+                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }
@@ -269,8 +274,12 @@ private fun ExtendedNutritionCard(meal: Meal) {
 private fun NutritionRow(
     label: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
+    val iconColor = getContrastingIconColor(backgroundColor)
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -284,17 +293,19 @@ private fun NutritionRow(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = iconColor
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor
             )
         }
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = textColor
         )
     }
 }
@@ -431,10 +442,13 @@ private fun ClassificationRow(
 
 @Composable
 private fun IngredientsCard(ingredients: String) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -444,13 +458,15 @@ private fun IngredientsCard(ingredients: String) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Ingredients",
+                text = stringResource(R.string.ingredients),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             Text(
                 text = parseOpenFoodFactsFormatting(ingredients),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = contrastingTextColor
             )
         }
     }
@@ -510,6 +526,7 @@ private fun parseOpenFoodFactsFormatting(text: String) = buildAnnotatedString {
 @Composable
 private fun AttributionCard() {
     val uriHandler = LocalUriHandler.current
+    val contrastingTextColor = getContrastingTextColor(MaterialTheme.colorScheme.surface)
     
     Row(
         modifier = Modifier
@@ -519,12 +536,12 @@ private fun AttributionCard() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Provided by ",
+            text = stringResource(R.string.provided_by),
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contrastingTextColor
         )
         Text(
-            text = "© Open Food Facts contributors",
+            text = "Â© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {
@@ -549,3 +566,4 @@ private fun hasClassifications(meal: Meal): Boolean {
            meal.greenScore != null || 
            meal.nutriscore != null
 }
+

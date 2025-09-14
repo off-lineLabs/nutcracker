@@ -11,6 +11,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.getContrastingSliderColor
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.ExerciseType
@@ -159,7 +161,7 @@ private fun ExerciseCheckInContent(
                     Text(
                         text = stringResource(R.string.max_weight_recorded, max),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -312,7 +314,10 @@ private fun ExerciseCheckInContent(
                 }
                 
                 TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
             }
         }
@@ -407,8 +412,13 @@ private fun MealCheckInContent(
                             value = currentValue,
                             onValueChange = { servingSize = it.toDouble() },
                             valueRange = minRange..maxRange,
-                            steps = ((maxRange - minRange) / 0.1f).toInt() - 1, // Dynamic steps based on range
-                            modifier = Modifier.weight(1f)
+                            steps = maxOf(0, ((maxRange - minRange) / 0.1f).toInt() - 1), // Dynamic steps based on range
+                            modifier = Modifier.weight(1f),
+                            colors = SliderDefaults.colors(
+                                thumbColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
+                                activeTrackColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
+                                inactiveTrackColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface).copy(alpha = 0.3f)
+                            )
                         )
                         Text(
                             text = "${String.format("%.1f", maxRange)}x",
@@ -456,18 +466,12 @@ private fun MealCheckInContent(
                     },
                     label = { 
                         Text(
-                            stringResource(
-                                R.string.serving_size_placeholder,
-                                meal.servingSize_unit.abbreviation
-                            )
+                            stringResource(R.string.serving_size_placeholder)
                         )
                     },
                     placeholder = { 
                         Text(
-                            stringResource(
-                                R.string.serving_size_placeholder,
-                                meal.servingSize_unit.abbreviation
-                            )
+                            stringResource(R.string.serving_size_placeholder)
                         )
                     },
                     suffix = {
@@ -581,7 +585,10 @@ private fun MealCheckInContent(
                 }
                 
                 TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
             }
         }

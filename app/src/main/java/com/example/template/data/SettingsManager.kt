@@ -65,7 +65,7 @@ class SettingsManager(context: Context) {
         this.currentThemeMode = themeMode
         prefs.edit().putString(KEY_THEME_MODE, themeMode.name).apply()
         // Debug log
-        android.util.Log.d("SettingsManager", "Theme changed to: $themeMode")
+        com.example.template.util.logger.AppLogger.d("SettingsManager", "Theme changed to: $themeMode")
     }
     
     fun setAppLanguage(language: AppLanguage) {
@@ -82,7 +82,7 @@ class SettingsManager(context: Context) {
     }
     
     fun isDarkTheme(context: Context): Boolean {
-        val isDark = when (currentThemeMode) {
+        return when (currentThemeMode) {
             ThemeMode.LIGHT -> false
             ThemeMode.DARK -> true
             ThemeMode.SYSTEM -> {
@@ -90,8 +90,5 @@ class SettingsManager(context: Context) {
                 nightModeFlags == Configuration.UI_MODE_NIGHT_YES
             }
         }
-        // Debug log
-        android.util.Log.d("SettingsManager", "isDarkTheme: $isDark (mode: $currentThemeMode)")
-        return isDark
     }
 }

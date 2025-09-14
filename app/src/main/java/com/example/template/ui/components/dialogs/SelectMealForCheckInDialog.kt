@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.example.template.R
 import com.example.template.data.model.Meal
 import com.example.template.ui.components.items.MealItem
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +78,7 @@ fun SelectMealForCheckInDialog(
                 // Show existing meals if any
                 if (meals.isNotEmpty()) {
                     Text(
-                        text = "Your Meals",
+                        text = stringResource(R.string.your_meals),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -109,7 +110,7 @@ fun SelectMealForCheckInDialog(
                 
                 // Action buttons
                 Text(
-                    text = "Add New Meal",
+                    text = stringResource(R.string.add_new_meal),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -173,7 +174,10 @@ fun SelectMealForCheckInDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )

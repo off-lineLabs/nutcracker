@@ -28,7 +28,7 @@ class ExternalExerciseService {
                 cachedExercises = api.getAllExercises()
             } catch (e: Exception) {
                 // Log the error for debugging
-                android.util.Log.e("ExternalExerciseService", "Failed to fetch exercises", e)
+                com.example.template.util.logger.AppLogger.e("ExternalExerciseService", "Failed to fetch exercises", e)
                 // Return empty list if network fails
                 return emptyList()
             }

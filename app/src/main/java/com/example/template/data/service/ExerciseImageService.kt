@@ -1,7 +1,7 @@
 package com.example.template.data.service
 
 import android.content.Context
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -53,10 +53,10 @@ class ExerciseImageService(private val context: Context) {
                     }
                     
                     localPaths.add(localFile.absolutePath)
-                    Log.d("ExerciseImageService", "Downloaded image: $fileName")
+                    AppLogger.d("ExerciseImageService", "Downloaded image: $fileName")
                     
                 } catch (e: Exception) {
-                    Log.e("ExerciseImageService", "Failed to download image: $imageUrl", e)
+                    AppLogger.e("ExerciseImageService", "Failed to download image: $imageUrl", e)
                     // Continue with other images even if one fails
                 }
             }
@@ -87,10 +87,10 @@ class ExerciseImageService(private val context: Context) {
                     val file = File(imagePath)
                     if (file.exists()) {
                         file.delete()
-                        Log.d("ExerciseImageService", "Deleted image: $imagePath")
+                        AppLogger.d("ExerciseImageService", "Deleted image: $imagePath")
                     }
                 } catch (e: Exception) {
-                    Log.e("ExerciseImageService", "Error deleting image: $imagePath", e)
+                    AppLogger.e("ExerciseImageService", "Error deleting image: $imagePath", e)
                 }
             }
         }
@@ -117,7 +117,7 @@ class ExerciseImageService(private val context: Context) {
             }
             files?.forEach { file ->
                 if (file.delete()) {
-                    Log.d("ExerciseImageService", "Deleted image: ${file.name}")
+                    AppLogger.d("ExerciseImageService", "Deleted image: ${file.name}")
                 }
             }
         }
@@ -135,7 +135,7 @@ class ExerciseImageService(private val context: Context) {
             allImageFiles.forEach { file ->
                 if (!validFiles.contains(file)) {
                     if (file.delete()) {
-                        Log.d("ExerciseImageService", "Cleaned up orphaned image: ${file.name}")
+                        AppLogger.d("ExerciseImageService", "Cleaned up orphaned image: ${file.name}")
                     }
                 }
             }

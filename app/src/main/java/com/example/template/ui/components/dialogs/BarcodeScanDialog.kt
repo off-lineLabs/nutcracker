@@ -9,7 +9,7 @@ import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.ImageReader
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.template.ui.theme.getContrastingTextColor
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -97,7 +98,7 @@ fun BarcodeScanDialog(
             ) {
                 if (!hasCameraPermission) {
                     Text(
-                        text = "Camera permission is required to scan barcodes",
+                        text = stringResource(R.string.camera_permission_required),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -161,13 +162,16 @@ fun BarcodeScanDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Use This Barcode")
+                    Text(stringResource(R.string.use_this_barcode))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )
@@ -251,14 +255,14 @@ private fun openCamera(
     val cameraId = cameraManager.cameraIdList[0] // Use first available camera
     
     try {
-        Log.d("BarcodeScan", "Opening camera with ID: $cameraId")
+        AppLogger.d("BarcodeScan", "Opening camera with ID: $cameraId")
         val characteristics = cameraManager.getCameraCharacteristics(cameraId)
         val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
         val sizes = map?.getOutputSizes(ImageFormat.JPEG)
         val largest = sizes?.maxByOrNull { it.height * it.width }
         
-        Log.d("BarcodeScan", "Camera image sizes available: ${sizes?.size ?: 0}")
-        Log.d("BarcodeScan", "Using image size: ${largest?.width}x${largest?.height}")
+        AppLogger.d("BarcodeScan", "Camera image sizes available: ${sizes?.size ?: 0}")
+        AppLogger.d("BarcodeScan", "Using image size: ${largest?.width}x${largest?.height}")
         
         val imageReader = ImageReader.newInstance(
             largest?.width ?: width,
@@ -274,47 +278,47 @@ private fun openCamera(
         imageReader.setOnImageAvailableListener({
             val image = imageReader.acquireLatestImage()
             if (image != null) {
-                Log.d("BarcodeScan", "Processing camera image for barcode detection")
+                AppLogger.d("BarcodeScan", "Processing camera image for barcode detection")
                 val buffer = image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining())
                 buffer.get(bytes)
                 
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 if (bitmap != null) {
-                    Log.d("BarcodeScan", "Bitmap created successfully, size: ${bitmap.width}x${bitmap.height}")
+                    AppLogger.d("BarcodeScan", "Bitmap created successfully, size: ${bitmap.width}x${bitmap.height}")
                     val inputImage = InputImage.fromBitmap(bitmap, 0)
                     
                     val barcodeScanner = BarcodeScanning.getClient()
                     barcodeScanner.process(inputImage)
                         .addOnSuccessListener { barcodes ->
-                            Log.d("BarcodeScan", "Barcode detection completed, found ${barcodes.size} barcodes")
+                            AppLogger.d("BarcodeScan", "Barcode detection completed, found ${barcodes.size} barcodes")
                             for (barcode in barcodes) {
-                                Log.d("BarcodeScan", "Found barcode: ${barcode.rawValue}")
+                                AppLogger.d("BarcodeScan", "Found barcode: ${barcode.rawValue}")
                                 barcode.rawValue?.let { value ->
-                                    Log.d("BarcodeScan", "Detected barcode value: $value")
+                                    AppLogger.d("BarcodeScan", "Detected barcode value: $value")
                                     onBarcodeDetected(value)
                                     return@addOnSuccessListener
                                 }
                             }
                         }
                         .addOnFailureListener { exception ->
-                            Log.e("BarcodeScan", "Barcode detection failed", exception)
+                            AppLogger.e("BarcodeScan", "Barcode detection failed", exception)
                         }
                         .addOnCompleteListener {
                             image.close()
                         }
                 } else {
-                    Log.e("BarcodeScan", "Failed to create bitmap from camera image")
+                    AppLogger.e("BarcodeScan", "Failed to create bitmap from camera image")
                     image.close()
                 }
             } else {
-                Log.w("BarcodeScan", "Camera image is null")
+                AppLogger.w("BarcodeScan", "Camera image is null")
             }
         }, backgroundHandler)
         
         val stateCallback = object : CameraDevice.StateCallback() {
             override fun onOpened(camera: CameraDevice) {
-                Log.d("BarcodeScan", "Camera opened successfully")
+                AppLogger.d("BarcodeScan", "Camera opened successfully")
                 val captureRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                 val textureSurface = Surface(surface)
                 captureRequestBuilder.addTarget(textureSurface)
@@ -322,14 +326,14 @@ private fun openCamera(
                 
                 val sessionCallback = object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
-                        Log.d("BarcodeScan", "Camera session configured successfully")
+                        AppLogger.d("BarcodeScan", "Camera session configured successfully")
                         val captureRequest = captureRequestBuilder.build()
                         session.setRepeatingRequest(captureRequest, null, backgroundHandler)
-                        Log.d("BarcodeScan", "Camera preview started")
+                        AppLogger.d("BarcodeScan", "Camera preview started")
                     }
                     
                     override fun onConfigureFailed(session: CameraCaptureSession) {
-                        Log.e("BarcodeScan", "Failed to configure camera session")
+                        AppLogger.e("BarcodeScan", "Failed to configure camera session")
                         onError("Failed to configure camera session")
                     }
                 }
@@ -344,12 +348,12 @@ private fun openCamera(
             }
             
             override fun onDisconnected(camera: CameraDevice) {
-                Log.d("BarcodeScan", "Camera disconnected")
+                AppLogger.d("BarcodeScan", "Camera disconnected")
                 camera.close()
             }
             
             override fun onError(camera: CameraDevice, error: Int) {
-                Log.e("BarcodeScan", "Camera error: $error")
+                AppLogger.e("BarcodeScan", "Camera error: $error")
                 onError("Camera error: $error")
                 camera.close()
             }
