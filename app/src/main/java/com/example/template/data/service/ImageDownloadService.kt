@@ -18,7 +18,6 @@ class ImageDownloadService(private val context: Context) {
     companion object {
         private const val TAG = "ImageDownloadService"
         private const val IMAGES_DIR = "food_images"
-        private const val MAX_IMAGE_SIZE = 1024 * 1024 // 1MB max
         private const val MAX_IMAGE_DIMENSION = 800 // Max width/height
     }
     
