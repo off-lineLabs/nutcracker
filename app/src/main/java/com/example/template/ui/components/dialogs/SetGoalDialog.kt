@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.template.R
 import com.example.template.data.model.UserGoal
+import com.example.template.ui.theme.getContrastingTextColor
 
 @Composable
 fun SetGoalDialog(
@@ -113,7 +114,12 @@ fun SetGoalDialog(
             ) { Text(stringResource(R.string.set_goals)) }
         },
         dismissButton = {
-            Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            Button(onClick = onDismiss) { 
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
+            }
         }
     )
 }

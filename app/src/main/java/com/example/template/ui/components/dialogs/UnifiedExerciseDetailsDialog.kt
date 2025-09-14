@@ -112,7 +112,10 @@ fun UnifiedExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text(stringResource(R.string.close))
+                    Text(
+                        text = stringResource(R.string.close),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
                 Button(
                     onClick = onCheckIn,
