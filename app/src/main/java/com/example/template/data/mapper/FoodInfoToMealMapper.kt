@@ -55,7 +55,6 @@ object FoodInfoToMealMapper {
             greenScore = foodInfo.greenScore,
             nutriscore = foodInfo.nutriscore,
             ingredients = foodInfo.ingredients,
-            categories = foodInfo.categories,
             quantity = foodInfo.quantity,
             servingSize = foodInfo.servingSize,
             barcode = barcode,

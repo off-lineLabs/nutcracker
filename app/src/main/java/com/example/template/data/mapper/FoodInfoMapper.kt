@@ -37,7 +37,6 @@ object FoodInfoMapper {
             } else {
                 product.ingredientsTextEn ?: product.ingredientsText
             },
-            categories = product.categories,
             quantity = product.quantity,
             servingSize = product.servingSize
         )

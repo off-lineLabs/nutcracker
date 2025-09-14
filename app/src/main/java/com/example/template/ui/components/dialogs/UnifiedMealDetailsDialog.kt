@@ -18,6 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalUriHandler
@@ -127,14 +131,6 @@ fun UnifiedMealDetailsDialog(
                     }
                 }
                 
-                // Categories (if available and not empty)
-                meal.categories?.let { categories ->
-                    if (categories.isNotBlank()) {
-                        item {
-                            CategoriesCard(categories = categories)
-                        }
-                    }
-                }
                 
                 // Attribution (only for Open Food Facts sourced meals)
                 if (meal.source != "manual") {
@@ -453,39 +449,63 @@ private fun IngredientsCard(ingredients: String) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = ingredients,
+                text = parseOpenFoodFactsFormatting(ingredients),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
     }
 }
 
-@Composable
-private fun CategoriesCard(categories: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Categories",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = categories,
-                style = MaterialTheme.typography.bodyMedium
-            )
+/**
+ * Simple parser for OpenFoodFacts formatting:
+ * - _text_ becomes italic
+ * - __text__ becomes bold
+ * - Removes other markdown-like formatting
+ */
+private fun parseOpenFoodFactsFormatting(text: String) = buildAnnotatedString {
+    val boldPattern = "__([^_]+)__".toRegex()
+    val italicPattern = "_([^_]+)_".toRegex()
+    
+    var processedText = text
+    val boldMatches = boldPattern.findAll(text).toList()
+    val italicMatches = italicPattern.findAll(text).toList()
+    
+    // Remove formatting markers
+    processedText = processedText.replace(boldPattern, "$1")
+    processedText = processedText.replace(italicPattern, "$1")
+    
+    // Build annotated string with styles
+    var currentIndex = 0
+    val allMatches = (boldMatches + italicMatches).sortedBy { it.range.first }
+    
+    for (match in allMatches) {
+        // Add text before the match
+        if (currentIndex < match.range.first) {
+            append(processedText.substring(currentIndex, match.range.first))
         }
+        
+        // Add styled text
+        val content = match.groupValues[1]
+        val isBold = match.value.startsWith("__")
+        
+        withStyle(
+            style = SpanStyle(
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                fontStyle = if (isBold) FontStyle.Normal else FontStyle.Italic
+            )
+        ) {
+            append(content)
+        }
+        
+        currentIndex = match.range.last + 1
+    }
+    
+    // Add remaining text
+    if (currentIndex < processedText.length) {
+        append(processedText.substring(currentIndex))
     }
 }
+
 
 @Composable
 private fun AttributionCard() {

@@ -38,7 +38,6 @@ data class Meal(
     val greenScore: GreenScore? = null, // Eco-Score
     val nutriscore: Nutriscore? = null, // Nutri-Score
     val ingredients: String? = null, // Ingredients text
-    val categories: String? = null, // Food categories
     val quantity: String? = null, // Product quantity
     val servingSize: String? = null, // Original serving size from Open Food Facts
     val barcode: String? = null, // Barcode if scanned

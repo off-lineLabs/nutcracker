@@ -152,7 +152,6 @@ data class FoodInfo(
     val greenScore: GreenScore?,
     val nutriscore: Nutriscore?,
     val ingredients: String?,
-    val categories: String?,
     val quantity: String?,
     val servingSize: String?
 )
