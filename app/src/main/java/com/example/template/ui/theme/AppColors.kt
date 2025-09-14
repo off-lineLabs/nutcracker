@@ -42,25 +42,25 @@ fun brandHighlightColor(): Color {
 // ===== THEMED BACKGROUND COLORS =====
 @Composable
 fun appBackgroundColor(): Color {
-    return if (isDarkTheme()) BrandNavy else NeutralLight50
+    return if (isDarkTheme()) OriginalDarkGray900 else OriginalLightGray50
 }
 
 @Composable
 fun appSurfaceColor(): Color {
-    return if (isDarkTheme()) BrandNavyLight else Color.White
+    return if (isDarkTheme()) OriginalDarkGray800 else OriginalContainerGray
 }
 
 @Composable
 fun appSurfaceVariantColor(): Color {
-    return if (isDarkTheme()) NeutralDark300 else NeutralLight100
+    return if (isDarkTheme()) OriginalDarkGray800 else OriginalLightGray100
 }
 
 @Composable
 fun appContainerBackgroundColor(): Color {
     return if (isDarkTheme()) {
-        BrandNavyLight.copy(alpha = 0.6f)
+        MaterialTheme.colorScheme.surface
     } else {
-        NeutralLight100.copy(alpha = 0.6f)
+        OriginalContainerGray
     }
 }
 
@@ -72,12 +72,12 @@ fun appCardBackgroundColor(): Color {
 // ===== THEMED TEXT COLORS =====
 @Composable
 fun appTextPrimaryColor(): Color {
-    return if (isDarkTheme()) TextInverse else TextPrimary
+    return if (isDarkTheme()) Color.White else Color(0xFF111827)
 }
 
 @Composable
 fun appTextSecondaryColor(): Color {
-    return if (isDarkTheme()) NeutralDark600 else TextSecondary
+    return if (isDarkTheme()) Color(0xFF9CA3AF) else Color(0xFF6B7280)
 }
 
 @Composable
