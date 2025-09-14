@@ -23,26 +23,30 @@ object FoodInfoToMealMapper {
     ): Meal {
         val nutrition = foodInfo.nutrition
         
+        // Calculate the multiplier to scale nutrition values from 100g/ml to the actual serving size
+        // Open Food Facts nutrition values are always per 100g/ml
+        val multiplier = servingSizeValue / 100.0
+        
         return Meal(
             name = foodInfo.name,
             brand = foodInfo.brand,
-            calories = nutrition.calories?.toInt() ?: 0,
-            carbohydrates_g = nutrition.carbohydrates ?: 0.0,
-            protein_g = nutrition.proteins ?: 0.0,
-            fat_g = nutrition.fat ?: 0.0,
-            fiber_g = nutrition.fiber ?: 0.0,
-            sodium_mg = nutrition.sodium ?: 0.0,
+            calories = ((nutrition.calories ?: 0.0) * multiplier).toInt(),
+            carbohydrates_g = (nutrition.carbohydrates ?: 0.0) * multiplier,
+            protein_g = (nutrition.proteins ?: 0.0) * multiplier,
+            fat_g = (nutrition.fat ?: 0.0) * multiplier,
+            fiber_g = (nutrition.fiber ?: 0.0) * multiplier,
+            sodium_mg = (nutrition.sodium ?: 0.0) * multiplier,
             servingSize_value = servingSizeValue,
             servingSize_unit = servingSizeUnit,
             notes = null,
             
-            // Additional nutrition fields
-            saturatedFat_g = nutrition.saturatedFat,
-            sugars_g = nutrition.sugars,
-            cholesterol_mg = nutrition.cholesterol,
-            vitaminC_mg = nutrition.vitaminC,
-            calcium_mg = nutrition.calcium,
-            iron_mg = nutrition.iron,
+            // Additional nutrition fields - scale these too
+            saturatedFat_g = nutrition.saturatedFat?.let { it * multiplier },
+            sugars_g = nutrition.sugars?.let { it * multiplier },
+            cholesterol_mg = nutrition.cholesterol?.let { it * multiplier },
+            vitaminC_mg = nutrition.vitaminC?.let { it * multiplier },
+            calcium_mg = nutrition.calcium?.let { it * multiplier },
+            iron_mg = nutrition.iron?.let { it * multiplier },
             
             // Open Food Facts specific fields
             imageUrl = foodInfo.imageUrl,
