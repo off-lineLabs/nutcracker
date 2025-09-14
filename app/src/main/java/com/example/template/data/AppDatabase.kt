@@ -33,7 +33,7 @@ import com.example.template.data.model.DateTimeTypeConverters
         Pill::class,
         PillCheckIn::class
     ], 
-    version = 10, 
+    version = 15, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -51,37 +51,24 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // Migration from version 9 to 10 - Add new fields to meals table
-        private val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Add new columns to meals table
-                db.execSQL("ALTER TABLE meals ADD COLUMN brand TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN imageUrl TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN localImagePath TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN novaClassification TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN greenScore TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN nutriscore TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN ingredients TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN categories TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN quantity TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN servingSize TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN barcode TEXT")
-                db.execSQL("ALTER TABLE meals ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'")
-            }
-        }
+        // No migrations needed - database will be recreated from scratch
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "food_log_database"
-                )
-                .addMigrations(MIGRATION_9_10)
-                .fallbackToDestructiveMigration() // Keep as fallback for development
-                .build()
-                INSTANCE = instance
-                instance
+                try {
+                    val instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "food_log_database_v2"
+                    )
+                    .fallbackToDestructiveMigration() // Always recreate database from scratch
+                    .build()
+                    INSTANCE = instance
+                    instance
+                } catch (e: Exception) {
+                    android.util.Log.e("AppDatabase", "Database initialization failed", e)
+                    throw e
+                }
             }
         }
     }

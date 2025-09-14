@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,9 +29,35 @@ fun SelectMealForCheckInDialog(
     onDismiss: () -> Unit,
     onAddMeal: () -> Unit,
     onSelectMeal: (Meal) -> Unit,
+    onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
     onScanBarcode: () -> Unit = {}
 ) {
+    var selectedMeal by remember { mutableStateOf<Meal?>(null) }
+    var showUnifiedDialog by remember { mutableStateOf(false) }
+    
+    // Show unified dialog when a meal is selected
+    selectedMeal?.let { meal ->
+        if (showUnifiedDialog) {
+            UnifiedMealDetailsDialog(
+                meal = meal,
+                onBack = {
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                },
+                onEdit = { mealToEdit ->
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                    onEditMeal(mealToEdit)
+                },
+                onCheckIn = {
+                    onSelectMeal(meal)
+                    showUnifiedDialog = false
+                    selectedMeal = null
+                }
+            )
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -65,7 +92,10 @@ fun SelectMealForCheckInDialog(
                         items(meals) { meal ->
                             MealItem(
                                 meal = meal,
-                                onCheckInClick = onSelectMeal
+                                onMealClick = { 
+                                    selectedMeal = meal
+                                    showUnifiedDialog = true
+                                }
                             )
                         }
                     }
@@ -132,7 +162,7 @@ fun SelectMealForCheckInDialog(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        painter = painterResource(R.drawable.ic_ballot),
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )

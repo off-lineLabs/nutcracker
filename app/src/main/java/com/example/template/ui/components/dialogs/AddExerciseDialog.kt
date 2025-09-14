@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.SportsGymnastics
@@ -21,6 +22,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.toInternalExercise
 import com.example.template.util.logger.AppLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +31,8 @@ fun AddExerciseDialog(
     externalExercise: ExternalExercise? = null,
     existingExercise: Exercise? = null,
     onDismiss: () -> Unit,
-    onAddExercise: (Exercise) -> Unit
+    onAddExercise: (Exercise) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.STRENGTH) }
@@ -95,10 +98,8 @@ fun AddExerciseDialog(
                 }
             }
             
-            // Set notes from instructions
-            if (exercise.instructions.isNotEmpty()) {
-                notes = exercise.instructions.joinToString("\n\n")
-            }
+            // Don't copy instructions to notes - let user add their own notes
+            // Instructions will be stored separately in the instructions field
         }
     }
 
@@ -107,15 +108,15 @@ fun AddExerciseDialog(
         title = {
             Text(
                 text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.titleMedium
             )
         },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Exercise name
                 OutlinedTextField(
@@ -277,29 +278,71 @@ fun AddExerciseDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
-                    val exercise = Exercise(
-                        name = name.trim(),
-                        category = ExerciseCategoryMapper.getCategory(exerciseType),
-                        kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                        kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
-                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                        defaultReps = defaultReps.toIntOrNull() ?: 0,
-                        defaultSets = defaultSets.toIntOrNull() ?: 0,
-                        notes = notes.takeIf { it.isNotBlank() }
-                    )
-                    onAddExercise(exercise)
-                },
-                enabled = name.isNotBlank()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(if (existingExercise != null) stringResource(R.string.update) else stringResource(R.string.add))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                // Delete button (only in edit mode when onDelete is provided) - positioned at left
+                if (existingExercise != null && onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                } else {
+                    // Empty space to maintain layout when no delete button
+                    Spacer(modifier = Modifier.size(48.dp))
+                }
+                
+                // Cancel and Add/Update buttons side by side
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    Button(
+                        onClick = {
+                            AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
+                            val exercise = if (existingExercise != null) {
+                                // When editing, preserve all non-editable fields from the existing exercise
+                                existingExercise.copy(
+                                    name = name.trim(),
+                                    category = ExerciseCategoryMapper.getCategory(exerciseType),
+                                    kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
+                                    kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                                    defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                                    defaultReps = defaultReps.toIntOrNull() ?: 0,
+                                    defaultSets = defaultSets.toIntOrNull() ?: 0,
+                                    notes = notes.takeIf { it.isNotBlank() }
+                                )
+                            } else {
+                                // When creating new exercise, use the provided external exercise data if available
+                                val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
+                                baseExercise.copy(
+                                    name = name.trim(),
+                                    category = ExerciseCategoryMapper.getCategory(exerciseType),
+                                    kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
+                                    kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                                    defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                                    defaultReps = defaultReps.toIntOrNull() ?: 0,
+                                    defaultSets = defaultSets.toIntOrNull() ?: 0,
+                                    notes = notes.takeIf { it.isNotBlank() }
+                                )
+                            }
+                            onAddExercise(exercise)
+                        },
+                        enabled = name.isNotBlank()
+                    ) {
+                        Text(if (existingExercise != null) stringResource(R.string.update) else stringResource(R.string.add))
+                    }
+                }
             }
         }
     )

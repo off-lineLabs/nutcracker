@@ -142,6 +142,7 @@
     <string name="serving_size_default_value">100</string>
     <string name="serving_size_placeholder">Enter amount</string>
     <string name="serving_size_validation_error">Please enter a valid serving size</string>
+    <string name="enter_manual_serving_size">Enter amount manually (%1$s)</string>
     
     <!-- Serving Size Units -->
     <string name="unit_grams">Grams (g)</string>

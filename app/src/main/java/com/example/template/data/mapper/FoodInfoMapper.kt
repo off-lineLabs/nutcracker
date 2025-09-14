@@ -5,24 +5,38 @@ import android.util.Log
 
 object FoodInfoMapper {
     
-    fun mapToFoodInfo(response: OpenFoodFactsResponse): FoodInfo? {
+    fun mapToFoodInfo(response: OpenFoodFactsResponse, currentLanguage: com.example.template.data.AppLanguage? = null): FoodInfo? {
         val product = response.product ?: return null
         
+        // Use localized name if language is provided, otherwise fall back to English
+        val productName = if (currentLanguage != null) {
+            product.getLocalizedProductName(currentLanguage)
+        } else {
+            product.productNameEn ?: product.productName ?: "Unknown Product"
+        }
+        
         return FoodInfo(
-            name = product.productNameEn ?: product.productName ?: "Unknown Product",
+            name = productName,
             brand = product.brands,
             imageUrl = product.imageFrontUrl ?: product.imageUrl,
             nutritionImageUrl = product.imageNutritionUrl,
             nutrition = mapNutritionInfo(product.nutriments),
             novaClassification = NovaClassification.fromGroup(product.novaGroup),
             greenScore = product.ecoscoreGrade?.let { grade ->
-                GreenScore(grade.uppercase(), product.ecoscoreScore)
+                if (grade.uppercase() != "UNKNOWN" && grade.uppercase() != "NOT-APPLICABLE" && grade.isNotBlank()) {
+                    GreenScore(grade.uppercase(), product.ecoscoreScore)
+                } else null
             },
             nutriscore = product.nutriscoreGrade?.let { grade ->
-                Nutriscore(grade.uppercase(), product.nutriscoreScore)
+                if (grade.uppercase() != "UNKNOWN" && grade.isNotBlank()) {
+                    Nutriscore(grade.uppercase(), product.nutriscoreScore)
+                } else null
             },
-            ingredients = product.ingredientsTextEn ?: product.ingredientsText,
-            categories = product.categories,
+            ingredients = if (currentLanguage != null) {
+                product.getLocalizedIngredientsText(currentLanguage)
+            } else {
+                product.ingredientsTextEn ?: product.ingredientsText
+            },
             quantity = product.quantity,
             servingSize = product.servingSize
         )

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,10 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalUriHandler
-import com.example.template.data.model.FoodInfo
+import com.example.template.data.model.Meal
 import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
@@ -41,10 +44,11 @@ private fun getContrastingTextColor(backgroundColor: Color): Color {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FoodInfoDialog(
-    foodInfo: FoodInfo,
+fun UnifiedMealDetailsDialog(
+    meal: Meal,
     onBack: () -> Unit,
-    onAddToMeals: () -> Unit
+    onEdit: (Meal) -> Unit,
+    onCheckIn: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onBack,
@@ -60,10 +64,10 @@ fun FoodInfoDialog(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = foodInfo.name,
+                        text = meal.name,
                         style = MaterialTheme.typography.headlineSmall
                     )
-                    foodInfo.brand?.let { brand ->
+                    meal.brand?.let { brand ->
                         Text(
                             text = brand,
                             style = MaterialTheme.typography.bodyMedium,
@@ -71,6 +75,9 @@ fun FoodInfoDialog(
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
+                }
+                IconButton(onClick = { onEdit(meal) }) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit Meal")
                 }
             }
         },
@@ -82,31 +89,55 @@ fun FoodInfoDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Food image
-                foodInfo.imageUrl?.let { imageUrl ->
+                meal.localImagePath?.let { imagePath ->
                     item {
-                        FoodImageCard(imageUrl = imageUrl)
+                        MealImageCard(imagePath = imagePath)
+                    }
+                } ?: meal.imageUrl?.let { imageUrl ->
+                    item {
+                        MealImageCard(imageUrl = imageUrl)
                     }
                 }
                 
-                // Nutrition information
+                // Basic nutrition information
                 item {
-                    NutritionInfoCard(nutrition = foodInfo.nutrition)
+                    BasicNutritionCard(meal = meal)
                 }
                 
-                // Classification and scores
-                item {
-                    ClassificationCard(
-                        novaClassification = foodInfo.novaClassification,
-                        greenScore = foodInfo.greenScore,
-                        nutriscore = foodInfo.nutriscore
-                    )
+                // Extended nutrition information (if available from Open Food Facts)
+                if (hasExtendedNutrition(meal)) {
+                    item {
+                        ExtendedNutritionCard(meal = meal)
+                    }
                 }
                 
-                // Attribution
-                item {
-                    AttributionCard()
+                // Classification and scores (if available)
+                if (hasClassifications(meal)) {
+                    item {
+                        ClassificationCard(
+                            novaClassification = meal.novaClassification,
+                            greenScore = meal.greenScore,
+                            nutriscore = meal.nutriscore
+                        )
+                    }
                 }
                 
+                // Ingredients (if available and not empty)
+                meal.ingredients?.let { ingredients ->
+                    if (ingredients.isNotBlank()) {
+                        item {
+                            IngredientsCard(ingredients = ingredients)
+                        }
+                    }
+                }
+                
+                
+                // Attribution (only for Open Food Facts sourced meals)
+                if (meal.source != "manual") {
+                    item {
+                        AttributionCard()
+                    }
+                }
             }
         },
         confirmButton = {
@@ -114,21 +145,21 @@ fun FoodInfoDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Cancel")
+                    Text("Close")
                 }
                 Button(
-                    onClick = onAddToMeals,
+                    onClick = onCheckIn,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add to My Meals")
+                    Text("Check-in Meal")
                 }
             }
         }
@@ -136,7 +167,7 @@ fun FoodInfoDialog(
 }
 
 @Composable
-private fun FoodImageCard(imageUrl: String) {
+private fun MealImageCard(imagePath: String? = null, imageUrl: String? = null) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -151,7 +182,7 @@ private fun FoodImageCard(imageUrl: String) {
                 .clip(RoundedCornerShape(8.dp))
         ) {
             AsyncImage(
-                model = imageUrl,
+                model = imagePath ?: imageUrl,
                 contentDescription = "Food product image",
                 modifier = Modifier
                     .fillMaxSize()
@@ -163,7 +194,7 @@ private fun FoodImageCard(imageUrl: String) {
 }
 
 @Composable
-private fun NutritionInfoCard(nutrition: com.example.template.data.model.NutritionInfo) {
+private fun BasicNutritionCard(meal: Meal) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -177,50 +208,57 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Nutrition Facts (per 100g/100ml)",
+                text = "Nutrition Facts (per ${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation})",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+            
+            NutritionRow("Calories", "${meal.calories} kcal", Icons.Filled.LocalFireDepartment)
+            NutritionRow("Carbs", "${String.format("%.1f", meal.carbohydrates_g)}g", Icons.Filled.Grain)
+            NutritionRow("Proteins", "${String.format("%.1f", meal.protein_g)}g", Icons.Filled.FitnessCenter)
+            NutritionRow("Fat", "${String.format("%.1f", meal.fat_g)}g", Icons.Filled.OilBarrel)
+            NutritionRow("Fiber", "${String.format("%.1f", meal.fiber_g)}g", Icons.Filled.Park)
+            NutritionRow("Sodium", "${String.format("%.1f", meal.sodium_mg)}mg", Icons.Filled.Water)
+        }
+    }
+}
+
+@Composable
+private fun ExtendedNutritionCard(meal: Meal) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Text(
-                text = "All values are standardized per 100g or 100ml for easy comparison",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Additional Nutrition",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
             
-            nutrition.calories?.let { 
-                NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment)
-            }
-            nutrition.fat?.let { 
-                NutritionRow("Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
-            }
-            nutrition.carbohydrates?.let { 
-                NutritionRow("Carbs", "${String.format("%.1f", it)}g", Icons.Filled.Grain)
-            }
-            nutrition.proteins?.let { 
-                NutritionRow("Proteins", "${String.format("%.1f", it)}g", Icons.Filled.FitnessCenter)
-            }
-            nutrition.sodium?.let { 
-                NutritionRow("Sodium", "${String.format("%.1f", it)}mg", Icons.Filled.Water)
-            }
-            nutrition.fiber?.let { 
-                NutritionRow("Fiber", "${String.format("%.1f", it)}g", Icons.Filled.Park)
-            }
-            nutrition.sugars?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake)
-            }
-            nutrition.saturatedFat?.let { 
+            meal.saturatedFat_g?.let { 
                 NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
             }
-            nutrition.cholesterol?.let { 
+            meal.sugars_g?.let { 
+                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake)
+            }
+            meal.cholesterol_mg?.let { 
                 NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite)
             }
-            nutrition.vitaminC?.let { 
+            meal.vitaminC_mg?.let { 
                 NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy)
             }
-            nutrition.calcium?.let { 
+            meal.calcium_mg?.let { 
                 NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink)
             }
-            nutrition.iron?.let { 
+            meal.iron_mg?.let { 
                 NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build)
             }
         }
@@ -263,12 +301,12 @@ private fun NutritionRow(
 
 @Composable
 private fun ClassificationCard(
-    novaClassification: NovaClassification,
+    novaClassification: NovaClassification?,
     greenScore: GreenScore?,
     nutriscore: Nutriscore?
 ) {
     // Check if we have any valid classifications to show
-    val hasValidClassifications = novaClassification.group > 0 || greenScore != null || nutriscore != null
+    val hasValidClassifications = novaClassification?.group?.let { it > 0 } == true || greenScore != null || nutriscore != null
     
     if (!hasValidClassifications) {
         return // Don't show the card if no valid classifications
@@ -293,19 +331,21 @@ private fun ClassificationCard(
             )
             
             // Nova Classification - only show if group > 0 (not unknown)
-            if (novaClassification.group > 0) {
-                ClassificationRow(
-                    label = "NOVA Classification",
-                    value = novaClassification.group.toString(),
-                    description = novaClassification.description,
-                    color = when (novaClassification.group) {
-                        1 -> Color(0xFF4CAF50) // Green
-                        2 -> Color(0xFF8BC34A) // Light Green
-                        3 -> Color(0xFFFF9800) // Orange
-                        4 -> Color(0xFFF44336) // Red
-                        else -> Color(0xFF9E9E9E) // Gray
-                    }
-                )
+            novaClassification?.let { classification ->
+                if (classification.group > 0) {
+                    ClassificationRow(
+                        label = "NOVA Classification",
+                        value = classification.group.toString(),
+                        description = classification.description,
+                        color = when (classification.group) {
+                            1 -> Color(0xFF4CAF50) // Green
+                            2 -> Color(0xFF8BC34A) // Light Green
+                            3 -> Color(0xFFFF9800) // Orange
+                            4 -> Color(0xFFF44336) // Red
+                            else -> Color(0xFF9E9E9E) // Gray
+                        }
+                    )
+                }
             }
             
             // Green Score (Eco-Score) - only show if not null
@@ -390,6 +430,84 @@ private fun ClassificationRow(
 }
 
 @Composable
+private fun IngredientsCard(ingredients: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Ingredients",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = parseOpenFoodFactsFormatting(ingredients),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+/**
+ * Simple parser for OpenFoodFacts formatting:
+ * - _text_ becomes italic
+ * - __text__ becomes bold
+ * - Removes other markdown-like formatting
+ */
+private fun parseOpenFoodFactsFormatting(text: String) = buildAnnotatedString {
+    val boldPattern = "__([^_]+)__".toRegex()
+    val italicPattern = "_([^_]+)_".toRegex()
+    
+    var processedText = text
+    val boldMatches = boldPattern.findAll(text).toList()
+    val italicMatches = italicPattern.findAll(text).toList()
+    
+    // Remove formatting markers
+    processedText = processedText.replace(boldPattern, "$1")
+    processedText = processedText.replace(italicPattern, "$1")
+    
+    // Build annotated string with styles
+    var currentIndex = 0
+    val allMatches = (boldMatches + italicMatches).sortedBy { it.range.first }
+    
+    for (match in allMatches) {
+        // Add text before the match
+        if (currentIndex < match.range.first) {
+            append(processedText.substring(currentIndex, match.range.first))
+        }
+        
+        // Add styled text
+        val content = match.groupValues[1]
+        val isBold = match.value.startsWith("__")
+        
+        withStyle(
+            style = SpanStyle(
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                fontStyle = if (isBold) FontStyle.Normal else FontStyle.Italic
+            )
+        ) {
+            append(content)
+        }
+        
+        currentIndex = match.range.last + 1
+    }
+    
+    // Add remaining text
+    if (currentIndex < processedText.length) {
+        append(processedText.substring(currentIndex))
+    }
+}
+
+
+@Composable
 private fun AttributionCard() {
     val uriHandler = LocalUriHandler.current
     
@@ -416,3 +534,18 @@ private fun AttributionCard() {
     }
 }
 
+// Helper functions
+private fun hasExtendedNutrition(meal: Meal): Boolean {
+    return meal.saturatedFat_g != null || 
+           meal.sugars_g != null || 
+           meal.cholesterol_mg != null || 
+           meal.vitaminC_mg != null || 
+           meal.calcium_mg != null || 
+           meal.iron_mg != null
+}
+
+private fun hasClassifications(meal: Meal): Boolean {
+    return (meal.novaClassification?.group?.let { it > 0 } == true) || 
+           meal.greenScore != null || 
+           meal.nutriscore != null
+}

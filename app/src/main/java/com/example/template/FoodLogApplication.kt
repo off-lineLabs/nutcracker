@@ -7,6 +7,7 @@ import com.example.template.data.repo.FoodLogRepository
 import com.example.template.data.repo.OfflineFoodLogRepository
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.data.service.ExerciseImageService
+import com.example.template.data.service.ImageDownloadService
 import com.example.template.data.service.OpenFoodFactsService
 import com.example.template.data.service.OpenFoodFactsApi
 import com.example.template.util.logger.AppLogger
@@ -18,6 +19,7 @@ class FoodLogApplication : Application() {
     val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
     
     val exerciseImageService: ExerciseImageService by lazy { ExerciseImageService(this) }
+    val imageDownloadService: ImageDownloadService by lazy { ImageDownloadService(this) }
     
     val foodLogRepository: FoodLogRepository by lazy {
         OfflineFoodLogRepository(
@@ -28,7 +30,8 @@ class FoodLogApplication : Application() {
             database.exerciseLogDao(),
             database.pillDao(),
             database.pillCheckInDao(),
-            exerciseImageService
+            exerciseImageService,
+            imageDownloadService
         )
     }
     
@@ -36,6 +39,9 @@ class FoodLogApplication : Application() {
     
     val openFoodFactsService: OpenFoodFactsService by lazy {
         val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .addHeader("User-Agent", "OfflineCalorieCalculator/1.0 (Android; ${android.os.Build.MODEL})")

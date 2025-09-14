@@ -1,9 +1,11 @@
 package com.example.template.ui.components.dialogs
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,29 +21,31 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import com.example.template.data.service.ExerciseImageService
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExternalExerciseDetailsDialog(
-    exercise: ExternalExercise,
-    externalExerciseService: ExternalExerciseService,
+fun UnifiedExerciseDetailsDialog(
+    exercise: Exercise,
+    externalExerciseService: ExternalExerciseService? = null,
+    exerciseImageService: ExerciseImageService? = null,
     onBack: () -> Unit,
-    onImport: () -> Unit
+    onEdit: () -> Unit,
+    onCheckIn: () -> Unit
 ) {
-    var currentImageIndex by remember { mutableStateOf(0) }
-    val pagerState = rememberPagerState { exercise.images.size }
+    val imagePaths = exercise.imagePaths
+    val pagerState = rememberPagerState { imagePaths.size }
     
-    // Auto-advance slideshow
+    // Auto-advance slideshow if there are multiple images
     LaunchedEffect(pagerState) {
-        if (exercise.images.size > 1) {
+        if (imagePaths.size > 1) {
             while (true) {
                 delay(3000) // 3 seconds per image
-                val nextPage = (pagerState.currentPage + 1) % exercise.images.size
+                val nextPage = (pagerState.currentPage + 1) % imagePaths.size
                 pagerState.animateScrollToPage(nextPage)
             }
         }
@@ -62,6 +66,9 @@ fun ExternalExerciseDetailsDialog(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit Exercise")
+                }
             }
         },
         text = {
@@ -72,14 +79,18 @@ fun ExternalExerciseDetailsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Exercise images slideshow
-                if (exercise.images.isNotEmpty()) {
+                if (imagePaths.isNotEmpty()) {
                     item {
                         ExerciseImageSlideshow(
-                            images = exercise.images,
-                            externalExerciseService = externalExerciseService,
-                            pagerState = pagerState
+                            imagePaths = imagePaths,
+                            exerciseImageService = exerciseImageService
                         )
                     }
+                }
+                
+                // Personal Data card (moved from swipable content)
+                item {
+                    PersonalDataCard(exercise = exercise)
                 }
                 
                 // Exercise details
@@ -87,11 +98,9 @@ fun ExternalExerciseDetailsDialog(
                     ExerciseDetailsCard(exercise = exercise)
                 }
                 
-                // Instructions
-                if (exercise.instructions.isNotEmpty()) {
-                    item {
-                        InstructionsCard(instructions = exercise.instructions)
-                    }
+                // Instructions card (simplified from swipable content)
+                item {
+                    InstructionsCard(exercise.instructions)
                 }
             }
         },
@@ -100,21 +109,21 @@ fun ExternalExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Cancel")
+                    Text("Close")
                 }
                 Button(
-                    onClick = onImport,
+                    onClick = onCheckIn,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add to My Exercises")
+                    Text("Check-in Exercise")
                 }
             }
         }
@@ -123,10 +132,11 @@ fun ExternalExerciseDetailsDialog(
 
 @Composable
 private fun ExerciseImageSlideshow(
-    images: List<String>,
-    externalExerciseService: ExternalExerciseService,
-    pagerState: androidx.compose.foundation.pager.PagerState
+    imagePaths: List<String>,
+    exerciseImageService: ExerciseImageService?
 ) {
+    val pagerState = rememberPagerState { imagePaths.size }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -140,25 +150,43 @@ private fun ExerciseImageSlideshow(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize()
             ) { page ->
-                AsyncImage(
-                    model = externalExerciseService.getImageUrl(images[page]),
-                    contentDescription = "Exercise image ${page + 1}",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                val imageFile = exerciseImageService?.getImageFile(imagePaths[page])
+                if (imageFile != null) {
+                    AsyncImage(
+                        model = imageFile,
+                        contentDescription = "Exercise image ${page + 1}",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Fallback to a placeholder or icon
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FitnessCenter,
+                            contentDescription = "Exercise image",
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             
             // Page indicators
-            if (images.size > 1) {
+            if (imagePaths.size > 1) {
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    repeat(images.size) { index ->
+                    repeat(imagePaths.size) { index ->
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
@@ -178,7 +206,7 @@ private fun ExerciseImageSlideshow(
 }
 
 @Composable
-private fun ExerciseDetailsCard(exercise: ExternalExercise) {
+private fun ExerciseDetailsCard(exercise: Exercise) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -200,7 +228,7 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
             DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() })
             exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }) }
             exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }) }
-            DetailRow("Level", exercise.level.replaceFirstChar { it.uppercase() })
+            exercise.level?.let { DetailRow("Level", it.replaceFirstChar { it.uppercase() }) }
             exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }) }
             
             if (exercise.primaryMuscles.isNotEmpty()) {
@@ -209,6 +237,54 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
                 DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } })
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonalDataCard(exercise: Exercise) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Personal Data",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg")
+            PersonalDataRow("Default Reps", exercise.defaultReps.toString())
+            PersonalDataRow("Default Sets", exercise.defaultSets.toString())
+            
+            exercise.kcalBurnedPerRep?.let { 
+                PersonalDataRow("Kcal per Rep", it.toString()) 
+            }
+            exercise.kcalBurnedPerMinute?.let { 
+                PersonalDataRow("Kcal per Minute", it.toString()) 
+            }
+            
+            exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Notes:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = notes,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
@@ -234,25 +310,53 @@ private fun InstructionsCard(instructions: List<String>) {
                 fontWeight = FontWeight.Bold
             )
             
-            instructions.forEachIndexed { index, instruction ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "${index + 1}.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = instruction,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
+            if (instructions.isNotEmpty()) {
+                instructions.forEachIndexed { index, instruction ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = "${index + 1}.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = instruction,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
+            } else {
+                Text(
+                    text = "No instructions available",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
+    }
+}
+
+
+@Composable
+private fun PersonalDataRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

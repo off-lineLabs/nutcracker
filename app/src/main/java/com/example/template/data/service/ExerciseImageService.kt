@@ -1,162 +1,144 @@
 package com.example.template.data.service
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Service for downloading and managing exercise images locally
- */
 class ExerciseImageService(private val context: Context) {
     
-    companion object {
-        private const val TAG = "ExerciseImageService"
-        private const val IMAGE_DIR = "exercise_images"
-        private const val MAX_IMAGE_SIZE = 1024 * 1024 // 1MB max image size
-    }
+    private val imageDir = File(context.filesDir, "exercise_images")
     
-    private val imageDir: File by lazy {
-        File(context.filesDir, IMAGE_DIR).apply {
-            if (!exists()) {
-                mkdirs()
-            }
+    init {
+        // Create the directory if it doesn't exist
+        if (!imageDir.exists()) {
+            imageDir.mkdirs()
         }
     }
     
     /**
-     * Download and save the first image from an external exercise
+     * Downloads and stores exercise images locally
+     * @param imageUrls List of image URLs to download
+     * @param exerciseId The exercise ID to use as a prefix for file names
+     * @return List of local file paths where images were saved
+     */
+    suspend fun downloadAndStoreImages(imageUrls: List<String>, exerciseId: String): List<String> {
+        return withContext(Dispatchers.IO) {
+            val localPaths = mutableListOf<String>()
+            
+            imageUrls.forEachIndexed { index, imageUrl ->
+                try {
+                    val fileName = "${exerciseId}_${index}.jpg"
+                    val localFile = File(imageDir, fileName)
+                    
+                    // Skip if file already exists
+                    if (localFile.exists()) {
+                        localPaths.add(localFile.absolutePath)
+                        return@forEachIndexed
+                    }
+                    
+                    // Download the image
+                    val url = URL(imageUrl)
+                    val inputStream: InputStream = url.openStream()
+                    val outputStream = FileOutputStream(localFile)
+                    
+                    inputStream.use { input ->
+                        outputStream.use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    
+                    localPaths.add(localFile.absolutePath)
+                    Log.d("ExerciseImageService", "Downloaded image: $fileName")
+                    
+                } catch (e: Exception) {
+                    Log.e("ExerciseImageService", "Failed to download image: $imageUrl", e)
+                    // Continue with other images even if one fails
+                }
+            }
+            
+            localPaths
+        }
+    }
+    
+    /**
+     * Downloads and saves a single image for an exercise (legacy method for backward compatibility)
      * @param imageUrl The URL of the image to download
-     * @param exerciseId The ID of the exercise (used for filename)
+     * @param exerciseId The exercise ID to use as a prefix for file name
      * @return The local file path if successful, null otherwise
      */
-    suspend fun downloadAndSaveImage(imageUrl: String, exerciseId: Long): String? = withContext(Dispatchers.IO) {
-        try {
-            val fileName = "exercise_${exerciseId}.jpg"
-            val localFile = File(imageDir, fileName)
-            
-            Log.d(TAG, "Attempting to download image from URL: $imageUrl")
-            Log.d(TAG, "Will save as: $fileName in directory: ${imageDir.absolutePath}")
-            
-            // If file already exists, return the path
-            if (localFile.exists()) {
-                Log.d(TAG, "File already exists, returning existing path: ${localFile.absolutePath}")
-                return@withContext localFile.absolutePath
-            }
-            
-            val url = URL(imageUrl)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.connectTimeout = 10000
-            connection.readTimeout = 15000
-            connection.doInput = true
-            connection.connect()
-            
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                Log.w(TAG, "Failed to download image: HTTP ${connection.responseCode}")
-                return@withContext null
-            }
-            
-            val inputStream: InputStream = connection.inputStream
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-            connection.disconnect()
-            
-            if (bitmap == null) {
-                Log.w(TAG, "Failed to decode image bitmap")
-                return@withContext null
-            }
-            
-            // Resize image if too large to save space
-            val resizedBitmap = resizeBitmapIfNeeded(bitmap)
-            
-            // Save to local file
-            val outputStream = FileOutputStream(localFile)
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
-            outputStream.flush()
-            outputStream.close()
-            
-            Log.d(TAG, "Successfully saved image: ${localFile.absolutePath}")
-            Log.d(TAG, "File exists after save: ${localFile.exists()}, size: ${localFile.length()} bytes")
-            return@withContext localFile.absolutePath
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error downloading image: ${e.message}", e)
-            return@withContext null
-        }
+    suspend fun downloadAndSaveImage(imageUrl: String, exerciseId: Long): String? {
+        val localPaths = downloadAndStoreImages(listOf(imageUrl), exerciseId.toString())
+        return localPaths.firstOrNull()
     }
     
     /**
-     * Resize bitmap if it's too large to save storage space
+     * Deletes a single image file
+     * @param imagePath The local file path to delete
      */
-    private fun resizeBitmapIfNeeded(bitmap: Bitmap): Bitmap {
-        val maxDimension = 400 // Max width/height in pixels
-        
-        if (bitmap.width <= maxDimension && bitmap.height <= maxDimension) {
-            return bitmap
-        }
-        
-        val scale = minOf(
-            maxDimension.toFloat() / bitmap.width,
-            maxDimension.toFloat() / bitmap.height
-        )
-        
-        val newWidth = (bitmap.width * scale).toInt()
-        val newHeight = (bitmap.height * scale).toInt()
-        
-        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
-    }
-    
-    /**
-     * Delete the image file for an exercise
-     * @param imagePath The local path to the image file
-     */
-    suspend fun deleteImage(imagePath: String?) = withContext(Dispatchers.IO) {
-        if (imagePath.isNullOrBlank()) return@withContext
-        
-        try {
-            val file = File(imagePath)
-            if (file.exists()) {
-                val deleted = file.delete()
-                Log.d(TAG, "Image deletion result: $deleted for path: $imagePath")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error deleting image: ${e.message}", e)
-        }
-    }
-    
-    /**
-     * Clean up all exercise images (useful for testing or app reset)
-     */
-    suspend fun clearAllImages() = withContext(Dispatchers.IO) {
-        try {
-            if (imageDir.exists()) {
-                imageDir.listFiles()?.forEach { file ->
-                    if (file.isFile && file.name.startsWith("exercise_")) {
+    suspend fun deleteImage(imagePath: String?) {
+        if (imagePath != null) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val file = File(imagePath)
+                    if (file.exists()) {
                         file.delete()
+                        Log.d("ExerciseImageService", "Deleted image: $imagePath")
+                    }
+                } catch (e: Exception) {
+                    Log.e("ExerciseImageService", "Error deleting image: $imagePath", e)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets the local file path for an image
+     * @param imagePath The local file path
+     * @return The file if it exists, null otherwise
+     */
+    fun getImageFile(imagePath: String): File? {
+        val file = File(imagePath)
+        return if (file.exists()) file else null
+    }
+    
+    /**
+     * Deletes all images for a specific exercise
+     * @param exerciseId The exercise ID
+     */
+    suspend fun deleteExerciseImages(exerciseId: String) {
+        withContext(Dispatchers.IO) {
+            val files = imageDir.listFiles { file ->
+                file.name.startsWith("${exerciseId}_")
+            }
+            files?.forEach { file ->
+                if (file.delete()) {
+                    Log.d("ExerciseImageService", "Deleted image: ${file.name}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Cleans up orphaned image files (images that don't correspond to any existing exercise)
+     * @param validImagePaths List of valid image paths that should be kept
+     */
+    suspend fun cleanupOrphanedImages(validImagePaths: List<String>) {
+        withContext(Dispatchers.IO) {
+            val validFiles = validImagePaths.map { File(it) }.toSet()
+            val allImageFiles = imageDir.listFiles() ?: return@withContext
+            
+            allImageFiles.forEach { file ->
+                if (!validFiles.contains(file)) {
+                    if (file.delete()) {
+                        Log.d("ExerciseImageService", "Cleaned up orphaned image: ${file.name}")
                     }
                 }
-                Log.d(TAG, "Cleared all exercise images")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error clearing images: ${e.message}", e)
         }
-    }
-    
-    /**
-     * Get the local file path for an exercise image
-     * @param exerciseId The exercise ID
-     * @return The local file path if it exists, null otherwise
-     */
-    fun getImagePath(exerciseId: Long): String? {
-        val fileName = "exercise_${exerciseId}.jpg"
-        val file = File(imageDir, fileName)
-        return if (file.exists()) file.absolutePath else null
     }
 }

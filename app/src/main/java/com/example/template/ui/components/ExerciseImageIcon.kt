@@ -49,21 +49,22 @@ fun ExerciseImageIcon(
     var imageLoadError by remember { mutableStateOf(false) }
     
     // Load image if path exists
-    LaunchedEffect(exercise.imagePath) {
-        AppLogger.i("ExerciseImageIcon", "LaunchedEffect triggered for exercise: ${exercise.name} (ID: ${exercise.id}), imagePath: ${exercise.imagePath}")
+    val firstImagePath = exercise.imagePaths.firstOrNull()
+    LaunchedEffect(firstImagePath) {
+        AppLogger.i("ExerciseImageIcon", "LaunchedEffect triggered for exercise: ${exercise.name} (ID: ${exercise.id}), imagePath: $firstImagePath")
         
-        if (!exercise.imagePath.isNullOrBlank() && !imageLoadError) {
-            AppLogger.i("ExerciseImageIcon", "Attempting to load image from path: ${exercise.imagePath}")
-            imageBitmap = loadImageFromPath(exercise.imagePath)
+        if (!firstImagePath.isNullOrBlank() && !imageLoadError) {
+            AppLogger.i("ExerciseImageIcon", "Attempting to load image from path: $firstImagePath")
+            imageBitmap = loadImageFromPath(firstImagePath)
             
             if (imageBitmap == null) {
-                AppLogger.w("ExerciseImageIcon", "Failed to load image from path: ${exercise.imagePath}")
+                AppLogger.w("ExerciseImageIcon", "Failed to load image from path: $firstImagePath")
                 imageLoadError = true
             } else {
                 AppLogger.i("ExerciseImageIcon", "Successfully loaded image for exercise: ${exercise.name}")
             }
         } else {
-            AppLogger.i("ExerciseImageIcon", "Skipping image load - imagePath: ${exercise.imagePath}, imageLoadError: $imageLoadError")
+            AppLogger.i("ExerciseImageIcon", "Skipping image load - imagePath: $firstImagePath, imageLoadError: $imageLoadError")
         }
     }
     

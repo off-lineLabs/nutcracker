@@ -18,6 +18,7 @@ import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
 import com.example.template.data.service.ExerciseImageService
+import com.example.template.data.service.ImageDownloadService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -96,7 +97,8 @@ class OfflineFoodLogRepository(
     private val exerciseLogDao: ExerciseLogDao,
     private val pillDao: PillDao,
     private val pillCheckInDao: PillCheckInDao,
-    private val exerciseImageService: ExerciseImageService? = null
+    private val exerciseImageService: ExerciseImageService? = null,
+    private val imageDownloadService: ImageDownloadService? = null
 ) : FoodLogRepository {
 
     // Meal operations
@@ -104,7 +106,13 @@ class OfflineFoodLogRepository(
     override fun getMealById(mealId: Long): Flow<Meal?> = mealDao.getMealById(mealId)
     override suspend fun insertMeal(meal: Meal): Long = mealDao.insertMeal(meal)
     override suspend fun updateMeal(meal: Meal) = mealDao.updateMeal(meal)
-    override suspend fun deleteMeal(meal: Meal) = mealDao.deleteMeal(meal)
+    override suspend fun deleteMeal(meal: Meal) {
+        // Delete the associated image if it exists
+        meal.localImagePath?.let { imagePath ->
+            imageDownloadService?.deleteLocalImage(imagePath)
+        }
+        mealDao.hideMeal(meal.id)
+    }
     override suspend fun deleteAllMeals() = mealDao.deleteAllMeals()
 
     // UserGoal operations
@@ -125,9 +133,11 @@ class OfflineFoodLogRepository(
     override suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.upsertExercise(exercise)
     override suspend fun updateExercise(exercise: Exercise) = exerciseDao.updateExercise(exercise)
     override suspend fun deleteExercise(exercise: Exercise) {
-        // Delete the associated image if it exists
-        exerciseImageService?.deleteImage(exercise.imagePath)
-        exerciseDao.deleteExercise(exercise)
+        // Delete the associated images if they exist
+        exercise.imagePaths.forEach { imagePath ->
+            exerciseImageService?.deleteImage(imagePath)
+        }
+        exerciseDao.hideExercise(exercise.id)
     }
     override suspend fun deleteAllExercises() = exerciseDao.deleteAllExercises()
 

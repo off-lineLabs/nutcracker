@@ -19,11 +19,11 @@ import coil.compose.AsyncImage
 import com.example.template.data.model.Meal
 
 @Composable
-fun MealItem(meal: Meal, onCheckInClick: (Meal) -> Unit) {
+fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckInClick(meal) }
+            .clickable { onMealClick(meal) }
             .padding(vertical = 4.dp, horizontal = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant

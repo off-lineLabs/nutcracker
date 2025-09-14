@@ -388,24 +388,30 @@ private fun MealCheckInContent(
                         style = MaterialTheme.typography.labelLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Calculate dynamic range based on current serving size
+                    val minRange = 0.1f
+                    val maxRange = maxOf(3.0f, (servingSize * 1.2f).toFloat()) // Expand range by 20% above current value
+                    val currentValue = servingSize.toFloat().coerceIn(minRange, maxRange)
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "0.5x",
+                            text = "${minRange}x",
                             style = MaterialTheme.typography.bodySmall
                         )
                         Slider(
-                            value = servingSize.toFloat(),
+                            value = currentValue,
                             onValueChange = { servingSize = it.toDouble() },
-                            valueRange = 0.5f..3.0f,
-                            steps = 24, // 0.1 increments
+                            valueRange = minRange..maxRange,
+                            steps = ((maxRange - minRange) / 0.1f).toInt() - 1, // Dynamic steps based on range
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "3.0x",
+                            text = "${String.format("%.1f", maxRange)}x",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -418,6 +424,76 @@ private fun MealCheckInContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
+                }
+
+                // Manual serving size input
+                var manualInput by remember { mutableStateOf("") }
+                var isUserTyping by remember { mutableStateOf(false) }
+                
+                // Update manual input when slider changes (only if user is not typing)
+                LaunchedEffect(servingSize) {
+                    if (!isUserTyping) {
+                        val currentAmount = servingSize * meal.servingSize_value
+                        // Format to 1 decimal place to avoid float precision issues
+                        manualInput = String.format("%.1f", currentAmount)
+                    }
+                }
+                
+                OutlinedTextField(
+                    value = manualInput,
+                    onValueChange = { newValue ->
+                        isUserTyping = true
+                        manualInput = newValue
+                        // Convert manual input to serving size multiplier
+                        val inputValue = newValue.toDoubleOrNull()
+                        if (inputValue != null && inputValue > 0) {
+                            // Calculate multiplier based on meal's base serving size
+                            val baseServing = meal.servingSize_value
+                            val multiplier = inputValue / baseServing
+                            // No artificial cap - let users input any reasonable value
+                            servingSize = maxOf(0.1, multiplier) // Only prevent negative values
+                        }
+                    },
+                    label = { 
+                        Text(
+                            stringResource(
+                                R.string.serving_size_placeholder,
+                                meal.servingSize_unit.abbreviation
+                            )
+                        )
+                    },
+                    placeholder = { 
+                        Text(
+                            stringResource(
+                                R.string.serving_size_placeholder,
+                                meal.servingSize_unit.abbreviation
+                            )
+                        )
+                    },
+                    suffix = {
+                        Text(
+                            text = meal.servingSize_unit.abbreviation,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                )
+                
+                // Reset typing flag after a delay to allow formatting
+                LaunchedEffect(manualInput) {
+                    if (isUserTyping) {
+                        kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
+                        isUserTyping = false
+                        val inputValue = manualInput.toDoubleOrNull()
+                        if (inputValue != null && inputValue > 0) {
+                            manualInput = String.format("%.1f", inputValue)
+                        }
+                    }
                 }
 
                 // Total calories display (matching exercise style)
