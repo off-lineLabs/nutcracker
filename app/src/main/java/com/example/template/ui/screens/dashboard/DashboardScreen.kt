@@ -103,8 +103,8 @@ fun NutrientProgressDisplay(
     valueColor: Color,
     goalColor: Color
 ) {
-    val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF5D916D)
+    val exceededColor = ExceededColor
+    val proteinFiberColor = ProteinFiberColor
     val fiberLabel = stringResource(R.string.fiber_label)
     val isFiber = nutrientName == fiberLabel
     val finalValueColor = when {
@@ -167,7 +167,7 @@ private fun CaloriesRing(
     // Remaining calories = goal - food calories + booster bonuses
     val remaining = goalCalories - foodCalories + totalBonus
     val progress = if (goalCalories > 0) (foodCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
-    val exceededColor = Color(0xFFB65755)
+    val exceededColor = ExceededColor
     val finalValueColor = if (remaining < 0) exceededColor else valueColor
 
     Box(contentAlignment = Alignment.Center) {
@@ -241,8 +241,8 @@ private fun NutrientBarRow(
     trackColor: Color,
     unit: String
 ) {
-    val exceededColor = Color(0xFFB65755)
-    val proteinFiberColor = Color(0xFF5D916D)
+    val exceededColor = ExceededColor
+    val proteinFiberColor = ProteinFiberColor
     val proteinLabel = stringResource(R.string.protein_label)
     val fiberLabel = stringResource(R.string.fiber_label)
     val isProteinOrFiber = title == proteinLabel || title == fiberLabel

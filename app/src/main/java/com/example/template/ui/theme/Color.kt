@@ -87,6 +87,10 @@ val PillNotTaken = Color(0xFF9E9E9E)      // Gray for not taken pills
 val ExerciseEnabled = Color(0xFF2196F3)   // Blue for enabled exercises
 val ExerciseDisabled = Color(0xFF9E9E9E)  // Gray for disabled exercises
 
+// Dashboard-specific colors
+val ExceededColor = Color(0xFFB65755)     // Red for exceeded nutrient/goal values
+val ProteinFiberColor = Color(0xFF5D916D) // Green for protein/fiber when exceeded
+
 // ===== FAB AND ACTION COLORS =====
 // Colors for Floating Action Buttons and action items
 val FabExercise = Color(0xFFA62934)       // Your brand red for exercise FAB
