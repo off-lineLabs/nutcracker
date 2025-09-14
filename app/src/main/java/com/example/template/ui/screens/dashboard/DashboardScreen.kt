@@ -1176,6 +1176,10 @@ fun DashboardScreen(
                                 message = exerciseAddedSuccess
                             )
                         }
+                        
+                        // Clear the external exercise and selected exercise after successful processing
+                        selectedExternalExercise = null
+                        selectedExerciseForEdit = null
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to ${if (selectedExerciseForEdit != null) "update" else "add"} exercise", e, mapOf(
                             "exerciseName" to newExercise.name
@@ -1183,8 +1187,7 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(
                             message = if (selectedExerciseForEdit != null) failedToUpdateExercise else exerciseAddError
                         )
-                    } finally {
-                        // Clear the external exercise and selected exercise after processing
+                        // Clear state after error handling is complete
                         selectedExternalExercise = null
                         selectedExerciseForEdit = null
                     }
