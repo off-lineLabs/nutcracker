@@ -6,7 +6,12 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
 @Entity(tableName = "meals")
-@TypeConverters(ServingSizeUnitConverter::class, NovaClassificationConverter::class, GreenScoreConverter::class, NutriscoreConverter::class)
+@TypeConverters(
+    ServingSizeUnitConverter::class,
+    NovaClassificationConverter::class,
+    GreenScoreConverter::class,
+    NutriscoreConverter::class
+)
 data class Meal(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0, // Auto-generated ID, default to 0 for new entries
