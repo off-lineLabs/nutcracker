@@ -263,6 +263,21 @@ fun getContrastingIconColor(backgroundColor: Color): Color {
 }
 
 /**
+ * Get a contrasting color for UI elements like sliders - provides good contrast
+ * but with a slight blue tint for better visual appeal
+ */
+@Composable
+fun getContrastingSliderColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        // For light backgrounds, use a dark blue-gray
+        Color(0xFF1976D2) // Material Blue 700
+    } else {
+        // For dark backgrounds, use a light blue
+        Color(0xFF64B5F6) // Material Blue 300
+    }
+}
+
+/**
  * Get a color that contrasts well with the current background
  */
 @Composable
