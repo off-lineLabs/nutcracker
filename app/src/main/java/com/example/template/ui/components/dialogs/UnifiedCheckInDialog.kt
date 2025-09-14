@@ -456,18 +456,12 @@ private fun MealCheckInContent(
                     },
                     label = { 
                         Text(
-                            stringResource(
-                                R.string.serving_size_placeholder,
-                                meal.servingSize_unit.abbreviation
-                            )
+                            stringResource(R.string.serving_size_placeholder)
                         )
                     },
                     placeholder = { 
                         Text(
-                            stringResource(
-                                R.string.serving_size_placeholder,
-                                meal.servingSize_unit.abbreviation
-                            )
+                            stringResource(R.string.serving_size_placeholder)
                         )
                     },
                     suffix = {
