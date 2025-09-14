@@ -77,7 +77,7 @@ fun SelectMealForCheckInDialog(
                 // Show existing meals if any
                 if (meals.isNotEmpty()) {
                     Text(
-                        text = "Your Meals",
+                        text = stringResource(R.string.your_meals),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -109,7 +109,7 @@ fun SelectMealForCheckInDialog(
                 
                 // Action buttons
                 Text(
-                    text = "Add New Meal",
+                    text = stringResource(R.string.add_new_meal),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)

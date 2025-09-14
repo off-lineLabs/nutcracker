@@ -1456,7 +1456,7 @@ fun DashboardScreen(
                 } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Unable to process food information"
+                            message = stringResource(R.string.unable_to_process_food_info)
                         )
                     }
                 }
@@ -1490,7 +1490,7 @@ fun DashboardScreen(
                                 } else {
                                     AppLogger.d("DashboardScreen", "FoodInfo is null, showing error message")
                                     snackbarHostState.showSnackbar(
-                                        message = "Food information not found for this barcode"
+                                        message = stringResource(R.string.food_info_not_found)
                                     )
                                 }
                             },
@@ -1508,7 +1508,7 @@ fun DashboardScreen(
                             "barcode" to barcode
                         ))
                         snackbarHostState.showSnackbar(
-                            message = "An error occurred while fetching food information"
+                            message = stringResource(R.string.error_fetching_food_info)
                         )
                     }
                 }
@@ -1627,7 +1627,7 @@ fun DashboardScreen(
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to get exercise data for check-in", e)
                         snackbarHostState.showSnackbar(
-                            message = "Failed to load exercise data"
+                            message = stringResource(R.string.failed_to_load_exercise_data)
                         )
                     }
                 }

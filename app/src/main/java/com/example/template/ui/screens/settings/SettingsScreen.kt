@@ -203,7 +203,7 @@ fun SettingsScreen(
                     // Database Section
                     item {
                         SettingsSection(
-                            title = "Database",
+                            title = stringResource(R.string.database),
                             icon = Icons.Filled.Settings
                         ) {
                             DatabaseSettings(exportHandler, database)
@@ -302,7 +302,7 @@ fun SettingsScreen(
                     }
                 ) {
                     Text(
-                        text = "Restart App",
+                        text = stringResource(R.string.restart_app),
                         color = Color(0xFF60A5FA)
                     )
                 }
@@ -329,7 +329,7 @@ fun SettingsScreen(
             onDismissRequest = exportHandler.onDismissMessage,
             title = {
                 Text(
-                    text = "Database Export",
+                    text = stringResource(R.string.database_export),
                     color = appTextPrimaryColor(),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -349,7 +349,7 @@ fun SettingsScreen(
                         contentColor = Color(0xFF2196F3) // Use a blue color instead of appAccentColor
                     )
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             containerColor = appSurfaceColor(),
@@ -553,7 +553,7 @@ private fun ImportProgressDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Importing Database",
+                    text = stringResource(R.string.importing_database),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -624,7 +624,7 @@ private fun ImportResultDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Import ${if (result.isSuccess) "Completed" else "Failed"}",
+                        text = stringResource(if (result.isSuccess) R.string.import_completed else R.string.import_failed),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (result.isSuccess) 
@@ -651,7 +651,7 @@ private fun ImportResultDialog(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Import Summary",
+                            text = stringResource(R.string.import_summary),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -774,7 +774,7 @@ private fun ImportResultDialog(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         }

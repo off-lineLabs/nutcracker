@@ -145,7 +145,7 @@ fun UnifiedMealDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
                 Button(
                     onClick = onCheckIn,
@@ -238,7 +238,7 @@ private fun ExtendedNutritionCard(meal: Meal) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Additional Nutrition",
+                text = stringResource(R.string.additional_nutrition),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -444,7 +444,7 @@ private fun IngredientsCard(ingredients: String) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Ingredients",
+                text = stringResource(R.string.ingredients),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -519,7 +519,7 @@ private fun AttributionCard() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Provided by ",
+            text = stringResource(R.string.provided_by),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

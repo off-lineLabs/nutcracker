@@ -120,7 +120,7 @@ fun FoodSearchDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Search Food",
+                        text = stringResource(R.string.search_food),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = appTextPrimaryColor()

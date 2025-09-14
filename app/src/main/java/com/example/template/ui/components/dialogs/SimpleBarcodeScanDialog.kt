@@ -99,7 +99,7 @@ fun SimpleBarcodeScanDialog(
             ) {
                 if (!hasCameraPermission) {
                     Text(
-                        text = "Camera permission is required to scan barcodes",
+                        text = stringResource(R.string.camera_permission_required),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -169,7 +169,7 @@ fun SimpleBarcodeScanDialog(
                                     scanAttempts = 0
                                 }
                             ) {
-                                Text("Scan Again")
+                                Text(stringResource(R.string.scan_again))
                             }
                         }
                     }
@@ -184,7 +184,7 @@ fun SimpleBarcodeScanDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Use This Barcode")
+                    Text(stringResource(R.string.use_this_barcode))
                 }
             }
         },

@@ -114,7 +114,7 @@ fun FoodInfoDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
                 Button(
                     onClick = onAddToMeals,
@@ -128,7 +128,7 @@ fun FoodInfoDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add to My Meals")
+                    Text(stringResource(R.string.add_to_my_meals))
                 }
             }
         }
@@ -401,7 +401,7 @@ private fun AttributionCard() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Provided by ",
+            text = stringResource(R.string.provided_by),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

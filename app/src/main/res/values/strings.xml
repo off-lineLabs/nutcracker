@@ -244,8 +244,71 @@
     <string name="english">English</string>
     <string name="portuguese">Português (Brasil)</string>
     <string name="spanish">Español</string>
+    <string name="database">Database</string>
     <string name="export_database">Export Database</string>
     <string name="import_database">Import Database</string>
+    <string name="restart_app">Restart App</string>
+    <string name="database_export">Database Export</string>
+    <string name="importing_database">Importing Database</string>
+    <string name="import_completed">Import Completed</string>
+    <string name="import_failed">Import Failed</string>
+    <string name="import_summary">Import Summary</string>
+    
+    <!-- Dialog strings -->
+    <string name="camera_permission_required">Camera permission is required to scan barcodes</string>
+    <string name="scan_again">Scan Again</string>
+    <string name="use_this_barcode">Use This Barcode</string>
+    <string name="add_to_my_meals">Add to My Meals</string>
+    <string name="serving_size">Serving Size</string>
+    <string name="amount">Amount</string>
+    <string name="select_unit">Select Unit</string>
+    <string name="nutrition_preview">Nutrition Preview</string>
+    <string name="common_units">Common Units</string>
+    <string name="weight_units">Weight Units</string>
+    <string name="volume_units">Volume Units</string>
+    <string name="additional_nutrition">Additional Nutrition</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="provided_by">Provided by</string>
+    <string name="exercise_details">Exercise Details</string>
+    <string name="personal_data">Personal Data</string>
+    <string name="instructions">Instructions</string>
+    <string name="no_instructions_available">No instructions available</string>
+    <string name="your_meals">Your Meals</string>
+    <string name="add_new_meal">Add New Meal</string>
+    <string name="search_exercise_database">Search Exercise Database</string>
+    <string name="no_exercises_found">No exercises found</string>
+    <string name="yuhonas">Yuhonas</string>
+    <string name="edit_meal">Edit Meal</string>
+    <string name="search_food">Search Food</string>
+    <string name="equipment">Equipment</string>
+    <string name="primary_muscle">Primary Muscle</string>
+    <string name="category">Category</string>
+    <string name="add_to_my_exercises">Add to My Exercises</string>
+    <string name="update_meal">Update Meal</string>
+    
+    <!-- Error messages -->
+    <string name="unable_to_process_food_info">Unable to process food information</string>
+    <string name="food_info_not_found">Food information not found for this barcode</string>
+    <string name="error_fetching_food_info">An error occurred while fetching food information</string>
+    <string name="failed_to_load_exercise_data">Failed to load exercise data</string>
+    
+    <!-- Unit names -->
+    <string name="grams">Grams</string>
+    <string name="kilograms">Kilograms</string>
+    <string name="pounds">Pounds</string>
+    <string name="ounces">Ounces</string>
+    <string name="milliliters">Milliliters</string>
+    <string name="liters">Liters</string>
+    <string name="cups">Cups</string>
+    <string name="fluid_ounces">Fluid Ounces</string>
+    <string name="tablespoons">Tablespoons</string>
+    <string name="teaspoons">Teaspoons</string>
+    <string name="pieces">Pieces</string>
+    <string name="slices">Slices</string>
+    <string name="units">Units</string>
+    <string name="servings">Servings</string>
+    <string name="portions">Portions</string>
+    
     <string name="app_version">App Version</string>
     <string name="version_info">Version %1$s (%2$d)</string>
     <string name="legal_information">Legal Information</string>

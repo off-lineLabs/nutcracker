@@ -109,7 +109,7 @@ fun UnifiedExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
                 Button(
                     onClick = onCheckIn,
@@ -220,7 +220,7 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Exercise Details",
+                text = stringResource(R.string.exercise_details),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -257,7 +257,7 @@ private fun PersonalDataCard(exercise: Exercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Personal Data",
+                text = stringResource(R.string.personal_data),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -305,7 +305,7 @@ private fun InstructionsCard(instructions: List<String>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Instructions",
+                text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -331,7 +331,7 @@ private fun InstructionsCard(instructions: List<String>) {
                 }
             } else {
                 Text(
-                    text = "No instructions available",
+                    text = stringResource(R.string.no_instructions_available),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

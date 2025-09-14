@@ -234,4 +234,68 @@
     <string name="terms_of_use_dialog_content">Nutcracker – Términos de Uso\n\nNutcracker es una aplicación gratuita y de código abierto lanzada por Offline Labs bajo la Licencia Pública General GNU v3 (GPLv3). Al descargar, instalar o usar esta aplicación, aceptas los siguientes términos:\n\n\nLICENCIA Y LIBERTAD\n• Nutcracker está licenciado bajo GNU GPL v3.\n• Eres libre de usar, estudiar, compartir y modificar la aplicación según la licencia.\n• Cualquier versión distribuida de Nutcracker debe permanecer gratuita y sin publicidad, de acuerdo con esta licencia.\n\n\nSIN GARANTÍAS\n• Nutcracker es un proyecto beta. Puede dejar de funcionar, perder datos o contener errores en cualquier momento.\n• No hay garantía de que la aplicación sea mantenida, actualizada o soportada en el futuro.\n• No debes confiar en Nutcracker para nada crítico. Úsala completamente bajo tu propio riesgo.\n\n\nDESCARGO DE RESPONSABILIDAD\n• Offline Labs y los desarrolladores no se hacen responsables de ningún problema, pérdida, daño o costo causado por el uso de esta aplicación.\n• Esto incluye (pero no se limita a) pérdida de datos, falla del dispositivo, corrupción de archivos o cualquier daño indirecto o directo.\n• Al usar Nutcracker, aceptas la responsabilidad completa por cualquier consecuencia.\n\n\nSOPORTE Y PROBLEMAS\n• Este es un proyecto impulsado por la comunidad. No hay soporte oficial.\n• Para errores, solicitudes o problemas técnicos, por favor abre un issue en el repositorio de GitHub.\n• Para cualquier otra cosa, puedes contactarnos en offlinelabs@duck.com.\n\n\nGENERAL\n• Al usar Nutcracker, aceptas que estos términos se aplican independientemente de dónde o cómo accedas a la aplicación.\n• Estos términos pueden cambiar en cualquier momento sin previo aviso.</string>
     <string name="close">Cerrar</string>
     <string name="settings_icon_description">Configuración</string>
+    
+    <!-- Missing dialog strings -->
+    <string name="camera_permission_required">Se requiere permiso de cámara para escanear códigos de barras</string>
+    <string name="scan_again">Escanear de Nuevo</string>
+    <string name="use_this_barcode">Usar Este Código de Barras</string>
+    <string name="add_to_my_meals">Agregar a Mis Comidas</string>
+    <string name="serving_size">Tamaño de Porción</string>
+    <string name="amount">Cantidad</string>
+    <string name="select_unit">Seleccionar Unidad</string>
+    <string name="nutrition_preview">Vista Previa de Nutrición</string>
+    <string name="common_units">Unidades Comunes</string>
+    <string name="weight_units">Unidades de Peso</string>
+    <string name="volume_units">Unidades de Volumen</string>
+    <string name="additional_nutrition">Nutrición Adicional</string>
+    <string name="ingredients">Ingredientes</string>
+    <string name="provided_by">Proporcionado por</string>
+    <string name="exercise_details">Detalles del Ejercicio</string>
+    <string name="personal_data">Datos Personales</string>
+    <string name="instructions">Instrucciones</string>
+    <string name="no_instructions_available">No hay instrucciones disponibles</string>
+    <string name="your_meals">Tus Comidas</string>
+    <string name="add_new_meal">Agregar Nueva Comida</string>
+    <string name="search_exercise_database">Buscar en Base de Datos de Ejercicios</string>
+    <string name="no_exercises_found">No se encontraron ejercicios</string>
+    <string name="yuhonas">Yuhonas</string>
+    <string name="edit_meal">Editar Comida</string>
+    <string name="search_food">Buscar Comida</string>
+    <string name="equipment">Equipo</string>
+    <string name="primary_muscle">Músculo Principal</string>
+    <string name="category">Categoría</string>
+    <string name="add_to_my_exercises">Agregar a Mis Ejercicios</string>
+    <string name="update_meal">Actualizar Comida</string>
+    
+    <!-- Missing error messages -->
+    <string name="unable_to_process_food_info">No se puede procesar la información de comida</string>
+    <string name="food_info_not_found">Información de comida no encontrada para este código de barras</string>
+    <string name="error_fetching_food_info">Ocurrió un error al obtener la información de comida</string>
+    <string name="failed_to_load_exercise_data">Error al cargar datos del ejercicio</string>
+    
+    <!-- Missing settings strings -->
+    <string name="database">Base de Datos</string>
+    <string name="restart_app">Reiniciar App</string>
+    <string name="database_export">Exportar Base de Datos</string>
+    <string name="importing_database">Importando Base de Datos</string>
+    <string name="import_completed">Importación Completada</string>
+    <string name="import_failed">Importación Fallida</string>
+    <string name="import_summary">Resumen de Importación</string>
+    
+    <!-- Missing unit names -->
+    <string name="grams">Gramos</string>
+    <string name="kilograms">Kilogramos</string>
+    <string name="pounds">Libras</string>
+    <string name="ounces">Onzas</string>
+    <string name="milliliters">Mililitros</string>
+    <string name="liters">Litros</string>
+    <string name="cups">Tazas</string>
+    <string name="fluid_ounces">Onzas Fluidas</string>
+    <string name="tablespoons">Cucharadas</string>
+    <string name="teaspoons">Cucharaditas</string>
+    <string name="pieces">Piezas</string>
+    <string name="slices">Rebanadas</string>
+    <string name="units">Unidades</string>
+    <string name="servings">Porciones</string>
+    <string name="portions">Porciones</string>
 </resources>

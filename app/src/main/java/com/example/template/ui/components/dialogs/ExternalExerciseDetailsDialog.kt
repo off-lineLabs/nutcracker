@@ -100,7 +100,7 @@ fun ExternalExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
                 Button(
                     onClick = onImport,
@@ -114,7 +114,7 @@ fun ExternalExerciseDetailsDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add to My Exercises")
+                    Text(stringResource(R.string.add_to_my_exercises))
                 }
             }
         }
@@ -192,7 +192,7 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Exercise Details",
+                text = stringResource(R.string.exercise_details),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -229,7 +229,7 @@ private fun InstructionsCard(instructions: List<String>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Instructions",
+                text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )

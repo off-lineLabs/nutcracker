@@ -99,7 +99,7 @@ fun GoogleCodeScannerDialog(
             ) {
                 if (!hasCameraPermission) {
                     Text(
-                        text = "Camera permission is required to scan barcodes",
+                        text = stringResource(R.string.camera_permission_required),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )

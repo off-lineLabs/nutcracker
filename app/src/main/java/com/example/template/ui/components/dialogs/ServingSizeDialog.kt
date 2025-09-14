@@ -39,7 +39,7 @@ fun ServingSizeDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Add to My Meals",
+                text = stringResource(R.string.add_to_my_meals),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -65,7 +65,7 @@ fun ServingSizeDialog(
                 
                 // Serving size input
                 Text(
-                    text = "Serving Size",
+                    text = stringResource(R.string.serving_size),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -78,7 +78,7 @@ fun ServingSizeDialog(
                     OutlinedTextField(
                         value = servingSizeValue,
                         onValueChange = { servingSizeValue = it },
-                        label = { Text("Amount") },
+                        label = { Text(stringResource(R.string.amount)) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
@@ -89,7 +89,7 @@ fun ServingSizeDialog(
                         onClick = { showUnitSelector = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(selectedUnit?.abbreviation ?: "Select Unit")
+                        Text(selectedUnit?.abbreviation ?: stringResource(R.string.select_unit))
                     }
                 }
                 
@@ -105,7 +105,7 @@ fun ServingSizeDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Nutrition Preview",
+                            text = stringResource(R.string.nutrition_preview),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium
                         )
@@ -143,12 +143,12 @@ fun ServingSizeDialog(
                 },
                 enabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
             ) {
-                Text("Add to My Meals")
+                Text(stringResource(R.string.add_to_my_meals))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -172,7 +172,7 @@ private fun UnitSelectorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Unit") },
+        title = { Text(stringResource(R.string.select_unit)) },
         text = {
             LazyColumn(
                 modifier = Modifier.heightIn(max = 400.dp)
@@ -180,7 +180,7 @@ private fun UnitSelectorDialog(
                 // Common units
                 item {
                     Text(
-                        text = "Common Units",
+                        text = stringResource(R.string.common_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -196,7 +196,7 @@ private fun UnitSelectorDialog(
                 // Weight units
                 item {
                     Text(
-                        text = "Weight Units",
+                        text = stringResource(R.string.weight_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -212,7 +212,7 @@ private fun UnitSelectorDialog(
                 // Volume units
                 item {
                     Text(
-                        text = "Volume Units",
+                        text = stringResource(R.string.volume_units),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -228,7 +228,7 @@ private fun UnitSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -271,22 +271,23 @@ private fun UnitItem(
     }
 }
 
+@Composable
 private fun getUnitDescription(unit: ServingSizeUnit): String {
     return when (unit) {
-        ServingSizeUnit.GRAMS -> "Grams"
-        ServingSizeUnit.KILOGRAMS -> "Kilograms"
-        ServingSizeUnit.POUNDS -> "Pounds"
-        ServingSizeUnit.OUNCES -> "Ounces"
-        ServingSizeUnit.MILLILITERS -> "Milliliters"
-        ServingSizeUnit.LITERS -> "Liters"
-        ServingSizeUnit.CUPS -> "Cups"
-        ServingSizeUnit.FLUID_OUNCES -> "Fluid Ounces"
-        ServingSizeUnit.TABLESPOONS -> "Tablespoons"
-        ServingSizeUnit.TEASPOONS -> "Teaspoons"
-        ServingSizeUnit.PIECES -> "Pieces"
-        ServingSizeUnit.SLICES -> "Slices"
-        ServingSizeUnit.UNITS -> "Units"
-        ServingSizeUnit.SERVINGS -> "Servings"
-        ServingSizeUnit.PORTIONS -> "Portions"
+        ServingSizeUnit.GRAMS -> stringResource(R.string.grams)
+        ServingSizeUnit.KILOGRAMS -> stringResource(R.string.kilograms)
+        ServingSizeUnit.POUNDS -> stringResource(R.string.pounds)
+        ServingSizeUnit.OUNCES -> stringResource(R.string.ounces)
+        ServingSizeUnit.MILLILITERS -> stringResource(R.string.milliliters)
+        ServingSizeUnit.LITERS -> stringResource(R.string.liters)
+        ServingSizeUnit.CUPS -> stringResource(R.string.cups)
+        ServingSizeUnit.FLUID_OUNCES -> stringResource(R.string.fluid_ounces)
+        ServingSizeUnit.TABLESPOONS -> stringResource(R.string.tablespoons)
+        ServingSizeUnit.TEASPOONS -> stringResource(R.string.teaspoons)
+        ServingSizeUnit.PIECES -> stringResource(R.string.pieces)
+        ServingSizeUnit.SLICES -> stringResource(R.string.slices)
+        ServingSizeUnit.UNITS -> stringResource(R.string.units)
+        ServingSizeUnit.SERVINGS -> stringResource(R.string.servings)
+        ServingSizeUnit.PORTIONS -> stringResource(R.string.portions)
     }
 }
