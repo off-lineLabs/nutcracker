@@ -407,7 +407,7 @@ private fun MealCheckInContent(
                             value = currentValue,
                             onValueChange = { servingSize = it.toDouble() },
                             valueRange = minRange..maxRange,
-                            steps = ((maxRange - minRange) / 0.1f).toInt() - 1, // Dynamic steps based on range
+                            steps = maxOf(0, ((maxRange - minRange) / 0.1f).toInt() - 1), // Dynamic steps based on range
                             modifier = Modifier.weight(1f)
                         )
                         Text(
