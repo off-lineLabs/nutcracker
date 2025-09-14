@@ -132,17 +132,16 @@ fun ServingSizeDialog(
             }
         },
         confirmButton = {
+            val parsedValue = servingSizeValue.toDoubleOrNull()
             Button(
                 onClick = {
-                    val value = servingSizeValue.toDoubleOrNull() ?: 0.0
+                    val value = parsedValue ?: 0.0
                     val unit = selectedUnit ?: ServingSizeUnit.GRAMS
                     if (value > 0) {
                         onConfirm(value, unit)
                     }
                 },
-                enabled = servingSizeValue.toDoubleOrNull() != null && 
-                         servingSizeValue.toDoubleOrNull()!! > 0 && 
-                         selectedUnit != null
+                enabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
             ) {
                 Text("Add to My Meals")
             }
