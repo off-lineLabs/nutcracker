@@ -17,6 +17,7 @@ import com.example.template.data.model.ServingSizeUnit
 import com.example.template.data.mapper.FoodInfoToMealMapper
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -230,7 +231,10 @@ private fun UnitSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )

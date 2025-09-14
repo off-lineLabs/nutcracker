@@ -28,18 +28,9 @@ import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.getContrastingIconColor
 
-/**
- * Determines the appropriate text color (black or white) based on the background color's luminance.
- * Uses a threshold of 0.5 - if the background is lighter than this, use black text, otherwise white.
- */
-private fun getContrastingTextColor(backgroundColor: Color): Color {
-    return if (backgroundColor.luminance() > 0.5f) {
-        Color.Black
-    } else {
-        Color.White
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,10 +157,13 @@ private fun FoodImageCard(imageUrl: String) {
 
 @Composable
 private fun NutritionInfoCard(nutrition: com.example.template.data.model.NutritionInfo) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
@@ -181,49 +175,50 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             Text(
                 text = "Nutrition Facts (per 100g/100ml)",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             Text(
                 text = "All values are standardized per 100g or 100ml for easy comparison",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = contrastingTextColor
             )
             
             nutrition.calories?.let { 
-                NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment)
+                NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fat?.let { 
-                NutritionRow("Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
+                NutritionRow("Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.carbohydrates?.let { 
-                NutritionRow("Carbs", "${String.format("%.1f", it)}g", Icons.Filled.Grain)
+                NutritionRow("Carbs", "${String.format("%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.proteins?.let { 
-                NutritionRow("Proteins", "${String.format("%.1f", it)}g", Icons.Filled.FitnessCenter)
+                NutritionRow("Proteins", "${String.format("%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow("Sodium", "${String.format("%.1f", it)}mg", Icons.Filled.Water)
+                NutritionRow("Sodium", "${String.format("%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
-                NutritionRow("Fiber", "${String.format("%.1f", it)}g", Icons.Filled.Park)
+                NutritionRow("Fiber", "${String.format("%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sugars?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake)
+                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.saturatedFat?.let { 
-                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel)
+                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.cholesterol?.let { 
-                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite)
+                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.vitaminC?.let { 
-                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy)
+                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.calcium?.let { 
-                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink)
+                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.iron?.let { 
-                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build)
+                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }
@@ -233,8 +228,12 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
 private fun NutritionRow(
     label: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
+    val iconColor = getContrastingIconColor(backgroundColor)
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -248,17 +247,19 @@ private fun NutritionRow(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = iconColor
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor
             )
         }
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = textColor
         )
     }
 }
@@ -394,6 +395,7 @@ private fun ClassificationRow(
 @Composable
 private fun AttributionCard() {
     val uriHandler = LocalUriHandler.current
+    val contrastingTextColor = getContrastingTextColor(MaterialTheme.colorScheme.surface)
     
     Row(
         modifier = Modifier
@@ -405,7 +407,7 @@ private fun AttributionCard() {
         Text(
             text = stringResource(R.string.provided_by),
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contrastingTextColor
         )
         Text(
             text = "Â© Open Food Facts contributors",

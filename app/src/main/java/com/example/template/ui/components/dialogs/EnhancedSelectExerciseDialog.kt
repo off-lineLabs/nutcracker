@@ -29,6 +29,7 @@ import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.ui.components.ExerciseImageIcon
+import com.example.template.ui.theme.getContrastingTextColor
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,6 +238,9 @@ private fun MainExerciseSelectionDialog(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                                 )
                             ) {
+                                val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+                                val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+                                
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -253,12 +257,13 @@ private fun MainExerciseSelectionDialog(
                                         Text(
                                             text = exercise.name,
                                             style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = contrastingTextColor
                                         )
                                         Text(
                                             text = exercise.category,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = contrastingTextColor.copy(alpha = 0.7f)
                                         )
                                     }
                                     
@@ -270,7 +275,7 @@ private fun MainExerciseSelectionDialog(
                                         Icon(
                                             imageVector = Icons.Filled.Edit,
                                             contentDescription = stringResource(R.string.edit_exercise),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            tint = contrastingTextColor.copy(alpha = 0.7f),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -283,7 +288,10 @@ private fun MainExerciseSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     )

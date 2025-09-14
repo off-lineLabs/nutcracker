@@ -3,6 +3,7 @@ package com.example.template.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 
 /**
@@ -231,6 +232,34 @@ fun appOverlayColor(): Color {
 fun Color.withThemeOpacity(lightOpacity: Float = 0.1f, darkOpacity: Float = 0.2f): Color {
     val opacity = if (isDarkTheme()) darkOpacity else lightOpacity
     return this.copy(alpha = opacity)
+}
+
+/**
+ * Determines the appropriate text color (black or white) based on the background color's luminance.
+ * Uses a threshold of 0.5 - if the background is lighter than this, use black text, otherwise white.
+ */
+@Composable
+fun getContrastingTextColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
+}
+
+/**
+ * Get a softer contrasting color for icons - provides contrast but with reduced intensity
+ * This is useful for icons that need to be visible but not as prominent as text
+ */
+@Composable
+fun getContrastingIconColor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) {
+        // For light backgrounds, use a dark gray instead of pure black
+        Color(0xFF424242) // Dark gray
+    } else {
+        // For dark backgrounds, use a light gray instead of pure white
+        Color(0xFFBDBDBD) // Light gray
+    }
 }
 
 /**

@@ -17,16 +17,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.template.data.model.Meal
+import com.example.template.ui.theme.getContrastingTextColor
 
 @Composable
 fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onMealClick(meal) }
             .padding(vertical = 4.dp, horizontal = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Row(
@@ -67,7 +71,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                     text = meal.name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = contrastingTextColor
                 )
                 
                 // Brand if available
@@ -75,7 +79,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                     Text(
                         text = brand,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = contrastingTextColor.copy(alpha = 0.7f)
                     )
                 }
                 
@@ -116,12 +120,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                                 Icons.Filled.Edit,
                                 contentDescription = "Manual",
                                 modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                tint = contrastingTextColor.copy(alpha = 0.6f)
                             )
                             Text(
                                 text = "Manual",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                color = contrastingTextColor.copy(alpha = 0.6f)
                             )
                         }
                     }
@@ -137,14 +141,14 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                     text = "${meal.calories} kcal",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = contrastingTextColor
                 )
                 
                 // Serving size
                 Text(
                     text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = contrastingTextColor.copy(alpha = 0.7f)
                 )
                 
                 // NOVA classification if available
