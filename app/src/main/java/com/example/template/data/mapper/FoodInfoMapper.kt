@@ -1,7 +1,7 @@
 package com.example.template.data.mapper
 
 import com.example.template.data.model.*
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 
 object FoodInfoMapper {
     
@@ -48,10 +48,10 @@ object FoodInfoMapper {
         }
         
         // Debug logging to see what values we're getting
-        Log.d("FoodInfoMapper", "Sodium values - 100g: ${nutriments.sodium100g}, regular: ${nutriments.sodium}, value: ${nutriments.sodiumValue}")
-        Log.d("FoodInfoMapper", "Vitamin C values - 100g: ${nutriments.vitaminC100g}, regular: ${nutriments.vitaminC}, value: ${nutriments.vitaminCValue}")
-        Log.d("FoodInfoMapper", "Calcium values - 100g: ${nutriments.calcium100g}, regular: ${nutriments.calcium}, value: ${nutriments.calciumValue}")
-        Log.d("FoodInfoMapper", "Iron values - 100g: ${nutriments.iron100g}, regular: ${nutriments.iron}, value: ${nutriments.ironValue}")
+        AppLogger.d("FoodInfoMapper", "Sodium values - 100g: ${nutriments.sodium100g}, regular: ${nutriments.sodium}, value: ${nutriments.sodiumValue}")
+        AppLogger.d("FoodInfoMapper", "Vitamin C values - 100g: ${nutriments.vitaminC100g}, regular: ${nutriments.vitaminC}, value: ${nutriments.vitaminCValue}")
+        AppLogger.d("FoodInfoMapper", "Calcium values - 100g: ${nutriments.calcium100g}, regular: ${nutriments.calcium}, value: ${nutriments.calciumValue}")
+        AppLogger.d("FoodInfoMapper", "Iron values - 100g: ${nutriments.iron100g}, regular: ${nutriments.iron}, value: ${nutriments.ironValue}")
         
         return NutritionInfo(
             // Always prioritize per-100g values for consistency

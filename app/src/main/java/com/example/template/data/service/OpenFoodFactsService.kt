@@ -7,7 +7,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 
 interface OpenFoodFactsApi {
     @GET("api/v0/product/{barcode}.json")
@@ -44,11 +44,11 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
                 if (body.status == 1 && body.product != null) {
                     // Debug logging to see the raw nutriments data
                     body.product.nutriments?.let { nutriments ->
-                        Log.d("OpenFoodFactsService", "Raw nutriments data for barcode $barcode:")
-                        Log.d("OpenFoodFactsService", "Sodium fields: 100g=${nutriments.sodium100g}, regular=${nutriments.sodium}, value=${nutriments.sodiumValue}")
-                        Log.d("OpenFoodFactsService", "Vitamin C fields: 100g=${nutriments.vitaminC100g}, regular=${nutriments.vitaminC}, value=${nutriments.vitaminCValue}")
-                        Log.d("OpenFoodFactsService", "Calcium fields: 100g=${nutriments.calcium100g}, regular=${nutriments.calcium}, value=${nutriments.calciumValue}")
-                        Log.d("OpenFoodFactsService", "Iron fields: 100g=${nutriments.iron100g}, regular=${nutriments.iron}, value=${nutriments.ironValue}")
+                        AppLogger.d("OpenFoodFactsService", "Raw nutriments data for barcode $barcode:")
+                        AppLogger.d("OpenFoodFactsService", "Sodium fields: 100g=${nutriments.sodium100g}, regular=${nutriments.sodium}, value=${nutriments.sodiumValue}")
+                        AppLogger.d("OpenFoodFactsService", "Vitamin C fields: 100g=${nutriments.vitaminC100g}, regular=${nutriments.vitaminC}, value=${nutriments.vitaminCValue}")
+                        AppLogger.d("OpenFoodFactsService", "Calcium fields: 100g=${nutriments.calcium100g}, regular=${nutriments.calcium}, value=${nutriments.calciumValue}")
+                        AppLogger.d("OpenFoodFactsService", "Iron fields: 100g=${nutriments.iron100g}, regular=${nutriments.iron}, value=${nutriments.ironValue}")
                     }
                     Result.success(body)
                 } else {
@@ -100,14 +100,14 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
                     }
                     
                     val filteredResponse = body.copy(products = filteredProducts)
-                    Log.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
+                    AppLogger.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
                     return Result.success(filteredResponse)
                 } else {
                     lastException = Exception("Search request failed: ${response.code()} ${response.message()}")
                 }
             } catch (e: Exception) {
                 lastException = e
-                Log.w("OpenFoodFactsService", "Search attempt ${attempt + 1} failed for '$searchTerms'", e)
+                AppLogger.w("OpenFoodFactsService", "Search attempt ${attempt + 1} failed for '$searchTerms'", e)
                 
                 // Don't retry for non-network errors
                 if (e.message?.contains("timeout") != true && 
@@ -123,7 +123,7 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
             }
         }
         
-        Log.e("OpenFoodFactsService", "Search failed for '$searchTerms' after all retries", lastException)
+        AppLogger.e("OpenFoodFactsService", "Search failed for '$searchTerms' after all retries", lastException)
         return Result.failure(lastException ?: Exception("Unknown error"))
     }
     

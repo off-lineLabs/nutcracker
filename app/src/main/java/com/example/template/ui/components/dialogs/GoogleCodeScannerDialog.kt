@@ -22,7 +22,7 @@ import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,7 +178,7 @@ private fun startScanning(
     onBarcodeScanned: (String) -> Unit,
     onResult: (String?, String?) -> Unit
 ) {
-    Log.d("GoogleCodeScanner", "Starting barcode scanning")
+    AppLogger.d("GoogleCodeScanner", "Starting barcode scanning")
     
     // Check if modules are installed
     val moduleInstall = ModuleInstall.getClient(context)
@@ -188,19 +188,19 @@ private fun startScanning(
     
     moduleInstall.installModules(moduleInstallRequest)
         .addOnSuccessListener { response ->
-            Log.d("GoogleCodeScanner", "Modules installation check completed")
+            AppLogger.d("GoogleCodeScanner", "Modules installation check completed")
             if (response.areModulesAlreadyInstalled()) {
-                Log.d("GoogleCodeScanner", "Modules already installed, starting scan")
+                AppLogger.d("GoogleCodeScanner", "Modules already installed, starting scan")
                 performScan(context, onBarcodeScanned, onResult)
             } else {
-                Log.d("GoogleCodeScanner", "Modules were just installed, waiting before scan")
+                AppLogger.d("GoogleCodeScanner", "Modules were just installed, waiting before scan")
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     performScan(context, onBarcodeScanned, onResult)
                 }, 1000)
             }
         }
         .addOnFailureListener { e ->
-            Log.e("GoogleCodeScanner", "Module installation failed", e)
+            AppLogger.e("GoogleCodeScanner", "Module installation failed", e)
             onResult(null, "Failed to install required modules: ${e.message}")
         }
 }
@@ -210,12 +210,12 @@ private fun performScan(
     onBarcodeScanned: (String) -> Unit,
     onResult: (String?, String?) -> Unit
 ) {
-    Log.d("GoogleCodeScanner", "Performing barcode scan")
+    AppLogger.d("GoogleCodeScanner", "Performing barcode scan")
     
     val scanner = GmsBarcodeScanning.getClient(context)
     scanner.startScan()
         .addOnSuccessListener { barcode ->
-            Log.d("GoogleCodeScanner", "Barcode scan successful: ${barcode.rawValue}")
+            AppLogger.d("GoogleCodeScanner", "Barcode scan successful: ${barcode.rawValue}")
             barcode.rawValue?.let { value ->
                 onResult(value, null)
             } ?: run {
@@ -223,11 +223,11 @@ private fun performScan(
             }
         }
         .addOnFailureListener { e ->
-            Log.e("GoogleCodeScanner", "Barcode scan failed", e)
+            AppLogger.e("GoogleCodeScanner", "Barcode scan failed", e)
             onResult(null, "Scan failed: ${e.message}")
         }
         .addOnCanceledListener {
-            Log.d("GoogleCodeScanner", "Barcode scan canceled by user")
+            AppLogger.d("GoogleCodeScanner", "Barcode scan canceled by user")
             onResult(null, "Scan canceled")
         }
 }

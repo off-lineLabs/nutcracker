@@ -23,7 +23,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,13 +67,13 @@ fun SimpleBarcodeScanDialog(
             
             // For testing, let's simulate finding a barcode after a few attempts
             scanAttempts++
-            Log.d("SimpleBarcodeScan", "Scan attempt $scanAttempts")
+            AppLogger.d("SimpleBarcodeScan", "Scan attempt $scanAttempts")
             
             if (scanAttempts >= 3) {
                 // Simulate finding a barcode
                 barcodeResult = "1234567890123"
                 isScanning = false
-                Log.d("SimpleBarcodeScan", "Simulated barcode found: $barcodeResult")
+                AppLogger.d("SimpleBarcodeScan", "Simulated barcode found: $barcodeResult")
             } else {
                 isScanning = false
             }

@@ -96,16 +96,16 @@ fun FoodLogTheme(
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             val scheme = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            android.util.Log.d("FoodLogTheme", "Using dynamic colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
+            com.example.template.util.logger.AppLogger.d("FoodLogTheme", "Using dynamic colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
             scheme
         }
 
         darkTheme -> {
-            android.util.Log.d("FoodLogTheme", "Using custom dark colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
+            com.example.template.util.logger.AppLogger.d("FoodLogTheme", "Using custom dark colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
             DarkColorScheme
         }
         else -> {
-            android.util.Log.d("FoodLogTheme", "Using custom light colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
+            com.example.template.util.logger.AppLogger.d("FoodLogTheme", "Using custom light colors: darkTheme=$darkTheme, dynamicColor=$dynamicColor")
             LightColorScheme
         }
     }

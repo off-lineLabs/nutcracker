@@ -1,7 +1,7 @@
 package com.example.template.data.mapper
 
 import com.example.template.data.model.*
-import android.util.Log
+import com.example.template.util.logger.AppLogger
 
 object FoodInfoToMealMapper {
     
@@ -115,7 +115,7 @@ object FoodInfoToMealMapper {
             
             null
         } catch (e: Exception) {
-            Log.e("FoodInfoToMealMapper", "Error parsing serving size: $servingSizeString", e)
+            AppLogger.e("FoodInfoToMealMapper", "Error parsing serving size: $servingSizeString", e)
             null
         }
     }

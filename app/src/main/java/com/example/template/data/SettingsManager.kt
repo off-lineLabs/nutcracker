@@ -65,7 +65,7 @@ class SettingsManager(context: Context) {
         this.currentThemeMode = themeMode
         prefs.edit().putString(KEY_THEME_MODE, themeMode.name).apply()
         // Debug log
-        android.util.Log.d("SettingsManager", "Theme changed to: $themeMode")
+        com.example.template.util.logger.AppLogger.d("SettingsManager", "Theme changed to: $themeMode")
     }
     
     fun setAppLanguage(language: AppLanguage) {
@@ -91,7 +91,7 @@ class SettingsManager(context: Context) {
             }
         }
         // Debug log
-        android.util.Log.d("SettingsManager", "isDarkTheme: $isDark (mode: $currentThemeMode)")
+        com.example.template.util.logger.AppLogger.d("SettingsManager", "isDarkTheme: $isDark (mode: $currentThemeMode)")
         return isDark
     }
 }
