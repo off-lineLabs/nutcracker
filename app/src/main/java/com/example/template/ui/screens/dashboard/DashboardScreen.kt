@@ -1120,8 +1120,11 @@ fun DashboardScreen(
                         val externalExercise = selectedExternalExercise
                         
                         if (existingExercise != null) {
-                            // Update existing exercise
-                            val updatedExercise = newExercise.copy(id = existingExercise.id)
+                            // Update existing exercise - preserve existing image paths
+                            val updatedExercise = newExercise.copy(
+                                id = existingExercise.id,
+                                imagePaths = existingExercise.imagePaths // Preserve existing image paths
+                            )
                             foodLogRepository.updateExercise(updatedExercise)
                             AppLogger.i("DashboardScreen", "Exercise updated: ${updatedExercise.name}")
                             
