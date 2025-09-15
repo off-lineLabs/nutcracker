@@ -50,8 +50,8 @@ class DatabaseImportManager(
         )
         
         // Date formats for parsing
-        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
     }
     
     private val _importProgress = MutableStateFlow<ImportProgress?>(null)

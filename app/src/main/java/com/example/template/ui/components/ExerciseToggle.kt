@@ -22,8 +22,8 @@ import java.util.Locale
 fun ExerciseToggle(
     isEnabled: Boolean,
     onToggle: () -> Unit,
-    exerciseCalories: Double = 0.0,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    exerciseCalories: Double = 0.0
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

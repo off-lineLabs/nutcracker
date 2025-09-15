@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -358,7 +359,7 @@ fun SearchExternalExercisesDialog(
                     )
                     TextButton(
                         onClick = { 
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
+                            val intent = Intent(Intent.ACTION_VIEW, "https://github.com/yuhonas/free-exercise-db".toUri())
                             context.startActivity(intent)
                         },
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)

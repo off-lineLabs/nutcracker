@@ -30,6 +30,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import android.os.Build
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -96,9 +98,13 @@ fun SettingsScreen(
     
     // Calculate status bar height
     val statusBarHeight = with(density) {
-        WindowInsetsCompat.Type.statusBars().let { insets ->
-            view.rootWindowInsets?.getInsets(insets)?.top ?: 0
-        }.toDp()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsCompat.Type.statusBars().let { insets ->
+                view.rootWindowInsets?.getInsets(insets)?.top ?: 0
+            }.toDp()
+        } else {
+            0.dp
+        }
     }
 
     Scaffold(
@@ -694,7 +700,7 @@ private fun ImportResultDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Success rate:")
-                            Text("${String.format("%.1f", result.successRate)}%")
+                            Text("${String.format(Locale.US, "%.1f", result.successRate)}%")
                         }
                         
                         Row(
@@ -923,7 +929,12 @@ private fun AppVersionInfo() {
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
     val versionName = packageInfo.versionName ?: "1.0"
-    val versionCode = packageInfo.longVersionCode.toInt()
+    val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode.toInt()
+    } else {
+        @Suppress("DEPRECATION")
+        packageInfo.versionCode
+    }
     
     Text(
         text = stringResource(R.string.version_info, versionName, versionCode),
@@ -952,7 +963,7 @@ private fun LegalInformation(
             icon = Icons.Filled.Code,
             isClickable = true,
             onClick = { 
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/JnCoe/offline-calorie-calculator"))
+                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/JnCoe/offline-calorie-calculator".toUri())
                 context.startActivity(intent)
             }
         )

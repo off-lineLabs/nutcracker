@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
+import java.util.Locale
 import com.example.template.ui.theme.getContrastingSliderColor
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
@@ -335,7 +336,7 @@ private fun MealCheckInContent(
     onDelete: (() -> Unit)? = null
 ) {
     var servingSize by remember { 
-        mutableStateOf(
+        mutableDoubleStateOf(
             if (isEditMode && existingMealCheckIn != null) {
                 existingMealCheckIn.servingSize
             } else {
@@ -421,7 +422,7 @@ private fun MealCheckInContent(
                             )
                         )
                         Text(
-                            text = "${String.format("%.1f", maxRange)}x",
+                            text = "${String.format(Locale.US, "%.1f", maxRange)}x",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -445,7 +446,7 @@ private fun MealCheckInContent(
                     if (!isUserTyping) {
                         val currentAmount = servingSize * meal.servingSize_value
                         // Format to 1 decimal place to avoid float precision issues
-                        manualInput = String.format("%.1f", currentAmount)
+                        manualInput = String.format(Locale.US, "%.1f", currentAmount)
                     }
                 }
                 
@@ -495,7 +496,7 @@ private fun MealCheckInContent(
                         isUserTyping = false
                         val inputValue = manualInput.toDoubleOrNull()
                         if (inputValue != null && inputValue > 0) {
-                            manualInput = String.format("%.1f", inputValue)
+                            manualInput = String.format(Locale.US, "%.1f", inputValue)
                         }
                     }
                 }

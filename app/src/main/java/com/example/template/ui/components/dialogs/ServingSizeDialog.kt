@@ -18,6 +18,7 @@ import com.example.template.data.mapper.FoodInfoToMealMapper
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,13 +123,13 @@ fun ServingSizeDialog(
                             Text("Calories: ${(it * multiplier / 100).toInt()} kcal")
                         }
                         nutrition.proteins?.let { 
-                            Text("Protein: ${String.format("%.1f", it * multiplier / 100)}g")
+                            Text("Protein: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
                         }
                         nutrition.carbohydrates?.let { 
-                            Text("Carbs: ${String.format("%.1f", it * multiplier / 100)}g")
+                            Text("Carbs: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
                         }
                         nutrition.fat?.let { 
-                            Text("Fat: ${String.format("%.1f", it * multiplier / 100)}g")
+                            Text("Fat: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
                         }
                     }
                 }

@@ -51,7 +51,7 @@ fun EnhancedSelectExerciseDialog(
     var searchResults by remember { mutableStateOf<List<ExternalExercise>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
-    var currentFilterCount by remember { mutableStateOf(0) }
+    var currentFilterCount by remember { mutableIntStateOf(0) }
     
     val keyboardController = LocalSoftwareKeyboardController.current
     

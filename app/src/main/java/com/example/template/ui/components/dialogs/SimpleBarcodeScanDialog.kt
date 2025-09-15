@@ -46,7 +46,7 @@ fun SimpleBarcodeScanDialog(
     
     var barcodeResult by remember { mutableStateOf<String?>(null) }
     var isScanning by remember { mutableStateOf(false) }
-    var scanAttempts by remember { mutableStateOf(0) }
+    var scanAttempts by remember { mutableIntStateOf(0) }
     
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()

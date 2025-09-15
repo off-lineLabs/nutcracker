@@ -27,6 +27,7 @@ import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
 import androidx.compose.ui.res.stringResource
+import java.util.Locale
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
 import com.example.template.ui.theme.getContrastingIconColor
@@ -188,37 +189,37 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
                 NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fat?.let { 
-                NutritionRow("Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.carbohydrates?.let { 
-                NutritionRow("Carbs", "${String.format("%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Carbs", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.proteins?.let { 
-                NutritionRow("Proteins", "${String.format("%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Proteins", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow("Sodium", "${String.format("%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Sodium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
-                NutritionRow("Fiber", "${String.format("%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Fiber", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sugars?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Sugars", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.saturatedFat?.let { 
-                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Saturated Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.cholesterol?.let { 
-                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Cholesterol", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.vitaminC?.let { 
-                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Vitamin C", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.calcium?.let { 
-                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Calcium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.iron?.let { 
-                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Iron", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }

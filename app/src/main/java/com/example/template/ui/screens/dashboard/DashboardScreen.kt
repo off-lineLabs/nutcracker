@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import android.os.Build
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
@@ -589,9 +590,13 @@ fun DashboardScreen(
     
     // Calculate status bar height
     val statusBarHeight = with(density) {
-        WindowInsetsCompat.Type.statusBars().let { insets ->
-            view.rootWindowInsets?.getInsets(insets)?.top ?: 0
-        }.toDp()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsCompat.Type.statusBars().let { insets ->
+                view.rootWindowInsets?.getInsets(insets)?.top ?: 0
+            }.toDp()
+        } else {
+            0.dp
+        }
     }
 
     // Pill toggle function

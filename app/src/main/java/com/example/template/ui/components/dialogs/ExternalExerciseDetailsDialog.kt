@@ -36,7 +36,7 @@ fun ExternalExerciseDetailsDialog(
     onBack: () -> Unit,
     onImport: () -> Unit
 ) {
-    var currentImageIndex by remember { mutableStateOf(0) }
+    var currentImageIndex by remember { mutableIntStateOf(0) }
     val pagerState = rememberPagerState { exercise.images.size }
     
     // Auto-advance slideshow

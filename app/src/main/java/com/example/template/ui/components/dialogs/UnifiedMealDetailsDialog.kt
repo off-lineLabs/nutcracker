@@ -33,6 +33,7 @@ import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
 import androidx.compose.ui.res.stringResource
 import com.example.template.ui.theme.getContrastingTextColor
+import java.util.Locale
 import com.example.template.ui.theme.getContrastingIconColor
 
 
@@ -215,11 +216,11 @@ private fun BasicNutritionCard(meal: Meal) {
             )
             
             NutritionRow("Calories", "${meal.calories} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
-            NutritionRow("Carbs", "${String.format("%.1f", meal.carbohydrates_g)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
-            NutritionRow("Proteins", "${String.format("%.1f", meal.protein_g)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
-            NutritionRow("Fat", "${String.format("%.1f", meal.fat_g)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
-            NutritionRow("Fiber", "${String.format("%.1f", meal.fiber_g)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
-            NutritionRow("Sodium", "${String.format("%.1f", meal.sodium_mg)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Carbs", "${String.format(Locale.US, "%.1f", meal.carbohydrates_g)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Proteins", "${String.format(Locale.US, "%.1f", meal.protein_g)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Fat", "${String.format(Locale.US, "%.1f", meal.fat_g)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Fiber", "${String.format(Locale.US, "%.1f", meal.fiber_g)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+            NutritionRow("Sodium", "${String.format(Locale.US, "%.1f", meal.sodium_mg)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
         }
     }
 }
@@ -249,22 +250,22 @@ private fun ExtendedNutritionCard(meal: Meal) {
             )
             
             meal.saturatedFat_g?.let { 
-                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Saturated Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             meal.sugars_g?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Sugars", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             meal.cholesterol_mg?.let { 
-                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Cholesterol", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             meal.vitaminC_mg?.let { 
-                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Vitamin C", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             meal.calcium_mg?.let { 
-                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Calcium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             meal.iron_mg?.let { 
-                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Iron", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }

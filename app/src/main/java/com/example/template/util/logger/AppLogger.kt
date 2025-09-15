@@ -26,8 +26,8 @@ object AppLogger {
     private var isInitialized = false
     private var logDirectory: File? = null
     private val logBuffer = ConcurrentLinkedQueue<LogEntry>()
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-    private val fileNameFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ROOT)
+    private val fileNameFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
     
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
