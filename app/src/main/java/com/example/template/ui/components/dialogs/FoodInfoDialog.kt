@@ -411,7 +411,7 @@ private fun AttributionCard() {
             color = contrastingTextColor
         )
         Text(
-            text = "Â© Open Food Facts contributors",
+            text = "© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {

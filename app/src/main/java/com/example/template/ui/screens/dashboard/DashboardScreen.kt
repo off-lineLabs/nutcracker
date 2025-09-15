@@ -785,7 +785,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = fabExerciseColor(),
-                    contentColor = appTextInverseColor(),
+                    contentColor = Color.White,
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -802,7 +802,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectMealDialog = true },
                     containerColor = fabMealColor(),
-                    contentColor = appTextInverseColor(),
+                    contentColor = Color.White,
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp

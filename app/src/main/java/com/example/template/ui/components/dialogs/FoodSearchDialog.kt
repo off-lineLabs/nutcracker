@@ -461,7 +461,7 @@ private fun ProductSearchResultItem(
                         }
                         nutriments.proteins100g?.let { proteins ->
                             Text(
-                                text = " â€¢ ${proteins.toInt()}g protein",
+                                text = " • ${proteins.toInt()}g protein",
                                 color = appTextSecondaryColor(),
                                 fontSize = 12.sp
                             )

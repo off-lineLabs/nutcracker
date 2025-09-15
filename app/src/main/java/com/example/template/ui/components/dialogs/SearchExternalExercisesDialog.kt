@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,7 +120,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showEquipmentFilter,
@@ -160,7 +161,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showMuscleFilter,
@@ -202,7 +203,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showCategoryFilter,
@@ -318,7 +319,7 @@ fun SearchExternalExercisesDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = "${exercise.category} â€¢ ${exercise.equipment ?: "No equipment"}",
+                                            text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
