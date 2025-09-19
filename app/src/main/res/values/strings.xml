@@ -20,14 +20,14 @@
     <string name="nutrient_protein">Protein</string>
     <string name="nutrient_fat">Fat</string>
     <string name="nutrient_fiber">Fiber</string>
-    <string name="nutrient_sodium">Sodium</string>
+    <string name="nutrient_sodium">Salt</string>
 
     <string name="nutrient_details_title">Nutrient Details</string>
     <string name="carbohydrates_label">Carbs</string>
     <string name="protein_label">Protein</string>
     <string name="fat_label">Fat</string>
     <string name="fiber_label">Fiber</string>
-    <string name="sodium_label">Sodium</string>
+    <string name="sodium_label">Salt</string>
 
     <!-- Common value pattern: current / goal with units -->
     <!-- Use these where appropriate to keep consistency -->
@@ -58,7 +58,7 @@
     <string name="acc_macro_bar_protein">Protein progress bar</string>
     <string name="acc_macro_bar_fat">Fat progress bar</string>
     <string name="acc_macro_bar_fiber">Fiber progress bar</string>
-    <string name="acc_macro_bar_sodium">Sodium progress bar</string>
+    <string name="acc_macro_bar_sodium">Salt progress bar</string>
 
     <!-- Dashboard specific strings -->
     <string name="add_new_meal">Add New Meal</string>
@@ -168,7 +168,7 @@
     <string name="carbs_g">Carbs</string>
     <string name="fat_g">Fat</string>
     <string name="fiber_g">Fiber</string>
-    <string name="sodium_mg">Sodium</string>
+    <string name="sodium_mg">Salt</string>
     
     <!-- Placeholder strings for meal fields -->
     <string name="meal_name_placeholder">Enter meal name</string>
@@ -177,14 +177,14 @@
     <string name="carbs_placeholder">Enter carbs</string>
     <string name="fat_placeholder">Enter fat</string>
     <string name="fiber_placeholder">Enter fiber</string>
-    <string name="sodium_placeholder">Enter sodium</string>
+    <string name="sodium_placeholder">Enter salt</string>
     <string name="set_your_daily_goals">Set Your Daily Goals</string>
     <string name="calories_kcal">Calories (kcal)</string>
     <string name="carbohydrates_g">Carbohydrates (g)</string>
     <string name="protein_g_goal">Protein (g)</string>
     <string name="fat_g_goal">Fat (g)</string>
     <string name="fiber_g_goal">Fiber (g)</string>
-    <string name="sodium_mg_goal">Sodium (mg)</string>
+    <string name="sodium_mg_goal">Salt (mg)</string>
     <string name="set_goals">Set Goals</string>
     <string name="all">All</string>
     <string name="no_activities_today">No activities today</string>
@@ -200,7 +200,7 @@
     <string name="validation_protein_non_negative">Protein must be a non-negative number.</string>
     <string name="validation_fat_non_negative">Fat must be a non-negative number.</string>
     <string name="validation_fiber_non_negative">Fiber must be a non-negative number.</string>
-    <string name="validation_sodium_non_negative">Sodium must be a non-negative number.</string>
+    <string name="validation_sodium_non_negative">Salt must be a non-negative number.</string>
     
     <!-- Exercise display units -->
     <string name="kg_unit">kg</string>

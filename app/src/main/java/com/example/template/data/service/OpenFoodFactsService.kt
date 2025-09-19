@@ -45,7 +45,7 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
                     // Debug logging to see the raw nutriments data
                     body.product.nutriments?.let { nutriments ->
                         AppLogger.d("OpenFoodFactsService", "Raw nutriments data for barcode $barcode:")
-                        AppLogger.d("OpenFoodFactsService", "Sodium fields: 100g=${nutriments.sodium100g}, regular=${nutriments.sodium}, value=${nutriments.sodiumValue}")
+                        AppLogger.d("OpenFoodFactsService", "Salt fields: 100g=${nutriments.salt100g}, regular=${nutriments.salt}, value=${nutriments.saltValue}")
                         AppLogger.d("OpenFoodFactsService", "Vitamin C fields: 100g=${nutriments.vitaminC100g}, regular=${nutriments.vitaminC}, value=${nutriments.vitaminCValue}")
                         AppLogger.d("OpenFoodFactsService", "Calcium fields: 100g=${nutriments.calcium100g}, regular=${nutriments.calcium}, value=${nutriments.calciumValue}")
                         AppLogger.d("OpenFoodFactsService", "Iron fields: 100g=${nutriments.iron100g}, regular=${nutriments.iron}, value=${nutriments.ironValue}")

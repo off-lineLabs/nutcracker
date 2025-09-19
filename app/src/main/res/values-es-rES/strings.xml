@@ -4,7 +4,7 @@
     <string name="acc_macro_bar_fat">Barra de progreso de grasa</string>
     <string name="acc_macro_bar_fiber">Barra de progreso de fibra</string>
     <string name="acc_macro_bar_protein">Barra de progreso de proteína</string>
-    <string name="acc_macro_bar_sodium">Barra de progreso de sodio</string>
+    <string name="acc_macro_bar_sodium">Barra de progreso de sal</string>
     <string name="acc_progress_ring">Anillo de progreso de calorías</string>
     <string name="acc_tef_bonus_toggle">Alternar Bono TEF</string>
     <string name="action_exercise_bonus">BONO DE EJERCICIO</string>
@@ -168,7 +168,7 @@
     <string name="nutrient_fat">Grasa</string>
     <string name="nutrient_fiber">Fibra</string>
     <string name="nutrient_protein">Proteína</string>
-    <string name="nutrient_sodium">Sodio</string>
+    <string name="nutrient_sodium">Sal</string>
     <string name="nutrition_preview">Vista Previa de Nutrición</string>
     <string name="ok">OK</string>
     <string name="ounces">Onzas</string>
@@ -221,10 +221,10 @@
     <string name="settings">Configuración</string>
     <string name="settings_icon_description">Configuración</string>
     <string name="slices">Rebanadas</string>
-    <string name="sodium_label">Sodio</string>
-    <string name="sodium_mg">Sodio</string>
-    <string name="sodium_mg_goal">Sodio (mg)</string>
-    <string name="sodium_placeholder">Ingresa sodio</string>
+    <string name="sodium_label">Sal</string>
+    <string name="sodium_mg">Sal</string>
+    <string name="sodium_mg_goal">Sal (mg)</string>
+    <string name="sodium_placeholder">Ingresa sal</string>
     <string name="sodium_value">%1$.1f / %2$.1f g</string>
     <string name="spanish">Español</string>
     <string name="strength">Fuerza</string>
@@ -290,7 +290,7 @@ GENERAL
     <string name="validation_fat_non_negative">La grasa debe ser un número no negativo.</string>
     <string name="validation_fiber_non_negative">La fibra debe ser un número no negativo.</string>
     <string name="validation_protein_non_negative">La proteína debe ser un número no negativo.</string>
-    <string name="validation_sodium_non_negative">El sodio debe ser un número no negativo.</string>
+    <string name="validation_sodium_non_negative">La sal debe ser un número no negativo.</string>
     <string name="value_of_total">%1$s / %2$s</string>
     <string name="version_info">Versión %1$s (%2$d)</string>
     <string name="volume_units">Unidades de Volumen</string>
