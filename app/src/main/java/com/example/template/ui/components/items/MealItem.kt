@@ -81,6 +81,13 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
+                    // Serving size (moved from nutrition column)
+                    Text(
+                        text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contrastingTextColor.copy(alpha = 0.7f)
+                    )
+                    
                     // Brand if available
                     meal.brand?.let { brand ->
                         Text(
@@ -146,16 +153,9 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                     // Calories
                     Text(
                         text = "${meal.calories} kcal",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium, // Same size as title
                         fontWeight = FontWeight.SemiBold,
                         color = contrastingTextColor
-                    )
-                    
-                    // Serving size
-                    Text(
-                        text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contrastingTextColor.copy(alpha = 0.7f)
                     )
                     
                     // NOVA classification if available
