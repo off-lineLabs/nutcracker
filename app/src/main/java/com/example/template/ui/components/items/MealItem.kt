@@ -33,149 +33,157 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
             containerColor = cardBackgroundColor
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp)
         ) {
-            // Food image
-            meal.localImagePath?.let { imagePath ->
-                AsyncImage(
-                    model = imagePath,
-                    contentDescription = "Food image",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            } ?: meal.imageUrl?.let { imageUrl ->
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = "Food image",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
+            // First row: Meal name only
+            Text(
+                text = meal.name,
+                style = MaterialTheme.typography.bodyMedium, // Slightly reduced from bodyLarge
+                fontWeight = FontWeight.Medium,
+                color = contrastingTextColor,
+                modifier = Modifier.fillMaxWidth()
+            )
             
-            // Meal information
-            Column(
-                modifier = Modifier.weight(1f)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Second row: Picture | Brand, Source | Kcal, portion size, Nova
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Meal name
-                Text(
-                    text = meal.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = contrastingTextColor
-                )
+                // Food image
+                meal.localImagePath?.let { imagePath ->
+                    AsyncImage(
+                        model = imagePath,
+                        contentDescription = "Food image",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                } ?: meal.imageUrl?.let { imageUrl ->
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Food image",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
                 
-                // Brand if available
-                meal.brand?.let { brand ->
+                // Brand and source info
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Brand if available
+                    meal.brand?.let { brand ->
+                        Text(
+                            text = brand,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contrastingTextColor.copy(alpha = 0.7f)
+                        )
+                    }
+                    
+                    // Source indicator
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        when (meal.source) {
+                            "barcode" -> {
+                                Icon(
+                                    Icons.Filled.QrCodeScanner,
+                                    contentDescription = "Scanned",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Scanned",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            "search" -> {
+                                Icon(
+                                    Icons.Filled.Search,
+                                    contentDescription = "Searched",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Text(
+                                    text = "Searched",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                            else -> {
+                                Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = "Manual",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = contrastingTextColor.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = "Manual",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = contrastingTextColor.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Nutrition info and classification
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    // Calories
                     Text(
-                        text = brand,
+                        text = "${meal.calories} kcal",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = contrastingTextColor
+                    )
+                    
+                    // Serving size
+                    Text(
+                        text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
                         style = MaterialTheme.typography.bodySmall,
                         color = contrastingTextColor.copy(alpha = 0.7f)
                     )
-                }
-                
-                // Source indicator
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    when (meal.source) {
-                        "barcode" -> {
-                            Icon(
-                                Icons.Filled.QrCodeScanner,
-                                contentDescription = "Scanned",
-                                modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Scanned",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        "search" -> {
-                            Icon(
-                                Icons.Filled.Search,
-                                contentDescription = "Searched",
-                                modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = "Searched",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                        }
-                        else -> {
-                            Icon(
-                                Icons.Filled.Edit,
-                                contentDescription = "Manual",
-                                modifier = Modifier.size(12.dp),
-                                tint = contrastingTextColor.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = "Manual",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = contrastingTextColor.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                }
-            }
-            
-            // Nutrition info and classification
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                // Calories
-                Text(
-                    text = "${meal.calories} kcal",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = contrastingTextColor
-                )
-                
-                // Serving size
-                Text(
-                    text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contrastingTextColor.copy(alpha = 0.7f)
-                )
-                
-                // NOVA classification if available
-                meal.novaClassification?.let { classification ->
-                    val (color, icon) = when (classification.group) {
-                        1 -> Color(0xFF4CAF50) to Icons.Filled.Eco
-                        2 -> Color(0xFF8BC34A) to Icons.Filled.Nature
-                        3 -> Color(0xFFFF9800) to Icons.Filled.Warning
-                        4 -> Color(0xFFF44336) to Icons.Filled.Error
-                        else -> Color(0xFF9E9E9E) to Icons.AutoMirrored.Filled.Help
-                    }
                     
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Icon(
-                            icon,
-                            contentDescription = "NOVA ${classification.group}",
-                            modifier = Modifier.size(10.dp),
-                            tint = color
-                        )
-                        Text(
-                            text = "NOVA ${classification.group}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = color
-                        )
+                    // NOVA classification if available
+                    meal.novaClassification?.let { classification ->
+                        val (color, icon) = when (classification.group) {
+                            1 -> Color(0xFF4CAF50) to Icons.Filled.Eco
+                            2 -> Color(0xFF8BC34A) to Icons.Filled.Nature
+                            3 -> Color(0xFFFF9800) to Icons.Filled.Warning
+                            4 -> Color(0xFFF44336) to Icons.Filled.Error
+                            else -> Color(0xFF9E9E9E) to Icons.AutoMirrored.Filled.Help
+                        }
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(
+                                icon,
+                                contentDescription = "NOVA ${classification.group}",
+                                modifier = Modifier.size(10.dp),
+                                tint = color
+                            )
+                            Text(
+                                text = "NOVA ${classification.group}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = color
+                            )
+                        }
                     }
                 }
             }
