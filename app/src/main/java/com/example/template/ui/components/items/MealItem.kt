@@ -113,7 +113,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                                 Text(
                                     text = "Scanned",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = contrastingTextColor
                                 )
                             }
                             "search" -> {
@@ -126,7 +126,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                                 Text(
                                     text = "Searched",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.secondary
+                                    color = contrastingTextColor
                                 )
                             }
                             else -> {
