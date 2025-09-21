@@ -18,11 +18,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.template.data.model.Meal
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.getContrastingIconColor
 
 @Composable
 fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
     val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    val softerContrastingColor = getContrastingIconColor(cardBackgroundColor)
     
     Card(
         modifier = Modifier
@@ -108,12 +110,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                                     Icons.Filled.QrCodeScanner,
                                     contentDescription = "Scanned",
                                     modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = softerContrastingColor
                                 )
                                 Text(
                                     text = "Scanned",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = contrastingTextColor
+                                    color = softerContrastingColor
                                 )
                             }
                             "search" -> {
@@ -121,12 +123,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                                     Icons.Filled.Search,
                                     contentDescription = "Searched",
                                     modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.secondary
+                                    tint = softerContrastingColor
                                 )
                                 Text(
                                     text = "Searched",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = contrastingTextColor
+                                    color = softerContrastingColor
                                 )
                             }
                             else -> {
