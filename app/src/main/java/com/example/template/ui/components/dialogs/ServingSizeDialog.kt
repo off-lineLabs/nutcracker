@@ -26,7 +26,9 @@ fun ServingSizeDialog(
     foodInfo: FoodInfo,
     barcode: String? = null,
     onDismiss: () -> Unit,
-    onConfirm: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit
+    onSaveAndCheckIn: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit,
+    onJustSave: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit,
+    onJustCheckIn: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit
 ) {
     var servingSizeValue by remember { mutableStateOf("") }
     var selectedUnit by remember { mutableStateOf<ServingSizeUnit?>(null) }
@@ -137,22 +139,72 @@ fun ServingSizeDialog(
         },
         confirmButton = {
             val parsedValue = servingSizeValue.toDoubleOrNull()
-            Button(
-                onClick = {
-                    val value = parsedValue ?: 0.0
-                    val unit = selectedUnit ?: ServingSizeUnit.GRAMS
-                    if (value > 0) {
-                        onConfirm(value, unit)
-                    }
-                },
-                enabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
+            val isEnabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
+            
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(stringResource(R.string.add_to_my_meals))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                // Save and Check-in button
+                Button(
+                    onClick = {
+                        val value = parsedValue ?: 0.0
+                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
+                        if (value > 0) {
+                            onSaveAndCheckIn(value, unit)
+                        }
+                    },
+                    enabled = isEnabled,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(stringResource(R.string.save_and_check_in))
+                }
+                
+                // Just Save button
+                Button(
+                    onClick = {
+                        val value = parsedValue ?: 0.0
+                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
+                        if (value > 0) {
+                            onJustSave(value, unit)
+                        }
+                    },
+                    enabled = isEnabled,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text(stringResource(R.string.just_save))
+                }
+                
+                // Just Check-in button
+                Button(
+                    onClick = {
+                        val value = parsedValue ?: 0.0
+                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
+                        if (value > 0) {
+                            onJustCheckIn(value, unit)
+                        }
+                    },
+                    enabled = isEnabled,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text(stringResource(R.string.just_check_in))
+                }
+                
+                // Cancel button
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     )

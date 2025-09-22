@@ -259,6 +259,11 @@
     <string name="scan_again">Scan Again</string>
     <string name="use_this_barcode">Use This Barcode</string>
     <string name="add_to_my_meals">Add to My Meals</string>
+    <string name="save">Save</string>
+    <string name="select">Select</string>
+    <string name="save_and_check_in">Save and Check-in</string>
+    <string name="just_save">Just Save</string>
+    <string name="just_check_in">Just Check-in</string>
     <string name="amount">Amount</string>
     <string name="select_unit">Select Unit</string>
     <string name="nutrition_preview">Nutrition Preview</string>

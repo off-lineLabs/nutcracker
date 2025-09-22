@@ -38,7 +38,7 @@ import com.example.template.ui.theme.getContrastingIconColor
 fun FoodInfoDialog(
     foodInfo: FoodInfo,
     onBack: () -> Unit,
-    onAddToMeals: () -> Unit
+    onSelect: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onBack,
@@ -111,18 +111,12 @@ fun FoodInfoDialog(
                     Text(stringResource(R.string.cancel))
                 }
                 Button(
-                    onClick = onAddToMeals,
+                    onClick = onSelect,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.add_to_my_meals))
+                    Text(stringResource(R.string.select))
                 }
             }
         }

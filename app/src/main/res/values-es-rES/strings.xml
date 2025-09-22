@@ -19,6 +19,11 @@
     <string name="add_new_meal">Agregar Nueva Comida</string>
     <string name="add_to_my_exercises">Agregar a Mis Ejercicios</string>
     <string name="add_to_my_meals">Agregar a Mis Comidas</string>
+    <string name="save">Guardar</string>
+    <string name="select">Seleccionar</string>
+    <string name="save_and_check_in">Guardar y Registrar</string>
+    <string name="just_save">Solo Guardar</string>
+    <string name="just_check_in">Solo Registrar</string>
     <string name="additional_nutrition">Nutrición Adicional</string>
     <string name="all">Todo</string>
     <string name="amount">Cantidad</string>

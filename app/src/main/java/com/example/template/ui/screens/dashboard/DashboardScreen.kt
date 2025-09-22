@@ -419,6 +419,7 @@ fun DashboardScreen(
     val failedToUpdatePillStatus = stringResource(R.string.failed_to_update_pill_status)
     val exerciseBonusCaloriesOn = stringResource(R.string.exercise_bonus_calories_on)
     val exerciseBonusCaloriesOff = stringResource(R.string.exercise_bonus_calories_off)
+    
     val tefBonusCaloriesOn = stringResource(R.string.tef_bonus_calories_on)
     val tefBonusCaloriesOff = stringResource(R.string.tef_bonus_calories_off)
     val exerciseCheckInCompletedSuccess = stringResource(R.string.exercise_check_in_completed_success)
@@ -1526,7 +1527,7 @@ fun DashboardScreen(
                 showFoodInfoDialog = null
                 // Don't reset currentBarcode here - it should persist through the flow
             },
-            onAddToMeals = {
+            onSelect = {
                 AppLogger.d("DashboardScreen", "Transitioning from FoodInfoDialog to ServingSizeDialog, currentBarcode: $currentBarcode")
                 showFoodInfoDialog = null
                 showServingSizeDialog = foodInfo
@@ -1545,20 +1546,20 @@ fun DashboardScreen(
                 showServingSizeDialog = null
                 currentBarcode = null
             },
-            onConfirm = { servingSizeValue, servingSizeUnit ->
-                // Store the barcode before it gets reset by onDismiss
+            onSaveAndCheckIn = { servingSizeValue, servingSizeUnit ->
                 val barcodeToUse = currentBarcode
-                AppLogger.d("DashboardScreen", "Creating meal with currentBarcode: $barcodeToUse")
+                AppLogger.d("DashboardScreen", "Save and Check-in: Creating meal with currentBarcode: $barcodeToUse")
                 
                 coroutineScope.launch {
                     try {
-                        // Convert FoodInfo to Meal
+                        // Save meal
                         val meal = FoodInfoToMealMapper.mapToMeal(
                             foodInfo = foodInfo,
                             servingSizeValue = servingSizeValue,
                             servingSizeUnit = servingSizeUnit,
                             barcode = barcodeToUse,
-                            source = if (barcodeToUse != null) "barcode" else "search"
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = true
                         )
                         
                         // Download image if available
@@ -1573,21 +1574,119 @@ fun DashboardScreen(
                         val newMealId = foodLogRepository.insertMeal(finalMeal)
                         
                         // Update the meal with the new ID from database
-                        val mealWithId = finalMeal.copy(id = newMealId)
+                        val savedMeal = finalMeal.copy(id = newMealId)
                         
-                        // Show unified dialog with the added meal (now with correct ID)
-                        showUnifiedMealDetailDialog = mealWithId
-                        
-                        snackbarHostState.showSnackbar(
-                            message = "Meal added successfully!"
+                        // Create a check-in for this meal
+                        val mealCheckIn = MealCheckIn.create(
+                            mealId = savedMeal.id,
+                            servingSize = 1.0,
+                            notes = null
                         )
+                        
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        
+                        snackbarHostState.showSnackbar(message = "Meal saved and check-in completed successfully!")
+                        showUnifiedMealDetailDialog = savedMeal
+                        
                     } catch (e: Exception) {
-                        AppLogger.exception("DashboardScreen", "Failed to add meal from food info", e, mapOf(
+                        AppLogger.exception("DashboardScreen", "Failed to save and check-in meal", e, mapOf(
                             "foodName" to foodInfo.name
                         ))
-                        snackbarHostState.showSnackbar(
-                            message = "Failed to add meal: ${e.message}"
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                    }
+                }
+                showServingSizeDialog = null
+                currentBarcode = null
+            },
+            onJustSave = { servingSizeValue, servingSizeUnit ->
+                val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "Just Save: Creating meal with currentBarcode: $barcodeToUse")
+                
+                coroutineScope.launch {
+                    try {
+                        // Save meal
+                        val meal = FoodInfoToMealMapper.mapToMeal(
+                            foodInfo = foodInfo,
+                            servingSizeValue = servingSizeValue,
+                            servingSizeUnit = servingSizeUnit,
+                            barcode = barcodeToUse,
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = true
                         )
+                        
+                        // Download image if available
+                        val localImagePath = if (foodInfo.imageUrl != null) {
+                            imageDownloadService.downloadAndSaveImage(foodInfo.imageUrl)
+                        } else null
+                        
+                        // Update meal with local image path
+                        val finalMeal = meal.copy(localImagePath = localImagePath)
+                        
+                        // Insert meal into database and get the new mealId
+                        val newMealId = foodLogRepository.insertMeal(finalMeal)
+                        
+                        // Update the meal with the new ID from database
+                        val savedMeal = finalMeal.copy(id = newMealId)
+                        
+                        snackbarHostState.showSnackbar(message = "Meal saved successfully!")
+                        showUnifiedMealDetailDialog = savedMeal
+                        
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to save meal", e, mapOf(
+                            "foodName" to foodInfo.name
+                        ))
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                    }
+                }
+                showServingSizeDialog = null
+                currentBarcode = null
+            },
+            onJustCheckIn = { servingSizeValue, servingSizeUnit ->
+                val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "Just Check-in: Creating meal with currentBarcode: $barcodeToUse")
+                
+                coroutineScope.launch {
+                    try {
+                        // Create meal for check-in only (not visible in meal list)
+                        val meal = FoodInfoToMealMapper.mapToMeal(
+                            foodInfo = foodInfo,
+                            servingSizeValue = servingSizeValue,
+                            servingSizeUnit = servingSizeUnit,
+                            barcode = barcodeToUse,
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = false
+                        )
+                        
+                        // Download image if available
+                        val localImagePath = if (foodInfo.imageUrl != null) {
+                            imageDownloadService.downloadAndSaveImage(foodInfo.imageUrl)
+                        } else null
+                        
+                        // Update meal with local image path
+                        val finalMeal = meal.copy(localImagePath = localImagePath)
+                        
+                        // Insert meal into database and get the new mealId
+                        val newMealId = foodLogRepository.insertMeal(finalMeal)
+                        
+                        // Update the meal with the new ID from database
+                        val savedMeal = finalMeal.copy(id = newMealId)
+                        
+                        // Create a check-in for this meal
+                        val mealCheckIn = MealCheckIn.create(
+                            mealId = savedMeal.id,
+                            servingSize = 1.0,
+                            notes = null
+                        )
+                        
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        
+                        snackbarHostState.showSnackbar(message = "Check-in completed successfully!")
+                        
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to check-in meal", e, mapOf(
+                            "foodName" to foodInfo.name
+                        ))
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
                     }
                 }
                 showServingSizeDialog = null
