@@ -11,6 +11,7 @@ val BrandNavyLight = Color(0xFF283D59)   // Lighter navy blue - main elements
 val BrandRed = Color(0xFFA62934)         // Red - details and accents
 val BrandGold = Color(0xFFA66A21)        // Goldish yellow - details
 val BrandGoldLight = Color(0xFFD9A25F)   // Lighter yellow - highlights
+val BrandRedLight = Color(0xFFe79da4)
 
 // Light theme brand colors
 val BrandNavyLightTheme = Color(0xFF2C3E50)  // Rich deep blue-gray

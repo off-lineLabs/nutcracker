@@ -10,10 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
 import java.util.Locale
 import com.example.template.ui.theme.getContrastingSliderColor
+import com.example.template.ui.theme.BrandGoldLight
+import com.example.template.ui.theme.BrandRedLight
+import com.example.template.ui.theme.NeutralLight100
+import androidx.compose.ui.graphics.Color
 import com.example.template.data.model.Exercise
 import com.example.template.data.model.ExerciseLog
 import com.example.template.data.model.ExerciseType
@@ -223,32 +228,11 @@ private fun ExerciseCheckInContent(
                     )
                 }
 
-                // Calories burned display
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.calories_burned),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = "${caloriesBurned.toInt()} kcal",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                CaloriesSummaryCard(
+                    label = stringResource(R.string.calories_burned),
+                    labelColor = BrandRedLight,
+                    valueText = "${caloriesBurned.toInt()} kcal"
+                )
 
                 // Notes field
                 OutlinedTextField(
@@ -262,64 +246,61 @@ private fun ExerciseCheckInContent(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val exerciseLog = if (isEditMode && existingExerciseLog != null) {
-                        // Update existing log with new values but preserve ID and timestamps
-                        existingExerciseLog.copy(
-                            weight = weight.toDoubleOrNull() ?: 0.0,
-                            reps = reps.toIntOrNull() ?: 0,
-                            sets = sets.toIntOrNull() ?: 0,
-                            caloriesBurned = caloriesBurned,
-                            notes = notes.takeIf { it.isNotBlank() }
-                        )
-                    } else {
-                        // Create new log
-                        ExerciseLog.create(
-                            exerciseId = exercise.id,
-                            weight = weight.toDoubleOrNull() ?: 0.0,
-                            reps = reps.toIntOrNull() ?: 0,
-                            sets = sets.toIntOrNull() ?: 0,
-                            caloriesBurned = caloriesBurned,
-                            notes = notes.takeIf { it.isNotBlank() }
-                        )
-                    }
-                    onCheckIn(exerciseLog)
-                },
-                enabled = weight.isNotBlank() && reps.isNotBlank() && sets.isNotBlank()
-            ) {
-                Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
-            }
-        },
-        dismissButton = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Delete button (only in edit mode) - positioned at bottom-left
-                if (isEditMode && onDelete != null) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                } else {
-                    // Empty space to maintain layout when no delete button
-                    Spacer(modifier = Modifier.size(48.dp))
-                }
-                
                 TextButton(onClick = onDismiss) {
                     Text(
                         text = stringResource(R.string.cancel),
                         color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                 }
+                Button(
+                    onClick = {
+                        val exerciseLog = if (isEditMode && existingExerciseLog != null) {
+                            // Update existing log with new values but preserve ID and timestamps
+                            existingExerciseLog.copy(
+                                weight = weight.toDoubleOrNull() ?: 0.0,
+                                reps = reps.toIntOrNull() ?: 0,
+                                sets = sets.toIntOrNull() ?: 0,
+                                caloriesBurned = caloriesBurned,
+                                notes = notes.takeIf { it.isNotBlank() }
+                            )
+                        } else {
+                            // Create new log
+                            ExerciseLog.create(
+                                exerciseId = exercise.id,
+                                weight = weight.toDoubleOrNull() ?: 0.0,
+                                reps = reps.toIntOrNull() ?: 0,
+                                sets = sets.toIntOrNull() ?: 0,
+                                caloriesBurned = caloriesBurned,
+                                notes = notes.takeIf { it.isNotBlank() }
+                            )
+                        }
+                        onCheckIn(exerciseLog)
+                    },
+                    enabled = weight.isNotBlank() && reps.isNotBlank() && sets.isNotBlank()
+                ) {
+                    Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
+                }
+            }
+        },
+        dismissButton = {
+            // Delete button (only in edit mode) - positioned at left
+            if (isEditMode && onDelete != null) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                // Empty space to maintain layout when no delete button
+                Spacer(modifier = Modifier.size(48.dp))
             }
         }
     )
@@ -427,13 +408,11 @@ private fun MealCheckInContent(
                         )
                     }
                     Text(
-                        text = stringResource(
-                            R.string.serving_size_value,
-                            servingSize,
-                            totalCalories
-                        ),
+                        text = "${String.format(Locale.US, "%.1f", servingSize)}x",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
 
@@ -501,32 +480,11 @@ private fun MealCheckInContent(
                     }
                 }
 
-                // Total calories display (matching exercise style)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.total_calories),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = "$totalCalories kcal",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                CaloriesSummaryCard(
+                    label = stringResource(R.string.total_calories),
+                    labelColor = BrandGoldLight,
+                    valueText = "$totalCalories kcal"
+                )
 
                 // Notes field
                 OutlinedTextField(
@@ -540,58 +498,89 @@ private fun MealCheckInContent(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val checkIn = if (isEditMode && existingMealCheckIn != null) {
-                        // Update existing check-in with new values but preserve ID and timestamps
-                        existingMealCheckIn.copy(
-                            servingSize = servingSize,
-                            notes = notes.takeIf { it.isNotBlank() }
-                        )
-                    } else {
-                        // Create new check-in
-                        MealCheckIn.create(
-                            mealId = meal.id,
-                            servingSize = servingSize,
-                            notes = notes.takeIf { it.isNotBlank() }
-                        )
-                    }
-                    onCheckIn(checkIn)
-                }
-            ) {
-                Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
-            }
-        },
-        dismissButton = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Delete button (only in edit mode) - positioned at bottom-left
-                if (isEditMode && onDelete != null) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                } else {
-                    // Empty space to maintain layout when no delete button
-                    Spacer(modifier = Modifier.size(48.dp))
-                }
-                
                 TextButton(onClick = onDismiss) {
                     Text(
                         text = stringResource(R.string.cancel),
                         color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                 }
+                Button(
+                    onClick = {
+                        val checkIn = if (isEditMode && existingMealCheckIn != null) {
+                            // Update existing check-in with new values but preserve ID and timestamps
+                            existingMealCheckIn.copy(
+                                servingSize = servingSize,
+                                notes = notes.takeIf { it.isNotBlank() }
+                            )
+                        } else {
+                            // Create new check-in
+                            MealCheckIn.create(
+                                mealId = meal.id,
+                                servingSize = servingSize,
+                                notes = notes.takeIf { it.isNotBlank() }
+                            )
+                        }
+                        onCheckIn(checkIn)
+                    }
+                ) {
+                    Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
+                }
+            }
+        },
+        dismissButton = {
+            // Delete button (only in edit mode) - positioned at left
+            if (isEditMode && onDelete != null) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                // Empty space to maintain layout when no delete button
+                Spacer(modifier = Modifier.size(48.dp))
             }
         }
     )
+}
+
+@Composable
+private fun CaloriesSummaryCard(
+    label: String,
+    labelColor: Color,
+    valueText: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = labelColor
+            )
+            Text(
+                text = valueText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = NeutralLight100
+            )
+        }
+    }
 }
