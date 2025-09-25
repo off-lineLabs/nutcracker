@@ -170,8 +170,9 @@ private fun MainExerciseSelectionDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.9f)
+                .padding(8.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
@@ -179,8 +180,8 @@ private fun MainExerciseSelectionDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
+                    .fillMaxSize()
+                    .padding(20.dp)
             ) {
                 // Custom title with back arrow
                 Box(
@@ -256,7 +257,9 @@ private fun MainExerciseSelectionDialog(
                 } else {
                     
                     LazyColumn(
-                        modifier = Modifier.heightIn(max = 200.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(exercises) { exercise ->

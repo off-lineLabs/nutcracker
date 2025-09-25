@@ -68,8 +68,9 @@ fun SelectMealForCheckInDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.9f)
+                .padding(8.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
@@ -77,8 +78,8 @@ fun SelectMealForCheckInDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
+                    .fillMaxSize()
+                    .padding(20.dp)
             ) {
                 // Custom title with back arrow
                 Box(
@@ -175,7 +176,7 @@ fun SelectMealForCheckInDialog(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 200.dp),
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(meals) { meal ->
