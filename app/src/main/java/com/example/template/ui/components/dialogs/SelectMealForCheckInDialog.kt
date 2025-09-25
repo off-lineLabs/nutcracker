@@ -76,47 +76,7 @@ fun SelectMealForCheckInDialog(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             ) {
-                // Show existing meals if any
-                if (meals.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.your_meals),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(meals) { meal ->
-                            MealItem(
-                                meal = meal,
-                                onMealClick = { 
-                                    selectedMeal = meal
-                                    showUnifiedDialog = true
-                                }
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    HorizontalDivider()
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                
-                // Action buttons
-                Text(
-                    text = stringResource(R.string.add_new_meal),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
+                // Action buttons at the top
                 // Scan barcode button
                 Button(
                     onClick = onScanBarcode,
@@ -155,7 +115,7 @@ fun SelectMealForCheckInDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Type information button (previously "Add new meal")
+                // Type information button
                 Button(
                     onClick = onAddMeal,
                     modifier = Modifier.fillMaxWidth(),
@@ -170,6 +130,34 @@ fun SelectMealForCheckInDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.type_information))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Existing meals list
+                if (meals.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.no_meals_added),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(meals) { meal ->
+                            MealItem(
+                                meal = meal,
+                                onMealClick = { 
+                                    selectedMeal = meal
+                                    showUnifiedDialog = true
+                                }
+                            )
+                        }
+                    }
                 }
             }
         },
