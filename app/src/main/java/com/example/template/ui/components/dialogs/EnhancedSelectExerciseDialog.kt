@@ -30,6 +30,7 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.ui.components.ExerciseImageIcon
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandSecondaryShade
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,7 +184,7 @@ private fun MainExerciseSelectionDialog(
                     onClick = onSearchExternal,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = brandSecondaryShade(0)
                     )
                 ) {
                     Icon(
@@ -202,7 +203,7 @@ private fun MainExerciseSelectionDialog(
                     onClick = onAddExercise,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = brandSecondaryShade(2)
                     )
                 ) {
                     Icon(
