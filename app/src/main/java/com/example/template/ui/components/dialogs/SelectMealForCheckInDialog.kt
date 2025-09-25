@@ -22,6 +22,7 @@ import com.example.template.R
 import com.example.template.data.model.Meal
 import com.example.template.ui.components.items.MealItem
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandAccentShade
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +122,7 @@ fun SelectMealForCheckInDialog(
                     onClick = onScanBarcode,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                        containerColor = brandAccentShade(0)
                     )
                 ) {
                     Icon(
@@ -140,7 +141,7 @@ fun SelectMealForCheckInDialog(
                     onClick = onSearchMeal,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = brandAccentShade(1)
                     )
                 ) {
                     Icon(
@@ -159,7 +160,7 @@ fun SelectMealForCheckInDialog(
                     onClick = onAddMeal,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = brandAccentShade(2)
                     )
                 ) {
                     Icon(

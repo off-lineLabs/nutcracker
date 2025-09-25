@@ -292,3 +292,176 @@ fun getContrastingTextColor(): Color {
 fun getSecondaryTextColor(): Color {
     return if (isDarkTheme()) NeutralDark600 else TextSecondary
 }
+
+/**
+ * Generate different shades of a color with varying contrast levels
+ * 
+ * @param baseColor The base color to create shades from
+ * @param level Contrast level from 0-4:
+ *   - 0: No change (returns original color)
+ *   - 1: Very subtle contrast adjustment
+ *   - 2: Subtle contrast adjustment
+ *   - 3: Moderate contrast adjustment  
+ *   - 4: High contrast adjustment
+ * @param backgroundColor The background color to contrast against (optional, uses theme background if not provided)
+ * @return A new color with the specified contrast level
+ */
+fun generateColorShade(
+    baseColor: Color, 
+    level: Int, 
+    backgroundColor: Color? = null
+): Color {
+    if (level == 0) return baseColor
+    
+    // Clamp level to valid range
+    val clampedLevel = level.coerceIn(0, 4)
+    
+    // Convert to HSL for better color manipulation
+    val hsl = rgbToHsl(baseColor)
+    
+    // Calculate contrast adjustment based on level (more gradual steps)
+    val contrastFactor = when (clampedLevel) {
+        1 -> 0.08f  // Very subtle
+        2 -> 0.15f  // Subtle
+        3 -> 0.25f  // Moderate
+        4 -> 0.40f  // High
+        else -> 0f
+    }
+    
+    // Determine contrast direction based on background luminance (like getContrastingTextColor)
+    val backgroundLuminance = backgroundColor?.luminance() ?: 0.5f
+    val shouldLighten = backgroundLuminance < 0.5f
+    
+    // Adjust lightness based on background contrast
+    val newLightness = if (shouldLighten) {
+        // For dark backgrounds, make colors lighter for better contrast
+        (hsl.lightness + contrastFactor).coerceAtMost(0.9f)
+    } else {
+        // For light backgrounds, make colors darker for better contrast
+        (hsl.lightness - contrastFactor).coerceAtLeast(0.1f)
+    }
+    
+    // Slightly adjust saturation for more vibrant results
+    val newSaturation = (hsl.saturation + (contrastFactor * 0.2f)).coerceAtMost(1f)
+    
+    return hslToRgb(hsl.hue, newSaturation, newLightness)
+}
+
+/**
+ * Generate a themed color shade that automatically detects the current theme background
+ */
+@Composable
+fun generateThemedColorShade(baseColor: Color, level: Int): Color {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    return generateColorShade(baseColor, level, backgroundColor)
+}
+
+/**
+ * Generate different shades of your brand colors
+ */
+@Composable
+fun brandPrimaryShade(level: Int): Color {
+    return generateThemedColorShade(brandPrimaryColor(), level)
+}
+
+@Composable
+fun brandSecondaryShade(level: Int): Color {
+    return generateThemedColorShade(brandSecondaryColor(), level)
+}
+
+@Composable
+fun brandAccentShade(level: Int): Color {
+    return generateThemedColorShade(brandAccentColor(), level)
+}
+
+@Composable
+fun brandHighlightShade(level: Int): Color {
+    return generateThemedColorShade(brandHighlightColor(), level)
+}
+
+/**
+ * Extension function for easy color shade generation
+ */
+fun Color.shade(level: Int, backgroundColor: Color? = null): Color {
+    return generateColorShade(this, level, backgroundColor)
+}
+
+/**
+ * Themed extension function for easy color shade generation
+ */
+@Composable
+fun Color.themedShade(level: Int): Color {
+    return generateThemedColorShade(this, level)
+}
+
+/**
+ * RGB to HSL conversion
+ */
+private fun rgbToHsl(color: Color): HslColor {
+    val r = color.red
+    val g = color.green
+    val b = color.blue
+    
+    val max = maxOf(r, g, b)
+    val min = minOf(r, g, b)
+    val delta = max - min
+    
+    val lightness = (max + min) / 2f
+    
+    val saturation = if (delta == 0f) {
+        0f
+    } else {
+        if (lightness < 0.5f) {
+            delta / (max + min)
+        } else {
+            delta / (2f - max - min)
+        }
+    }
+    
+    val hue = when {
+        delta == 0f -> 0f
+        max == r -> ((g - b) / delta + (if (g < b) 6 else 0)) / 6f
+        max == g -> ((b - r) / delta + 2) / 6f
+        else -> ((r - g) / delta + 4) / 6f
+    }
+    
+    return HslColor(hue, saturation, lightness)
+}
+
+/**
+ * HSL to RGB conversion
+ */
+private fun hslToRgb(hue: Float, saturation: Float, lightness: Float): Color {
+    val h = hue * 6f
+    val s = saturation
+    val l = lightness
+    
+    val c = (1f - kotlin.math.abs(2f * l - 1f)) * s
+    val x = c * (1f - kotlin.math.abs((h % 2f) - 1f))
+    val m = l - c / 2f
+    
+    val (r, g, b) = when {
+        h < 1f -> Triple(c, x, 0f)
+        h < 2f -> Triple(x, c, 0f)
+        h < 3f -> Triple(0f, c, x)
+        h < 4f -> Triple(0f, x, c)
+        h < 5f -> Triple(x, 0f, c)
+        else -> Triple(c, 0f, x)
+    }
+    
+    return Color(
+        red = (r + m).coerceIn(0f, 1f),
+        green = (g + m).coerceIn(0f, 1f),
+        blue = (b + m).coerceIn(0f, 1f),
+        alpha = 1f
+    )
+}
+
+/**
+ * HSL color data class
+ */
+private data class HslColor(
+    val hue: Float,
+    val saturation: Float,
+    val lightness: Float
+)
