@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.window.Dialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -154,6 +155,7 @@ enum class DialogState {
     MAIN, SEARCH, EXTERNAL_DETAILS
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainExerciseSelectionDialog(
     exercises: List<Exercise>,
@@ -163,22 +165,49 @@ private fun MainExerciseSelectionDialog(
     onEditExercise: (Exercise) -> Unit,
     onSearchExternal: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.my_exercises),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
-        },
-        text = {
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(24.dp)
             ) {
+                // Custom title with back arrow
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Back arrow button on the left
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.close),
+                            tint = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        )
+                    }
+                    
+                    // Centered title
+                    Text(
+                        text = stringResource(R.string.my_exercises),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
                 // Search external database button
                 Button(
                     onClick = onSearchExternal,
@@ -286,14 +315,6 @@ private fun MainExerciseSelectionDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(R.string.cancel),
-                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                )
-            }
         }
-    )
+    }
 }
