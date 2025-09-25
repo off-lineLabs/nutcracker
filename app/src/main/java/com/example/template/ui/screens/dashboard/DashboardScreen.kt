@@ -378,6 +378,7 @@ fun DashboardScreen(
     var userGoal by remember { mutableStateOf(UserGoal.default()) }
     var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
+    var refreshCheckIns by remember { mutableStateOf(0) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableDoubleStateOf(0.0) }
     var foodCalories by remember { mutableDoubleStateOf(0.0) }
@@ -524,7 +525,7 @@ fun DashboardScreen(
         selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
     }
 
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = refreshCheckIns) {
         foodLogRepository.getCheckInsByDate(selectedDateString).collectLatest { checkInsList ->
             dailyMealCheckIns = checkInsList
         }
@@ -1313,9 +1314,16 @@ fun DashboardScreen(
     
     // Edit Meal Dialog
     showEditMealDialog?.let { checkIn ->
-        // Find the corresponding meal
-        val meal = meals.find { it.id == checkIn.mealId }
-        if (meal != null) {
+        // Get the meal directly from database (including hidden meals)
+        var meal by remember { mutableStateOf<Meal?>(null) }
+        
+        LaunchedEffect(checkIn.mealId) {
+            foodLogRepository.getMealById(checkIn.mealId).collectLatest { foundMeal ->
+                meal = foundMeal
+            }
+        }
+        
+        meal?.let { foundMeal ->
             // Convert DailyNutritionEntry to MealCheckIn for editing
             val existingMealCheckIn = MealCheckIn(
                 id = checkIn.checkInId,
@@ -1367,7 +1375,7 @@ fun DashboardScreen(
                     showEditMealDialog = null
                 },
                 isEditMode = true,
-                meal = meal,
+                meal = foundMeal,
                 existingMealCheckIn = existingMealCheckIn
             )
         }
@@ -1585,8 +1593,10 @@ fun DashboardScreen(
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         
+                        AppLogger.d("DashboardScreen", "Save and Check-in: Check-in created successfully with mealId: ${savedMeal.id}")
                         snackbarHostState.showSnackbar(message = "Meal saved and check-in completed successfully!")
                         showUnifiedMealDetailDialog = savedMeal
+                        refreshCheckIns++
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to save and check-in meal", e, mapOf(
@@ -1680,7 +1690,9 @@ fun DashboardScreen(
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         
+                        AppLogger.d("DashboardScreen", "Check-in created successfully with mealId: ${savedMeal.id}")
                         snackbarHostState.showSnackbar(message = "Check-in completed successfully!")
+                        refreshCheckIns++
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to check-in meal", e, mapOf(
