@@ -18,6 +18,7 @@ import com.example.template.data.mapper.FoodInfoToMealMapper
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandAccentShade
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,7 +96,10 @@ fun ServingSizeDialog(
                         onClick = { showUnitSelector = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(selectedUnit?.abbreviation ?: stringResource(R.string.select_unit))
+                        Text(
+                            text = selectedUnit?.abbreviation ?: stringResource(R.string.select_unit),
+                            color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        )
                     }
                 }
                 
@@ -113,7 +117,8 @@ fun ServingSizeDialog(
                         Text(
                             text = stringResource(R.string.nutrition_preview),
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = brandAccentShade(4)
                         )
                         
                         val multiplier = try {
@@ -122,16 +127,52 @@ fun ServingSizeDialog(
                         
                         val nutrition = foodInfo.nutrition
                         nutrition.calories?.let { 
-                            Text("Calories: ${(it * multiplier / 100).toInt()} kcal")
+                            Row {
+                                Text(
+                                    text = "Calories: ",
+                                    color = brandAccentShade(2)
+                                )
+                                Text(
+                                    text = "${(it * multiplier / 100).toInt()} kcal",
+                                    color = brandAccentShade(3)
+                                )
+                            }
                         }
                         nutrition.proteins?.let { 
-                            Text("Protein: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
+                            Row {
+                                Text(
+                                    text = "Protein: ",
+                                    color = brandAccentShade(2)
+                                )
+                                Text(
+                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    color = brandAccentShade(3)
+                                )
+                            }
                         }
                         nutrition.carbohydrates?.let { 
-                            Text("Carbs: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
+                            Row {
+                                Text(
+                                    text = "Carbs: ",
+                                    color = brandAccentShade(2)
+                                )
+                                Text(
+                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    color = brandAccentShade(3)
+                                )
+                            }
                         }
                         nutrition.fat?.let { 
-                            Text("Fat: ${String.format(Locale.US, "%.1f", it * multiplier / 100)}g")
+                            Row {
+                                Text(
+                                    text = "Fat: ",
+                                    color = brandAccentShade(2)
+                                )
+                                Text(
+                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    color = brandAccentShade(3)
+                                )
+                            }
                         }
                     }
                 }
@@ -156,7 +197,7 @@ fun ServingSizeDialog(
                     enabled = isEnabled,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = brandAccentShade(0)
                     )
                 ) {
                     Text(stringResource(R.string.save_and_check_in))
@@ -174,7 +215,7 @@ fun ServingSizeDialog(
                     enabled = isEnabled,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = brandAccentShade(1)
                     )
                 ) {
                     Text(stringResource(R.string.just_save))
@@ -192,7 +233,7 @@ fun ServingSizeDialog(
                     enabled = isEnabled,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                        containerColor = brandAccentShade(2)
                     )
                 ) {
                     Text(stringResource(R.string.just_check_in))
@@ -203,7 +244,10 @@ fun ServingSizeDialog(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
             }
         }

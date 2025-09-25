@@ -170,9 +170,9 @@ private fun MainExerciseSelectionDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
+                .fillMaxWidth(0.98f)
                 .fillMaxHeight(0.9f)
-                .padding(8.dp),
+                .padding(4.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
