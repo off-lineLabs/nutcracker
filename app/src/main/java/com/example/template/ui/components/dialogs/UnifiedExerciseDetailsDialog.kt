@@ -69,9 +69,6 @@ fun UnifiedExerciseDetailsDialog(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit Exercise")
-                }
             }
         },
         text = {
@@ -93,7 +90,7 @@ fun UnifiedExerciseDetailsDialog(
                 
                 // Personal Data card (moved from swipable content)
                 item {
-                    PersonalDataCard(exercise = exercise)
+                    PersonalDataCard(exercise = exercise, onEdit = onEdit)
                 }
                 
                 // Exercise details
@@ -254,7 +251,7 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
 }
 
 @Composable
-private fun PersonalDataCard(exercise: Exercise) {
+private fun PersonalDataCard(exercise: Exercise, onEdit: () -> Unit) {
     val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
     
@@ -268,15 +265,35 @@ private fun PersonalDataCard(exercise: Exercise) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = stringResource(R.string.personal_data),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = contrastingTextColor
-            )
+            // Header row with centered title and edit button
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Centered title
+                Text(
+                    text = stringResource(R.string.personal_data),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = contrastingTextColor,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                // Edit button on the right
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        Icons.Filled.Edit, 
+                        contentDescription = "Edit Exercise",
+                        modifier = Modifier.size(18.dp),
+                        tint = contrastingTextColor
+                    )
+                }
+            }
             
             PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg", contrastingTextColor)
             PersonalDataRow("Default Reps", exercise.defaultReps.toString(), contrastingTextColor)

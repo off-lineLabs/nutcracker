@@ -29,6 +29,7 @@ import com.example.template.data.service.ExternalExerciseService
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.generateThemedColorShade
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -237,7 +238,7 @@ fun SearchExternalExercisesDialog(
                     Text(
                         text = "Found $currentFilterCount exercises matching your filters",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -358,7 +359,7 @@ fun SearchExternalExercisesDialog(
                     Text(
                         text = stringResource(R.string.provided_by),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                     TextButton(
                         onClick = { 
@@ -370,7 +371,7 @@ fun SearchExternalExercisesDialog(
                         Text(
                             text = stringResource(R.string.yuhonas),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            color = generateThemedColorShade(MaterialTheme.colorScheme.primary, 3)
                         )
                     }
                 }
