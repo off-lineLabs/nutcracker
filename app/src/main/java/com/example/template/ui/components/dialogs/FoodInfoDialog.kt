@@ -347,11 +347,11 @@ private fun ClassificationCard(
                     value = novaClassification.group.toString(),
                     description = novaClassification.description,
                     color = when (novaClassification.group) {
-                        1 -> Color(0xFF4CAF50) // Green
-                        2 -> Color(0xFF8BC34A) // Light Green
-                        3 -> Color(0xFFFF9800) // Orange
-                        4 -> Color(0xFFF44336) // Red
-                        else -> Color(0xFF9E9E9E) // Gray
+                        1 -> Color(0xFF2E7D32) // Dark Green
+                        2 -> Color(0xFF4CAF50) // Green
+                        3 -> Color(0xFFFF6F00) // Dark Orange
+                        4 -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -363,12 +363,12 @@ private fun ClassificationCard(
                     value = score.grade,
                     description = "Environmental impact score",
                     color = when (score.grade.uppercase()) {
-                        "A" -> Color(0xFF4CAF50)
-                        "B" -> Color(0xFF8BC34A)
-                        "C" -> Color(0xFFFFEB3B)
-                        "D" -> Color(0xFFFF9800)
-                        "E" -> Color(0xFFF44336)
-                        else -> Color(0xFF9E9E9E)
+                        "A" -> Color(0xFF2E7D32) // Dark Green
+                        "B" -> Color(0xFF4CAF50) // Green
+                        "C" -> Color(0xFFF57F17) // Dark Yellow
+                        "D" -> Color(0xFFFF6F00) // Dark Orange
+                        "E" -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -380,12 +380,12 @@ private fun ClassificationCard(
                     value = score.grade,
                     description = "Nutritional quality score",
                     color = when (score.grade.uppercase()) {
-                        "A" -> Color(0xFF4CAF50)
-                        "B" -> Color(0xFF8BC34A)
-                        "C" -> Color(0xFFFFEB3B)
-                        "D" -> Color(0xFFFF9800)
-                        "E" -> Color(0xFFF44336)
-                        else -> Color(0xFF9E9E9E)
+                        "A" -> Color(0xFF2E7D32) // Dark Green
+                        "B" -> Color(0xFF4CAF50) // Green
+                        "C" -> Color(0xFFF57F17) // Dark Yellow
+                        "D" -> Color(0xFFFF6F00) // Dark Orange
+                        "E" -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -415,7 +415,7 @@ private fun ClassificationRow(
             Text(
                 text = value,
                 style = MaterialTheme.typography.labelSmall,
-                color = getContrastingTextColor(color),
+                color = Color.White,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -426,12 +426,13 @@ private fun ClassificationRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
             )
         }
     }
