@@ -114,7 +114,7 @@ fun FoodInfoDialog(
                 TextButton(onClick = onBack) {
                     Text(
                         text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.primary
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                 }
                 Button(

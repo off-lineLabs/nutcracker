@@ -104,7 +104,10 @@ fun ExternalExerciseDetailsDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
                 Button(
                     onClick = onImport,

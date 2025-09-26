@@ -380,7 +380,7 @@ fun SearchExternalExercisesDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.primary
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                 }
             }
