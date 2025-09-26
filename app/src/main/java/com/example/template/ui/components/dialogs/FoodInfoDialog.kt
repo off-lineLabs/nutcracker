@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -125,25 +128,69 @@ fun FoodInfoDialog(
 
 @Composable
 private fun FoodImageCard(imageUrl: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    HeroFoodImage(
+        imageUrl = imageUrl,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun HeroFoodImage(
+    imageUrl: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(240.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
+        // Background blurred image
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(radius = 20.dp),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Gradient overlay for better contrast
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+        )
+        
+        // Main image with original aspect ratio preserved and levitating effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
         ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "Food product image",
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp)),
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.2f),
+                        spotColor = Color.Black.copy(alpha = 0.1f)
+                    ),
                 contentScale = ContentScale.Fit
             )
         }
