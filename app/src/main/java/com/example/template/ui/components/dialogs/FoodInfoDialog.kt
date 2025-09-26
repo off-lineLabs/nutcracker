@@ -213,16 +213,17 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nutrition Facts (per 100g/100ml)",
+                text = "Nutrition Facts",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = contrastingTextColor
             )
             Text(
-                text = "All values are standardized per 100g or 100ml for easy comparison",
+                text = "per 100g/100ml",
                 style = MaterialTheme.typography.bodySmall,
                 color = contrastingTextColor
             )

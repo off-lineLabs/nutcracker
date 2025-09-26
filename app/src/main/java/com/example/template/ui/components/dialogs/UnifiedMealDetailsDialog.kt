@@ -258,12 +258,18 @@ private fun BasicNutritionCard(meal: Meal) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nutrition Facts (per ${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation})",
+                text = "Nutrition Facts",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
+            )
+            Text(
+                text = "per ${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
+                style = MaterialTheme.typography.bodySmall,
                 color = contrastingTextColor
             )
             
