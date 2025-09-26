@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -75,9 +76,6 @@ fun UnifiedMealDetailsDialog(
                         )
                     }
                 }
-                IconButton(onClick = { onEdit(meal) }) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit Meal")
-                }
             }
         },
         text = {
@@ -100,7 +98,7 @@ fun UnifiedMealDetailsDialog(
                 
                 // Basic nutrition information
                 item {
-                    BasicNutritionCard(meal = meal)
+                    BasicNutritionCard(meal = meal, onEdit = onEdit)
                 }
                 
                 // Extended nutrition information (if available from Open Food Facts)
@@ -244,7 +242,7 @@ private fun HeroFoodImage(
 }
 
 @Composable
-private fun BasicNutritionCard(meal: Meal) {
+private fun BasicNutritionCard(meal: Meal, onEdit: (Meal) -> Unit) {
     val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
     
@@ -258,19 +256,40 @@ private fun BasicNutritionCard(meal: Meal) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Nutrition Facts",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = contrastingTextColor
-            )
+            // Header row with centered title and edit button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Nutrition Facts",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = contrastingTextColor
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { onEdit(meal) },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Edit, 
+                        contentDescription = "Edit Meal",
+                        modifier = Modifier.size(18.dp),
+                        tint = contrastingTextColor
+                    )
+                }
+            }
             Text(
                 text = "per ${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
                 style = MaterialTheme.typography.bodySmall,
-                color = contrastingTextColor
+                color = contrastingTextColor,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
             
             NutritionRow("Calories", "${meal.calories} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
@@ -298,7 +317,8 @@ private fun ExtendedNutritionCard(meal: Meal) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.additional_nutrition),
@@ -392,7 +412,8 @@ private fun ClassificationCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Classification & Scores",
