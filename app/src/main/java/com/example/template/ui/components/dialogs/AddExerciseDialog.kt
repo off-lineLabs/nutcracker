@@ -24,6 +24,7 @@ import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.toInternalExercise
 import com.example.template.util.logger.AppLogger
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -305,7 +306,10 @@ fun AddExerciseDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.cancel))
+                        Text(
+                            text = stringResource(R.string.cancel),
+                            color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        )
                     }
                     Button(
                         onClick = {
