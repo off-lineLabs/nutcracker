@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.template.ui.theme.getContrastingTextColor
 import java.util.Locale
 import com.example.template.ui.theme.getContrastingIconColor
+import com.example.template.ui.theme.generateThemedColorShade
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -579,13 +580,13 @@ private fun parseOpenFoodFactsFormatting(text: String) = buildAnnotatedString {
 private fun AttributionCard() {
     val uriHandler = LocalUriHandler.current
     val contrastingTextColor = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+    val linkColor = generateThemedColorShade(MaterialTheme.colorScheme.primary, 3)
     
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = stringResource(R.string.provided_by),
@@ -595,7 +596,7 @@ private fun AttributionCard() {
         Text(
             text = "© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
+            color = linkColor,
             modifier = Modifier.clickable {
                 uriHandler.openUri("https://world.openfoodfacts.org/")
             }
