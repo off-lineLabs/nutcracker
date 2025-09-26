@@ -258,23 +258,24 @@ private fun BasicNutritionCard(meal: Meal, onEdit: (Meal) -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Header row with centered title and edit button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Header row with truly centered title and edit button
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.weight(1f))
+                // Centered title
                 Text(
                     text = "Nutrition Facts",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = contrastingTextColor
+                    color = contrastingTextColor,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                // Edit button on the right
                 IconButton(
                     onClick = { onEdit(meal) },
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.CenterEnd)
                 ) {
                     Icon(
                         Icons.Filled.Edit, 
