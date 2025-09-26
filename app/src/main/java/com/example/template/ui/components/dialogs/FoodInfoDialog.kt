@@ -112,7 +112,10 @@ fun FoodInfoDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
                 Button(
                     onClick = onSelect,
@@ -296,7 +299,7 @@ private fun NutritionRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = textColor
+                color = textColor.copy(alpha = 0.7f)
             )
         }
         Text(
@@ -337,7 +340,8 @@ private fun ClassificationCard(
             Text(
                 text = "Classification & Scores",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
             )
             
             // Nova Classification - only show if group > 0 (not unknown)

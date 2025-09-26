@@ -114,7 +114,7 @@ fun UnifiedExerciseDetailsDialog(
                 TextButton(onClick = onBack) {
                     Text(
                         text = stringResource(R.string.close),
-                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Button(
@@ -226,7 +226,8 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.exercise_details),
@@ -267,7 +268,8 @@ private fun PersonalDataCard(exercise: Exercise) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.personal_data),
@@ -320,7 +322,8 @@ private fun InstructionsCard(instructions: List<String>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.instructions),

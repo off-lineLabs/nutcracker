@@ -28,6 +28,7 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -316,18 +317,19 @@ fun SearchExternalExercisesDialog(
                                         Text(
                                             text = exercise.name,
                                             style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
                                         )
                                         Text(
                                             text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                         )
                                         if (exercise.primaryMuscles.isNotEmpty()) {
                                             Text(
                                                 text = "Muscles: ${exercise.primaryMuscles.joinToString(", ")}",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                             )
                                         }
                                     }
@@ -376,7 +378,10 @@ fun SearchExternalExercisesDialog(
                     onClick = onBack,
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }

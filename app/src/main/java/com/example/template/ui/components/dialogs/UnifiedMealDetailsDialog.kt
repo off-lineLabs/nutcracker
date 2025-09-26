@@ -378,7 +378,7 @@ private fun NutritionRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = textColor
+                color = textColor.copy(alpha = 0.7f)
             )
         }
         Text(
@@ -419,7 +419,8 @@ private fun ClassificationCard(
             Text(
                 text = "Classification & Scores",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
             )
             
             // Nova Classification - only show if group > 0 (not unknown)

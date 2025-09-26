@@ -27,6 +27,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
+import com.example.template.ui.theme.getContrastingTextColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,36 +183,41 @@ private fun ExerciseImageSlideshow(
 
 @Composable
 private fun ExerciseDetailsCard(exercise: ExternalExercise) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.exercise_details),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
-            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() })
-            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }) }
-            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }) }
-            DetailRow("Level", exercise.level.replaceFirstChar { it.uppercase() })
-            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }) }
+            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            DetailRow("Level", exercise.level.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } })
+                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } })
+                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
         }
     }
@@ -219,22 +225,27 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
 
 @Composable
 private fun InstructionsCard(instructions: List<String>) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardBackgroundColor
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = contrastingTextColor
             )
             
             instructions.forEachIndexed { index, instruction ->
@@ -246,11 +257,13 @@ private fun InstructionsCard(instructions: List<String>) {
                         text = "${index + 1}.",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
+                        color = contrastingTextColor,
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
                         text = instruction,
                         style = MaterialTheme.typography.bodyMedium,
+                        color = contrastingTextColor,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -260,7 +273,7 @@ private fun InstructionsCard(instructions: List<String>) {
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(label: String, value: String, contrastingTextColor: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -269,11 +282,12 @@ private fun DetailRow(label: String, value: String) {
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contrastingTextColor.copy(alpha = 0.7f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = contrastingTextColor
         )
     }
 }
