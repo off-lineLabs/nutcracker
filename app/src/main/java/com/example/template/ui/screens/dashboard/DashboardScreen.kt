@@ -45,6 +45,8 @@ import com.example.template.ui.components.ExerciseToggle
 import com.example.template.ui.components.TEFToggle
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import com.example.template.FoodLogApplication
@@ -1152,8 +1154,7 @@ fun DashboardScreen(
                                         // Create the complete exercise with all external data
                                         val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
                                             id = exerciseId,
-                                            kcalBurnedPerRep = newExercise.kcalBurnedPerRep,
-                                            kcalBurnedPerMinute = newExercise.kcalBurnedPerMinute,
+                                            kcalBurnedPerUnit = newExercise.kcalBurnedPerUnit,
                                             defaultWeight = newExercise.defaultWeight,
                                             defaultReps = newExercise.defaultReps,
                                             defaultSets = newExercise.defaultSets,
@@ -1234,8 +1235,7 @@ fun DashboardScreen(
                                     if (localImagePaths.isNotEmpty()) {
                                         val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                             id = exerciseId,
-                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
-                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                             defaultWeight = exercise.defaultWeight,
                                             defaultReps = exercise.defaultReps,
                                             defaultSets = exercise.defaultSets,
@@ -1247,13 +1247,38 @@ fun DashboardScreen(
                                 }
                             }
                             
-                            // Create check-in
+                            // Create check-in with appropriate values based on exercise type
+                            val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+                            val (weight, reps, sets) = when (exerciseType) {
+                                ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
+                                ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
+                                ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
+                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
+                            }
+                            
+                            // Calculate calories burned based on exercise type
+                            val caloriesBurned = when (exerciseType) {
+                                ExerciseType.STRENGTH -> {
+                                    val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
+                                    sets * kcalPerSet
+                                }
+                                ExerciseType.CARDIO -> {
+                                    val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerMinute // reps = minutes for cardio
+                                }
+                                ExerciseType.BODYWEIGHT -> {
+                                    val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerRep
+                                }
+                                else -> 0.0
+                            }
+                            
                             val exerciseLog = ExerciseLog.create(
                                 exerciseId = exerciseId,
-                                weight = exercise.defaultWeight,
-                                reps = exercise.defaultReps,
-                                sets = exercise.defaultSets,
-                                caloriesBurned = 0.0,
+                                weight = weight,
+                                reps = reps,
+                                sets = sets,
+                                caloriesBurned = caloriesBurned,
                                 notes = null
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
@@ -1285,8 +1310,7 @@ fun DashboardScreen(
                                     if (localImagePaths.isNotEmpty()) {
                                         val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                             id = exerciseId,
-                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
-                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                             defaultWeight = exercise.defaultWeight,
                                             defaultReps = exercise.defaultReps,
                                             defaultSets = exercise.defaultSets,
@@ -1324,8 +1348,7 @@ fun DashboardScreen(
                                     if (localImagePaths.isNotEmpty()) {
                                         val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                             id = exerciseId,
-                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
-                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                             defaultWeight = exercise.defaultWeight,
                                             defaultReps = exercise.defaultReps,
                                             defaultSets = exercise.defaultSets,
@@ -1337,13 +1360,38 @@ fun DashboardScreen(
                                 }
                             }
                             
-                            // Create check-in
+                            // Create check-in with appropriate values based on exercise type
+                            val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+                            val (weight, reps, sets) = when (exerciseType) {
+                                ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
+                                ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
+                                ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
+                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
+                            }
+                            
+                            // Calculate calories burned based on exercise type
+                            val caloriesBurned = when (exerciseType) {
+                                ExerciseType.STRENGTH -> {
+                                    val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
+                                    sets * kcalPerSet
+                                }
+                                ExerciseType.CARDIO -> {
+                                    val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerMinute // reps = minutes for cardio
+                                }
+                                ExerciseType.BODYWEIGHT -> {
+                                    val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerRep
+                                }
+                                else -> 0.0
+                            }
+                            
                             val exerciseLog = ExerciseLog.create(
                                 exerciseId = exerciseId,
-                                weight = exercise.defaultWeight,
-                                reps = exercise.defaultReps,
-                                sets = exercise.defaultSets,
-                                caloriesBurned = 0.0,
+                                weight = weight,
+                                reps = reps,
+                                sets = sets,
+                                caloriesBurned = caloriesBurned,
                                 notes = null
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)

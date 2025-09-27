@@ -136,20 +136,19 @@ private fun ExerciseCheckInContent(
         when (exerciseType) {
             ExerciseType.STRENGTH -> {
                 val setsVal = sets.toIntOrNull() ?: 0
-                val kcalPerSet = exercise.kcalBurnedPerRep ?: 0.0 // This field now represents kcal per set
+                val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
                 setsVal * kcalPerSet
             }
             ExerciseType.CARDIO -> {
                 val repsVal = reps.toIntOrNull() ?: 0
-                val kcalPerMinute = exercise.kcalBurnedPerMinute ?: 0.0
+                val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
                 // Assuming reps represent minutes for cardio
                 repsVal * kcalPerMinute
             }
             ExerciseType.BODYWEIGHT -> {
                 val repsVal = reps.toIntOrNull() ?: 0
-                val setsVal = sets.toIntOrNull() ?: 0
-                val kcalPerRep = exercise.kcalBurnedPerRep ?: 0.0
-                repsVal * setsVal * kcalPerRep
+                val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
+                repsVal * kcalPerRep
             }
         }
     }

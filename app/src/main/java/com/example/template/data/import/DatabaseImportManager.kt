@@ -504,8 +504,7 @@ class DatabaseImportManager(
                         val exercise = Exercise(
                             id = 0, // Let Room auto-generate
                             name = row.getValueOrEmpty("name"),
-                            kcalBurnedPerRep = row.getDoubleValue("kcalBurnedPerRep"),
-                            kcalBurnedPerMinute = row.getDoubleValue("kcalBurnedPerMinute"),
+                            kcalBurnedPerUnit = row.getDoubleValue("kcalBurnedPerUnit"),
                             defaultWeight = row.getDoubleValue("defaultWeight") ?: 0.0,
                             defaultReps = row.getIntValue("defaultReps") ?: 0,
                             defaultSets = row.getIntValue("defaultSets") ?: 0,

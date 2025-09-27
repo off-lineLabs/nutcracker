@@ -41,11 +41,12 @@ fun AddExerciseDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.STRENGTH) }
-    var kcalPerRep by remember { mutableStateOf("") }
-    var kcalPerMinute by remember { mutableStateOf("") }
+    var kcalPerUnit by remember { mutableStateOf("") }
     var defaultWeight by remember { mutableStateOf("") }
     var defaultReps by remember { mutableStateOf("") }
     var defaultSets by remember { mutableStateOf("") }
+    var defaultMinutes by remember { mutableStateOf("") } // For Cardio exercises
+    var defaultBodyweightReps by remember { mutableStateOf("") } // For Bodyweight exercises
     var notes by remember { mutableStateOf("") }
 
     // Pre-populate fields when external exercise or existing exercise is provided
@@ -55,8 +56,7 @@ fun AddExerciseDialog(
         existingExercise?.let { exercise ->
             name = exercise.name
             exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
-            kcalPerRep = exercise.kcalBurnedPerRep?.toString() ?: ""
-            kcalPerMinute = exercise.kcalBurnedPerMinute?.toString() ?: ""
+            kcalPerUnit = exercise.kcalBurnedPerUnit?.toString() ?: ""
             defaultWeight = exercise.defaultWeight.toString()
             defaultReps = exercise.defaultReps.toString()
             defaultSets = exercise.defaultSets.toString()
@@ -87,7 +87,7 @@ fun AddExerciseDialog(
                 }
                 ExerciseType.CARDIO -> {
                     // Default kcal per minute for cardio
-                    kcalPerMinute = "8.0"
+                    kcalPerUnit = "8.0"
                 }
                 ExerciseType.BODYWEIGHT -> {
                     defaultReps = when (exercise.category.lowercase()) {
@@ -201,45 +201,25 @@ fun AddExerciseDialog(
                     }
                 }
 
-                // Calorie burn rate fields based on exercise type
-                when (exerciseType) {
-                    ExerciseType.STRENGTH -> {
-                        OutlinedTextField(
-                            value = kcalPerRep,
-                            onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_set)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
+                // Calorie burn rate field with appropriate label based on exercise type
+                OutlinedTextField(
+                    value = kcalPerUnit,
+                    onValueChange = { kcalPerUnit = it },
+                    label = { 
+                        Text(
+                            when (exerciseType) {
+                                ExerciseType.STRENGTH -> stringResource(R.string.kcal_per_set)
+                                ExerciseType.CARDIO -> stringResource(R.string.kcal_per_minute)
+                                ExerciseType.BODYWEIGHT -> stringResource(R.string.kcal_per_rep)
+                            }
                         )
-                    }
-                    ExerciseType.CARDIO -> {
-                        OutlinedTextField(
-                            value = kcalPerMinute,
-                            onValueChange = { kcalPerMinute = it },
-                            label = { Text(stringResource(R.string.kcal_per_minute)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
-                        )
-                    }
-                    ExerciseType.BODYWEIGHT -> {
-                        OutlinedTextField(
-                            value = kcalPerRep,
-                            onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_rep)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
-                        )
-                    }
-                }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                )
 
                 // Default values (for strength exercises) - 2x2 layout
                 if (exerciseType == ExerciseType.STRENGTH) {
@@ -293,6 +273,37 @@ fun AddExerciseDialog(
                         }
                     }
                 }
+                
+                // Additional fields for Cardio and Bodyweight exercises
+                when (exerciseType) {
+                    ExerciseType.CARDIO -> {
+                        OutlinedTextField(
+                            value = defaultMinutes,
+                            onValueChange = { defaultMinutes = it },
+                            label = { Text("Default Minutes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                            )
+                        )
+                    }
+                    ExerciseType.BODYWEIGHT -> {
+                        OutlinedTextField(
+                            value = defaultBodyweightReps,
+                            onValueChange = { defaultBodyweightReps = it },
+                            label = { Text("Default Reps") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                            )
+                        )
+                    }
+                    ExerciseType.STRENGTH -> {
+                        // No additional fields for Strength exercises
+                    }
+                }
 
                 // Notes
                 OutlinedTextField(
@@ -336,11 +347,18 @@ fun AddExerciseDialog(
                         existingExercise.copy(
                             name = name.trim(),
                             category = ExerciseCategoryMapper.getCategory(exerciseType),
-                            kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                            kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                            kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
                             defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                            defaultReps = defaultReps.toIntOrNull() ?: 0,
-                            defaultSets = defaultSets.toIntOrNull() ?: 0,
+                            defaultReps = when (exerciseType) {
+                                ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                                ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                                ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
+                            },
+                            defaultSets = when (exerciseType) {
+                                ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                                ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                                ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                            },
                             notes = notes.takeIf { it.isNotBlank() },
                             imagePaths = existingExercise.imagePaths // Preserve existing image paths
                         )
@@ -350,11 +368,18 @@ fun AddExerciseDialog(
                         baseExercise.copy(
                             name = name.trim(),
                             category = ExerciseCategoryMapper.getCategory(exerciseType),
-                            kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                            kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
+                            kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
                             defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                            defaultReps = defaultReps.toIntOrNull() ?: 0,
-                            defaultSets = defaultSets.toIntOrNull() ?: 0,
+                            defaultReps = when (exerciseType) {
+                                ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                                ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                                ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
+                            },
+                            defaultSets = when (exerciseType) {
+                                ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                                ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                                ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                            },
                             notes = notes.takeIf { it.isNotBlank() }
                         )
                     }

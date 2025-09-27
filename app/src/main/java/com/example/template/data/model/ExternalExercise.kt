@@ -30,6 +30,7 @@ fun ExternalExercise.toInternalExercise(imagePaths: List<String> = emptyList()):
         defaultWeight = getDefaultWeightForExercise(this),
         defaultReps = getDefaultRepsForExercise(this),
         defaultSets = getDefaultSetsForExercise(this),
+        kcalBurnedPerUnit = getDefaultKcalPerUnit(this),
         imagePaths = imagePaths
     )
 }
@@ -69,5 +70,14 @@ private fun getDefaultSetsForExercise(external: ExternalExercise): Int {
         "stretching" -> 1
         "cardio", "plyometrics" -> 1
         else -> 3
+    }
+}
+
+private fun getDefaultKcalPerUnit(external: ExternalExercise): Double {
+    return when (external.category.lowercase()) {
+        "strength", "strongman", "olympic weightlifting" -> 5.0 // kcal per set
+        "cardio", "plyometrics" -> 8.0 // kcal per minute
+        "stretching" -> 0.5 // kcal per rep
+        else -> 5.0 // Default to strength
     }
 }

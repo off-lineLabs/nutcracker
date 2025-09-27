@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.template.data.model.Exercise
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.data.service.ExerciseImageService
@@ -299,11 +301,14 @@ private fun PersonalDataCard(exercise: Exercise, onEdit: () -> Unit) {
             PersonalDataRow("Default Reps", exercise.defaultReps.toString(), contrastingTextColor)
             PersonalDataRow("Default Sets", exercise.defaultSets.toString(), contrastingTextColor)
             
-            exercise.kcalBurnedPerRep?.let { 
-                PersonalDataRow("Kcal per Rep", it.toString(), contrastingTextColor) 
-            }
-            exercise.kcalBurnedPerMinute?.let { 
-                PersonalDataRow("Kcal per Minute", it.toString(), contrastingTextColor) 
+            exercise.kcalBurnedPerUnit?.let { 
+                val label = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+                    ExerciseType.STRENGTH -> "Kcal per Set"
+                    ExerciseType.CARDIO -> "Kcal per Minute"
+                    ExerciseType.BODYWEIGHT -> "Kcal per Rep"
+                    else -> "Kcal per Unit"
+                }
+                PersonalDataRow(label, it.toString(), contrastingTextColor) 
             }
             
             exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
