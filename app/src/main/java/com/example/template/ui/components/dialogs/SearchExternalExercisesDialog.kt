@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -302,7 +304,9 @@ fun SearchExternalExercisesDialog(
                                         AsyncImage(
                                             model = externalExerciseService.getImageUrl(exercise.images.first()),
                                             contentDescription = "Exercise image",
-                                            modifier = Modifier.size(48.dp),
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(RoundedCornerShape(8.dp)),
                                             contentScale = ContentScale.Crop
                                         )
                                     } else {

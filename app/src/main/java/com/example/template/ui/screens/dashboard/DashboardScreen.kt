@@ -1217,6 +1217,147 @@ fun DashboardScreen(
                     showAddExerciseDialog = false
                     selectedExerciseForEdit = null
                 }
+            } else null,
+            onSaveAndCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    coroutineScope.launch {
+                        try {
+                            // Save exercise with isVisible = true
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            
+                            // Download images if available
+                            selectedExternalExercise?.let { externalExercise ->
+                                if (externalExercise.images.isNotEmpty()) {
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    
+                                    if (localImagePaths.isNotEmpty()) {
+                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                            id = exerciseId,
+                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
+                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            defaultWeight = exercise.defaultWeight,
+                                            defaultReps = exercise.defaultReps,
+                                            defaultSets = exercise.defaultSets,
+                                            notes = exercise.notes,
+                                            isVisible = true
+                                        )
+                                        foodLogRepository.updateExercise(completeExercise)
+                                    }
+                                }
+                            }
+                            
+                            // Create check-in
+                            val exerciseLog = ExerciseLog.create(
+                                exerciseId = exerciseId,
+                                weight = exercise.defaultWeight,
+                                reps = exercise.defaultReps,
+                                sets = exercise.defaultSets,
+                                caloriesBurned = 0.0,
+                                notes = null
+                            )
+                            foodLogRepository.insertExerciseLog(exerciseLog)
+                            
+                            snackbarHostState.showSnackbar(message = "Exercise saved and check-in completed!")
+                            refreshCheckIns++
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to save and check-in exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
+                }
+            } else null,
+            onJustSave = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    coroutineScope.launch {
+                        try {
+                            // Save exercise with isVisible = true
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            
+                            // Download images if available
+                            selectedExternalExercise?.let { externalExercise ->
+                                if (externalExercise.images.isNotEmpty()) {
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    
+                                    if (localImagePaths.isNotEmpty()) {
+                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                            id = exerciseId,
+                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
+                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            defaultWeight = exercise.defaultWeight,
+                                            defaultReps = exercise.defaultReps,
+                                            defaultSets = exercise.defaultSets,
+                                            notes = exercise.notes,
+                                            isVisible = true
+                                        )
+                                        foodLogRepository.updateExercise(completeExercise)
+                                    }
+                                }
+                            }
+                            
+                            snackbarHostState.showSnackbar(message = "Exercise saved successfully!")
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to save exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to save exercise: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
+                }
+            } else null,
+            onJustCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    coroutineScope.launch {
+                        try {
+                            // Save exercise with isVisible = false
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = false))
+                            
+                            // Download images if available
+                            selectedExternalExercise?.let { externalExercise ->
+                                if (externalExercise.images.isNotEmpty()) {
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    
+                                    if (localImagePaths.isNotEmpty()) {
+                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                            id = exerciseId,
+                                            kcalBurnedPerRep = exercise.kcalBurnedPerRep,
+                                            kcalBurnedPerMinute = exercise.kcalBurnedPerMinute,
+                                            defaultWeight = exercise.defaultWeight,
+                                            defaultReps = exercise.defaultReps,
+                                            defaultSets = exercise.defaultSets,
+                                            notes = exercise.notes,
+                                            isVisible = false
+                                        )
+                                        foodLogRepository.updateExercise(completeExercise)
+                                    }
+                                }
+                            }
+                            
+                            // Create check-in
+                            val exerciseLog = ExerciseLog.create(
+                                exerciseId = exerciseId,
+                                weight = exercise.defaultWeight,
+                                reps = exercise.defaultReps,
+                                sets = exercise.defaultSets,
+                                caloriesBurned = 0.0,
+                                notes = null
+                            )
+                            foodLogRepository.insertExerciseLog(exerciseLog)
+                            
+                            snackbarHostState.showSnackbar(message = "Check-in completed!")
+                            refreshCheckIns++
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to check-in exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to check-in: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
+                }
             } else null
         )
     }
@@ -1383,9 +1524,16 @@ fun DashboardScreen(
     
     // Edit Exercise Dialog
     showEditExerciseDialog?.let { exerciseEntry ->
-        // Find the corresponding exercise
-        val exercise = exercises.find { it.id == exerciseEntry.exerciseId }
-        if (exercise != null) {
+        // Get the exercise directly from database (including hidden exercises)
+        var exercise by remember { mutableStateOf<Exercise?>(null) }
+        
+        LaunchedEffect(exerciseEntry.exerciseId) {
+            foodLogRepository.getExerciseById(exerciseEntry.exerciseId).collectLatest { foundExercise ->
+                exercise = foundExercise
+            }
+        }
+        
+        exercise?.let { foundExercise ->
             // Convert DailyExerciseEntry to ExerciseLog for editing
             val existingExerciseLog = ExerciseLog(
                 id = exerciseEntry.logId,
@@ -1400,6 +1548,9 @@ fun DashboardScreen(
             )
             
             UnifiedCheckInDialog<CheckInData.Exercise>(
+                exercise = foundExercise,
+                existingExerciseLog = existingExerciseLog,
+                isEditMode = true,
                 onDismiss = { showEditExerciseDialog = null },
                 onCheckIn = { checkInData ->
                     coroutineScope.launch {
@@ -1438,10 +1589,7 @@ fun DashboardScreen(
                         }
                     }
                     showEditExerciseDialog = null
-                },
-                isEditMode = true,
-                exercise = exercise,
-                existingExerciseLog = existingExerciseLog
+                }
             )
         }
     }

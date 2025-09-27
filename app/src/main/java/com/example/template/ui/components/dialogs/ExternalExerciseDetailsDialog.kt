@@ -116,12 +116,12 @@ fun ExternalExerciseDetailsDialog(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        imageVector = Icons.Filled.Check,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.add_to_my_exercises))
+                    Text(stringResource(R.string.select))
                 }
             }
         }
