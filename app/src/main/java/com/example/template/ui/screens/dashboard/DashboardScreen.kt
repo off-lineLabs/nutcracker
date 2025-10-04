@@ -1133,45 +1133,80 @@ fun DashboardScreen(
                             )
                         } else {
                             // Add new exercise
-                            AppLogger.i("DashboardScreen", "onAddExercise called with externalExercise: ${externalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "=== START onAddExercise ===")
+                            AppLogger.i("DashboardScreen", "External exercise name: ${externalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "External exercise has images: ${externalExercise?.images?.isNotEmpty()}")
+                            AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise?.images?.size}")
                             
                             // Insert exercise first to get an ID
+                            AppLogger.i("DashboardScreen", "Inserting newExercise with name: ${newExercise.name}")
+                            AppLogger.i("DashboardScreen", "newExercise.imagePaths before insert: ${newExercise.imagePaths}")
                             val exerciseId = foodLogRepository.insertExercise(newExercise)
                             AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
                             
-                            // Download and save all images if available
+                            // Download and save all images if available, and update with external exercise data
                             externalExercise?.let { exercise ->
-                                if (exercise.images.isNotEmpty()) {
+                                AppLogger.i("DashboardScreen", "Processing external exercise data...")
+                                
+                                val localImagePaths = if (exercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "External exercise has ${exercise.images.size} images")
                                     val imageUrls = exercise.images.map { externalExerciseService.getImageUrl(it) }
-                                    AppLogger.i("DashboardScreen", "Downloading ${imageUrls.size} images for exercise: ${newExercise.name}")
-                                    
-                                    // Download all images
-                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
-                                    
-                                    if (localImagePaths.isNotEmpty()) {
-                                        AppLogger.i("DashboardScreen", "Downloaded ${localImagePaths.size} images successfully")
-                                        
-                                        // Create the complete exercise with all external data
-                                        val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
-                                            id = exerciseId,
-                                            kcalBurnedPerUnit = newExercise.kcalBurnedPerUnit,
-                                            defaultWeight = newExercise.defaultWeight,
-                                            defaultReps = newExercise.defaultReps,
-                                            defaultSets = newExercise.defaultSets,
-                                            notes = newExercise.notes // Keep user's personal notes separate from instructions
-                                        )
-                                        
-                                        // Update the exercise with all the data
-                                        foodLogRepository.updateExercise(completeExercise)
-                                        AppLogger.i("DashboardScreen", "Exercise updated with complete external data and ${localImagePaths.size} images")
-                                    } else {
-                                        AppLogger.w("DashboardScreen", "Failed to download any images for exercise ID: $exerciseId")
+                                    AppLogger.i("DashboardScreen", "Full image URLs:")
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  URL $index: $url")
                                     }
+                                    
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages with exerciseId: $exerciseId")
+                                    // Download all images
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    
+                                    AppLogger.i("DashboardScreen", "downloadAndStoreImages returned ${paths.size} paths")
+                                    paths.forEachIndexed { index, path ->
+                                        AppLogger.i("DashboardScreen", "  Path $index: $path")
+                                    }
+                                    
+                                    if (paths.isNotEmpty()) {
+                                        AppLogger.i("DashboardScreen", "✓ Downloaded ${paths.size} images successfully")
+                                    } else {
+                                        AppLogger.w("DashboardScreen", "✗ Failed to download any images for exercise ID: $exerciseId")
+                                    }
+                                    paths
                                 } else {
-                                    AppLogger.i("DashboardScreen", "No images available for exercise ID: $exerciseId")
+                                    AppLogger.i("DashboardScreen", "No images in external exercise")
+                                    emptyList()
                                 }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                // This ensures we preserve instructions, equipment, muscles, etc.
+                                val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = newExercise.kcalBurnedPerUnit,
+                                    defaultWeight = newExercise.defaultWeight,
+                                    defaultReps = newExercise.defaultReps,
+                                    defaultSets = newExercise.defaultSets,
+                                    notes = newExercise.notes // Keep user's personal notes separate from instructions
+                                )
+                                
+                                AppLogger.i("DashboardScreen", "completeExercise created:")
+                                AppLogger.i("DashboardScreen", "  - ID: ${completeExercise.id}")
+                                AppLogger.i("DashboardScreen", "  - Name: ${completeExercise.name}")
+                                AppLogger.i("DashboardScreen", "  - imagePaths.size: ${completeExercise.imagePaths.size}")
+                                completeExercise.imagePaths.forEachIndexed { index, path ->
+                                    AppLogger.i("DashboardScreen", "  - imagePath $index: $path")
+                                }
+                                AppLogger.i("DashboardScreen", "  - equipment: ${completeExercise.equipment}")
+                                AppLogger.i("DashboardScreen", "  - primaryMuscles: ${completeExercise.primaryMuscles}")
+                                AppLogger.i("DashboardScreen", "  - instructions.size: ${completeExercise.instructions.size}")
+                                
+                                // Update the exercise with all the data
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                                AppLogger.i("DashboardScreen", "=== END onAddExercise ===")
                             } ?: run {
-                                AppLogger.i("DashboardScreen", "No external exercise data for exercise ID: $exerciseId")
+                                AppLogger.w("DashboardScreen", "No external exercise data for exercise ID: $exerciseId")
                             }
                             
                             snackbarHostState.showSnackbar(
@@ -1221,31 +1256,54 @@ fun DashboardScreen(
             } else null,
             onSaveAndCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
                 { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
                     coroutineScope.launch {
                         try {
+                            AppLogger.i("DashboardScreen", "=== START onSaveAndCheckIn ===")
+                            AppLogger.i("DashboardScreen", "Exercise name: ${exercise.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise: ${capturedExternalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise has images: ${capturedExternalExercise?.images?.isNotEmpty()}")
+                            
                             // Save exercise with isVisible = true
                             val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
                             
-                            // Download images if available
-                            selectedExternalExercise?.let { externalExercise ->
-                                if (externalExercise.images.isNotEmpty()) {
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                AppLogger.i("DashboardScreen", "Processing external exercise: ${externalExercise.name}")
+                                AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise.images.size}")
+                                
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages...")
                                     val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
-                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
-                                    
-                                    if (localImagePaths.isNotEmpty()) {
-                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
-                                            id = exerciseId,
-                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
-                                            defaultWeight = exercise.defaultWeight,
-                                            defaultReps = exercise.defaultReps,
-                                            defaultSets = exercise.defaultSets,
-                                            notes = exercise.notes,
-                                            isVisible = true
-                                        )
-                                        foodLogRepository.updateExercise(completeExercise)
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  Image URL $index: $url")
                                     }
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    AppLogger.i("DashboardScreen", "Downloaded ${paths.size} images")
+                                    paths
+                                } else {
+                                    AppLogger.i("DashboardScreen", "No images to download")
+                                    emptyList()
                                 }
-                            }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = true
+                                )
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                            } ?: AppLogger.w("DashboardScreen", "capturedExternalExercise is null!")
                             
                             // Create check-in with appropriate values based on exercise type
                             val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
@@ -1296,31 +1354,54 @@ fun DashboardScreen(
             } else null,
             onJustSave = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
                 { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
                     coroutineScope.launch {
                         try {
+                            AppLogger.i("DashboardScreen", "=== START onJustSave ===")
+                            AppLogger.i("DashboardScreen", "Exercise name: ${exercise.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise: ${capturedExternalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise has images: ${capturedExternalExercise?.images?.isNotEmpty()}")
+                            
                             // Save exercise with isVisible = true
                             val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
                             
-                            // Download images if available
-                            selectedExternalExercise?.let { externalExercise ->
-                                if (externalExercise.images.isNotEmpty()) {
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                AppLogger.i("DashboardScreen", "Processing external exercise: ${externalExercise.name}")
+                                AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise.images.size}")
+                                
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages...")
                                     val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
-                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
-                                    
-                                    if (localImagePaths.isNotEmpty()) {
-                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
-                                            id = exerciseId,
-                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
-                                            defaultWeight = exercise.defaultWeight,
-                                            defaultReps = exercise.defaultReps,
-                                            defaultSets = exercise.defaultSets,
-                                            notes = exercise.notes,
-                                            isVisible = true
-                                        )
-                                        foodLogRepository.updateExercise(completeExercise)
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  Image URL $index: $url")
                                     }
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    AppLogger.i("DashboardScreen", "Downloaded ${paths.size} images")
+                                    paths
+                                } else {
+                                    AppLogger.i("DashboardScreen", "No images to download")
+                                    emptyList()
                                 }
-                            }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = true
+                                )
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                            } ?: AppLogger.w("DashboardScreen", "capturedExternalExercise is null!")
                             
                             snackbarHostState.showSnackbar(message = "Exercise saved successfully!")
                         } catch (e: Exception) {
@@ -1334,30 +1415,34 @@ fun DashboardScreen(
             } else null,
             onJustCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
                 { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
                     coroutineScope.launch {
                         try {
                             // Save exercise with isVisible = false
                             val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = false))
                             
-                            // Download images if available
-                            selectedExternalExercise?.let { externalExercise ->
-                                if (externalExercise.images.isNotEmpty()) {
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
                                     val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
-                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
-                                    
-                                    if (localImagePaths.isNotEmpty()) {
-                                        val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
-                                            id = exerciseId,
-                                            kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
-                                            defaultWeight = exercise.defaultWeight,
-                                            defaultReps = exercise.defaultReps,
-                                            defaultSets = exercise.defaultSets,
-                                            notes = exercise.notes,
-                                            isVisible = false
-                                        )
-                                        foodLogRepository.updateExercise(completeExercise)
-                                    }
+                                    exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                } else {
+                                    emptyList()
                                 }
+                                
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = false
+                                )
+                                foodLogRepository.updateExercise(completeExercise)
                             }
                             
                             // Create check-in with appropriate values based on exercise type

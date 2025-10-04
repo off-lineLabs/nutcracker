@@ -27,38 +27,68 @@ class ExerciseImageService(private val context: Context) {
      * @return List of local file paths where images were saved
      */
     suspend fun downloadAndStoreImages(imageUrls: List<String>, exerciseId: String): List<String> {
+        AppLogger.i("ExerciseImageService", "=== START downloadAndStoreImages ===")
+        AppLogger.i("ExerciseImageService", "Exercise ID: $exerciseId")
+        AppLogger.i("ExerciseImageService", "Number of URLs to download: ${imageUrls.size}")
+        AppLogger.i("ExerciseImageService", "Image directory: ${imageDir.absolutePath}")
+        AppLogger.i("ExerciseImageService", "Directory exists: ${imageDir.exists()}")
+        
         return withContext(Dispatchers.IO) {
             val localPaths = mutableListOf<String>()
             
             imageUrls.forEachIndexed { index, imageUrl ->
                 try {
+                    AppLogger.i("ExerciseImageService", "Processing image $index: $imageUrl")
+                    
                     val fileName = "${exerciseId}_${index}.jpg"
                     val localFile = File(imageDir, fileName)
                     
+                    AppLogger.i("ExerciseImageService", "Target file: ${localFile.absolutePath}")
+                    
                     // Skip if file already exists
                     if (localFile.exists()) {
+                        AppLogger.i("ExerciseImageService", "File already exists, reusing: $fileName")
                         localPaths.add(localFile.absolutePath)
+                        AppLogger.i("ExerciseImageService", "Added existing path to list. Total paths: ${localPaths.size}")
                         return@forEachIndexed
                     }
                     
                     // Download the image
+                    AppLogger.i("ExerciseImageService", "Starting download from URL: $imageUrl")
                     val url = URL(imageUrl)
-                    val inputStream: InputStream = url.openStream()
+                    val connection = url.openConnection()
+                    connection.connectTimeout = 10000 // 10 seconds
+                    connection.readTimeout = 10000
+                    val inputStream: InputStream = connection.getInputStream()
                     val outputStream = FileOutputStream(localFile)
                     
+                    var bytesDownloaded = 0L
                     inputStream.use { input ->
                         outputStream.use { output ->
-                            input.copyTo(output)
+                            bytesDownloaded = input.copyTo(output)
                         }
                     }
                     
+                    AppLogger.i("ExerciseImageService", "Downloaded $bytesDownloaded bytes")
+                    AppLogger.i("ExerciseImageService", "File exists after download: ${localFile.exists()}")
+                    AppLogger.i("ExerciseImageService", "File size: ${localFile.length()} bytes")
+                    
                     localPaths.add(localFile.absolutePath)
-                    AppLogger.d("ExerciseImageService", "Downloaded image: $fileName")
+                    AppLogger.i("ExerciseImageService", "Successfully downloaded: $fileName")
+                    AppLogger.i("ExerciseImageService", "Added path to list: ${localFile.absolutePath}")
+                    AppLogger.i("ExerciseImageService", "Total paths so far: ${localPaths.size}")
                     
                 } catch (e: Exception) {
-                    AppLogger.e("ExerciseImageService", "Failed to download image: $imageUrl", e)
+                    AppLogger.e("ExerciseImageService", "Failed to download image $index from: $imageUrl", e)
+                    AppLogger.e("ExerciseImageService", "Error type: ${e.javaClass.simpleName}, Message: ${e.message}")
                     // Continue with other images even if one fails
                 }
+            }
+            
+            AppLogger.i("ExerciseImageService", "=== END downloadAndStoreImages ===")
+            AppLogger.i("ExerciseImageService", "Total paths returned: ${localPaths.size}")
+            localPaths.forEachIndexed { index, path ->
+                AppLogger.i("ExerciseImageService", "Path $index: $path")
             }
             
             localPaths

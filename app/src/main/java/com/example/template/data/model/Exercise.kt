@@ -37,14 +37,33 @@ enum class ExerciseType {
 
 // Type converters for Room database
 class ExerciseTypeConverters {
+    // Use pipe (|) as delimiter since it's illegal in file paths on all platforms
+    private val delimiter = "|"
+    
     @TypeConverter
     fun fromStringList(value: List<String>): String {
-        return value.joinToString(",")
+        // Filter out empty strings to avoid issues when reading back
+        val filtered = value.filter { it.isNotBlank() }
+        val result = filtered.joinToString(delimiter)
+        com.example.template.util.logger.AppLogger.i("ExerciseTypeConverter", "fromStringList: ${filtered.size} paths -> '$result'")
+        filtered.forEachIndexed { index, path ->
+            com.example.template.util.logger.AppLogger.i("ExerciseTypeConverter", "  Input path $index: $path")
+        }
+        return result
     }
 
     @TypeConverter
     fun toStringList(value: String): List<String> {
-        return if (value.isEmpty()) emptyList() else value.split(",")
+        val result = if (value.isEmpty()) {
+            emptyList()
+        } else {
+            value.split(delimiter).filter { it.isNotBlank() }
+        }
+        com.example.template.util.logger.AppLogger.i("ExerciseTypeConverter", "toStringList: '$value' -> ${result.size} paths")
+        result.forEachIndexed { index, path ->
+            com.example.template.util.logger.AppLogger.i("ExerciseTypeConverter", "  Output path $index: $path")
+        }
+        return result
     }
 }
 
