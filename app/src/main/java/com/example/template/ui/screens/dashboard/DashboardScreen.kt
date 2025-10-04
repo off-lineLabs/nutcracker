@@ -398,7 +398,11 @@ fun DashboardScreen(
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
     var showFoodSearchDialog by remember { mutableStateOf(false) }
-    var showFoodInfoDialog by remember { mutableStateOf<FoodInfo?>(null) }
+    var showFoodInfoDialog by remember { 
+        mutableStateOf<FoodInfo?>(null).also { 
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog initialized to null")
+        }
+    }
     var showServingSizeDialog by remember { mutableStateOf<FoodInfo?>(null) }
     var currentBarcode by remember { mutableStateOf<String?>(null) }
     
@@ -528,8 +532,16 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = refreshCheckIns) {
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: CheckIns LaunchedEffect triggered")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: refreshCheckIns = $refreshCheckIns")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: showFoodInfoDialog = $showFoodInfoDialog")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: showServingSizeDialog = $showServingSizeDialog")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: About to start collectLatest")
         foodLogRepository.getCheckInsByDate(selectedDateString).collectLatest { checkInsList ->
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: CheckIns data updated, count: ${checkInsList.size}")
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: About to update dailyMealCheckIns")
             dailyMealCheckIns = checkInsList
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: dailyMealCheckIns updated")
         }
     }
 
@@ -1741,7 +1753,10 @@ fun DashboardScreen(
                     currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
                 )
                 if (foodInfo != null) {
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodSearchDialog setting showFoodInfoDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before setting - showFoodInfoDialog = $showFoodInfoDialog")
                     showFoodInfoDialog = foodInfo
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After setting - showFoodInfoDialog = $showFoodInfoDialog")
                 } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
@@ -1774,8 +1789,11 @@ fun DashboardScreen(
                                     currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
                                 )
                                 if (foodInfo != null) {
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: BarcodeScanDialog setting showFoodInfoDialog")
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before setting - showFoodInfoDialog = $showFoodInfoDialog")
                                     AppLogger.d("DashboardScreen", "FoodInfo created successfully, showing FoodInfoDialog")
                                     showFoodInfoDialog = foodInfo
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After setting - showFoodInfoDialog = $showFoodInfoDialog")
                                 } else {
                                     AppLogger.d("DashboardScreen", "FoodInfo is null, showing error message")
                                     snackbarHostState.showSnackbar(
@@ -1806,38 +1824,68 @@ fun DashboardScreen(
         )
     }
 
-    // Food Info Dialog
+    // Food Info Dialog - only show if serving size dialog is not already showing
     showFoodInfoDialog?.let { foodInfo ->
-        AppLogger.d("DashboardScreen", "Showing FoodInfoDialog for: ${foodInfo.name}")
-        FoodInfoDialog(
-            foodInfo = foodInfo,
-            onBack = { 
-                AppLogger.d("DashboardScreen", "FoodInfoDialog dismissed via back button")
-                showFoodInfoDialog = null
-                // Don't reset currentBarcode here - it should persist through the flow
-            },
-            onSelect = {
-                AppLogger.d("DashboardScreen", "Transitioning from FoodInfoDialog to ServingSizeDialog, currentBarcode: $currentBarcode")
-                showFoodInfoDialog = null
-                showServingSizeDialog = foodInfo
-                // currentBarcode should still be set from the barcode scan
-            }
-        )
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog?.let triggered - foodInfo = ${foodInfo.name}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfo object hash = ${foodInfo.hashCode()}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog check = $showServingSizeDialog")
+        if (showServingSizeDialog == null) {
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Showing FoodInfoDialog for: ${foodInfo.name}")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog = $showFoodInfoDialog")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog = $showServingSizeDialog")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode = $currentBarcode")
+            FoodInfoDialog(
+                foodInfo = foodInfo,
+                onBack = { 
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog dismissed via back button")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Setting showFoodInfoDialog = null")
+                    showFoodInfoDialog = null
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After back - showFoodInfoDialog = $showFoodInfoDialog")
+                    // Don't reset currentBarcode here - it should persist through the flow
+                },
+                onSelect = {
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Transitioning from FoodInfoDialog to ServingSizeDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before transition - showFoodInfoDialog = $showFoodInfoDialog, showServingSizeDialog = $showServingSizeDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode: $currentBarcode")
+                    showFoodInfoDialog = null
+                    showServingSizeDialog = foodInfo
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After transition - showFoodInfoDialog = $showFoodInfoDialog, showServingSizeDialog = $showServingSizeDialog")
+                    // currentBarcode should still be set from the barcode scan
+                }
+            )
+        } else {
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog blocked - showServingSizeDialog is not null: $showServingSizeDialog")
+        }
     }
     
     // Serving Size Dialog
     showServingSizeDialog?.let { foodInfo ->
-        AppLogger.d("DashboardScreen", "Showing ServingSizeDialog for: ${foodInfo.name}, currentBarcode: $currentBarcode")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Showing ServingSizeDialog for: ${foodInfo.name}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog = $showServingSizeDialog")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog = $showFoodInfoDialog")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode = $currentBarcode")
         ServingSizeDialog(
             foodInfo = foodInfo,
             barcode = currentBarcode,
             onDismiss = { 
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: ServingSizeDialog dismissed")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before dismiss - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 showServingSizeDialog = null
+                showFoodInfoDialog = null
                 currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After dismiss - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
             },
             onSaveAndCheckIn = { servingSizeValue, servingSizeUnit ->
                 val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Save and Check-in clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 AppLogger.d("DashboardScreen", "Save and Check-in: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
+                showServingSizeDialog = null
+                showFoodInfoDialog = null
+                currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 
                 coroutineScope.launch {
                     try {
@@ -1874,10 +1922,13 @@ fun DashboardScreen(
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Save and Check-in: Check-in created successfully with mealId: ${savedMeal.id}")
                         snackbarHostState.showSnackbar(message = "Meal saved and check-in completed successfully!")
-                        showUnifiedMealDetailDialog = savedMeal
+                        // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
                         refreshCheckIns++
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to save and check-in meal", e, mapOf(
@@ -1886,12 +1937,18 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
                     }
                 }
-                showServingSizeDialog = null
-                currentBarcode = null
             },
             onJustSave = { servingSizeValue, servingSizeUnit ->
                 val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Just Save clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 AppLogger.d("DashboardScreen", "Just Save: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
+                showServingSizeDialog = null
+                showFoodInfoDialog = null
+                currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 
                 coroutineScope.launch {
                     try {
@@ -1920,7 +1977,7 @@ fun DashboardScreen(
                         val savedMeal = finalMeal.copy(id = newMealId)
                         
                         snackbarHostState.showSnackbar(message = "Meal saved successfully!")
-                        showUnifiedMealDetailDialog = savedMeal
+                        // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to save meal", e, mapOf(
@@ -1929,12 +1986,18 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
                     }
                 }
-                showServingSizeDialog = null
-                currentBarcode = null
             },
             onJustCheckIn = { servingSizeValue, servingSizeUnit ->
                 val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Just Check-in clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 AppLogger.d("DashboardScreen", "Just Check-in: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
+                showServingSizeDialog = null
+                showFoodInfoDialog = null
+                currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 
                 coroutineScope.launch {
                     try {
@@ -1971,9 +2034,12 @@ fun DashboardScreen(
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
                         
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Check-in created successfully with mealId: ${savedMeal.id}")
                         snackbarHostState.showSnackbar(message = "Check-in completed successfully!")
                         refreshCheckIns++
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to check-in meal", e, mapOf(
@@ -1982,8 +2048,6 @@ fun DashboardScreen(
                         snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
                     }
                 }
-                showServingSizeDialog = null
-                currentBarcode = null
             }
         )
     }
