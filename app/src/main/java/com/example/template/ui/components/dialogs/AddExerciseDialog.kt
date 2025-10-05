@@ -26,6 +26,7 @@ import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.toInternalExercise
 import com.example.template.util.logger.AppLogger
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandSecondaryShade
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,120 +318,123 @@ fun AddExerciseDialog(
             }
         },
         confirmButton = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Delete button (only in edit mode when onDelete is provided) - positioned at left
-                if (existingExercise != null && onDelete != null) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+            // Create exercise helper function
+            fun createExercise(): Exercise {
+                AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
+                return if (existingExercise != null) {
+                    // When editing, preserve all non-editable fields from the existing exercise
+                    existingExercise.copy(
+                        name = name.trim(),
+                        category = ExerciseCategoryMapper.getCategory(exerciseType),
+                        kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
+                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                        defaultReps = when (exerciseType) {
+                            ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                            ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                            ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
+                        },
+                        defaultSets = when (exerciseType) {
+                            ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                            ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                            ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                        },
+                        notes = notes.takeIf { it.isNotBlank() },
+                        imagePaths = existingExercise.imagePaths // Preserve existing image paths
+                    )
                 } else {
-                    // Empty space to maintain layout when no delete button
-                    Spacer(modifier = Modifier.size(48.dp))
+                    // When creating new exercise, use the provided external exercise data if available
+                    val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
+                    baseExercise.copy(
+                        name = name.trim(),
+                        category = ExerciseCategoryMapper.getCategory(exerciseType),
+                        kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
+                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                        defaultReps = when (exerciseType) {
+                            ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                            ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                            ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
+                        },
+                        defaultSets = when (exerciseType) {
+                            ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                            ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                            ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                        },
+                        notes = notes.takeIf { it.isNotBlank() }
+                    )
                 }
-                
-                // Create exercise helper function
-                fun createExercise(): Exercise {
-                    AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
-                    return if (existingExercise != null) {
-                        // When editing, preserve all non-editable fields from the existing exercise
-                        existingExercise.copy(
-                            name = name.trim(),
-                            category = ExerciseCategoryMapper.getCategory(exerciseType),
-                            kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
-                            defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                            defaultReps = when (exerciseType) {
-                                ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
-                                ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
-                                ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
-                            },
-                            defaultSets = when (exerciseType) {
-                                ExerciseType.CARDIO -> 1 // Always 1 set for cardio
-                                ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
-                                ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
-                            },
-                            notes = notes.takeIf { it.isNotBlank() },
-                            imagePaths = existingExercise.imagePaths // Preserve existing image paths
+            }
+            
+            // Check if we should show three-button structure (when external exercise is provided and not editing)
+            val showThreeButtons = externalExercise != null && existingExercise == null && 
+                onSaveAndCheckIn != null && onJustSave != null && onJustCheckIn != null
+            
+            if (showThreeButtons) {
+                // Three-button structure for external exercises - centered
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Save and Check-in button
+                    Button(
+                        onClick = { onSaveAndCheckIn(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(0)
                         )
+                    ) {
+                        Text(stringResource(R.string.save_and_check_in))
+                    }
+                    
+                    // Just Save button
+                    Button(
+                        onClick = { onJustSave(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(1)
+                        )
+                    ) {
+                        Text(stringResource(R.string.just_save))
+                    }
+                    
+                    // Just Check-in button
+                    Button(
+                        onClick = { onJustCheckIn(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(2)
+                        )
+                    ) {
+                        Text(stringResource(R.string.just_check_in))
+                    }
+                }
+            } else {
+                // Original layout with delete button and single button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Delete button (only in edit mode when onDelete is provided) - positioned at left
+                    if (existingExercise != null && onDelete != null) {
+                        IconButton(
+                            onClick = onDelete,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     } else {
-                        // When creating new exercise, use the provided external exercise data if available
-                        val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
-                        baseExercise.copy(
-                            name = name.trim(),
-                            category = ExerciseCategoryMapper.getCategory(exerciseType),
-                            kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
-                            defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                            defaultReps = when (exerciseType) {
-                                ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
-                                ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
-                                ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
-                            },
-                            defaultSets = when (exerciseType) {
-                                ExerciseType.CARDIO -> 1 // Always 1 set for cardio
-                                ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
-                                ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
-                            },
-                            notes = notes.takeIf { it.isNotBlank() }
-                        )
+                        // Empty space to maintain layout when no delete button
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
-                }
-                
-                // Check if we should show three-button structure (when external exercise is provided and not editing)
-                val showThreeButtons = externalExercise != null && existingExercise == null && 
-                    onSaveAndCheckIn != null && onJustSave != null && onJustCheckIn != null
-                
-                if (showThreeButtons) {
-                    // Three-button structure for external exercises
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Save and Check-in button
-                        Button(
-                            onClick = { onSaveAndCheckIn(createExercise()) },
-                            enabled = name.isNotBlank(),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Text(stringResource(R.string.save_and_check_in))
-                        }
-                        
-                        // Just Save button
-                        Button(
-                            onClick = { onJustSave(createExercise()) },
-                            enabled = name.isNotBlank(),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            )
-                        ) {
-                            Text(stringResource(R.string.just_save))
-                        }
-                        
-                        // Just Check-in button
-                        Button(
-                            onClick = { onJustCheckIn(createExercise()) },
-                            enabled = name.isNotBlank(),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary
-                            )
-                        ) {
-                            Text(stringResource(R.string.just_check_in))
-                        }
-                    }
-                } else {
+                    
                     // Original single button for regular add/edit
                     Button(
                         onClick = { onAddExercise(createExercise()) },
