@@ -420,13 +420,13 @@ fun NutritionAnalyticsContent() {
                 ExerciseToggle(
                     isEnabled = includeExerciseCalories,
                     onToggle = { includeExerciseCalories = !includeExerciseCalories },
-                    exerciseCalories = totalExerciseCalories
+                    exerciseCalories = -totalExerciseCalories // Negative since it removes calories
                 )
                 
                 TEFToggle(
                     isEnabled = includeTEFBonus,
                     onToggle = { includeTEFBonus = !includeTEFBonus },
-                    tefCalories = totalTEFCalories
+                    tefCalories = -totalTEFCalories // Negative since it removes calories
                 )
             }
         }
@@ -548,7 +548,7 @@ fun StatsCards(
 ) {
     val totalCalories = dailyCalories.values.sum()
     val targetCalories = calorieGoal * 7 // 7 days
-    val balance = totalCalories - targetCalories
+    val balance = targetCalories - totalCalories // Inverted: remaining calories (positive = under goal, negative = over goal)
     val averageBalance = balance / 7
     
     Column(
@@ -565,14 +565,14 @@ fun StatsCards(
         StatCard(
             title = "Your final balance",
             value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
-            valueColor = if (balance >= 0) ExceededColor else ProteinFiberColor
+            valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor // Green if under goal, red if over
         )
         
         // Card 3: Average balance
         StatCard(
             title = "Average balance per day",
             value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
-            valueColor = if (averageBalance >= 0) ExceededColor else ProteinFiberColor
+            valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor // Green if under goal, red if over
         )
     }
 }

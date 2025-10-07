@@ -56,8 +56,8 @@ fun TEFToggle(
             modifier = Modifier.height(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Show TEF calories when there are any
-            if (tefCalories > 0) {
+            // Show TEF calories when there are any (handles both positive and negative)
+            if (tefCalories != 0.0) {
                 val textColor = if (isEnabled) tefEnabledColor() else tefDisabledColor()
                 val backgroundColor = if (isEnabled) {
                     tefEnabledColor().copy(alpha = 0.15f)
@@ -74,7 +74,7 @@ fun TEFToggle(
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = "+${tefCalories.toInt()} kcal",
+                        text = "${if (tefCalories >= 0) "+" else ""}${tefCalories.toInt()} kcal",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor

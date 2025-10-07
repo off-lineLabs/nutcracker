@@ -53,8 +53,8 @@ fun ExerciseToggle(
             modifier = Modifier.height(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Show exercise calories when there are any
-            if (exerciseCalories > 0) {
+            // Show exercise calories when there are any (handles both positive and negative)
+            if (exerciseCalories != 0.0) {
                 val textColor = if (isEnabled) exerciseEnabledColor() else exerciseDisabledColor()
                 val backgroundColor = if (isEnabled) {
                     exerciseEnabledColor().copy(alpha = 0.15f)
@@ -71,7 +71,7 @@ fun ExerciseToggle(
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = "+${exerciseCalories.toInt()} kcal",
+                        text = "${if (exerciseCalories >= 0) "+" else ""}${exerciseCalories.toInt()} kcal",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor
