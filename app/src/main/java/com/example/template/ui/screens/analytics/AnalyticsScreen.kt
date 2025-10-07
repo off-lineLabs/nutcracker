@@ -28,16 +28,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import kotlin.math.abs
 import com.example.template.FoodLogApplication
 import com.example.template.R
 import com.example.template.data.dao.DailyTotals
@@ -463,81 +468,226 @@ fun CaloriesBarChart(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val textColor = appTextPrimaryColor()
+    val textSecondaryColor = appTextSecondaryColor()
+    val surfaceColor = appSurfaceColor()
     val barColor = BrandGold
-    val goalLineColor = appTextSecondaryColor()
+    val selectedBarColor = BrandGoldLight
+    val goalLineColor = BrandRed.copy(alpha = 0.7f)
     
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
-            .background(
-                color = appSurfaceColor().copy(alpha = 0.5f),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+    var selectedDayIndex by remember { mutableStateOf<Int?>(null) }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val chartWidth = size.width
-            val chartHeight = size.height
-            val barWidth = chartWidth / (last7Days.size * 2)
-            val spacing = barWidth
+        // Title and Legend
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Daily Calories (Last 7 Days)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
             
-            // Calculate max value for scaling
-            val maxCalories = maxOf(
-                dailyCalories.values.maxOrNull() ?: 0.0,
-                calorieGoal
-            ) * 1.1 // Add 10% padding
-            
-            if (maxCalories > 0) {
-                // Draw goal line
-                val goalY = chartHeight - (calorieGoal / maxCalories * chartHeight).toFloat()
-                drawLine(
-                    color = goalLineColor,
-                    start = Offset(0f, goalY),
-                    end = Offset(chartWidth, goalY),
-                    strokeWidth = 3f
+            // Goal line legend
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(20.dp)
+                        .height(2.dp)
+                        .background(goalLineColor)
                 )
+                Text(
+                    text = "Goal: ${calorieGoal.toInt()} kcal",
+                    fontSize = 11.sp,
+                    color = textSecondaryColor
+                )
+            }
+        }
+        
+        // Chart
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(280.dp)
+                .background(
+                    color = appSurfaceColor().copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(16.dp)
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            // Calculate which bar was tapped
+                            val chartWidth = size.width.toFloat()
+                            val barWidth = chartWidth / (last7Days.size * 2)
+                            val spacing = barWidth
+                            
+                            last7Days.forEachIndexed { index, _ ->
+                                val x = index * (barWidth + spacing) + spacing / 2
+                                if (offset.x >= x && offset.x <= x + barWidth) {
+                                    selectedDayIndex = if (selectedDayIndex == index) null else index
+                                }
+                            }
+                        }
+                    }
+            ) {
+                val chartWidth = size.width
+                val chartHeight = size.height - 60f // Reserve space for labels
+                val barWidth = chartWidth / (last7Days.size * 2)
+                val spacing = barWidth
                 
-                // Draw bars
-                last7Days.forEachIndexed { index, date ->
-                    val calories = dailyCalories[date] ?: 0.0
-                    val barHeight = (calories / maxCalories * chartHeight).toFloat()
-                    val x = index * (barWidth + spacing) + spacing / 2
-                    val y = chartHeight - barHeight
-                    
-                    // Draw bar
-                    drawRoundRect(
-                        color = barColor,
-                        topLeft = Offset(x, y),
-                        size = Size(barWidth, barHeight),
-                        cornerRadius = CornerRadius(8f, 8f)
-                    )
-                    
-                    // Draw day label
-                    val dayLabel = date.dayOfWeek.getDisplayName(
-                        JavaTextStyle.SHORT,
-                        Locale.getDefault()
-                    ).take(1) // First letter only
-                    
-                    val textLayoutResult = textMeasurer.measure(
-                        dayLabel,
-                        style = TextStyle(
-                            color = textColor,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
+                // Calculate max value for scaling
+                val maxCalories = maxOf(
+                    dailyCalories.values.maxOrNull() ?: 0.0,
+                    calorieGoal
+                ) * 1.15 // Add 15% padding
+                
+                if (maxCalories > 0) {
+                    // Draw Y-axis scale lines and labels
+                    val scaleSteps = 4
+                    for (i in 0..scaleSteps) {
+                        val value = (maxCalories / scaleSteps * i).toInt()
+                        val y = chartHeight - (value / maxCalories * chartHeight).toFloat()
+                        
+                        // Scale line
+                        drawLine(
+                            color = textSecondaryColor.copy(alpha = 0.15f),
+                            start = Offset(0f, y),
+                            end = Offset(chartWidth, y),
+                            strokeWidth = 1f
                         )
+                        
+                        // Scale label (skip first one at 0)
+                        if (i > 0) {
+                            val labelText = if (value >= 1000) {
+                                "${value / 1000}k"
+                            } else {
+                                "$value"
+                            }
+                            val textLayoutResult = textMeasurer.measure(
+                                labelText,
+                                style = TextStyle(
+                                    color = textSecondaryColor.copy(alpha = 0.6f),
+                                    fontSize = 9.sp
+                                )
+                            )
+                            drawText(
+                                textLayoutResult = textLayoutResult,
+                                topLeft = Offset(4f, y - textLayoutResult.size.height / 2)
+                            )
+                        }
+                    }
+                    
+                    // Draw goal line (dashed)
+                    val goalY = chartHeight - (calorieGoal / maxCalories * chartHeight).toFloat()
+                    drawLine(
+                        color = goalLineColor,
+                        start = Offset(0f, goalY),
+                        end = Offset(chartWidth, goalY),
+                        strokeWidth = 3f,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                     )
                     
-                    drawText(
-                        textLayoutResult = textLayoutResult,
-                        topLeft = Offset(
-                            x + barWidth / 2 - textLayoutResult.size.width / 2,
-                            chartHeight + 8f
+                    // Draw bars
+                    last7Days.forEachIndexed { index, date ->
+                        val calories = dailyCalories[date] ?: 0.0
+                        val barHeight = (calories / maxCalories * chartHeight).toFloat()
+                        val x = index * (barWidth + spacing) + spacing / 2
+                        val y = chartHeight - barHeight
+                        
+                        val isSelected = selectedDayIndex == index
+                        val currentBarColor = if (isSelected) selectedBarColor else barColor
+                        
+                        // Draw bar
+                        drawRoundRect(
+                            color = currentBarColor,
+                            topLeft = Offset(x, y.coerceAtLeast(0f)),
+                            size = Size(barWidth, barHeight.coerceAtLeast(1f)),
+                            cornerRadius = CornerRadius(8f, 8f)
                         )
-                    )
+                        
+                        // Draw value on selected bar
+                        if (isSelected && calories > 0) {
+                            val valueText = "${calories.toInt()}"
+                            val valueLayoutResult = textMeasurer.measure(
+                                valueText,
+                                style = TextStyle(
+                                    color = textColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            
+                            // Background for value
+                            val valuePadding = 4f
+                            val valueBoxWidth = valueLayoutResult.size.width + valuePadding * 2
+                            val valueBoxHeight = valueLayoutResult.size.height + valuePadding * 2
+                            val valueX = x + barWidth / 2 - valueBoxWidth / 2
+                            val valueY = (y - valueBoxHeight - 8f).coerceAtLeast(0f)
+                            
+                            drawRoundRect(
+                                color = surfaceColor,
+                                topLeft = Offset(valueX, valueY),
+                                size = Size(valueBoxWidth, valueBoxHeight),
+                                cornerRadius = CornerRadius(6f, 6f)
+                            )
+                            
+                            drawText(
+                                textLayoutResult = valueLayoutResult,
+                                topLeft = Offset(
+                                    valueX + valuePadding,
+                                    valueY + valuePadding
+                                )
+                            )
+                        }
+                        
+                        // Draw day label below chart
+                        val dayOfWeek = date.dayOfWeek.getDisplayName(
+                            JavaTextStyle.SHORT,
+                            Locale.getDefault()
+                        ).take(1) // First letter only (M, T, W, etc.)
+                        
+                        // Day of week letter (prominent)
+                        val dayNameLayoutResult = textMeasurer.measure(
+                            dayOfWeek,
+                            style = TextStyle(
+                                color = if (isSelected) textColor else textSecondaryColor,
+                                fontSize = 14.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        )
+                        
+                        drawText(
+                            textLayoutResult = dayNameLayoutResult,
+                            topLeft = Offset(
+                                x + barWidth / 2 - dayNameLayoutResult.size.width / 2,
+                                chartHeight + 12f
+                            )
+                        )
+                    }
                 }
             }
         }
+        
+        // Tap instruction
+        Text(
+            text = "Tap on a bar to see exact values",
+            fontSize = 11.sp,
+            color = textSecondaryColor.copy(alpha = 0.6f),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
