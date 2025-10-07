@@ -27,11 +27,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import com.example.template.FoodLogApplication
 import com.example.template.R
+import com.example.template.data.dao.DailyTotals
+import com.example.template.data.model.UserGoal
+import com.example.template.ui.components.ExerciseToggle
+import com.example.template.ui.components.TEFToggle
 import com.example.template.ui.theme.*
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.Locale
 
 // Enum for analytics sections
 enum class AnalyticsSection {
@@ -286,18 +308,304 @@ fun SectionTabButton(
 
 @Composable
 fun NutritionAnalyticsContent() {
-    Box(
+    val context = LocalContext.current
+    val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
+    
+    // State for toggles
+    var includeExerciseCalories by remember { mutableStateOf(false) }
+    var includeTEFBonus by remember { mutableStateOf(false) }
+    
+    // State for data
+    var dailyCalories by remember { mutableStateOf<Map<LocalDate, Double>>(emptyMap()) }
+    var userGoal by remember { mutableStateOf(UserGoal.default()) }
+    
+    // Get last 7 days
+    val last7Days = remember {
+        (0..6).map { LocalDate.now().minusDays(it.toLong()) }.reversed()
+    }
+    
+    // Load user goal
+    LaunchedEffect(foodLogRepository) {
+        foodLogRepository.getUserGoal().collectLatest { goal ->
+            userGoal = goal ?: UserGoal.default()
+        }
+    }
+    
+    // Load data for all 7 days
+    LaunchedEffect(foodLogRepository, includeExerciseCalories, includeTEFBonus) {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        
+        // Collect all flows simultaneously
+        kotlinx.coroutines.flow.combine(
+            last7Days.map { date ->
+                val dateString = date.format(dateFormatter)
+                if (includeExerciseCalories || includeTEFBonus) {
+                    foodLogRepository.getDailyCombinedTotals(
+                        dateString, 
+                        includeExerciseCalories, 
+                        includeTEFBonus
+                    )
+                } else {
+                    foodLogRepository.getDailyNutrientTotals(dateString)
+                }
+            }
+        ) { totalsArray ->
+            // Map each total to its corresponding date
+            last7Days.mapIndexed { index, date ->
+                date to (totalsArray[index]?.totalCalories ?: 0.0)
+            }.toMap()
+        }.collectLatest { caloriesMap ->
+            dailyCalories = caloriesMap
+        }
+    }
+    
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Nutrition Analytics\n(Coming soon)",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = appTextPrimaryColor()
+        item {
+            // Bar Chart
+            CaloriesBarChart(
+                dailyCalories = dailyCalories,
+                calorieGoal = userGoal.caloriesGoal.toDouble(),
+                last7Days = last7Days
+            )
+        }
+        
+        item {
+            // Toggles Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Calculate exercise and TEF totals for display
+                var totalExerciseCalories by remember { mutableStateOf(0.0) }
+                var totalTEFCalories by remember { mutableStateOf(0.0) }
+                
+                LaunchedEffect(foodLogRepository, last7Days) {
+                    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    
+                    // Collect exercise calories for all days
+                    val exerciseFlows = last7Days.map { date ->
+                        foodLogRepository.getDailyExerciseCalories(date.format(dateFormatter))
+                    }
+                    
+                    // Collect TEF calories for all days
+                    val tefFlows = last7Days.map { date ->
+                        foodLogRepository.getDailyNutrientTotals(date.format(dateFormatter))
+                    }
+                    
+                    kotlinx.coroutines.flow.combine(
+                        exerciseFlows + tefFlows
+                    ) { values ->
+                        val exerciseValues = values.take(7) as List<Double>
+                        val tefTotals = values.drop(7) as List<DailyTotals?>
+                        
+                        val exerciseSum = exerciseValues.sum()
+                        val tefSum = tefTotals.sumOf { totals ->
+                            totals?.let { com.example.template.utils.TEFCalculator.calculateTEFBonus(it) } ?: 0.0
+                        }
+                        
+                        exerciseSum to tefSum
+                    }.collectLatest { (exerciseSum, tefSum) ->
+                        totalExerciseCalories = exerciseSum
+                        totalTEFCalories = tefSum
+                    }
+                }
+                
+                ExerciseToggle(
+                    isEnabled = includeExerciseCalories,
+                    onToggle = { includeExerciseCalories = !includeExerciseCalories },
+                    exerciseCalories = totalExerciseCalories
+                )
+                
+                TEFToggle(
+                    isEnabled = includeTEFBonus,
+                    onToggle = { includeTEFBonus = !includeTEFBonus },
+                    tefCalories = totalTEFCalories
+                )
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        
+        item {
+            // Stats Cards Title
+            Text(
+                text = "For this period:",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = appTextPrimaryColor()
+            )
+        }
+        
+        item {
+            // Stats Cards
+            StatsCards(
+                dailyCalories = dailyCalories,
+                calorieGoal = userGoal.caloriesGoal.toDouble()
+            )
+        }
+    }
+}
+
+@Composable
+fun CaloriesBarChart(
+    dailyCalories: Map<LocalDate, Double>,
+    calorieGoal: Double,
+    last7Days: List<LocalDate>
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val textColor = appTextPrimaryColor()
+    val barColor = BrandGold
+    val goalLineColor = appTextSecondaryColor()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .background(
+                color = appSurfaceColor().copy(alpha = 0.5f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val chartWidth = size.width
+            val chartHeight = size.height
+            val barWidth = chartWidth / (last7Days.size * 2)
+            val spacing = barWidth
+            
+            // Calculate max value for scaling
+            val maxCalories = maxOf(
+                dailyCalories.values.maxOrNull() ?: 0.0,
+                calorieGoal
+            ) * 1.1 // Add 10% padding
+            
+            if (maxCalories > 0) {
+                // Draw goal line
+                val goalY = chartHeight - (calorieGoal / maxCalories * chartHeight).toFloat()
+                drawLine(
+                    color = goalLineColor,
+                    start = Offset(0f, goalY),
+                    end = Offset(chartWidth, goalY),
+                    strokeWidth = 3f
+                )
+                
+                // Draw bars
+                last7Days.forEachIndexed { index, date ->
+                    val calories = dailyCalories[date] ?: 0.0
+                    val barHeight = (calories / maxCalories * chartHeight).toFloat()
+                    val x = index * (barWidth + spacing) + spacing / 2
+                    val y = chartHeight - barHeight
+                    
+                    // Draw bar
+                    drawRoundRect(
+                        color = barColor,
+                        topLeft = Offset(x, y),
+                        size = Size(barWidth, barHeight),
+                        cornerRadius = CornerRadius(8f, 8f)
+                    )
+                    
+                    // Draw day label
+                    val dayLabel = date.dayOfWeek.getDisplayName(
+                        JavaTextStyle.SHORT,
+                        Locale.getDefault()
+                    ).take(1) // First letter only
+                    
+                    val textLayoutResult = textMeasurer.measure(
+                        dayLabel,
+                        style = TextStyle(
+                            color = textColor,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                    
+                    drawText(
+                        textLayoutResult = textLayoutResult,
+                        topLeft = Offset(
+                            x + barWidth / 2 - textLayoutResult.size.width / 2,
+                            chartHeight + 8f
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatsCards(
+    dailyCalories: Map<LocalDate, Double>,
+    calorieGoal: Double
+) {
+    val totalCalories = dailyCalories.values.sum()
+    val targetCalories = calorieGoal * 7 // 7 days
+    val balance = totalCalories - targetCalories
+    val averageBalance = balance / 7
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Card 1: Total calories consumed
+        StatCard(
+            title = "Total calories consumed",
+            value = "${totalCalories.toInt()} kcal"
         )
+        
+        // Card 2: Final balance
+        StatCard(
+            title = "Your final balance",
+            value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
+            valueColor = if (balance >= 0) ExceededColor else ProteinFiberColor
+        )
+        
+        // Card 3: Average balance
+        StatCard(
+            title = "Average balance per day",
+            value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
+            valueColor = if (averageBalance >= 0) ExceededColor else ProteinFiberColor
+        )
+    }
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    valueColor: Color = appTextPrimaryColor()
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = appSurfaceColor(),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Column {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                color = appTextSecondaryColor()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = valueColor
+            )
+        }
     }
 }
 
