@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import android.os.Build
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
@@ -44,6 +45,8 @@ import com.example.template.ui.components.ExerciseToggle
 import com.example.template.ui.components.TEFToggle
 import com.example.template.data.model.Pill
 import com.example.template.data.model.PillCheckIn
+import com.example.template.data.model.ExerciseCategoryMapper
+import com.example.template.data.model.ExerciseType
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import com.example.template.FoodLogApplication
@@ -377,6 +380,7 @@ fun DashboardScreen(
     var userGoal by remember { mutableStateOf(UserGoal.default()) }
     var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
+    var refreshCheckIns by remember { mutableStateOf(0) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableDoubleStateOf(0.0) }
     var foodCalories by remember { mutableDoubleStateOf(0.0) }
@@ -394,7 +398,11 @@ fun DashboardScreen(
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
     var showFoodSearchDialog by remember { mutableStateOf(false) }
-    var showFoodInfoDialog by remember { mutableStateOf<FoodInfo?>(null) }
+    var showFoodInfoDialog by remember { 
+        mutableStateOf<FoodInfo?>(null).also { 
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog initialized to null")
+        }
+    }
     var showServingSizeDialog by remember { mutableStateOf<FoodInfo?>(null) }
     var currentBarcode by remember { mutableStateOf<String?>(null) }
     
@@ -418,6 +426,7 @@ fun DashboardScreen(
     val failedToUpdatePillStatus = stringResource(R.string.failed_to_update_pill_status)
     val exerciseBonusCaloriesOn = stringResource(R.string.exercise_bonus_calories_on)
     val exerciseBonusCaloriesOff = stringResource(R.string.exercise_bonus_calories_off)
+    
     val tefBonusCaloriesOn = stringResource(R.string.tef_bonus_calories_on)
     val tefBonusCaloriesOff = stringResource(R.string.tef_bonus_calories_off)
     val exerciseCheckInCompletedSuccess = stringResource(R.string.exercise_check_in_completed_success)
@@ -522,9 +531,17 @@ fun DashboardScreen(
         selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
     }
 
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString) {
+    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = refreshCheckIns) {
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: CheckIns LaunchedEffect triggered")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: refreshCheckIns = $refreshCheckIns")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: showFoodInfoDialog = $showFoodInfoDialog")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: showServingSizeDialog = $showServingSizeDialog")
+        AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: About to start collectLatest")
         foodLogRepository.getCheckInsByDate(selectedDateString).collectLatest { checkInsList ->
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: CheckIns data updated, count: ${checkInsList.size}")
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: About to update dailyMealCheckIns")
             dailyMealCheckIns = checkInsList
+            AppLogger.d("DashboardScreen", "🔍 LAUNCHED EFFECT: dailyMealCheckIns updated")
         }
     }
 
@@ -589,9 +606,13 @@ fun DashboardScreen(
     
     // Calculate status bar height
     val statusBarHeight = with(density) {
-        WindowInsetsCompat.Type.statusBars().let { insets ->
-            view.rootWindowInsets?.getInsets(insets)?.top ?: 0
-        }.toDp()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsCompat.Type.statusBars().let { insets ->
+                view.rootWindowInsets?.getInsets(insets)?.top ?: 0
+            }.toDp()
+        } else {
+            0.dp
+        }
     }
 
     // Pill toggle function
@@ -780,7 +801,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectExerciseDialog = true },
                     containerColor = fabExerciseColor(),
-                    contentColor = appTextInverseColor(),
+                    contentColor = Color.White,
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -797,7 +818,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = { showSelectMealDialog = true },
                     containerColor = fabMealColor(),
-                    contentColor = appTextInverseColor(),
+                    contentColor = Color.White,
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -1124,46 +1145,80 @@ fun DashboardScreen(
                             )
                         } else {
                             // Add new exercise
-                            AppLogger.i("DashboardScreen", "onAddExercise called with externalExercise: ${externalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "=== START onAddExercise ===")
+                            AppLogger.i("DashboardScreen", "External exercise name: ${externalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "External exercise has images: ${externalExercise?.images?.isNotEmpty()}")
+                            AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise?.images?.size}")
                             
                             // Insert exercise first to get an ID
+                            AppLogger.i("DashboardScreen", "Inserting newExercise with name: ${newExercise.name}")
+                            AppLogger.i("DashboardScreen", "newExercise.imagePaths before insert: ${newExercise.imagePaths}")
                             val exerciseId = foodLogRepository.insertExercise(newExercise)
                             AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
                             
-                            // Download and save all images if available
+                            // Download and save all images if available, and update with external exercise data
                             externalExercise?.let { exercise ->
-                                if (exercise.images.isNotEmpty()) {
+                                AppLogger.i("DashboardScreen", "Processing external exercise data...")
+                                
+                                val localImagePaths = if (exercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "External exercise has ${exercise.images.size} images")
                                     val imageUrls = exercise.images.map { externalExerciseService.getImageUrl(it) }
-                                    AppLogger.i("DashboardScreen", "Downloading ${imageUrls.size} images for exercise: ${newExercise.name}")
-                                    
-                                    // Download all images
-                                    val localImagePaths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
-                                    
-                                    if (localImagePaths.isNotEmpty()) {
-                                        AppLogger.i("DashboardScreen", "Downloaded ${localImagePaths.size} images successfully")
-                                        
-                                        // Create the complete exercise with all external data
-                                        val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
-                                            id = exerciseId,
-                                            kcalBurnedPerRep = newExercise.kcalBurnedPerRep,
-                                            kcalBurnedPerMinute = newExercise.kcalBurnedPerMinute,
-                                            defaultWeight = newExercise.defaultWeight,
-                                            defaultReps = newExercise.defaultReps,
-                                            defaultSets = newExercise.defaultSets,
-                                            notes = newExercise.notes // Keep user's personal notes separate from instructions
-                                        )
-                                        
-                                        // Update the exercise with all the data
-                                        foodLogRepository.updateExercise(completeExercise)
-                                        AppLogger.i("DashboardScreen", "Exercise updated with complete external data and ${localImagePaths.size} images")
-                                    } else {
-                                        AppLogger.w("DashboardScreen", "Failed to download any images for exercise ID: $exerciseId")
+                                    AppLogger.i("DashboardScreen", "Full image URLs:")
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  URL $index: $url")
                                     }
+                                    
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages with exerciseId: $exerciseId")
+                                    // Download all images
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    
+                                    AppLogger.i("DashboardScreen", "downloadAndStoreImages returned ${paths.size} paths")
+                                    paths.forEachIndexed { index, path ->
+                                        AppLogger.i("DashboardScreen", "  Path $index: $path")
+                                    }
+                                    
+                                    if (paths.isNotEmpty()) {
+                                        AppLogger.i("DashboardScreen", "✓ Downloaded ${paths.size} images successfully")
+                                    } else {
+                                        AppLogger.w("DashboardScreen", "✗ Failed to download any images for exercise ID: $exerciseId")
+                                    }
+                                    paths
                                 } else {
-                                    AppLogger.i("DashboardScreen", "No images available for exercise ID: $exerciseId")
+                                    AppLogger.i("DashboardScreen", "No images in external exercise")
+                                    emptyList()
                                 }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                // This ensures we preserve instructions, equipment, muscles, etc.
+                                val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = newExercise.kcalBurnedPerUnit,
+                                    defaultWeight = newExercise.defaultWeight,
+                                    defaultReps = newExercise.defaultReps,
+                                    defaultSets = newExercise.defaultSets,
+                                    notes = newExercise.notes // Keep user's personal notes separate from instructions
+                                )
+                                
+                                AppLogger.i("DashboardScreen", "completeExercise created:")
+                                AppLogger.i("DashboardScreen", "  - ID: ${completeExercise.id}")
+                                AppLogger.i("DashboardScreen", "  - Name: ${completeExercise.name}")
+                                AppLogger.i("DashboardScreen", "  - imagePaths.size: ${completeExercise.imagePaths.size}")
+                                completeExercise.imagePaths.forEachIndexed { index, path ->
+                                    AppLogger.i("DashboardScreen", "  - imagePath $index: $path")
+                                }
+                                AppLogger.i("DashboardScreen", "  - equipment: ${completeExercise.equipment}")
+                                AppLogger.i("DashboardScreen", "  - primaryMuscles: ${completeExercise.primaryMuscles}")
+                                AppLogger.i("DashboardScreen", "  - instructions.size: ${completeExercise.instructions.size}")
+                                
+                                // Update the exercise with all the data
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                                AppLogger.i("DashboardScreen", "=== END onAddExercise ===")
                             } ?: run {
-                                AppLogger.i("DashboardScreen", "No external exercise data for exercise ID: $exerciseId")
+                                AppLogger.w("DashboardScreen", "No external exercise data for exercise ID: $exerciseId")
                             }
                             
                             snackbarHostState.showSnackbar(
@@ -1209,6 +1264,244 @@ fun DashboardScreen(
                     }
                     showAddExerciseDialog = false
                     selectedExerciseForEdit = null
+                }
+            } else null,
+            onSaveAndCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
+                    coroutineScope.launch {
+                        try {
+                            AppLogger.i("DashboardScreen", "=== START onSaveAndCheckIn ===")
+                            AppLogger.i("DashboardScreen", "Exercise name: ${exercise.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise: ${capturedExternalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise has images: ${capturedExternalExercise?.images?.isNotEmpty()}")
+                            
+                            // Save exercise with isVisible = true
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
+                            
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                AppLogger.i("DashboardScreen", "Processing external exercise: ${externalExercise.name}")
+                                AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise.images.size}")
+                                
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages...")
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  Image URL $index: $url")
+                                    }
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    AppLogger.i("DashboardScreen", "Downloaded ${paths.size} images")
+                                    paths
+                                } else {
+                                    AppLogger.i("DashboardScreen", "No images to download")
+                                    emptyList()
+                                }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = true
+                                )
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                            } ?: AppLogger.w("DashboardScreen", "capturedExternalExercise is null!")
+                            
+                            // Create check-in with appropriate values based on exercise type
+                            val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+                            val (weight, reps, sets) = when (exerciseType) {
+                                ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
+                                ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
+                                ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
+                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
+                            }
+                            
+                            // Calculate calories burned based on exercise type
+                            val caloriesBurned = when (exerciseType) {
+                                ExerciseType.STRENGTH -> {
+                                    val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
+                                    sets * kcalPerSet
+                                }
+                                ExerciseType.CARDIO -> {
+                                    val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerMinute // reps = minutes for cardio
+                                }
+                                ExerciseType.BODYWEIGHT -> {
+                                    val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerRep
+                                }
+                                else -> 0.0
+                            }
+                            
+                            val exerciseLog = ExerciseLog.create(
+                                exerciseId = exerciseId,
+                                weight = weight,
+                                reps = reps,
+                                sets = sets,
+                                caloriesBurned = caloriesBurned,
+                                notes = null
+                            )
+                            foodLogRepository.insertExerciseLog(exerciseLog)
+                            
+                            snackbarHostState.showSnackbar(message = "Exercise saved and check-in completed!")
+                            refreshCheckIns++
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to save and check-in exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
+                }
+            } else null,
+            onJustSave = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
+                    coroutineScope.launch {
+                        try {
+                            AppLogger.i("DashboardScreen", "=== START onJustSave ===")
+                            AppLogger.i("DashboardScreen", "Exercise name: ${exercise.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise: ${capturedExternalExercise?.name}")
+                            AppLogger.i("DashboardScreen", "capturedExternalExercise has images: ${capturedExternalExercise?.images?.isNotEmpty()}")
+                            
+                            // Save exercise with isVisible = true
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = true))
+                            AppLogger.i("DashboardScreen", "Exercise inserted with ID: $exerciseId")
+                            
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                AppLogger.i("DashboardScreen", "Processing external exercise: ${externalExercise.name}")
+                                AppLogger.i("DashboardScreen", "External exercise image count: ${externalExercise.images.size}")
+                                
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
+                                    AppLogger.i("DashboardScreen", "Calling downloadAndStoreImages...")
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    imageUrls.forEachIndexed { index, url ->
+                                        AppLogger.i("DashboardScreen", "  Image URL $index: $url")
+                                    }
+                                    val paths = exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                    AppLogger.i("DashboardScreen", "Downloaded ${paths.size} images")
+                                    paths
+                                } else {
+                                    AppLogger.i("DashboardScreen", "No images to download")
+                                    emptyList()
+                                }
+                                
+                                AppLogger.i("DashboardScreen", "Creating completeExercise with ${localImagePaths.size} image paths")
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = true
+                                )
+                                AppLogger.i("DashboardScreen", "Calling updateExercise...")
+                                foodLogRepository.updateExercise(completeExercise)
+                                AppLogger.i("DashboardScreen", "✓ updateExercise completed")
+                            } ?: AppLogger.w("DashboardScreen", "capturedExternalExercise is null!")
+                            
+                            snackbarHostState.showSnackbar(message = "Exercise saved successfully!")
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to save exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to save exercise: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
+                }
+            } else null,
+            onJustCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
+                { exercise ->
+                    // Capture the external exercise reference before the coroutine
+                    val capturedExternalExercise = selectedExternalExercise
+                    
+                    coroutineScope.launch {
+                        try {
+                            // Save exercise with isVisible = false
+                            val exerciseId = foodLogRepository.insertExercise(exercise.copy(isVisible = false))
+                            
+                            // Download images if available and update with external exercise data
+                            capturedExternalExercise?.let { externalExercise ->
+                                val localImagePaths = if (externalExercise.images.isNotEmpty()) {
+                                    val imageUrls = externalExercise.images.map { externalExerciseService.getImageUrl(it) }
+                                    exerciseImageService.downloadAndStoreImages(imageUrls, exerciseId.toString())
+                                } else {
+                                    emptyList()
+                                }
+                                
+                                // ALWAYS update the exercise with external data, even if image downloads failed
+                                val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
+                                    id = exerciseId,
+                                    kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
+                                    defaultWeight = exercise.defaultWeight,
+                                    defaultReps = exercise.defaultReps,
+                                    defaultSets = exercise.defaultSets,
+                                    notes = exercise.notes,
+                                    isVisible = false
+                                )
+                                foodLogRepository.updateExercise(completeExercise)
+                            }
+                            
+                            // Create check-in with appropriate values based on exercise type
+                            val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+                            val (weight, reps, sets) = when (exerciseType) {
+                                ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
+                                ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
+                                ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
+                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
+                            }
+                            
+                            // Calculate calories burned based on exercise type
+                            val caloriesBurned = when (exerciseType) {
+                                ExerciseType.STRENGTH -> {
+                                    val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
+                                    sets * kcalPerSet
+                                }
+                                ExerciseType.CARDIO -> {
+                                    val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerMinute // reps = minutes for cardio
+                                }
+                                ExerciseType.BODYWEIGHT -> {
+                                    val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
+                                    reps * kcalPerRep
+                                }
+                                else -> 0.0
+                            }
+                            
+                            val exerciseLog = ExerciseLog.create(
+                                exerciseId = exerciseId,
+                                weight = weight,
+                                reps = reps,
+                                sets = sets,
+                                caloriesBurned = caloriesBurned,
+                                notes = null
+                            )
+                            foodLogRepository.insertExerciseLog(exerciseLog)
+                            
+                            snackbarHostState.showSnackbar(message = "Check-in completed!")
+                            refreshCheckIns++
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to check-in exercise", e)
+                            snackbarHostState.showSnackbar(message = "Failed to check-in: ${e.message}")
+                        }
+                    }
+                    showAddExerciseDialog = false
+                    selectedExternalExercise = null
                 }
             } else null
         )
@@ -1307,9 +1600,16 @@ fun DashboardScreen(
     
     // Edit Meal Dialog
     showEditMealDialog?.let { checkIn ->
-        // Find the corresponding meal
-        val meal = meals.find { it.id == checkIn.mealId }
-        if (meal != null) {
+        // Get the meal directly from database (including hidden meals)
+        var meal by remember { mutableStateOf<Meal?>(null) }
+        
+        LaunchedEffect(checkIn.mealId) {
+            foodLogRepository.getMealById(checkIn.mealId).collectLatest { foundMeal ->
+                meal = foundMeal
+            }
+        }
+        
+        meal?.let { foundMeal ->
             // Convert DailyNutritionEntry to MealCheckIn for editing
             val existingMealCheckIn = MealCheckIn(
                 id = checkIn.checkInId,
@@ -1361,7 +1661,7 @@ fun DashboardScreen(
                     showEditMealDialog = null
                 },
                 isEditMode = true,
-                meal = meal,
+                meal = foundMeal,
                 existingMealCheckIn = existingMealCheckIn
             )
         }
@@ -1369,9 +1669,16 @@ fun DashboardScreen(
     
     // Edit Exercise Dialog
     showEditExerciseDialog?.let { exerciseEntry ->
-        // Find the corresponding exercise
-        val exercise = exercises.find { it.id == exerciseEntry.exerciseId }
-        if (exercise != null) {
+        // Get the exercise directly from database (including hidden exercises)
+        var exercise by remember { mutableStateOf<Exercise?>(null) }
+        
+        LaunchedEffect(exerciseEntry.exerciseId) {
+            foodLogRepository.getExerciseById(exerciseEntry.exerciseId).collectLatest { foundExercise ->
+                exercise = foundExercise
+            }
+        }
+        
+        exercise?.let { foundExercise ->
             // Convert DailyExerciseEntry to ExerciseLog for editing
             val existingExerciseLog = ExerciseLog(
                 id = exerciseEntry.logId,
@@ -1386,6 +1693,9 @@ fun DashboardScreen(
             )
             
             UnifiedCheckInDialog<CheckInData.Exercise>(
+                exercise = foundExercise,
+                existingExerciseLog = existingExerciseLog,
+                isEditMode = true,
                 onDismiss = { showEditExerciseDialog = null },
                 onCheckIn = { checkInData ->
                     coroutineScope.launch {
@@ -1424,10 +1734,7 @@ fun DashboardScreen(
                         }
                     }
                     showEditExerciseDialog = null
-                },
-                isEditMode = true,
-                exercise = exercise,
-                existingExerciseLog = existingExerciseLog
+                }
             )
         }
     }
@@ -1446,7 +1753,10 @@ fun DashboardScreen(
                     currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
                 )
                 if (foodInfo != null) {
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodSearchDialog setting showFoodInfoDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before setting - showFoodInfoDialog = $showFoodInfoDialog")
                     showFoodInfoDialog = foodInfo
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After setting - showFoodInfoDialog = $showFoodInfoDialog")
                 } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
@@ -1479,8 +1789,11 @@ fun DashboardScreen(
                                     currentLanguage = (context.applicationContext as FoodLogApplication).settingsManager.currentAppLanguage
                                 )
                                 if (foodInfo != null) {
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: BarcodeScanDialog setting showFoodInfoDialog")
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before setting - showFoodInfoDialog = $showFoodInfoDialog")
                                     AppLogger.d("DashboardScreen", "FoodInfo created successfully, showing FoodInfoDialog")
                                     showFoodInfoDialog = foodInfo
+                                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After setting - showFoodInfoDialog = $showFoodInfoDialog")
                                 } else {
                                     AppLogger.d("DashboardScreen", "FoodInfo is null, showing error message")
                                     snackbarHostState.showSnackbar(
@@ -1511,49 +1824,79 @@ fun DashboardScreen(
         )
     }
 
-    // Food Info Dialog
+    // Food Info Dialog - only show if serving size dialog is not already showing
     showFoodInfoDialog?.let { foodInfo ->
-        AppLogger.d("DashboardScreen", "Showing FoodInfoDialog for: ${foodInfo.name}")
-        FoodInfoDialog(
-            foodInfo = foodInfo,
-            onBack = { 
-                AppLogger.d("DashboardScreen", "FoodInfoDialog dismissed via back button")
-                showFoodInfoDialog = null
-                // Don't reset currentBarcode here - it should persist through the flow
-            },
-            onAddToMeals = {
-                AppLogger.d("DashboardScreen", "Transitioning from FoodInfoDialog to ServingSizeDialog, currentBarcode: $currentBarcode")
-                showFoodInfoDialog = null
-                showServingSizeDialog = foodInfo
-                // currentBarcode should still be set from the barcode scan
-            }
-        )
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog?.let triggered - foodInfo = ${foodInfo.name}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfo object hash = ${foodInfo.hashCode()}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog check = $showServingSizeDialog")
+        if (showServingSizeDialog == null) {
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Showing FoodInfoDialog for: ${foodInfo.name}")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog = $showFoodInfoDialog")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog = $showServingSizeDialog")
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode = $currentBarcode")
+            FoodInfoDialog(
+                foodInfo = foodInfo,
+                onBack = { 
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog dismissed via back button")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Setting showFoodInfoDialog = null")
+                    showFoodInfoDialog = null
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After back - showFoodInfoDialog = $showFoodInfoDialog")
+                    // Don't reset currentBarcode here - it should persist through the flow
+                },
+                onSelect = {
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Transitioning from FoodInfoDialog to ServingSizeDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before transition - showFoodInfoDialog = $showFoodInfoDialog, showServingSizeDialog = $showServingSizeDialog")
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode: $currentBarcode")
+                    showFoodInfoDialog = null
+                    showServingSizeDialog = foodInfo
+                    AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After transition - showFoodInfoDialog = $showFoodInfoDialog, showServingSizeDialog = $showServingSizeDialog")
+                    // currentBarcode should still be set from the barcode scan
+                }
+            )
+        } else {
+            AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: FoodInfoDialog blocked - showServingSizeDialog is not null: $showServingSizeDialog")
+        }
     }
     
     // Serving Size Dialog
     showServingSizeDialog?.let { foodInfo ->
-        AppLogger.d("DashboardScreen", "Showing ServingSizeDialog for: ${foodInfo.name}, currentBarcode: $currentBarcode")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Showing ServingSizeDialog for: ${foodInfo.name}")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showServingSizeDialog = $showServingSizeDialog")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: showFoodInfoDialog = $showFoodInfoDialog")
+        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: currentBarcode = $currentBarcode")
         ServingSizeDialog(
             foodInfo = foodInfo,
             barcode = currentBarcode,
             onDismiss = { 
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: ServingSizeDialog dismissed")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before dismiss - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 showServingSizeDialog = null
+                showFoodInfoDialog = null
                 currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After dismiss - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
             },
-            onConfirm = { servingSizeValue, servingSizeUnit ->
-                // Store the barcode before it gets reset by onDismiss
+            onSaveAndCheckIn = { servingSizeValue, servingSizeUnit ->
                 val barcodeToUse = currentBarcode
-                AppLogger.d("DashboardScreen", "Creating meal with currentBarcode: $barcodeToUse")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Save and Check-in clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                AppLogger.d("DashboardScreen", "Save and Check-in: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
+                showServingSizeDialog = null
+                showFoodInfoDialog = null
+                currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                 
                 coroutineScope.launch {
                     try {
-                        // Convert FoodInfo to Meal
+                        // Save meal
                         val meal = FoodInfoToMealMapper.mapToMeal(
                             foodInfo = foodInfo,
                             servingSizeValue = servingSizeValue,
                             servingSizeUnit = servingSizeUnit,
                             barcode = barcodeToUse,
-                            source = if (barcodeToUse != null) "barcode" else "search"
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = true
                         )
                         
                         // Download image if available
@@ -1568,25 +1911,143 @@ fun DashboardScreen(
                         val newMealId = foodLogRepository.insertMeal(finalMeal)
                         
                         // Update the meal with the new ID from database
-                        val mealWithId = finalMeal.copy(id = newMealId)
+                        val savedMeal = finalMeal.copy(id = newMealId)
                         
-                        // Show unified dialog with the added meal (now with correct ID)
-                        showUnifiedMealDetailDialog = mealWithId
-                        
-                        snackbarHostState.showSnackbar(
-                            message = "Meal added successfully!"
+                        // Create a check-in for this meal
+                        val mealCheckIn = MealCheckIn.create(
+                            mealId = savedMeal.id,
+                            servingSize = 1.0,
+                            notes = null
                         )
+                        
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                        AppLogger.d("DashboardScreen", "Save and Check-in: Check-in created successfully with mealId: ${savedMeal.id}")
+                        snackbarHostState.showSnackbar(message = "Meal saved and check-in completed successfully!")
+                        // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
+                        refreshCheckIns++
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                        
                     } catch (e: Exception) {
-                        AppLogger.exception("DashboardScreen", "Failed to add meal from food info", e, mapOf(
+                        AppLogger.exception("DashboardScreen", "Failed to save and check-in meal", e, mapOf(
                             "foodName" to foodInfo.name
                         ))
-                        snackbarHostState.showSnackbar(
-                            message = "Failed to add meal: ${e.message}"
-                        )
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
                     }
                 }
+            },
+            onJustSave = { servingSizeValue, servingSizeUnit ->
+                val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Just Save clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                AppLogger.d("DashboardScreen", "Just Save: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
                 showServingSizeDialog = null
+                showFoodInfoDialog = null
                 currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                
+                coroutineScope.launch {
+                    try {
+                        // Save meal
+                        val meal = FoodInfoToMealMapper.mapToMeal(
+                            foodInfo = foodInfo,
+                            servingSizeValue = servingSizeValue,
+                            servingSizeUnit = servingSizeUnit,
+                            barcode = barcodeToUse,
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = true
+                        )
+                        
+                        // Download image if available
+                        val localImagePath = if (foodInfo.imageUrl != null) {
+                            imageDownloadService.downloadAndSaveImage(foodInfo.imageUrl)
+                        } else null
+                        
+                        // Update meal with local image path
+                        val finalMeal = meal.copy(localImagePath = localImagePath)
+                        
+                        // Insert meal into database and get the new mealId
+                        val newMealId = foodLogRepository.insertMeal(finalMeal)
+                        
+                        // Update the meal with the new ID from database
+                        val savedMeal = finalMeal.copy(id = newMealId)
+                        
+                        snackbarHostState.showSnackbar(message = "Meal saved successfully!")
+                        // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
+                        
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to save meal", e, mapOf(
+                            "foodName" to foodInfo.name
+                        ))
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                    }
+                }
+            },
+            onJustCheckIn = { servingSizeValue, servingSizeUnit ->
+                val barcodeToUse = currentBarcode
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Just Check-in clicked")
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                AppLogger.d("DashboardScreen", "Just Check-in: Creating meal with currentBarcode: $barcodeToUse")
+                
+                // Clear all dialog states IMMEDIATELY to prevent race condition
+                showServingSizeDialog = null
+                showFoodInfoDialog = null
+                currentBarcode = null
+                AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After clearing - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                
+                coroutineScope.launch {
+                    try {
+                        // Create meal for check-in only (not visible in meal list)
+                        val meal = FoodInfoToMealMapper.mapToMeal(
+                            foodInfo = foodInfo,
+                            servingSizeValue = servingSizeValue,
+                            servingSizeUnit = servingSizeUnit,
+                            barcode = barcodeToUse,
+                            source = if (barcodeToUse != null) "barcode" else "search",
+                            isVisible = false
+                        )
+                        
+                        // Download image if available
+                        val localImagePath = if (foodInfo.imageUrl != null) {
+                            imageDownloadService.downloadAndSaveImage(foodInfo.imageUrl)
+                        } else null
+                        
+                        // Update meal with local image path
+                        val finalMeal = meal.copy(localImagePath = localImagePath)
+                        
+                        // Insert meal into database and get the new mealId
+                        val newMealId = foodLogRepository.insertMeal(finalMeal)
+                        
+                        // Update the meal with the new ID from database
+                        val savedMeal = finalMeal.copy(id = newMealId)
+                        
+                        // Create a check-in for this meal
+                        val mealCheckIn = MealCheckIn.create(
+                            mealId = savedMeal.id,
+                            servingSize = 1.0,
+                            notes = null
+                        )
+                        
+                        foodLogRepository.insertMealCheckIn(mealCheckIn)
+                        
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                        AppLogger.d("DashboardScreen", "Check-in created successfully with mealId: ${savedMeal.id}")
+                        snackbarHostState.showSnackbar(message = "Check-in completed successfully!")
+                        refreshCheckIns++
+                        AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
+                        
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to check-in meal", e, mapOf(
+                            "foodName" to foodInfo.name
+                        ))
+                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                    }
+                }
             }
         )
     }

@@ -158,10 +158,10 @@ class DatabaseExportManager(
         val exercisesList = exercises.first() // Get the current value from Flow
         
         val csv = StringBuilder()
-        csv.appendLine("id,name,kcalBurnedPerRep,kcalBurnedPerMinute,defaultWeight,defaultReps,defaultSets,category,equipment,primaryMuscles,secondaryMuscles,force,notes")
+        csv.appendLine("id,name,kcalBurnedPerUnit,defaultWeight,defaultReps,defaultSets,category,equipment,primaryMuscles,secondaryMuscles,force,notes")
         
         exercisesList.forEach { exercise: Exercise ->
-            csv.appendLine("${exercise.id},${escapeCsv(exercise.name)},${exercise.kcalBurnedPerRep},${exercise.kcalBurnedPerMinute},${exercise.defaultWeight},${exercise.defaultReps},${exercise.defaultSets},${exercise.category},${escapeCsv(exercise.equipment ?: "")},${exercise.primaryMuscles.joinToString(";")},${exercise.secondaryMuscles.joinToString(";")},${escapeCsv(exercise.force ?: "")},${escapeCsv(exercise.notes ?: "")}")
+            csv.appendLine("${exercise.id},${escapeCsv(exercise.name)},${exercise.kcalBurnedPerUnit},${exercise.defaultWeight},${exercise.defaultReps},${exercise.defaultSets},${exercise.category},${escapeCsv(exercise.equipment ?: "")},${exercise.primaryMuscles.joinToString(";")},${exercise.secondaryMuscles.joinToString(";")},${escapeCsv(exercise.force ?: "")},${escapeCsv(exercise.notes ?: "")}")
         }
         
         csv.toString()

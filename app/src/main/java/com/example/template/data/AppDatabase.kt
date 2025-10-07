@@ -33,7 +33,7 @@ import com.example.template.data.model.DateTimeTypeConverters
         Pill::class,
         PillCheckIn::class
     ], 
-    version = 15, 
+    version = 17, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)

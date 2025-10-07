@@ -130,12 +130,13 @@ fun ExerciseItem(
                         color = appTextSecondaryColor()
                     )
                     
-                    // Weight (for strength exercises) - Last, with distinguished color
+                    // Weight (for strength exercises) - Last, with bold highlighting
                     if (exerciseType == ExerciseType.STRENGTH) {
                         Text(
                             text = "${exerciseEntry.weight} ${stringResource(R.string.kg_unit)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = appTextTertiaryColor() // Distinguished lighter color
+                            fontWeight = FontWeight.Bold,
+                            color = appTextSecondaryColor() // Use secondary color with bold weight
                         )
                     }
                 }

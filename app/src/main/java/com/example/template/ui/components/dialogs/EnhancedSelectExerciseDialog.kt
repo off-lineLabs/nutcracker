@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.window.Dialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import com.example.template.ui.components.ExerciseImageIcon
 import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandSecondaryShade
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +53,7 @@ fun EnhancedSelectExerciseDialog(
     var searchResults by remember { mutableStateOf<List<ExternalExercise>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
-    var currentFilterCount by remember { mutableStateOf(0) }
+    var currentFilterCount by remember { mutableIntStateOf(0) }
     
     val keyboardController = LocalSoftwareKeyboardController.current
     
@@ -153,6 +155,7 @@ enum class DialogState {
     MAIN, SEARCH, EXTERNAL_DETAILS
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainExerciseSelectionDialog(
     exercises: List<Exercise>,
@@ -162,28 +165,56 @@ private fun MainExerciseSelectionDialog(
     onEditExercise: (Exercise) -> Unit,
     onSearchExternal: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.my_exercises),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.98f)
+                .fillMaxHeight(0.9f)
+                .padding(4.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
-        },
-        text = {
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .fillMaxSize()
+                    .padding(20.dp)
             ) {
+                // Custom title with back arrow
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Back arrow button on the left
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.close),
+                            tint = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        )
+                    }
+                    
+                    // Centered title
+                    Text(
+                        text = stringResource(R.string.my_exercises),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
                 // Search external database button
                 Button(
                     onClick = onSearchExternal,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = brandSecondaryShade(0)
                     )
                 ) {
                     Icon(
@@ -202,7 +233,7 @@ private fun MainExerciseSelectionDialog(
                     onClick = onAddExercise,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = brandSecondaryShade(2)
                     )
                 ) {
                     Icon(
@@ -226,7 +257,9 @@ private fun MainExerciseSelectionDialog(
                 } else {
                     
                     LazyColumn(
-                        modifier = Modifier.heightIn(max = 200.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(exercises) { exercise ->
@@ -285,14 +318,6 @@ private fun MainExerciseSelectionDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(R.string.cancel),
-                    color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                )
-            }
         }
-    )
+    }
 }

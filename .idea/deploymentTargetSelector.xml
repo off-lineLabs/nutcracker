@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="Food log">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-08-24T21:54:06.582458900Z">
+        <DropdownSelection timestamp="2025-09-21T23:29:04.488818200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jonas\.android\avd\Pixel_9.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RQCW405YGBW" />
             </handle>
           </Target>
         </DropdownSelection>

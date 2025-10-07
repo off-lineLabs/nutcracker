@@ -16,7 +16,14 @@ data class ExternalExercise(
 
 // Extension function to convert external exercise to internal
 fun ExternalExercise.toInternalExercise(imagePaths: List<String> = emptyList()): Exercise {
-    return Exercise(
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "toInternalExercise called:")
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "  - name: ${this.name}")
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "  - imagePaths parameter size: ${imagePaths.size}")
+    imagePaths.forEachIndexed { index, path ->
+        com.example.template.util.logger.AppLogger.i("ExternalExercise", "    imagePath $index: $path")
+    }
+    
+    val exercise = Exercise(
         name = this.name,
         category = mapCategory(this.category),
         equipment = this.equipment,
@@ -30,8 +37,18 @@ fun ExternalExercise.toInternalExercise(imagePaths: List<String> = emptyList()):
         defaultWeight = getDefaultWeightForExercise(this),
         defaultReps = getDefaultRepsForExercise(this),
         defaultSets = getDefaultSetsForExercise(this),
+        kcalBurnedPerUnit = getDefaultKcalPerUnit(this),
         imagePaths = imagePaths
     )
+    
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "toInternalExercise created exercise:")
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "  - name: ${exercise.name}")
+    com.example.template.util.logger.AppLogger.i("ExternalExercise", "  - imagePaths.size: ${exercise.imagePaths.size}")
+    exercise.imagePaths.forEachIndexed { index, path ->
+        com.example.template.util.logger.AppLogger.i("ExternalExercise", "    imagePath $index: $path")
+    }
+    
+    return exercise
 }
 
 private fun mapCategory(externalCategory: String): String {
@@ -69,5 +86,14 @@ private fun getDefaultSetsForExercise(external: ExternalExercise): Int {
         "stretching" -> 1
         "cardio", "plyometrics" -> 1
         else -> 3
+    }
+}
+
+private fun getDefaultKcalPerUnit(external: ExternalExercise): Double {
+    return when (external.category.lowercase()) {
+        "strength", "strongman", "olympic weightlifting" -> 5.0 // kcal per set
+        "cardio", "plyometrics" -> 8.0 // kcal per minute
+        "stretching" -> 0.5 // kcal per rep
+        else -> 5.0 // Default to strength
     }
 }

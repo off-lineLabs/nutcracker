@@ -25,8 +25,8 @@ import java.util.Locale
 fun TEFToggle(
     isEnabled: Boolean,
     onToggle: () -> Unit,
-    tefCalories: Double = 0.0,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tefCalories: Double = 0.0
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

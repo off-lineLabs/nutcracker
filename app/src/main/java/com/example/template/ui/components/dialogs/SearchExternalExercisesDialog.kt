@@ -4,18 +4,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -26,6 +30,8 @@ import com.example.template.data.model.ExternalExercise
 import com.example.template.data.service.ExternalExerciseService
 import androidx.compose.ui.res.stringResource
 import com.example.template.R
+import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.generateThemedColorShade
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,7 +124,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showEquipmentFilter,
@@ -159,7 +165,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showMuscleFilter,
@@ -201,7 +207,7 @@ fun SearchExternalExercisesDialog(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         ExposedDropdownMenu(
                             expanded = showCategoryFilter,
@@ -234,7 +240,7 @@ fun SearchExternalExercisesDialog(
                     Text(
                         text = "Found $currentFilterCount exercises matching your filters",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -298,7 +304,9 @@ fun SearchExternalExercisesDialog(
                                         AsyncImage(
                                             model = externalExerciseService.getImageUrl(exercise.images.first()),
                                             contentDescription = "Exercise image",
-                                            modifier = Modifier.size(48.dp),
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(RoundedCornerShape(8.dp)),
                                             contentScale = ContentScale.Crop
                                         )
                                     } else {
@@ -314,18 +322,19 @@ fun SearchExternalExercisesDialog(
                                         Text(
                                             text = exercise.name,
                                             style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
                                         )
                                         Text(
-                                            text = "${exercise.category} â€¢ ${exercise.equipment ?: "No equipment"}",
+                                            text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                         )
                                         if (exercise.primaryMuscles.isNotEmpty()) {
                                             Text(
                                                 text = "Muscles: ${exercise.primaryMuscles.joinToString(", ")}",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                             )
                                         }
                                     }
@@ -354,11 +363,11 @@ fun SearchExternalExercisesDialog(
                     Text(
                         text = stringResource(R.string.provided_by),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                     )
                     TextButton(
                         onClick = { 
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yuhonas/free-exercise-db"))
+                            val intent = Intent(Intent.ACTION_VIEW, "https://github.com/yuhonas/free-exercise-db".toUri())
                             context.startActivity(intent)
                         },
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
@@ -366,7 +375,7 @@ fun SearchExternalExercisesDialog(
                         Text(
                             text = stringResource(R.string.yuhonas),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            color = generateThemedColorShade(MaterialTheme.colorScheme.primary, 3)
                         )
                     }
                 }
@@ -374,7 +383,10 @@ fun SearchExternalExercisesDialog(
                     onClick = onBack,
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
             }
         }

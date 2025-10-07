@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,9 +30,11 @@ import com.example.template.data.model.NovaClassification
 import com.example.template.data.model.GreenScore
 import com.example.template.data.model.Nutriscore
 import androidx.compose.ui.res.stringResource
+import java.util.Locale
 import com.example.template.R
 import com.example.template.ui.theme.getContrastingTextColor
 import com.example.template.ui.theme.getContrastingIconColor
+import com.example.template.ui.theme.generateThemedColorShade
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +42,7 @@ import com.example.template.ui.theme.getContrastingIconColor
 fun FoodInfoDialog(
     foodInfo: FoodInfo,
     onBack: () -> Unit,
-    onAddToMeals: () -> Unit
+    onSelect: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onBack,
@@ -107,21 +112,18 @@ fun FoodInfoDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextButton(onClick = onBack) {
-                    Text(stringResource(R.string.cancel))
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
                 }
                 Button(
-                    onClick = onAddToMeals,
+                    onClick = onSelect,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.add_to_my_meals))
+                    Text(stringResource(R.string.select))
                 }
             }
         }
@@ -130,25 +132,69 @@ fun FoodInfoDialog(
 
 @Composable
 private fun FoodImageCard(imageUrl: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    HeroFoodImage(
+        imageUrl = imageUrl,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun HeroFoodImage(
+    imageUrl: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(240.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
+        // Background blurred image
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(radius = 20.dp),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Gradient overlay for better contrast
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+        )
+        
+        // Main image with original aspect ratio preserved and levitating effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
         ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "Food product image",
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp)),
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.2f),
+                        spotColor = Color.Black.copy(alpha = 0.1f)
+                    ),
                 contentScale = ContentScale.Fit
             )
         }
@@ -170,16 +216,17 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nutrition Facts (per 100g/100ml)",
+                text = "Nutrition Facts",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = contrastingTextColor
             )
             Text(
-                text = "All values are standardized per 100g or 100ml for easy comparison",
+                text = "per 100g/100ml",
                 style = MaterialTheme.typography.bodySmall,
                 color = contrastingTextColor
             )
@@ -188,37 +235,37 @@ private fun NutritionInfoCard(nutrition: com.example.template.data.model.Nutriti
                 NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fat?.let { 
-                NutritionRow("Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.carbohydrates?.let { 
-                NutritionRow("Carbs", "${String.format("%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Carbs", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.proteins?.let { 
-                NutritionRow("Proteins", "${String.format("%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Proteins", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow("Sodium", "${String.format("%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Sodium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
-                NutritionRow("Fiber", "${String.format("%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Fiber", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sugars?.let { 
-                NutritionRow("Sugars", "${String.format("%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Sugars", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.saturatedFat?.let { 
-                NutritionRow("Saturated Fat", "${String.format("%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Saturated Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.cholesterol?.let { 
-                NutritionRow("Cholesterol", "${String.format("%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Cholesterol", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.vitaminC?.let { 
-                NutritionRow("Vitamin C", "${String.format("%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Vitamin C", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.calcium?.let { 
-                NutritionRow("Calcium", "${String.format("%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Calcium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.iron?.let { 
-                NutritionRow("Iron", "${String.format("%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow("Iron", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }
@@ -252,7 +299,7 @@ private fun NutritionRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = textColor
+                color = textColor.copy(alpha = 0.7f)
             )
         }
         Text(
@@ -287,12 +334,14 @@ private fun ClassificationCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Classification & Scores",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
             )
             
             // Nova Classification - only show if group > 0 (not unknown)
@@ -302,11 +351,11 @@ private fun ClassificationCard(
                     value = novaClassification.group.toString(),
                     description = novaClassification.description,
                     color = when (novaClassification.group) {
-                        1 -> Color(0xFF4CAF50) // Green
-                        2 -> Color(0xFF8BC34A) // Light Green
-                        3 -> Color(0xFFFF9800) // Orange
-                        4 -> Color(0xFFF44336) // Red
-                        else -> Color(0xFF9E9E9E) // Gray
+                        1 -> Color(0xFF2E7D32) // Dark Green
+                        2 -> Color(0xFF4CAF50) // Green
+                        3 -> Color(0xFFFF6F00) // Dark Orange
+                        4 -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -318,12 +367,12 @@ private fun ClassificationCard(
                     value = score.grade,
                     description = "Environmental impact score",
                     color = when (score.grade.uppercase()) {
-                        "A" -> Color(0xFF4CAF50)
-                        "B" -> Color(0xFF8BC34A)
-                        "C" -> Color(0xFFFFEB3B)
-                        "D" -> Color(0xFFFF9800)
-                        "E" -> Color(0xFFF44336)
-                        else -> Color(0xFF9E9E9E)
+                        "A" -> Color(0xFF2E7D32) // Dark Green
+                        "B" -> Color(0xFF4CAF50) // Green
+                        "C" -> Color(0xFFF57F17) // Dark Yellow
+                        "D" -> Color(0xFFFF6F00) // Dark Orange
+                        "E" -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -335,12 +384,12 @@ private fun ClassificationCard(
                     value = score.grade,
                     description = "Nutritional quality score",
                     color = when (score.grade.uppercase()) {
-                        "A" -> Color(0xFF4CAF50)
-                        "B" -> Color(0xFF8BC34A)
-                        "C" -> Color(0xFFFFEB3B)
-                        "D" -> Color(0xFFFF9800)
-                        "E" -> Color(0xFFF44336)
-                        else -> Color(0xFF9E9E9E)
+                        "A" -> Color(0xFF2E7D32) // Dark Green
+                        "B" -> Color(0xFF4CAF50) // Green
+                        "C" -> Color(0xFFF57F17) // Dark Yellow
+                        "D" -> Color(0xFFFF6F00) // Dark Orange
+                        "E" -> Color(0xFFD32F2F) // Dark Red
+                        else -> Color(0xFF616161) // Dark Gray
                     }
                 )
             }
@@ -370,7 +419,7 @@ private fun ClassificationRow(
             Text(
                 text = value,
                 style = MaterialTheme.typography.labelSmall,
-                color = getContrastingTextColor(color),
+                color = Color.White,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -381,12 +430,13 @@ private fun ClassificationRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
             )
         }
     }
@@ -396,13 +446,13 @@ private fun ClassificationRow(
 private fun AttributionCard() {
     val uriHandler = LocalUriHandler.current
     val contrastingTextColor = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+    val linkColor = generateThemedColorShade(MaterialTheme.colorScheme.primary, 3)
     
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = stringResource(R.string.provided_by),
@@ -410,9 +460,9 @@ private fun AttributionCard() {
             color = contrastingTextColor
         )
         Text(
-            text = "Â© Open Food Facts contributors",
+            text = "© Open Food Facts contributors",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
+            color = linkColor,
             modifier = Modifier.clickable {
                 uriHandler.openUri("https://world.openfoodfacts.org/")
             }

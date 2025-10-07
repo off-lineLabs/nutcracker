@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -24,6 +25,8 @@ import com.example.template.data.model.ExerciseType
 import com.example.template.data.model.ExerciseCategoryMapper
 import com.example.template.data.model.toInternalExercise
 import com.example.template.util.logger.AppLogger
+import com.example.template.ui.theme.getContrastingTextColor
+import com.example.template.ui.theme.brandSecondaryShade
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,15 +35,19 @@ fun AddExerciseDialog(
     existingExercise: Exercise? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onSaveAndCheckIn: ((Exercise) -> Unit)? = null,
+    onJustSave: ((Exercise) -> Unit)? = null,
+    onJustCheckIn: ((Exercise) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.STRENGTH) }
-    var kcalPerRep by remember { mutableStateOf("") }
-    var kcalPerMinute by remember { mutableStateOf("") }
+    var kcalPerUnit by remember { mutableStateOf("") }
     var defaultWeight by remember { mutableStateOf("") }
     var defaultReps by remember { mutableStateOf("") }
     var defaultSets by remember { mutableStateOf("") }
+    var defaultMinutes by remember { mutableStateOf("") } // For Cardio exercises
+    var defaultBodyweightReps by remember { mutableStateOf("") } // For Bodyweight exercises
     var notes by remember { mutableStateOf("") }
 
     // Pre-populate fields when external exercise or existing exercise is provided
@@ -50,8 +57,7 @@ fun AddExerciseDialog(
         existingExercise?.let { exercise ->
             name = exercise.name
             exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
-            kcalPerRep = exercise.kcalBurnedPerRep?.toString() ?: ""
-            kcalPerMinute = exercise.kcalBurnedPerMinute?.toString() ?: ""
+            kcalPerUnit = exercise.kcalBurnedPerUnit?.toString() ?: ""
             defaultWeight = exercise.defaultWeight.toString()
             defaultReps = exercise.defaultReps.toString()
             defaultSets = exercise.defaultSets.toString()
@@ -82,7 +88,7 @@ fun AddExerciseDialog(
                 }
                 ExerciseType.CARDIO -> {
                     // Default kcal per minute for cardio
-                    kcalPerMinute = "8.0"
+                    kcalPerUnit = "8.0"
                 }
                 ExerciseType.BODYWEIGHT -> {
                     defaultReps = when (exercise.category.lowercase()) {
@@ -106,10 +112,19 @@ fun AddExerciseDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+                Text(
+                    text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         },
         text = {
             Column(
@@ -187,82 +202,107 @@ fun AddExerciseDialog(
                     }
                 }
 
-                // Calorie burn rate fields based on exercise type
-                when (exerciseType) {
-                    ExerciseType.STRENGTH -> {
-                        OutlinedTextField(
-                            value = kcalPerRep,
-                            onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_set)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
+                // Calorie burn rate field with appropriate label based on exercise type
+                OutlinedTextField(
+                    value = kcalPerUnit,
+                    onValueChange = { kcalPerUnit = it },
+                    label = { 
+                        Text(
+                            when (exerciseType) {
+                                ExerciseType.STRENGTH -> stringResource(R.string.kcal_per_set)
+                                ExerciseType.CARDIO -> stringResource(R.string.kcal_per_minute)
+                                ExerciseType.BODYWEIGHT -> stringResource(R.string.kcal_per_rep)
+                            }
                         )
-                    }
-                    ExerciseType.CARDIO -> {
-                        OutlinedTextField(
-                            value = kcalPerMinute,
-                            onValueChange = { kcalPerMinute = it },
-                            label = { Text(stringResource(R.string.kcal_per_minute)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
-                        )
-                    }
-                    ExerciseType.BODYWEIGHT -> {
-                        OutlinedTextField(
-                            value = kcalPerRep,
-                            onValueChange = { kcalPerRep = it },
-                            label = { Text(stringResource(R.string.kcal_per_rep)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
-                        )
-                    }
-                }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                )
 
-                // Default values (for strength exercises)
+                // Default values (for strength exercises) - 2x2 layout
                 if (exerciseType == ExerciseType.STRENGTH) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
-                            value = defaultWeight,
-                            onValueChange = { defaultWeight = it },
-                            label = { Text(stringResource(R.string.default_weight_kg)) },
+                        // First row: Weight and Reps
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = defaultWeight,
+                                onValueChange = { defaultWeight = it },
+                                label = { Text(stringResource(R.string.default_weight_kg)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                                )
                             )
-                        )
+                            OutlinedTextField(
+                                value = defaultReps,
+                                onValueChange = { defaultReps = it },
+                                label = { Text(stringResource(R.string.default_reps)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                                )
+                            )
+                        }
+                        // Second row: Sets and empty space
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = defaultSets,
+                                onValueChange = { defaultSets = it },
+                                label = { Text(stringResource(R.string.default_sets)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                                )
+                            )
+                            // Empty space to maintain 2x2 layout
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+                
+                // Additional fields for Cardio and Bodyweight exercises
+                when (exerciseType) {
+                    ExerciseType.CARDIO -> {
                         OutlinedTextField(
-                            value = defaultReps,
-                            onValueChange = { defaultReps = it },
-                            label = { Text(stringResource(R.string.default_reps)) },
+                            value = defaultMinutes,
+                            onValueChange = { defaultMinutes = it },
+                            label = { Text("Default Minutes") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
                             )
                         )
+                    }
+                    ExerciseType.BODYWEIGHT -> {
                         OutlinedTextField(
-                            value = defaultSets,
-                            onValueChange = { defaultSets = it },
-                            label = { Text(stringResource(R.string.default_sets)) },
+                            value = defaultBodyweightReps,
+                            onValueChange = { defaultBodyweightReps = it },
+                            label = { Text("Default Reps") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
                             )
                         )
+                    }
+                    ExerciseType.STRENGTH -> {
+                        // No additional fields for Strength exercises
                     }
                 }
 
@@ -278,67 +318,126 @@ fun AddExerciseDialog(
             }
         },
         confirmButton = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Delete button (only in edit mode when onDelete is provided) - positioned at left
-                if (existingExercise != null && onDelete != null) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                } else {
-                    // Empty space to maintain layout when no delete button
-                    Spacer(modifier = Modifier.size(48.dp))
-                }
-                
-                // Cancel and Add/Update buttons side by side
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                    Button(
-                        onClick = {
-                            AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
-                            val exercise = if (existingExercise != null) {
-                                // When editing, preserve all non-editable fields from the existing exercise
-                                existingExercise.copy(
-                                    name = name.trim(),
-                                    category = ExerciseCategoryMapper.getCategory(exerciseType),
-                                    kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                                    kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
-                                    defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                                    defaultReps = defaultReps.toIntOrNull() ?: 0,
-                                    defaultSets = defaultSets.toIntOrNull() ?: 0,
-                                    notes = notes.takeIf { it.isNotBlank() },
-                                    imagePaths = existingExercise.imagePaths // Preserve existing image paths
-                                )
-                            } else {
-                                // When creating new exercise, use the provided external exercise data if available
-                                val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
-                                baseExercise.copy(
-                                    name = name.trim(),
-                                    category = ExerciseCategoryMapper.getCategory(exerciseType),
-                                    kcalBurnedPerRep = kcalPerRep.toDoubleOrNull(),
-                                    kcalBurnedPerMinute = kcalPerMinute.toDoubleOrNull(),
-                                    defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
-                                    defaultReps = defaultReps.toIntOrNull() ?: 0,
-                                    defaultSets = defaultSets.toIntOrNull() ?: 0,
-                                    notes = notes.takeIf { it.isNotBlank() }
-                                )
-                            }
-                            onAddExercise(exercise)
+            // Create exercise helper function
+            fun createExercise(): Exercise {
+                AppLogger.i("AddExerciseDialog", "Creating exercise with externalExercise: ${externalExercise?.name}")
+                return if (existingExercise != null) {
+                    // When editing, preserve all non-editable fields from the existing exercise
+                    existingExercise.copy(
+                        name = name.trim(),
+                        category = ExerciseCategoryMapper.getCategory(exerciseType),
+                        kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
+                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                        defaultReps = when (exerciseType) {
+                            ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                            ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                            ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
                         },
+                        defaultSets = when (exerciseType) {
+                            ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                            ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                            ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                        },
+                        notes = notes.takeIf { it.isNotBlank() },
+                        imagePaths = existingExercise.imagePaths // Preserve existing image paths
+                    )
+                } else {
+                    // When creating new exercise, use the provided external exercise data if available
+                    val baseExercise = externalExercise?.toInternalExercise() ?: Exercise(name = "")
+                    baseExercise.copy(
+                        name = name.trim(),
+                        category = ExerciseCategoryMapper.getCategory(exerciseType),
+                        kcalBurnedPerUnit = kcalPerUnit.toDoubleOrNull(),
+                        defaultWeight = defaultWeight.toDoubleOrNull() ?: 0.0,
+                        defaultReps = when (exerciseType) {
+                            ExerciseType.CARDIO -> defaultMinutes.toIntOrNull() ?: 0 // Minutes for cardio
+                            ExerciseType.BODYWEIGHT -> defaultBodyweightReps.toIntOrNull() ?: 0 // Reps for bodyweight
+                            ExerciseType.STRENGTH -> defaultReps.toIntOrNull() ?: 0 // Reps for strength
+                        },
+                        defaultSets = when (exerciseType) {
+                            ExerciseType.CARDIO -> 1 // Always 1 set for cardio
+                            ExerciseType.BODYWEIGHT -> 1 // Always 1 set for bodyweight
+                            ExerciseType.STRENGTH -> defaultSets.toIntOrNull() ?: 0 // Sets for strength
+                        },
+                        notes = notes.takeIf { it.isNotBlank() }
+                    )
+                }
+            }
+            
+            // Check if we should show three-button structure (when external exercise is provided and not editing)
+            val showThreeButtons = externalExercise != null && existingExercise == null && 
+                onSaveAndCheckIn != null && onJustSave != null && onJustCheckIn != null
+            
+            if (showThreeButtons) {
+                // Three-button structure for external exercises - centered
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Save and Check-in button
+                    Button(
+                        onClick = { onSaveAndCheckIn(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(0)
+                        )
+                    ) {
+                        Text(stringResource(R.string.save_and_check_in))
+                    }
+                    
+                    // Just Save button
+                    Button(
+                        onClick = { onJustSave(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(1)
+                        )
+                    ) {
+                        Text(stringResource(R.string.just_save))
+                    }
+                    
+                    // Just Check-in button
+                    Button(
+                        onClick = { onJustCheckIn(createExercise()) },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brandSecondaryShade(2)
+                        )
+                    ) {
+                        Text(stringResource(R.string.just_check_in))
+                    }
+                }
+            } else {
+                // Original layout with delete button and single button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Delete button (only in edit mode when onDelete is provided) - positioned at left
+                    if (existingExercise != null && onDelete != null) {
+                        IconButton(
+                            onClick = onDelete,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        // Empty space to maintain layout when no delete button
+                        Spacer(modifier = Modifier.size(48.dp))
+                    }
+                    
+                    // Original single button for regular add/edit
+                    Button(
+                        onClick = { onAddExercise(createExercise()) },
                         enabled = name.isNotBlank()
                     ) {
                         Text(if (existingExercise != null) stringResource(R.string.update) else stringResource(R.string.add))

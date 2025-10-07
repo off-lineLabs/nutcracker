@@ -48,7 +48,7 @@ object FoodInfoMapper {
         }
         
         // Debug logging to see what values we're getting
-        AppLogger.d("FoodInfoMapper", "Sodium values - 100g: ${nutriments.sodium100g}, regular: ${nutriments.sodium}, value: ${nutriments.sodiumValue}")
+        AppLogger.d("FoodInfoMapper", "Salt values - 100g: ${nutriments.salt100g}, regular: ${nutriments.salt}, value: ${nutriments.saltValue}")
         AppLogger.d("FoodInfoMapper", "Vitamin C values - 100g: ${nutriments.vitaminC100g}, regular: ${nutriments.vitaminC}, value: ${nutriments.vitaminCValue}")
         AppLogger.d("FoodInfoMapper", "Calcium values - 100g: ${nutriments.calcium100g}, regular: ${nutriments.calcium}, value: ${nutriments.calciumValue}")
         AppLogger.d("FoodInfoMapper", "Iron values - 100g: ${nutriments.iron100g}, regular: ${nutriments.iron}, value: ${nutriments.ironValue}")
@@ -78,9 +78,9 @@ object FoodInfoMapper {
                 fallback = nutriments.proteins
             ),
             sodium = convertGramsToMilligrams(getPer100gValue(
-                primary = nutriments.sodium100g,
-                fallback = nutriments.sodium,
-                tertiary = nutriments.sodiumValue
+                primary = nutriments.salt100g,
+                fallback = nutriments.salt,
+                tertiary = nutriments.saltValue
             )),
             fiber = getPer100gValue(
                 primary = nutriments.fiber100g,

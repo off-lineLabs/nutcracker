@@ -130,8 +130,28 @@ class OfflineFoodLogRepository(
     // Exercise operations
     override fun getAllExercises(): Flow<List<Exercise>> = exerciseDao.getAllExercises()
     override fun getExerciseById(exerciseId: Long): Flow<Exercise?> = exerciseDao.getExerciseById(exerciseId)
-    override suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.upsertExercise(exercise)
-    override suspend fun updateExercise(exercise: Exercise) = exerciseDao.updateExercise(exercise)
+    override suspend fun insertExercise(exercise: Exercise): Long {
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "insertExercise called:")
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "  - name: ${exercise.name}")
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "  - imagePaths.size: ${exercise.imagePaths.size}")
+        exercise.imagePaths.forEachIndexed { index, path ->
+            com.example.template.util.logger.AppLogger.i("FoodLogRepository", "    imagePath $index: $path")
+        }
+        val id = exerciseDao.upsertExercise(exercise)
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "insertExercise returned ID: $id")
+        return id
+    }
+    override suspend fun updateExercise(exercise: Exercise) {
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "updateExercise called:")
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "  - ID: ${exercise.id}")
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "  - name: ${exercise.name}")
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "  - imagePaths.size: ${exercise.imagePaths.size}")
+        exercise.imagePaths.forEachIndexed { index, path ->
+            com.example.template.util.logger.AppLogger.i("FoodLogRepository", "    imagePath $index: $path")
+        }
+        exerciseDao.updateExercise(exercise)
+        com.example.template.util.logger.AppLogger.i("FoodLogRepository", "updateExercise completed")
+    }
     override suspend fun deleteExercise(exercise: Exercise) {
         // Delete the associated images if they exist
         exercise.imagePaths.forEach { imagePath ->

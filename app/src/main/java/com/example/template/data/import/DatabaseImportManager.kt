@@ -50,8 +50,8 @@ class DatabaseImportManager(
         )
         
         // Date formats for parsing
-        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
     }
     
     private val _importProgress = MutableStateFlow<ImportProgress?>(null)
@@ -504,8 +504,7 @@ class DatabaseImportManager(
                         val exercise = Exercise(
                             id = 0, // Let Room auto-generate
                             name = row.getValueOrEmpty("name"),
-                            kcalBurnedPerRep = row.getDoubleValue("kcalBurnedPerRep"),
-                            kcalBurnedPerMinute = row.getDoubleValue("kcalBurnedPerMinute"),
+                            kcalBurnedPerUnit = row.getDoubleValue("kcalBurnedPerUnit"),
                             defaultWeight = row.getDoubleValue("defaultWeight") ?: 0.0,
                             defaultReps = row.getIntValue("defaultReps") ?: 0,
                             defaultSets = row.getIntValue("defaultSets") ?: 0,

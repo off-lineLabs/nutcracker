@@ -19,7 +19,8 @@ object FoodInfoToMealMapper {
         servingSizeValue: Double = 100.0,
         servingSizeUnit: ServingSizeUnit = ServingSizeUnit.GRAMS,
         barcode: String? = null,
-        source: String = "search"
+        source: String = "search",
+        isVisible: Boolean = true
     ): Meal {
         val nutrition = foodInfo.nutrition
         
@@ -39,6 +40,7 @@ object FoodInfoToMealMapper {
             servingSize_value = servingSizeValue,
             servingSize_unit = servingSizeUnit,
             notes = null,
+            isVisible = isVisible,
             
             // Additional nutrition fields - scale these too
             saturatedFat_g = nutrition.saturatedFat?.let { it * multiplier },
