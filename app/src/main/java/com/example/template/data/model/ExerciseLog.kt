@@ -42,8 +42,8 @@ data class ExerciseLog(
             notes: String? = null
         ): ExerciseLog {
             val now = Date()
-            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
             
             return ExerciseLog(
                 exerciseId = exerciseId,

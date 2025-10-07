@@ -32,8 +32,8 @@ data class MealCheckIn(
     companion object {
         fun create(mealId: Long, servingSize: Double = 1.0, notes: String? = null): MealCheckIn {
             val now = Date()
-            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
             
             return MealCheckIn(
                 mealId = mealId,

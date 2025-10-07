@@ -160,7 +160,7 @@ fun CheckInItem(
 
 private fun formatCheckInTime(dateTimeString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
         val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val date = inputFormat.parse(dateTimeString)
         date?.let { outputFormat.format(it) } ?: dateTimeString

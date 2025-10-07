@@ -62,7 +62,7 @@ fun FilterableHistoryView(
         // Sort by timestamp (most recent first)
         items.sortedByDescending { item ->
             try {
-                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
                 formatter.parse(item.timestamp)?.time ?: 0L
             } catch (e: Exception) {
                 0L

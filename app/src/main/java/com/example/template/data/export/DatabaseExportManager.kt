@@ -78,7 +78,7 @@ class DatabaseExportManager(
      * Generate a filename with timestamp for the export
      */
     fun generateExportFilename(): String {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ROOT).format(Date())
         return "${EXPORT_FILENAME_PREFIX}_$timestamp$EXPORT_FILE_EXTENSION"
     }
     
@@ -224,7 +224,7 @@ class DatabaseExportManager(
     private suspend fun exportMetadata(): String {
         val csv = StringBuilder()
         csv.appendLine("export_type,export_date,app_version,database_version,table_count")
-        csv.appendLine("full_export,${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())},1.0,7,7")
+        csv.appendLine("full_export,${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(Date())},1.0,7,7")
         csv.appendLine("")
         csv.appendLine("table_name,description")
         csv.appendLine("meals,Food items with nutritional information")

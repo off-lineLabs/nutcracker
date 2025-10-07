@@ -165,7 +165,7 @@ fun ExerciseItem(
 
 private fun formatTime(dateTimeString: String): String {
     return try {
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
         val date = formatter.parse(dateTimeString)
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         timeFormatter.format(date ?: Date())
