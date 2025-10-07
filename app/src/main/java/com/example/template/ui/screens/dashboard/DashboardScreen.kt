@@ -366,6 +366,7 @@ private fun NutrientBox(
 @Composable
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     isDarkTheme: Boolean
 ) {
     val context = LocalContext.current
@@ -778,7 +779,7 @@ fun DashboardScreen(
                         
                         // Progress bar button
                         IconButton(
-                            onClick = { /* TODO: Implement progress bar functionality */ },
+                            onClick = onNavigateToAnalytics,
                             modifier = Modifier.size(48.dp)
                         ) {
                             Icon(

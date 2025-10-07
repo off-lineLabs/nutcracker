@@ -134,6 +134,8 @@
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
     <string name="progress_details">Progress Details</string>
+    <string name="analytics_title">Analytics</string>
+    <string name="back">Back</string>
     
     <!-- Serving Size -->
     <string name="serving_size_label">Serving Size</string>
