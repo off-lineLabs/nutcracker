@@ -13,6 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -571,7 +576,8 @@ fun CaloriesBarChart(
                         // Scale label (skip first one at 0)
                         if (i > 0) {
                             val labelText = if (value >= 1000) {
-                                "${value / 1000}k"
+                                val kValue = value / 1000.0
+                                String.format(Locale.US, "%.1fk", kValue)
                             } else {
                                 "$value"
                             }
@@ -656,7 +662,7 @@ fun CaloriesBarChart(
                         val dayOfWeek = date.dayOfWeek.getDisplayName(
                             JavaTextStyle.SHORT,
                             Locale.getDefault()
-                        ).take(1) // First letter only (M, T, W, etc.)
+                        ).take(1).uppercase() // First letter only, uppercase (M, T, W, etc.)
                         
                         // Day of week letter (prominent)
                         val dayNameLayoutResult = textMeasurer.measure(
@@ -703,58 +709,142 @@ fun StatsCards(
     
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Card 1: Total calories consumed
-        StatCard(
+        EnhancedStatCard(
             title = "Total calories consumed",
-            value = "${totalCalories.toInt()} kcal"
+            value = "${totalCalories.toInt()} kcal",
+            icon = Icons.Filled.LocalDining,
+            gradientColors = listOf(
+                BrandGold.copy(alpha = 0.15f),
+                BrandGold.copy(alpha = 0.05f)
+            )
         )
         
         // Card 2: Final balance
-        StatCard(
+        EnhancedStatCard(
             title = "Your final balance",
             value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
-            valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor // Green if under goal, red if over
+            valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor,
+            icon = if (balance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            gradientColors = if (balance >= 0) {
+                listOf(
+                    ProteinFiberColor.copy(alpha = 0.15f),
+                    ProteinFiberColor.copy(alpha = 0.05f)
+                )
+            } else {
+                listOf(
+                    ExceededColor.copy(alpha = 0.15f),
+                    ExceededColor.copy(alpha = 0.05f)
+                )
+            }
         )
         
         // Card 3: Average balance
-        StatCard(
+        EnhancedStatCard(
             title = "Average balance per day",
             value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
-            valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor // Green if under goal, red if over
+            valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor,
+            icon = if (averageBalance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            gradientColors = if (averageBalance >= 0) {
+                listOf(
+                    ProteinFiberColor.copy(alpha = 0.12f),
+                    ProteinFiberColor.copy(alpha = 0.03f)
+                )
+            } else {
+                listOf(
+                    ExceededColor.copy(alpha = 0.12f),
+                    ExceededColor.copy(alpha = 0.03f)
+                )
+            }
         )
     }
 }
 
 @Composable
-fun StatCard(
+fun EnhancedStatCard(
     title: String,
     value: String,
-    valueColor: Color = appTextPrimaryColor()
+    icon: ImageVector,
+    valueColor: Color = appTextPrimaryColor(),
+    gradientColors: List<Color>
 ) {
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = appSurfaceColor(),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(16.dp)
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = appTextPrimaryColor().copy(alpha = 0.1f)
+            ),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
     ) {
-        Column {
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                color = appTextSecondaryColor()
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = valueColor
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = gradientColors
+                    )
+                )
+                .background(
+                    color = appSurfaceColor(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = title,
+                        fontSize = 13.sp,
+                        color = appTextSecondaryColor(),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = value,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = valueColor,
+                        letterSpacing = (-0.5).sp
+                    )
+                }
+                
+                // Icon with gradient background
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    valueColor.copy(alpha = 0.2f),
+                                    valueColor.copy(alpha = 0.05f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(14.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = valueColor.copy(alpha = 0.8f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
         }
     }
 }
