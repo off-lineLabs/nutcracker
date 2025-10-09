@@ -35,6 +35,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -1197,18 +1202,352 @@ fun EnhancedStatCard(
 
 @Composable
 fun ExerciseAnalyticsContent() {
-    Box(
+    val context = LocalContext.current
+    val application = context.applicationContext as FoodLogApplication
+    val exerciseLogDao = application.database.exerciseLogDao()
+    
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Current date and month
+    val currentDate = LocalDate.now()
+    
+    // State for calendar navigation
+    var selectedMonth by remember { mutableStateOf(currentDate.month) }
+    var selectedYear by remember { mutableStateOf(currentDate.year) }
+    
+    // Calculate month boundaries for selected month
+    val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
+    val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
+    
+    // Calculate last 7 days (including today)
+    val last7DaysEnd = currentDate
+    val last7DaysStart = currentDate.minusDays(6)
+    
+    // State for analytics data
+    var caloriesBurnedLast7Days by remember { mutableStateOf(0.0) }
+    var exerciseDaysLastWeek by remember { mutableStateOf(0) }
+    var daysSinceLastExercise by remember { mutableStateOf(0) }
+    var exerciseDatesInMonth by remember { mutableStateOf<List<String>>(emptyList()) }
+    
+    // Load analytics data
+    LaunchedEffect(currentDate) {
+        coroutineScope.launch {
+            // Get calories burned in last 7 days
+            exerciseLogDao.getCaloriesBurnedInDateRange(
+                last7DaysStart.toString(),
+                last7DaysEnd.toString()
+            ).collectLatest { calories ->
+                caloriesBurnedLast7Days = calories
+            }
+        }
+        
+        coroutineScope.launch {
+            // Get exercise days in last week
+            exerciseLogDao.getExerciseDaysInDateRange(
+                last7DaysStart.toString(),
+                last7DaysEnd.toString()
+            ).collectLatest { days ->
+                exerciseDaysLastWeek = days
+            }
+        }
+        
+        coroutineScope.launch {
+            // Get days since last exercise
+            exerciseLogDao.getLastExerciseDate().collectLatest { lastDate ->
+                if (lastDate != null) {
+                    val lastExerciseDate = LocalDate.parse(lastDate)
+                    daysSinceLastExercise = currentDate.toEpochDay().toInt() - lastExerciseDate.toEpochDay().toInt()
+                } else {
+                    daysSinceLastExercise = -1 // No exercise logged
+                }
+            }
+        }
+        
+        coroutineScope.launch {
+            // Get exercise dates in current month
+            exerciseLogDao.getExerciseDatesInRange(
+                monthStart.toString(),
+                monthEnd.toString()
+            ).collectLatest { dates ->
+                exerciseDatesInMonth = dates
+            }
+        }
+    }
+    
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Exercise Analytics\n(Coming soon)",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = appTextPrimaryColor()
-        )
+        // Calendar
+        item {
+            ExerciseCalendar(
+                currentMonth = selectedMonth,
+                currentYear = selectedYear,
+                exerciseDates = exerciseDatesInMonth,
+                onPreviousMonth = {
+                    val newDate = LocalDate.of(selectedYear, selectedMonth, 1).minusMonths(1)
+                    selectedMonth = newDate.month
+                    selectedYear = newDate.year
+                },
+                onNextMonth = {
+                    val newDate = LocalDate.of(selectedYear, selectedMonth, 1).plusMonths(1)
+                    selectedMonth = newDate.month
+                    selectedYear = newDate.year
+                }
+            )
+        }
+        
+        // Analytics Cards Row
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Card 1: Calories burned in last 7 days
+                ExerciseAnalyticsCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Calories Burned",
+                    value = "${caloriesBurnedLast7Days.toInt()}",
+                    subtitle = "Last 7 days",
+                    icon = Icons.Filled.TrendingUp,
+                    color = BrandRed
+                )
+                
+                // Card 2: Exercise days in last week
+                ExerciseAnalyticsCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Exercise Days",
+                    value = "$exerciseDaysLastWeek",
+                    subtitle = "Last week",
+                    icon = Icons.Filled.TrendingDown,
+                    color = BrandRed
+                )
+            }
+        }
+        
+        // Card 3: Days since last exercise (full width)
+        item {
+            ExerciseAnalyticsCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                title = "Days Since Last Exercise",
+                value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
+                subtitle = if (daysSinceLastExercise == -1) "No exercise logged" else "days ago",
+                icon = Icons.Filled.LocalDining,
+                color = if (daysSinceLastExercise > 7) BrandRed else BrandGold
+            )
+        }
+    }
+}
+
+@Composable
+fun ExerciseCalendar(
+    currentMonth: java.time.Month,
+    currentYear: Int,
+    exerciseDates: List<String>,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
+) {
+    val currentDate = LocalDate.now()
+    val monthStart = LocalDate.of(currentYear, currentMonth, 1)
+    val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
+    
+    // Get first day of week for the month (adjust to start on Monday)
+    val firstDayOfMonth = monthStart.dayOfWeek
+    val daysToSubtract = (firstDayOfMonth.value - 1) % 7
+    val calendarStart = monthStart.minusDays(daysToSubtract.toLong())
+    
+    // Generate all days for the calendar (6 weeks = 42 days)
+    val calendarDays = (0..41).map { calendarStart.plusDays(it.toLong()) }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = appCardBackgroundColor()
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Month and year header with navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onPreviousMonth,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Previous Month",
+                        tint = appTextPrimaryColor(),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
+                Text(
+                    text = "${currentMonth.getDisplayName(JavaTextStyle.FULL, Locale.getDefault())} $currentYear",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = appTextPrimaryColor()
+                )
+                
+                IconButton(
+                    onClick = onNextMonth,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Next Month",
+                        tint = appTextPrimaryColor(),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .scale(scaleX = -1f, scaleY = 1f)
+                    )
+                }
+            }
+            
+            // Day of week headers
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
+                    Text(
+                        text = day,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = appTextSecondaryColor(),
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Calendar grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                modifier = Modifier.height(240.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(calendarDays.size) { index ->
+                    val day = calendarDays[index]
+                    val isCurrentMonth = day.month == currentMonth
+                    val isToday = day == currentDate
+                    val hasExercise = exerciseDates.contains(day.toString())
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    isToday -> BrandRed.copy(alpha = 0.3f)
+                                    hasExercise -> BrandRed.copy(alpha = 0.1f)
+                                    else -> Color.Transparent
+                                }
+                            )
+                            .then(
+                                if (hasExercise) {
+                                    Modifier.border(
+                                        width = 2.dp,
+                                        color = BrandRed,
+                                        shape = CircleShape
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${day.dayOfMonth}",
+                            fontSize = 14.sp,
+                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                            color = when {
+                                !isCurrentMonth -> appTextTertiaryColor()
+                                isToday -> BrandRed
+                                hasExercise -> BrandRed
+                                else -> appTextPrimaryColor()
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExerciseAnalyticsCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    subtitle: String,
+    icon: ImageVector,
+    color: Color
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = appCardBackgroundColor()
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(24.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = value,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = appTextPrimaryColor()
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = appTextSecondaryColor(),
+                textAlign = TextAlign.Center,
+                lineHeight = 16.sp
+            )
+            
+            Spacer(modifier = Modifier.height(2.dp))
+            
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = appTextTertiaryColor(),
+                textAlign = TextAlign.Center,
+                lineHeight = 14.sp
+            )
+        }
     }
 }
 

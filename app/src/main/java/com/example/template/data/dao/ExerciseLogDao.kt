@@ -80,6 +80,35 @@ interface ExerciseLogDao {
         WHERE logDate = :date
     """)
     fun getDailyExerciseCalories(date: String): Flow<Double>
+
+    // Analytics queries for exercise analytics screen
+    @Query("""
+        SELECT COALESCE(SUM(caloriesBurned), 0.0) as totalCaloriesBurned
+        FROM exercise_logs 
+        WHERE logDate >= :startDate AND logDate <= :endDate
+    """)
+    fun getCaloriesBurnedInDateRange(startDate: String, endDate: String): Flow<Double>
+
+    @Query("""
+        SELECT COUNT(DISTINCT logDate) as exerciseDays
+        FROM exercise_logs 
+        WHERE logDate >= :startDate AND logDate <= :endDate
+    """)
+    fun getExerciseDaysInDateRange(startDate: String, endDate: String): Flow<Int>
+
+    @Query("""
+        SELECT MAX(logDate) as lastExerciseDate
+        FROM exercise_logs
+    """)
+    fun getLastExerciseDate(): Flow<String?>
+
+    @Query("""
+        SELECT DISTINCT logDate
+        FROM exercise_logs 
+        WHERE logDate >= :startDate AND logDate <= :endDate
+        ORDER BY logDate
+    """)
+    fun getExerciseDatesInRange(startDate: String, endDate: String): Flow<List<String>>
 }
 
 // Data class for the complex query result
