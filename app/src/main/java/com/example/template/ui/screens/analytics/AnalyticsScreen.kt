@@ -1307,6 +1307,17 @@ fun ExerciseAnalyticsContent() {
             )
         }
         
+        // Weekly Stats Section Title
+        item {
+        Text(
+                text = "Weekly Stats",
+            fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = appTextPrimaryColor(),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+        
         // Analytics Cards - 2x2 Grid
         item {
             Column(
@@ -1322,7 +1333,6 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier.weight(1f),
                         title = "Calories Burned",
                         value = "${caloriesBurnedLast7Days.toInt()}",
-                        subtitle = "Last 7 days",
                         icon = Icons.Filled.TrendingUp,
                         color = BrandRed
                     )
@@ -1332,7 +1342,6 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier.weight(1f),
                         title = "Exercise Days",
                         value = "$exerciseDaysLastWeek",
-                        subtitle = "Last week",
                         icon = Icons.Filled.TrendingDown,
                         color = BrandRed
                     )
@@ -1348,7 +1357,6 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier.weight(1f),
                         title = "Days Since Last Exercise",
                         value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
-                        subtitle = if (daysSinceLastExercise == -1) "No exercise logged" else "days ago",
                         icon = Icons.Filled.LocalDining,
                         color = if (daysSinceLastExercise > 7) BrandRed else BrandGold
                     )
@@ -1360,9 +1368,9 @@ fun ExerciseAnalyticsContent() {
                         value = primaryMusclesLastExercise.joinToString(", ") { 
                             it.replaceFirstChar { char -> char.uppercase() }
                         }.takeIf { it.isNotEmpty() } ?: "None",
-                        subtitle = "Primary muscles",
                         icon = Icons.Filled.TrendingUp,
-                        color = BrandRed
+                        color = BrandRed,
+                        isSmallValue = true
                     )
                 }
             }
@@ -1423,8 +1431,8 @@ fun ExerciseCalendar(
                 Text(
                     text = "${currentMonth.getDisplayName(JavaTextStyle.FULL, Locale.getDefault())} $currentYear",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = appTextPrimaryColor()
+            fontWeight = FontWeight.Bold,
+            color = appTextPrimaryColor()
                 )
                 
                 IconButton(
@@ -1521,9 +1529,10 @@ fun ExerciseAnalyticsCard(
     modifier: Modifier = Modifier,
     title: String,
     value: String,
-    subtitle: String,
+    subtitle: String = "",
     icon: ImageVector,
-    color: Color
+    color: Color,
+    isSmallValue: Boolean = false
 ) {
     Card(
         modifier = modifier,
@@ -1547,15 +1556,7 @@ fun ExerciseAnalyticsCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            Text(
-                text = value,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = appTextPrimaryColor()
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
+            // Title on top
             Text(
                 text = title,
                 fontSize = 14.sp,
@@ -1565,14 +1566,16 @@ fun ExerciseAnalyticsCard(
                 lineHeight = 16.sp
             )
             
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             
+            // Value below
             Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = appTextTertiaryColor(),
+                text = value,
+                fontSize = if (isSmallValue) 16.sp else 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = appTextPrimaryColor(),
                 textAlign = TextAlign.Center,
-                lineHeight = 14.sp
+                lineHeight = if (isSmallValue) 18.sp else 28.sp
             )
         }
     }
