@@ -100,6 +100,12 @@ data class MonthData(
     val monthLabel: String
 )
 
+data class SelectedPeriodData(
+    val period: String,
+    val calories: Double,
+    val date: LocalDate
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
@@ -527,6 +533,8 @@ fun generateMonthData(dailyCalories: Map<LocalDate, Double>): List<MonthData> {
 fun NutritionAnalyticsContent(
     timePeriod: TimePeriod = TimePeriod.DAYS
 ) {
+    // State for selected bar
+    var selectedBarIndex by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
     
@@ -593,7 +601,8 @@ fun NutritionAnalyticsContent(
                     DayCaloriesBarChart(
                         dayData = dayData,
                         calorieGoal = userGoal.caloriesGoal.toDouble(),
-                        timePeriod = timePeriod
+                        timePeriod = timePeriod,
+                        onBarSelected = { selectedBarIndex = it }
                     )
                 }
                 TimePeriod.WEEKS -> {
@@ -601,7 +610,8 @@ fun NutritionAnalyticsContent(
                     WeekCaloriesBarChart(
                         weekData = weekData,
                         calorieGoal = userGoal.caloriesGoal.toDouble() * 7, // Weekly goal
-                        timePeriod = timePeriod
+                        timePeriod = timePeriod,
+                        onBarSelected = { selectedBarIndex = it }
                     )
                 }
                 TimePeriod.MONTHS -> {
@@ -609,7 +619,8 @@ fun NutritionAnalyticsContent(
                     MonthCaloriesBarChart(
                         monthData = monthData,
                         calorieGoal = userGoal.caloriesGoal.toDouble() * 30, // Monthly goal (approximate)
-                        timePeriod = timePeriod
+                        timePeriod = timePeriod,
+                        onBarSelected = { selectedBarIndex = it }
                     )
                 }
             }
@@ -678,7 +689,7 @@ fun NutritionAnalyticsContent(
         item {
             // Stats Cards Title
             Text(
-                text = "For this period:",
+                text = "For the selected period:",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = appTextPrimaryColor()
@@ -686,10 +697,47 @@ fun NutritionAnalyticsContent(
         }
         
         item {
-            // Stats Cards
+            // Stats Cards - now show data for selected period
+            val selectedPeriodData = when (timePeriod) {
+                TimePeriod.DAYS -> {
+                    val dayData = generateDayData(last7Days, dailyCalories)
+                    val selectedIndex = selectedBarIndex ?: (dayData.size - 1).coerceAtLeast(0)
+                    dayData.getOrNull(selectedIndex)?.let { 
+                        SelectedPeriodData(
+                            period = "Day",
+                            calories = it.calories,
+                            date = it.date
+                        )
+                    }
+                }
+                TimePeriod.WEEKS -> {
+                    val weekData = generateWeekData(dailyCalories)
+                    val selectedIndex = selectedBarIndex ?: (weekData.size - 1).coerceAtLeast(0)
+                    weekData.getOrNull(selectedIndex)?.let {
+                        SelectedPeriodData(
+                            period = "Week",
+                            calories = it.calories,
+                            date = it.weekStart
+                        )
+                    }
+                }
+                TimePeriod.MONTHS -> {
+                    val monthData = generateMonthData(dailyCalories)
+                    val selectedIndex = selectedBarIndex ?: (monthData.size - 1).coerceAtLeast(0)
+                    monthData.getOrNull(selectedIndex)?.let {
+                        SelectedPeriodData(
+                            period = "Month",
+                            calories = it.calories,
+                            date = it.monthStart
+                        )
+                    }
+                }
+            }
+            
             StatsCards(
                 dailyCalories = dailyCalories,
-                calorieGoal = userGoal.caloriesGoal.toDouble()
+                calorieGoal = userGoal.caloriesGoal.toDouble(),
+                selectedPeriodData = selectedPeriodData
             )
         }
     }
@@ -700,13 +748,15 @@ fun NutritionAnalyticsContent(
 fun DayCaloriesBarChart(
     dayData: List<DayData>,
     calorieGoal: Double,
-    timePeriod: TimePeriod
+    timePeriod: TimePeriod,
+    onBarSelected: (Int?) -> Unit = {}
 ) {
     CaloriesBarChartImpl(
         data = dayData.map { it.calories },
         labels = dayData.map { it.date.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()).take(1).uppercase() },
         calorieGoal = calorieGoal,
-        timePeriod = timePeriod
+        timePeriod = timePeriod,
+        onBarSelected = onBarSelected
     )
 }
 
@@ -714,13 +764,15 @@ fun DayCaloriesBarChart(
 fun WeekCaloriesBarChart(
     weekData: List<WeekData>,
     calorieGoal: Double,
-    timePeriod: TimePeriod
+    timePeriod: TimePeriod,
+    onBarSelected: (Int?) -> Unit = {}
 ) {
     CaloriesBarChartImpl(
         data = weekData.map { it.calories },
         labels = weekData.map { it.weekLabel },
         calorieGoal = calorieGoal,
-        timePeriod = timePeriod
+        timePeriod = timePeriod,
+        onBarSelected = onBarSelected
     )
 }
 
@@ -728,13 +780,15 @@ fun WeekCaloriesBarChart(
 fun MonthCaloriesBarChart(
     monthData: List<MonthData>,
     calorieGoal: Double,
-    timePeriod: TimePeriod
+    timePeriod: TimePeriod,
+    onBarSelected: (Int?) -> Unit = {}
 ) {
     CaloriesBarChartImpl(
         data = monthData.map { it.calories },
         labels = monthData.map { it.monthLabel },
         calorieGoal = calorieGoal,
-        timePeriod = timePeriod
+        timePeriod = timePeriod,
+        onBarSelected = onBarSelected
     )
 }
 
@@ -743,7 +797,8 @@ fun CaloriesBarChartImpl(
     data: List<Double>,
     labels: List<String>,
     calorieGoal: Double,
-    timePeriod: TimePeriod
+    timePeriod: TimePeriod,
+    onBarSelected: (Int?) -> Unit = {}
 ) {
     val textMeasurer = rememberTextMeasurer()
     val textColor = appTextPrimaryColor()
@@ -753,30 +808,18 @@ fun CaloriesBarChartImpl(
     val selectedBarColor = BrandGoldLight
     val goalLineColor = BrandRed.copy(alpha = 0.7f)
     
-    var selectedDayIndex by remember { mutableStateOf<Int?>(null) }
+    var selectedDayIndex by remember { mutableStateOf<Int?>(data.size - 1) } // Default to last bar
     
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Title and Legend
+        // Goal line legend only
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = when (timePeriod) {
-                    TimePeriod.DAYS -> "Daily Calories (Last 7 Days)"
-                    TimePeriod.WEEKS -> "Weekly Calories (Last 7 Weeks)"
-                    TimePeriod.MONTHS -> "Monthly Calories (Last 7 Months)"
-                },
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            )
-            
-            // Goal line legend
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -820,6 +863,7 @@ fun CaloriesBarChartImpl(
                                 val x = index * (barWidth + spacing) + spacing / 2
                                 if (offset.x >= x && offset.x <= x + barWidth) {
                                     selectedDayIndex = if (selectedDayIndex == index) null else index
+                                    onBarSelected(selectedDayIndex)
                                 }
                             }
                         }
@@ -985,27 +1029,29 @@ fun CaloriesBarChartImpl(
                 }
             }
         }
-        
-        // Tap instruction
-        Text(
-            text = "Tap on a bar to see exact values",
-            fontSize = 11.sp,
-            color = textSecondaryColor.copy(alpha = 0.6f),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
     }
 }
 
 @Composable
 fun StatsCards(
     dailyCalories: Map<LocalDate, Double>,
-    calorieGoal: Double
+    calorieGoal: Double,
+    selectedPeriodData: SelectedPeriodData? = null
 ) {
-    val totalCalories = dailyCalories.values.sum()
-    val targetCalories = calorieGoal * 7 // 7 days
+    // Use selected period data if available, otherwise use total data
+    val totalCalories = selectedPeriodData?.calories ?: dailyCalories.values.sum()
+    val targetCalories = if (selectedPeriodData != null) {
+        when (selectedPeriodData.period) {
+            "Day" -> calorieGoal
+            "Week" -> calorieGoal * 7
+            "Month" -> calorieGoal * 30
+            else -> calorieGoal
+        }
+    } else {
+        calorieGoal * 7 // 7 days
+    }
     val balance = targetCalories - totalCalories // Inverted: remaining calories (positive = under goal, negative = over goal)
-    val averageBalance = balance / 7
+    val averageBalance = if (selectedPeriodData != null) balance else balance / 7
     
     Column(
         modifier = Modifier.fillMaxWidth(),
