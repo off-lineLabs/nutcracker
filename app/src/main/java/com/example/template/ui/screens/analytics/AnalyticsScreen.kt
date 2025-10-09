@@ -61,8 +61,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import java.time.LocalDate
+import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle as JavaTextStyle
+import java.time.temporal.WeekFields
 import java.util.Locale
 
 // Enum for analytics sections
@@ -70,6 +72,33 @@ enum class AnalyticsSection {
     NUTRITION,
     EXERCISE
 }
+
+// Enum for time periods
+enum class TimePeriod {
+    DAYS,
+    WEEKS,
+    MONTHS
+}
+
+// Data classes for different time periods
+data class DayData(
+    val date: LocalDate,
+    val calories: Double
+)
+
+data class WeekData(
+    val weekStart: LocalDate,
+    val weekEnd: LocalDate,
+    val calories: Double,
+    val weekLabel: String
+)
+
+data class MonthData(
+    val monthStart: LocalDate,
+    val monthEnd: LocalDate,
+    val calories: Double,
+    val monthLabel: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +112,9 @@ fun AnalyticsScreen(
     
     // Current section state
     var currentSection by remember { mutableStateOf(AnalyticsSection.NUTRITION) }
+    
+    // Current time period state
+    var currentTimePeriod by remember { mutableStateOf(TimePeriod.DAYS) }
     
     // Start animation on first composition
     LaunchedEffect(Unit) {
@@ -189,6 +221,14 @@ fun AnalyticsScreen(
                         currentSection = currentSection,
                         onSectionChange = { currentSection = it }
                     )
+                    
+                    // Time period navigation (only for nutrition)
+                    if (currentSection == AnalyticsSection.NUTRITION) {
+                        TimePeriodTabs(
+                            currentTimePeriod = currentTimePeriod,
+                            onTimePeriodChange = { currentTimePeriod = it }
+                        )
+                    }
                 }
             },
             containerColor = Color.Transparent
@@ -227,7 +267,9 @@ fun AnalyticsScreen(
                     label = "sectionContent"
                 ) { section ->
                     when (section) {
-                        AnalyticsSection.NUTRITION -> NutritionAnalyticsContent()
+                        AnalyticsSection.NUTRITION -> NutritionAnalyticsContent(
+                            timePeriod = currentTimePeriod
+                        )
                         AnalyticsSection.EXERCISE -> ExerciseAnalyticsContent()
                     }
                 }
@@ -317,7 +359,174 @@ fun SectionTabButton(
 }
 
 @Composable
-fun NutritionAnalyticsContent() {
+fun TimePeriodTabs(
+    currentTimePeriod: TimePeriod,
+    onTimePeriodChange: (TimePeriod) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TimePeriod.values().forEach { period ->
+            TimePeriodTabButton(
+                period = period,
+                isSelected = currentTimePeriod == period,
+                onClick = { onTimePeriodChange(period) }
+            )
+            
+            if (period != TimePeriod.values().last()) {
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun TimePeriodTabButton(
+    period: TimePeriod,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) BrandGold else appSurfaceColor(),
+        animationSpec = tween(300),
+        label = "timePeriodBackground"
+    )
+    
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else appTextSecondaryColor(),
+        animationSpec = tween(300),
+        label = "timePeriodContent"
+    )
+    
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = contentColor
+        ),
+        modifier = Modifier
+            .height(36.dp),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Text(
+            text = when (period) {
+                TimePeriod.DAYS -> "Days"
+                TimePeriod.WEEKS -> "Weeks"
+                TimePeriod.MONTHS -> "Months"
+            },
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 14.sp
+        )
+    }
+}
+
+// Helper functions for time period data
+fun generateDayData(last7Days: List<LocalDate>, dailyCalories: Map<LocalDate, Double>): List<DayData> {
+    return last7Days.map { date ->
+        DayData(
+            date = date,
+            calories = dailyCalories[date] ?: 0.0
+        )
+    }
+}
+
+fun generateWeekData(dailyCalories: Map<LocalDate, Double>): List<WeekData> {
+    val weeks = mutableListOf<WeekData>()
+    val sortedDates = dailyCalories.keys.sorted()
+    
+    if (sortedDates.isEmpty()) return weeks
+    
+    // Group dates by week (Monday to Sunday)
+    val weekGroups = mutableMapOf<String, MutableList<LocalDate>>()
+    
+    for (date in sortedDates) {
+        // Get Monday of the week
+        val monday = date.with(DayOfWeek.MONDAY)
+        val weekKey = monday.toString()
+        
+        weekGroups.getOrPut(weekKey) { mutableListOf() }.add(date)
+    }
+    
+    // Convert to WeekData
+    weekGroups.entries.sortedBy { it.key }.forEach { (_, dates) ->
+        val weekStart = dates.minOrNull() ?: return@forEach
+        val weekEnd = dates.maxOrNull() ?: return@forEach
+        val weekCalories = dates.sumOf { dailyCalories[it] ?: 0.0 }
+        
+        // Format: "29/09 - 05/10"
+        val startStr = "${weekStart.dayOfMonth.toString().padStart(2, '0')}/${weekStart.monthValue.toString().padStart(2, '0')}"
+        val endStr = "${weekEnd.dayOfMonth.toString().padStart(2, '0')}/${weekEnd.monthValue.toString().padStart(2, '0')}"
+        
+        weeks.add(
+            WeekData(
+                weekStart = weekStart,
+                weekEnd = weekEnd,
+                calories = weekCalories,
+                weekLabel = "$startStr - $endStr"
+            )
+        )
+    }
+    
+    return weeks.takeLast(7) // Return last 7 weeks
+}
+
+fun generateMonthData(dailyCalories: Map<LocalDate, Double>): List<MonthData> {
+    val months = mutableListOf<MonthData>()
+    val sortedDates = dailyCalories.keys.sorted()
+    
+    if (sortedDates.isEmpty()) return months
+    
+    var currentMonth = sortedDates.first().month
+    var currentYear = sortedDates.first().year
+    var monthStart = sortedDates.first()
+    var monthEnd = monthStart
+    var monthCalories = 0.0
+    
+    for (date in sortedDates) {
+        if (date.month == currentMonth && date.year == currentYear) {
+            monthEnd = date
+            monthCalories += dailyCalories[date] ?: 0.0
+        } else {
+            // Save previous month
+            months.add(
+                MonthData(
+                    monthStart = monthStart,
+                    monthEnd = monthEnd,
+                    calories = monthCalories,
+                    monthLabel = "${monthStart.month.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())} ${monthStart.year}"
+                )
+            )
+            
+            // Start new month
+            currentMonth = date.month
+            currentYear = date.year
+            monthStart = date
+            monthEnd = date
+            monthCalories = dailyCalories[date] ?: 0.0
+        }
+    }
+    
+    // Add the last month
+    months.add(
+        MonthData(
+            monthStart = monthStart,
+            monthEnd = monthEnd,
+            calories = monthCalories,
+            monthLabel = "${monthStart.month.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())} ${monthStart.year}"
+        )
+    )
+    
+    return months.takeLast(7) // Return last 7 months
+}
+
+@Composable
+fun NutritionAnalyticsContent(
+    timePeriod: TimePeriod = TimePeriod.DAYS
+) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
     
@@ -377,12 +586,33 @@ fun NutritionAnalyticsContent() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            // Bar Chart
-            CaloriesBarChart(
-                dailyCalories = dailyCalories,
-                calorieGoal = userGoal.caloriesGoal.toDouble(),
-                last7Days = last7Days
-            )
+            // Bar Chart - now supports different time periods
+            when (timePeriod) {
+                TimePeriod.DAYS -> {
+                    val dayData = generateDayData(last7Days, dailyCalories)
+                    DayCaloriesBarChart(
+                        dayData = dayData,
+                        calorieGoal = userGoal.caloriesGoal.toDouble(),
+                        timePeriod = timePeriod
+                    )
+                }
+                TimePeriod.WEEKS -> {
+                    val weekData = generateWeekData(dailyCalories)
+                    WeekCaloriesBarChart(
+                        weekData = weekData,
+                        calorieGoal = userGoal.caloriesGoal.toDouble() * 7, // Weekly goal
+                        timePeriod = timePeriod
+                    )
+                }
+                TimePeriod.MONTHS -> {
+                    val monthData = generateMonthData(dailyCalories)
+                    MonthCaloriesBarChart(
+                        monthData = monthData,
+                        calorieGoal = userGoal.caloriesGoal.toDouble() * 30, // Monthly goal (approximate)
+                        timePeriod = timePeriod
+                    )
+                }
+            }
         }
         
         item {
@@ -465,11 +695,55 @@ fun NutritionAnalyticsContent() {
     }
 }
 
+// Chart functions for different time periods
 @Composable
-fun CaloriesBarChart(
-    dailyCalories: Map<LocalDate, Double>,
+fun DayCaloriesBarChart(
+    dayData: List<DayData>,
     calorieGoal: Double,
-    last7Days: List<LocalDate>
+    timePeriod: TimePeriod
+) {
+    CaloriesBarChartImpl(
+        data = dayData.map { it.calories },
+        labels = dayData.map { it.date.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()).take(1).uppercase() },
+        calorieGoal = calorieGoal,
+        timePeriod = timePeriod
+    )
+}
+
+@Composable
+fun WeekCaloriesBarChart(
+    weekData: List<WeekData>,
+    calorieGoal: Double,
+    timePeriod: TimePeriod
+) {
+    CaloriesBarChartImpl(
+        data = weekData.map { it.calories },
+        labels = weekData.map { it.weekLabel },
+        calorieGoal = calorieGoal,
+        timePeriod = timePeriod
+    )
+}
+
+@Composable
+fun MonthCaloriesBarChart(
+    monthData: List<MonthData>,
+    calorieGoal: Double,
+    timePeriod: TimePeriod
+) {
+    CaloriesBarChartImpl(
+        data = monthData.map { it.calories },
+        labels = monthData.map { it.monthLabel },
+        calorieGoal = calorieGoal,
+        timePeriod = timePeriod
+    )
+}
+
+@Composable
+fun CaloriesBarChartImpl(
+    data: List<Double>,
+    labels: List<String>,
+    calorieGoal: Double,
+    timePeriod: TimePeriod
 ) {
     val textMeasurer = rememberTextMeasurer()
     val textColor = appTextPrimaryColor()
@@ -492,7 +766,11 @@ fun CaloriesBarChart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Daily Calories (Last 7 Days)",
+                text = when (timePeriod) {
+                    TimePeriod.DAYS -> "Daily Calories (Last 7 Days)"
+                    TimePeriod.WEEKS -> "Weekly Calories (Last 7 Weeks)"
+                    TimePeriod.MONTHS -> "Monthly Calories (Last 7 Months)"
+                },
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = textColor
@@ -535,10 +813,10 @@ fun CaloriesBarChart(
                         detectTapGestures { offset ->
                             // Calculate which bar was tapped
                             val chartWidth = size.width.toFloat()
-                            val barWidth = chartWidth / (last7Days.size * 2)
+                            val barWidth = chartWidth / (data.size * 2)
                             val spacing = barWidth
                             
-                            last7Days.forEachIndexed { index, _ ->
+                            data.forEachIndexed { index, _ ->
                                 val x = index * (barWidth + spacing) + spacing / 2
                                 if (offset.x >= x && offset.x <= x + barWidth) {
                                     selectedDayIndex = if (selectedDayIndex == index) null else index
@@ -548,13 +826,17 @@ fun CaloriesBarChart(
                     }
             ) {
                 val chartWidth = size.width
-                val chartHeight = size.height - 60f // Reserve space for labels
-                val barWidth = chartWidth / (last7Days.size * 2)
+                val chartHeight = if (timePeriod == TimePeriod.WEEKS || timePeriod == TimePeriod.MONTHS) {
+                    size.height - 80f // More space for rotated labels
+                } else {
+                    size.height - 60f // Regular space for horizontal labels
+                }
+                val barWidth = chartWidth / (data.size * 2)
                 val spacing = barWidth
                 
                 // Calculate max value for scaling
                 val maxCalories = maxOf(
-                    dailyCalories.values.maxOrNull() ?: 0.0,
+                    data.maxOrNull() ?: 0.0,
                     calorieGoal
                 ) * 1.15 // Add 15% padding
                 
@@ -606,8 +888,7 @@ fun CaloriesBarChart(
                     )
                     
                     // Draw bars
-                    last7Days.forEachIndexed { index, date ->
-                        val calories = dailyCalories[date] ?: 0.0
+                    data.forEachIndexed { index, calories ->
                         val barHeight = (calories / maxCalories * chartHeight).toFloat()
                         val x = index * (barWidth + spacing) + spacing / 2
                         val y = chartHeight - barHeight
@@ -658,29 +939,48 @@ fun CaloriesBarChart(
                             )
                         }
                         
-                        // Draw day label below chart
-                        val dayOfWeek = date.dayOfWeek.getDisplayName(
-                            JavaTextStyle.SHORT,
-                            Locale.getDefault()
-                        ).take(1).uppercase() // First letter only, uppercase (M, T, W, etc.)
-                        
-                        // Day of week letter (prominent)
-                        val dayNameLayoutResult = textMeasurer.measure(
-                            dayOfWeek,
+                        // Draw label below chart
+                        val label = labels.getOrNull(index) ?: ""
+                        val labelLayoutResult = textMeasurer.measure(
+                            label,
                             style = TextStyle(
                                 color = if (isSelected) textColor else textSecondaryColor,
-                                fontSize = 14.sp,
+                                fontSize = if (timePeriod == TimePeriod.DAYS) 14.sp else 10.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
                         )
                         
-                        drawText(
-                            textLayoutResult = dayNameLayoutResult,
-                            topLeft = Offset(
-                                x + barWidth / 2 - dayNameLayoutResult.size.width / 2,
-                                chartHeight + 12f
+                        // Draw labels with rotation for weeks and months
+                        if (timePeriod == TimePeriod.WEEKS || timePeriod == TimePeriod.MONTHS) {
+                            // For rotated labels, we'll use a different approach
+                            // Draw them with a slight offset to avoid overlap
+                            val labelX = x + barWidth / 2 - labelLayoutResult.size.width / 2
+                            val labelY = chartHeight + 15f
+                            
+                            // Draw a small background for better readability
+                            drawRect(
+                                color = surfaceColor.copy(alpha = 0.8f),
+                                topLeft = Offset(labelX - 2f, labelY - 2f),
+                                size = androidx.compose.ui.geometry.Size(
+                                    labelLayoutResult.size.width + 4f,
+                                    labelLayoutResult.size.height + 4f
+                                )
                             )
-                        )
+                            
+                            drawText(
+                                textLayoutResult = labelLayoutResult,
+                                topLeft = Offset(labelX, labelY)
+                            )
+                        } else {
+                            // Regular horizontal labels for days
+                            drawText(
+                                textLayoutResult = labelLayoutResult,
+                                topLeft = Offset(
+                                    x + barWidth / 2 - labelLayoutResult.size.width / 2,
+                                    chartHeight + 12f
+                                )
+                            )
+                        }
                     }
                 }
             }
