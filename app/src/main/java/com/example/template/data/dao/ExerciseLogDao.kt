@@ -109,6 +109,19 @@ interface ExerciseLogDao {
         ORDER BY logDate
     """)
     fun getExerciseDatesInRange(startDate: String, endDate: String): Flow<List<String>>
+
+    // Get primary muscles from the last exercise session
+    @Query("""
+        SELECT e.primaryMuscles
+        FROM exercise_logs el
+        INNER JOIN exercises e ON el.exerciseId = e.id
+        WHERE el.logDate = (
+            SELECT MAX(logDate) 
+            FROM exercise_logs
+        )
+        ORDER BY el.logDateTime DESC
+    """)
+    fun getPrimaryMusclesFromLastExercise(): Flow<List<String>>
 }
 
 // Data class for the complex query result

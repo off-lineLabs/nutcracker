@@ -1228,6 +1228,7 @@ fun ExerciseAnalyticsContent() {
     var exerciseDaysLastWeek by remember { mutableStateOf(0) }
     var daysSinceLastExercise by remember { mutableStateOf(0) }
     var exerciseDatesInMonth by remember { mutableStateOf<List<String>>(emptyList()) }
+    var primaryMusclesLastExercise by remember { mutableStateOf<List<String>>(emptyList()) }
     
     // Load analytics data
     LaunchedEffect(currentDate) {
@@ -1272,6 +1273,13 @@ fun ExerciseAnalyticsContent() {
                 exerciseDatesInMonth = dates
             }
         }
+        
+        coroutineScope.launch {
+            // Get primary muscles from last exercise
+            exerciseLogDao.getPrimaryMusclesFromLastExercise().collectLatest { muscles ->
+                primaryMusclesLastExercise = muscles
+            }
+        }
     }
     
     LazyColumn(
@@ -1299,46 +1307,65 @@ fun ExerciseAnalyticsContent() {
             )
         }
         
-        // Analytics Cards Row
+        // Analytics Cards - 2x2 Grid
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Card 1: Calories burned in last 7 days
-                ExerciseAnalyticsCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Calories Burned",
-                    value = "${caloriesBurnedLast7Days.toInt()}",
-                    subtitle = "Last 7 days",
-                    icon = Icons.Filled.TrendingUp,
-                    color = BrandRed
-                )
+                // First row: Cards 1 and 2
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Card 1: Calories burned in last 7 days
+                    ExerciseAnalyticsCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Calories Burned",
+                        value = "${caloriesBurnedLast7Days.toInt()}",
+                        subtitle = "Last 7 days",
+                        icon = Icons.Filled.TrendingUp,
+                        color = BrandRed
+                    )
+                    
+                    // Card 2: Exercise days in last week
+                    ExerciseAnalyticsCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Exercise Days",
+                        value = "$exerciseDaysLastWeek",
+                        subtitle = "Last week",
+                        icon = Icons.Filled.TrendingDown,
+                        color = BrandRed
+                    )
+                }
                 
-                // Card 2: Exercise days in last week
-                ExerciseAnalyticsCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Exercise Days",
-                    value = "$exerciseDaysLastWeek",
-                    subtitle = "Last week",
-                    icon = Icons.Filled.TrendingDown,
-                    color = BrandRed
-                )
+                // Second row: Cards 3 and 4
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Card 3: Days since last exercise
+                    ExerciseAnalyticsCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Days Since Last Exercise",
+                        value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
+                        subtitle = if (daysSinceLastExercise == -1) "No exercise logged" else "days ago",
+                        icon = Icons.Filled.LocalDining,
+                        color = if (daysSinceLastExercise > 7) BrandRed else BrandGold
+                    )
+                    
+                    // Card 4: Primary muscles from last exercise
+                    ExerciseAnalyticsCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Last Exercise Muscles",
+                        value = primaryMusclesLastExercise.joinToString(", ") { 
+                            it.replaceFirstChar { char -> char.uppercase() }
+                        }.takeIf { it.isNotEmpty() } ?: "None",
+                        subtitle = "Primary muscles",
+                        icon = Icons.Filled.TrendingUp,
+                        color = BrandRed
+                    )
+                }
             }
-        }
-        
-        // Card 3: Days since last exercise (full width)
-        item {
-            ExerciseAnalyticsCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                title = "Days Since Last Exercise",
-                value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
-                subtitle = if (daysSinceLastExercise == -1) "No exercise logged" else "days ago",
-                icon = Icons.Filled.LocalDining,
-                color = if (daysSinceLastExercise > 7) BrandRed else BrandGold
-            )
         }
     }
 }
