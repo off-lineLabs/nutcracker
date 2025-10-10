@@ -16,8 +16,11 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -255,21 +258,21 @@ fun AnalyticsScreen(
                     transitionSpec = {
                         // Determine slide direction based on section change
                         val slideDirection = if (targetState == AnalyticsSection.EXERCISE) {
-                            // Moving from Nutrition to Exercise (right to left)
-                            slideInHorizontally(
-                                initialOffsetX = { fullWidth -> fullWidth },
-                                animationSpec = tween(400, easing = FastOutSlowInEasing)
-                            ) togetherWith slideOutHorizontally(
-                                targetOffsetX = { fullWidth -> -fullWidth },
-                                animationSpec = tween(400, easing = FastOutSlowInEasing)
-                            )
-                        } else {
-                            // Moving from Exercise to Nutrition (left to right)
+                            // Moving from Nutrition to Exercise (left to right)
                             slideInHorizontally(
                                 initialOffsetX = { fullWidth -> -fullWidth },
                                 animationSpec = tween(400, easing = FastOutSlowInEasing)
                             ) togetherWith slideOutHorizontally(
                                 targetOffsetX = { fullWidth -> fullWidth },
+                                animationSpec = tween(400, easing = FastOutSlowInEasing)
+                            )
+                        } else {
+                            // Moving from Exercise to Nutrition (right to left)
+                            slideInHorizontally(
+                                initialOffsetX = { fullWidth -> fullWidth },
+                                animationSpec = tween(400, easing = FastOutSlowInEasing)
+                            ) togetherWith slideOutHorizontally(
+                                targetOffsetX = { fullWidth -> -fullWidth },
                                 animationSpec = tween(400, easing = FastOutSlowInEasing)
                             )
                         }
@@ -1309,31 +1312,34 @@ fun ExerciseAnalyticsContent() {
         
         // Weekly Stats Section Title
         item {
-        Text(
+            Text(
                 text = "Weekly Stats",
-            fontSize = 20.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = appTextPrimaryColor(),
-                modifier = Modifier.padding(bottom = 8.dp)
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
             )
         }
         
-        // Analytics Cards - 2x2 Grid
+        // Analytics Cards - 3+1 Layout
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // First row: Cards 1 and 2
+                // First row: Cards 1, 2, and 3
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     // Card 1: Calories burned in last 7 days
                     ExerciseAnalyticsCard(
                         modifier = Modifier.weight(1f),
                         title = "Calories Burned",
                         value = "${caloriesBurnedLast7Days.toInt()}",
-                        icon = Icons.Filled.TrendingUp,
+                        icon = Icons.Filled.LocalFireDepartment,
                         color = BrandRed
                     )
                     
@@ -1342,33 +1348,33 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier.weight(1f),
                         title = "Exercise Days",
                         value = "$exerciseDaysLastWeek",
-                        icon = Icons.Filled.TrendingDown,
+                        icon = Icons.Filled.FitnessCenter,
                         color = BrandRed
                     )
-                }
-                
-                // Second row: Cards 3 and 4
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                    
                     // Card 3: Days since last exercise
                     ExerciseAnalyticsCard(
                         modifier = Modifier.weight(1f),
                         title = "Days Since Last Exercise",
                         value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
-                        icon = Icons.Filled.LocalDining,
-                        color = if (daysSinceLastExercise > 7) BrandRed else BrandGold
+                        icon = painterResource(R.drawable.ic_pause),
+                        color = BrandRed
                     )
-                    
+                }
+                
+                // Second row: Card 4 (full width)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     // Card 4: Primary muscles from last exercise
                     ExerciseAnalyticsCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         title = "Last Exercise Muscles",
                         value = primaryMusclesLastExercise.joinToString(", ") { 
                             it.replaceFirstChar { char -> char.uppercase() }
                         }.takeIf { it.isNotEmpty() } ?: "None",
-                        icon = Icons.Filled.TrendingUp,
+                        icon = painterResource(R.drawable.ic_attribution),
                         color = BrandRed,
                         isSmallValue = true
                     )
@@ -1530,7 +1536,7 @@ fun ExerciseAnalyticsCard(
     title: String,
     value: String,
     subtitle: String = "",
-    icon: ImageVector,
+    icon: Any, // Can be ImageVector or PainterResource
     color: Color,
     isSmallValue: Boolean = false
 ) {
@@ -1547,12 +1553,24 @@ fun ExerciseAnalyticsCard(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(24.dp)
-            )
+            when (icon) {
+                is ImageVector -> {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = generateColorShade(color, 4),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                is Painter -> {
+                    Icon(
+                        painter = icon,
+                        contentDescription = null,
+                        tint = generateColorShade(color, 4),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.height(8.dp))
             
