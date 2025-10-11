@@ -163,8 +163,8 @@ fun AnalyticsScreen(
     
     val backgroundEndColor by animateColorAsState(
         targetValue = when (currentSection) {
-            AnalyticsSection.NUTRITION -> if (isDarkTheme) BrandGold else BrandGoldLightTheme
-            AnalyticsSection.EXERCISE -> if (isDarkTheme) BrandRed else BrandRedLightTheme
+            AnalyticsSection.NUTRITION -> if (isDarkTheme) BrandGold else Color(0xFFFEFEFE)
+            AnalyticsSection.EXERCISE -> if (isDarkTheme) BrandRed else Color(0xFFFEFEFE)
         },
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "backgroundEnd"
@@ -697,10 +697,11 @@ fun NutritionAnalyticsContent(
         item {
             // Stats Cards Title
             Text(
-                text = "For the selected period:",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = appTextPrimaryColor()
+                text = "Selected Period Overview",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = getContrastingTextColor(appBackgroundColor()),
+                letterSpacing = 0.5.sp
             )
         }
         
@@ -1313,11 +1314,12 @@ fun ExerciseAnalyticsContent() {
         // Weekly Stats Section Title
         item {
             Text(
-                text = "Weekly Stats",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = appTextPrimaryColor(),
+                text = "Exercise Analytics",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = getContrastingTextColor(appBackgroundColor()),
                 textAlign = TextAlign.Center,
+                letterSpacing = 0.8.sp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
@@ -1336,7 +1338,9 @@ fun ExerciseAnalyticsContent() {
                 ) {
                     // Card 1: Calories burned in last 7 days
                     ExerciseAnalyticsCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         title = "Calories Burned",
                         value = "${caloriesBurnedLast7Days.toInt()}",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -1345,7 +1349,9 @@ fun ExerciseAnalyticsContent() {
                     
                     // Card 2: Exercise days in last week
                     ExerciseAnalyticsCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         title = "Exercise Days",
                         value = "$exerciseDaysLastWeek",
                         icon = Icons.Filled.FitnessCenter,
@@ -1354,7 +1360,9 @@ fun ExerciseAnalyticsContent() {
                     
                     // Card 3: Days since last exercise
                     ExerciseAnalyticsCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         title = "Days Since Last Exercise",
                         value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
                         icon = painterResource(R.drawable.ic_pause),
