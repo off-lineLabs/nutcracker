@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.template"
+    namespace = "com.offlinelabs.nutcracker"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.template"
+        applicationId = "com.offlinelabs.nutcracker"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
