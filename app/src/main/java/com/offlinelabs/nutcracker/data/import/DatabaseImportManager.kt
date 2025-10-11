@@ -299,6 +299,7 @@ class DatabaseImportManager(
                         val meal = Meal(
                             id = 0, // Let Room auto-generate
                             name = row.getValueOrEmpty("name"),
+                            brand = row.getValue("brand").takeIf { !it.isNullOrBlank() },
                             calories = row.getIntValue("calories") ?: 0,
                             carbohydrates_g = row.getDoubleValue("carbohydrates_g") ?: 0.0,
                             protein_g = row.getDoubleValue("protein_g") ?: 0.0,
@@ -307,7 +308,24 @@ class DatabaseImportManager(
                             sodium_mg = row.getDoubleValue("sodium_mg") ?: 0.0,
                             servingSize_value = row.getDoubleValue("servingSize_value") ?: 100.0,
                             servingSize_unit = ServingSizeUnit.fromAbbreviation(row.getValue("servingSize_unit") ?: "") ?: ServingSizeUnit.getDefault(),
-                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
+                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
+                            saturatedFat_g = row.getDoubleValue("saturatedFat_g"),
+                            sugars_g = row.getDoubleValue("sugars_g"),
+                            cholesterol_mg = row.getDoubleValue("cholesterol_mg"),
+                            vitaminC_mg = row.getDoubleValue("vitaminC_mg"),
+                            calcium_mg = row.getDoubleValue("calcium_mg"),
+                            iron_mg = row.getDoubleValue("iron_mg"),
+                            imageUrl = row.getValue("imageUrl").takeIf { !it.isNullOrBlank() },
+                            localImagePath = row.getValue("localImagePath").takeIf { !it.isNullOrBlank() },
+                            novaClassification = row.getValue("novaClassification")?.let { parseNovaClassification(it) },
+                            greenScore = row.getValue("greenScore")?.let { parseGreenScore(it) },
+                            nutriscore = row.getValue("nutriscore")?.let { parseNutriscore(it) },
+                            ingredients = row.getValue("ingredients").takeIf { !it.isNullOrBlank() },
+                            quantity = row.getValue("quantity").takeIf { !it.isNullOrBlank() },
+                            servingSize = row.getValue("servingSize").takeIf { !it.isNullOrBlank() },
+                            barcode = row.getValue("barcode").takeIf { !it.isNullOrBlank() },
+                            source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual"
                         )
                         
                         val newId = database.mealDao().insertMeal(meal)
@@ -498,7 +516,12 @@ class DatabaseImportManager(
                             primaryMuscles = parseMuscleList(row.getValue("primaryMuscles")),
                             secondaryMuscles = parseMuscleList(row.getValue("secondaryMuscles")),
                             force = row.getValue("force").takeIf { !it.isNullOrBlank() },
-                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                            level = row.getValue("level").takeIf { !it.isNullOrBlank() },
+                            mechanic = row.getValue("mechanic").takeIf { !it.isNullOrBlank() },
+                            instructions = parseMuscleList(row.getValue("instructions")),
+                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
+                            imagePaths = parseMuscleList(row.getValue("imagePaths")),
+                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true
                         )
                         
                         val newId = database.exerciseDao().upsertExercise(exercise)
@@ -922,6 +945,40 @@ class DatabaseImportManager(
             emptyList()
         } else {
             muscleString.split(";").map { it.trim() }.filter { it.isNotBlank() }
+        }
+    }
+    
+    /**
+     * Parse NovaClassification from group number string
+     */
+    private fun parseNovaClassification(groupString: String): NovaClassification? {
+        return try {
+            val group = groupString.toIntOrNull() ?: return null
+            NovaClassification.fromGroup(group)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
+     * Parse GreenScore from grade string
+     */
+    private fun parseGreenScore(gradeString: String): GreenScore? {
+        return if (gradeString.isNotBlank()) {
+            GreenScore(grade = gradeString, score = null)
+        } else {
+            null
+        }
+    }
+    
+    /**
+     * Parse Nutriscore from grade string
+     */
+    private fun parseNutriscore(gradeString: String): Nutriscore? {
+        return if (gradeString.isNotBlank()) {
+            Nutriscore(grade = gradeString, score = null)
+        } else {
+            null
         }
     }
 }
