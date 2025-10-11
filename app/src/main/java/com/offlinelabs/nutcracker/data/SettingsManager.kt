@@ -30,6 +30,8 @@ class SettingsManager(context: Context) {
     companion object {
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_APP_LANGUAGE = "app_language"
+        private const val KEY_TERMS_AGREED = "terms_agreed"
+        private const val KEY_TERMS_AGREED_TIMESTAMP = "terms_agreed_timestamp"
     }
     
     private fun getStoredThemeMode(): ThemeMode {
@@ -90,5 +92,21 @@ class SettingsManager(context: Context) {
                 nightModeFlags == Configuration.UI_MODE_NIGHT_YES
             }
         }
+    }
+    
+    fun hasAgreedToTerms(): Boolean {
+        return prefs.getBoolean(KEY_TERMS_AGREED, false)
+    }
+    
+    fun getTermsAgreementTimestamp(): Long {
+        return prefs.getLong(KEY_TERMS_AGREED_TIMESTAMP, 0L)
+    }
+    
+    fun setTermsAgreed() {
+        val currentTime = System.currentTimeMillis()
+        prefs.edit()
+            .putBoolean(KEY_TERMS_AGREED, true)
+            .putLong(KEY_TERMS_AGREED_TIMESTAMP, currentTime)
+            .apply()
     }
 }

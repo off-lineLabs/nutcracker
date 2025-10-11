@@ -14,6 +14,7 @@ import com.offlinelabs.nutcracker.ui.screens.dashboard.DashboardScreen
 import com.offlinelabs.nutcracker.ui.screens.settings.SettingsScreen
 import com.offlinelabs.nutcracker.ui.screens.analytics.AnalyticsScreen
 import com.offlinelabs.nutcracker.ui.screens.help.HelpScreen
+import com.offlinelabs.nutcracker.ui.screens.terms.TermsOfUseDialog
 import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
 import java.util.Locale
 
@@ -71,11 +72,15 @@ fun AppNavigation(settingsManager: SettingsManager) {
     val database = (context.applicationContext as FoodLogApplication).database
     var currentScreen by remember { mutableStateOf("dashboard") }
     
+    // Check if user has agreed to terms
+    var showTermsDialog by remember { mutableStateOf(!settingsManager.hasAgreedToTerms()) }
+    
     // Handle system back button
     BackHandler(enabled = currentScreen == "settings" || currentScreen == "analytics" || currentScreen == "help") {
         currentScreen = "dashboard"
     }
     
+    // Show dashboard (and other screens) as background
     when (currentScreen) {
         "dashboard" -> DashboardScreen(
             onNavigateToSettings = { currentScreen = "settings" },
@@ -95,6 +100,16 @@ fun AppNavigation(settingsManager: SettingsManager) {
         "help" -> HelpScreen(
             onNavigateBack = { currentScreen = "dashboard" },
             isDarkTheme = settingsManager.isDarkTheme(context)
+        )
+    }
+    
+    // Show terms dialog overlay if user hasn't agreed yet
+    if (showTermsDialog) {
+        TermsOfUseDialog(
+            settingsManager = settingsManager,
+            onTermsAgreed = { 
+                showTermsDialog = false
+            }
         )
     }
 }

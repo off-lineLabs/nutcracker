@@ -248,14 +248,12 @@ fun SettingsScreen(
             text = {
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 400.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     item {
-                        Text(
+                        FormattedTermsText(
                             text = stringResource(R.string.terms_of_use_dialog_content),
-                            color = appTextPrimaryColor(),
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp
+                            textColor = appTextPrimaryColor()
                         )
                     }
                 }
@@ -1026,5 +1024,57 @@ private fun LegalItem(
             color = if (isClickable) Color(0xFF60A5FA) else appTextSecondaryColor(),
             fontSize = 12.sp
         )
+    }
+}
+
+@Composable
+private fun FormattedTermsText(
+    text: String,
+    textColor: Color
+) {
+    val paragraphs = text.split("\n\n").filter { it.isNotBlank() }
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        paragraphs.forEach { paragraph ->
+            val trimmedParagraph = paragraph.trim()
+            if (trimmedParagraph.isNotEmpty()) {
+                // Check if it's a section header (all caps or starts with specific patterns)
+                val isHeader = trimmedParagraph.let { p ->
+                    p.all { it.isUpperCase() || it.isWhitespace() || it == '•' } ||
+                    p.startsWith("LICENSE") || p.startsWith("NO GUARANTEES") || 
+                    p.startsWith("DISCLAIMER") || p.startsWith("DATA COLLECTION") || 
+                    p.startsWith("SUPPORT") || p.startsWith("GENERAL")
+                }
+                
+                if (isHeader) {
+                    Text(
+                        text = trimmedParagraph,
+                        color = textColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 24.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                } else {
+                    // Handle bullet points and regular text
+                    val lines = trimmedParagraph.split("\n")
+                    lines.forEach { line ->
+                        val trimmedLine = line.trim()
+                        if (trimmedLine.isNotEmpty()) {
+                            Text(
+                                text = trimmedLine,
+                                color = textColor,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.padding(start = if (trimmedLine.startsWith("•")) 0.dp else 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
