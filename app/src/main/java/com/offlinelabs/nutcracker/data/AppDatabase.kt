@@ -11,6 +11,9 @@ import com.offlinelabs.nutcracker.data.dao.ExerciseDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseLogDao
 import com.offlinelabs.nutcracker.data.dao.PillDao
 import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
+import com.offlinelabs.nutcracker.data.dao.TagDao
+import com.offlinelabs.nutcracker.data.dao.MealTagDao
+import com.offlinelabs.nutcracker.data.dao.ExerciseTagDao
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
@@ -20,6 +23,10 @@ import com.offlinelabs.nutcracker.data.model.ExerciseTypeConverters
 import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
 import com.offlinelabs.nutcracker.data.model.DateTimeTypeConverters
+import com.offlinelabs.nutcracker.data.model.Tag
+import com.offlinelabs.nutcracker.data.model.MealTag
+import com.offlinelabs.nutcracker.data.model.ExerciseTag
+import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
 
 @Database(
     entities = [
@@ -29,9 +36,12 @@ import com.offlinelabs.nutcracker.data.model.DateTimeTypeConverters
         Exercise::class,
         ExerciseLog::class,
         Pill::class,
-        PillCheckIn::class
+        PillCheckIn::class,
+        Tag::class,
+        MealTag::class,
+        ExerciseTag::class
     ], 
-    version = 17, 
+    version = 18, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -44,12 +54,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseLogDao(): ExerciseLogDao
     abstract fun pillDao(): PillDao
     abstract fun pillCheckInDao(): PillCheckInDao
+    abstract fun tagDao(): TagDao
+    abstract fun mealTagDao(): MealTagDao
+    abstract fun exerciseTagDao(): ExerciseTagDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
-
-        // No migrations needed - database will be recreated from scratch
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -59,7 +70,10 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "food_log_database_v2"
                     )
-                    .fallbackToDestructiveMigration() // Always recreate database from scratch
+                    .addMigrations(
+                        DatabaseMigrations.MIGRATION_17_18
+                        // Add more migrations here as needed
+                    )
                     .build()
                     INSTANCE = instance
                     instance

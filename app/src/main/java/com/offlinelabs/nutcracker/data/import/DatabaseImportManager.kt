@@ -18,7 +18,7 @@ import java.util.zip.ZipInputStream
 
 /**
  * Modern database import manager using Room database and DocumentFile API
- * Imports CSV files from ZIP archive with comprehensive validation
+ * Imports TSV files from ZIP archive with comprehensive validation
  */
 class DatabaseImportManager(
     private val context: Context,
@@ -26,25 +26,31 @@ class DatabaseImportManager(
 ) {
     
     companion object {
-        // Expected CSV files in the ZIP archive
-        private const val MEALS_CSV = "meals.csv"
-        private const val USER_GOALS_CSV = "user_goals.csv"
-        private const val MEAL_CHECK_INS_CSV = "meal_check_ins.csv"
-        private const val EXERCISES_CSV = "exercises.csv"
-        private const val EXERCISE_LOGS_CSV = "exercise_logs.csv"
-        private const val PILLS_CSV = "pills.csv"
-        private const val PILL_CHECK_INS_CSV = "pill_check_ins.csv"
-        private const val EXPORT_INFO_CSV = "export_info.csv"
+        // Expected TSV files in the ZIP archive
+        private const val MEALS_TSV = "meals.tsv"
+        private const val USER_GOALS_TSV = "user_goals.tsv"
+        private const val MEAL_CHECK_INS_TSV = "meal_check_ins.tsv"
+        private const val EXERCISES_TSV = "exercises.tsv"
+        private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
+        private const val PILLS_TSV = "pills.tsv"
+        private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
+        private const val TAGS_TSV = "tags.tsv"
+        private const val MEAL_TAGS_TSV = "meal_tags.tsv"
+        private const val EXERCISE_TAGS_TSV = "exercise_tags.tsv"
+        private const val EXPORT_INFO_TSV = "export_info.tsv"
         
         // Import order to maintain referential integrity
         private val IMPORT_ORDER = listOf(
-            MEALS_CSV,
-            EXERCISES_CSV,
-            PILLS_CSV,
-            USER_GOALS_CSV,
-            MEAL_CHECK_INS_CSV,
-            EXERCISE_LOGS_CSV,
-            PILL_CHECK_INS_CSV
+            MEALS_TSV,
+            EXERCISES_TSV,
+            PILLS_TSV,
+            TAGS_TSV,
+            USER_GOALS_TSV,
+            MEAL_CHECK_INS_TSV,
+            EXERCISE_LOGS_TSV,
+            PILL_CHECK_INS_TSV,
+            MEAL_TAGS_TSV,
+            EXERCISE_TAGS_TSV
         )
         
         // Date formats for parsing
@@ -58,7 +64,7 @@ class DatabaseImportManager(
     private val idMappingManager = IdMappingManager()
     
     /**
-     * Import database from CSV files in ZIP archive
+     * Import database from TSV files in ZIP archive
      * @param sourceUri The URI of the ZIP file to import
      * @param createBackup Whether to create a backup before importing
      * @return Result containing import results and any errors
@@ -95,12 +101,12 @@ class DatabaseImportManager(
                 ?: return@withContext Result.failure(Exception("Cannot open source file"))
             
             ZipInputStream(inputStream).use { zipIn ->
-                val csvFiles = extractCsvFiles(zipIn)
+                val tsvFiles = extractCsvFiles(zipIn)
                 
                 // Import tables in correct order
                 for ((index, tableName) in IMPORT_ORDER.withIndex()) {
-                    val csvData = csvFiles[tableName]
-                    if (csvData != null) {
+                    val tsvData = tsvFiles[tableName]
+                    if (tsvData != null) {
                         _importProgress.value = ImportProgress(
                             currentTable = tableName,
                             currentTableProgress = 0,
@@ -111,7 +117,7 @@ class DatabaseImportManager(
                             isComplete = false
                         )
                         
-                        val tableResult = importTable(tableName, csvData)
+                        val tableResult = importTable(tableName, tsvData)
                         tableResults.add(tableResult)
                         tablesImported.add(tableName)
                         
@@ -175,36 +181,39 @@ class DatabaseImportManager(
     }
     
     /**
-     * Extract CSV files from ZIP archive
+     * Extract TSV files from ZIP archive
      */
     private fun extractCsvFiles(zipIn: ZipInputStream): Map<String, String> {
-        val csvFiles = mutableMapOf<String, String>()
+        val tsvFiles = mutableMapOf<String, String>()
         var entry: ZipEntry? = zipIn.nextEntry
         
         while (entry != null) {
-            if (entry.name.endsWith(".csv")) {
-                val csvContent = zipIn.readBytes().toString(Charsets.UTF_8)
-                csvFiles[entry.name] = csvContent
+            if (entry.name.endsWith(".tsv")) {
+                val tsvContent = zipIn.readBytes().toString(Charsets.UTF_8)
+                tsvFiles[entry.name] = tsvContent
             }
             zipIn.closeEntry()
             entry = zipIn.nextEntry
         }
         
-        return csvFiles
+        return tsvFiles
     }
     
     /**
-     * Import a single table from CSV data
+     * Import a single table from TSV data
      */
-    private suspend fun importTable(tableName: String, csvData: String): TableImportResult {
+    private suspend fun importTable(tableName: String, tsvData: String): TableImportResult {
         return when (tableName) {
-            MEALS_CSV -> importMeals(csvData)
-            USER_GOALS_CSV -> importUserGoals(csvData)
-            MEAL_CHECK_INS_CSV -> importMealCheckIns(csvData)
-            EXERCISES_CSV -> importExercises(csvData)
-            EXERCISE_LOGS_CSV -> importExerciseLogs(csvData)
-            PILLS_CSV -> importPills(csvData)
-            PILL_CHECK_INS_CSV -> importPillCheckIns(csvData)
+            MEALS_TSV -> importMeals(tsvData)
+            USER_GOALS_TSV -> importUserGoals(tsvData)
+            MEAL_CHECK_INS_TSV -> importMealCheckIns(tsvData)
+            EXERCISES_TSV -> importExercises(tsvData)
+            EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
+            PILLS_TSV -> importPills(tsvData)
+            PILL_CHECK_INS_TSV -> importPillCheckIns(tsvData)
+            TAGS_TSV -> importTags(tsvData)
+            MEAL_TAGS_TSV -> importMealTags(tsvData)
+            EXERCISE_TAGS_TSV -> importExerciseTags(tsvData)
             else -> TableImportResult(
                 tableName = tableName,
                 recordsProcessed = 0,
@@ -233,17 +242,17 @@ class DatabaseImportManager(
     }
     
     /**
-     * Parse CSV data into rows
+     * Parse TSV data into rows
      */
     private fun parseCsvData(csvData: String): List<CsvRow> {
         val lines = csvData.trim().split("\n")
         if (lines.isEmpty()) return emptyList()
         
-        val headers = parseCsvLine(lines[0])
+        val headers = parseTsvLine(lines[0])
         val rows = mutableListOf<CsvRow>()
         
         for (i in 1 until lines.size) {
-            val values = parseCsvLine(lines[i])
+            val values = parseTsvLine(lines[i])
             val data = headers.zip(values).toMap()
             rows.add(CsvRow(i + 1, data, headers))
         }
@@ -252,48 +261,26 @@ class DatabaseImportManager(
     }
     
     /**
-     * Parse a single CSV line, handling quoted values
+     * Parse a single TSV line, handling escaped characters
      */
-    private fun parseCsvLine(line: String): List<String> {
-        val result = mutableListOf<String>()
-        var current = StringBuilder()
-        var inQuotes = false
-        var i = 0
-        
-        while (i < line.length) {
-            val char = line[i]
-            
-            when {
-                char == '"' && !inQuotes -> {
-                    inQuotes = true
-                }
-                char == '"' && inQuotes -> {
-                    if (i + 1 < line.length && line[i + 1] == '"') {
-                        // Escaped quote
-                        current.append('"')
-                        i++ // Skip next quote
-                    } else {
-                        inQuotes = false
-                    }
-                }
-                char == ',' && !inQuotes -> {
-                    result.add(current.toString())
-                    current.clear()
-                }
-                else -> {
-                    current.append(char)
-                }
-            }
-            i++
-        }
-        
-        result.add(current.toString())
-        return result
+    private fun parseTsvLine(line: String): List<String> {
+        return line.split('\t').map { unescapeTsv(it) }
+    }
+    
+    /**
+     * Unescape TSV values
+     */
+    private fun unescapeTsv(value: String): String {
+        return value
+            .replace("\\t", "\t")   // Unescape tabs
+            .replace("\\n", "\n")   // Unescape newlines
+            .replace("\\r", "\r")   // Unescape carriage returns
+            .replace("\\\\", "\\")  // Unescape backslashes (must be last)
     }
     
     // Import methods for each table
-    private suspend fun importMeals(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importMeals(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -358,8 +345,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importUserGoals(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importUserGoals(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         var imported = 0
@@ -413,8 +400,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importMealCheckIns(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importMealCheckIns(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -482,8 +469,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importExercises(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importExercises(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -549,8 +536,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importExerciseLogs(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importExerciseLogs(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -621,8 +608,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importPills(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importPills(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -678,8 +665,8 @@ class DatabaseImportManager(
         }
     }
     
-    private suspend fun importPillCheckIns(csvData: String): TableImportResult {
-        val rows = parseCsvData(csvData)
+    private suspend fun importPillCheckIns(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
         val warnings = mutableListOf<ImportWarning>()
         val idMappings = mutableMapOf<String, Long>()
@@ -747,6 +734,182 @@ class DatabaseImportManager(
                 errors = errors,
                 warnings = warnings,
                 idMappings = idMappings
+            )
+        }
+    }
+    
+    /**
+     * Import tags table from TSV
+     */
+    private suspend fun importTags(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val tag = Tag(
+                        id = 0, // Let Room auto-generate
+                        name = row.getValueOrEmpty("name"),
+                        color = row.getValueOrEmpty("color"),
+                        type = TagType.valueOf(row.getValueOrEmpty("type"))
+                    )
+                    
+                    val newId = database.tagDao().insertTag(tag)
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    if (oldId != null) {
+                        idMappings[oldId.toString()] = newId
+                        idMappingManager.addMapping("tags", oldId.toString(), newId)
+                    }
+                    imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "tags",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert tag: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            
+            TableImportResult(
+                tableName = "tags",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = warnings,
+                idMappings = idMappings
+            )
+        }
+    }
+    
+    /**
+     * Import meal tags junction table from TSV
+     */
+    private suspend fun importMealTags(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val oldMealId = row.getLongValue("mealId")
+                    val oldTagId = row.getLongValue("tagId")
+                    
+                    val newMealId = if (oldMealId != null) {
+                        idMappingManager.getNewId("meals", oldMealId.toString())
+                    } else null
+                    
+                    val newTagId = if (oldTagId != null) {
+                        idMappingManager.getNewId("tags", oldTagId.toString())
+                    } else null
+                    
+                    if (newMealId != null && newTagId != null) {
+                        val mealTag = MealTag(
+                            id = 0, // Let Room auto-generate
+                            mealId = newMealId,
+                            tagId = newTagId
+                        )
+                        
+                        database.mealTagDao().insertMealTag(mealTag)
+                        imported++
+                    } else {
+                        skipped++
+                    }
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "meal_tags",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert meal tag: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            
+            TableImportResult(
+                tableName = "meal_tags",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = warnings
+            )
+        }
+    }
+    
+    /**
+     * Import exercise tags junction table from TSV
+     */
+    private suspend fun importExerciseTags(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val oldExerciseId = row.getLongValue("exerciseId")
+                    val oldTagId = row.getLongValue("tagId")
+                    
+                    val newExerciseId = if (oldExerciseId != null) {
+                        idMappingManager.getNewId("exercises", oldExerciseId.toString())
+                    } else null
+                    
+                    val newTagId = if (oldTagId != null) {
+                        idMappingManager.getNewId("tags", oldTagId.toString())
+                    } else null
+                    
+                    if (newExerciseId != null && newTagId != null) {
+                        val exerciseTag = ExerciseTag(
+                            id = 0, // Let Room auto-generate
+                            exerciseId = newExerciseId,
+                            tagId = newTagId
+                        )
+                        
+                        database.exerciseTagDao().insertExerciseTag(exerciseTag)
+                        imported++
+                    } else {
+                        skipped++
+                    }
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "exercise_tags",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert exercise tag: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            
+            TableImportResult(
+                tableName = "exercise_tags",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = warnings
             )
         }
     }

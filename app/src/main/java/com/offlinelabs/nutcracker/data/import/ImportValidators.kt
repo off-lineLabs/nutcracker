@@ -13,7 +13,7 @@ object ImportValidators {
     private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
     
     /**
-     * Validate meal data from CSV row
+     * Validate meal data from TSV row
      */
     fun validateMealData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -131,7 +131,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate user goal data from CSV row
+     * Validate user goal data from TSV row
      */
     fun validateUserGoalData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -168,7 +168,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate meal check-in data from CSV row
+     * Validate meal check-in data from TSV row
      */
     fun validateMealCheckInData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -238,7 +238,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate exercise data from CSV row
+     * Validate exercise data from TSV row
      */
     fun validateExerciseData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -256,34 +256,14 @@ object ImportValidators {
         }
         
         // Numeric validations
-        val kcalPerRep = row.getDoubleValue("kcalBurnedPerRep")
-        val kcalPerMinute = row.getDoubleValue("kcalBurnedPerMinute")
+        val kcalPerUnit = row.getDoubleValue("kcalBurnedPerUnit")
         
-        if (kcalPerRep == null && kcalPerMinute == null) {
-            warnings.add(ImportWarning(
-                tableName = "exercises",
-                rowNumber = row.rowNumber,
-                fieldName = "kcalBurnedPerRep",
-                warningMessage = "Neither kcal per rep nor kcal per minute is specified"
-            ))
-        }
-        
-        if (kcalPerRep != null && kcalPerRep < 0) {
+        if (kcalPerUnit != null && kcalPerUnit < 0) {
             errors.add(ImportError(
                 tableName = "exercises",
                 rowNumber = row.rowNumber,
-                fieldName = "kcalBurnedPerRep",
-                errorMessage = "Kcal per rep must be non-negative",
-                severity = ErrorSeverity.ERROR
-            ))
-        }
-        
-        if (kcalPerMinute != null && kcalPerMinute < 0) {
-            errors.add(ImportError(
-                tableName = "exercises",
-                rowNumber = row.rowNumber,
-                fieldName = "kcalBurnedPerMinute",
-                errorMessage = "Kcal per minute must be non-negative",
+                fieldName = "kcalBurnedPerUnit",
+                errorMessage = "Kcal per unit must be non-negative",
                 severity = ErrorSeverity.ERROR
             ))
         }
@@ -329,7 +309,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate exercise log data from CSV row
+     * Validate exercise log data from TSV row
      */
     fun validateExerciseLogData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -432,7 +412,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate pill data from CSV row
+     * Validate pill data from TSV row
      */
     fun validatePillData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
@@ -457,7 +437,7 @@ object ImportValidators {
     }
     
     /**
-     * Validate pill check-in data from CSV row
+     * Validate pill check-in data from TSV row
      */
     fun validatePillCheckInData(row: CsvRow): ValidationResult {
         val errors = mutableListOf<ImportError>()
