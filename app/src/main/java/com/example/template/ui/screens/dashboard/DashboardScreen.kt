@@ -37,6 +37,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -694,33 +695,33 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Help and Calendar icons on the left
+                    // Left side - Help and Calendar icons with fixed spacing
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Help icon
                         IconButton(
                             onClick = onNavigateToHelp,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Help,
                                 contentDescription = "Help",
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                         
                         // Calendar icon
                         IconButton(
                             onClick = { showCalendarDialog = true },
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.DateRange,
                                 contentDescription = stringResource(R.string.select_date),
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
@@ -735,78 +736,79 @@ fun DashboardScreen(
                             onClick = { 
                                 selectedDate = selectedDate.minusDays(1)
                             },
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                 contentDescription = stringResource(R.string.previous_day),
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                         
-                                                 // Date display
-                         val today = java.time.LocalDate.now()
-                         val dateText = if (selectedDate == today) {
-                             stringResource(R.string.today)
-                         } else {
-                             selectedDate.format(
-                                 java.time.format.DateTimeFormatter.ofLocalizedDate(
-                                     java.time.format.FormatStyle.MEDIUM
-                                 )
-                             )
-                         }
-                         Text(
-                             text = dateText,
-                             fontSize = 20.sp,
-                             fontWeight = FontWeight.Bold,
-                             color = appTextPrimaryColor(),
-                             textAlign = TextAlign.Center
-                         )
+                        // Date display
+                        val today = java.time.LocalDate.now()
+                        val dateText = if (selectedDate == today) {
+                            stringResource(R.string.today)
+                        } else {
+                            // Custom formatter with 2-digit year
+                            val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy")
+                            selectedDate.format(formatter)
+                        }
+                        Text(
+                            text = dateText,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = appTextPrimaryColor(),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.width(80.dp)
+                        )
                         
                         // Right arrow
                         IconButton(
                             onClick = { 
                                 selectedDate = selectedDate.plusDays(1)
                             },
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = stringResource(R.string.next_day),
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                     
-                    // Settings and Progress bar buttons on the right
+                    // Right side - Settings and Analytics icons with fixed spacing
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Settings button
                         IconButton(
                             onClick = onNavigateToSettings,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Settings,
                                 contentDescription = stringResource(R.string.settings_icon_description),
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                         
                         // Progress bar button
                         IconButton(
                             onClick = onNavigateToAnalytics,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.BarChart,
                                 contentDescription = stringResource(R.string.progress_details),
                                 tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
