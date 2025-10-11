@@ -15,6 +15,7 @@ import com.example.template.data.ThemeMode
 import com.example.template.ui.screens.dashboard.DashboardScreen
 import com.example.template.ui.screens.settings.SettingsScreen
 import com.example.template.ui.screens.analytics.AnalyticsScreen
+import com.example.template.ui.screens.help.HelpScreen
 import com.example.template.ui.theme.FoodLogTheme
 import java.util.Locale
 
@@ -73,7 +74,7 @@ fun AppNavigation(settingsManager: SettingsManager) {
     var currentScreen by remember { mutableStateOf("dashboard") }
     
     // Handle system back button
-    BackHandler(enabled = currentScreen == "settings" || currentScreen == "analytics") {
+    BackHandler(enabled = currentScreen == "settings" || currentScreen == "analytics" || currentScreen == "help") {
         currentScreen = "dashboard"
     }
     
@@ -81,6 +82,7 @@ fun AppNavigation(settingsManager: SettingsManager) {
         "dashboard" -> DashboardScreen(
             onNavigateToSettings = { currentScreen = "settings" },
             onNavigateToAnalytics = { currentScreen = "analytics" },
+            onNavigateToHelp = { currentScreen = "help" },
             isDarkTheme = settingsManager.isDarkTheme(LocalContext.current)
         )
         "settings" -> SettingsScreen(
@@ -89,6 +91,10 @@ fun AppNavigation(settingsManager: SettingsManager) {
             database = database
         )
         "analytics" -> AnalyticsScreen(
+            onNavigateBack = { currentScreen = "dashboard" },
+            isDarkTheme = settingsManager.isDarkTheme(context)
+        )
+        "help" -> HelpScreen(
             onNavigateBack = { currentScreen = "dashboard" },
             isDarkTheme = settingsManager.isDarkTheme(context)
         )

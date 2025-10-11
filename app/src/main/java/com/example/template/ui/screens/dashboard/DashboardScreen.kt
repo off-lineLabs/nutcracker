@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -367,6 +368,7 @@ private fun NutrientBox(
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToHelp: () -> Unit = {},
     isDarkTheme: Boolean
 ) {
     val context = LocalContext.current
@@ -692,17 +694,35 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Calendar icon on the left
-                    IconButton(
-                        onClick = { showCalendarDialog = true },
-                        modifier = Modifier.size(48.dp)
+                    // Help and Calendar icons on the left
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.DateRange,
-                            contentDescription = stringResource(R.string.select_date),
-                            tint = appTextSecondaryColor(),
-                            modifier = Modifier.size(24.dp)
-                        )
+                        // Help icon
+                        IconButton(
+                            onClick = onNavigateToHelp,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Help,
+                                contentDescription = "Help",
+                                tint = appTextSecondaryColor(),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        // Calendar icon
+                        IconButton(
+                            onClick = { showCalendarDialog = true },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DateRange,
+                                contentDescription = stringResource(R.string.select_date),
+                                tint = appTextSecondaryColor(),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                     
                     // Center section with navigation arrows and date
