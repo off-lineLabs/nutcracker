@@ -338,4 +338,9 @@
     <string name="terms_of_use_agree">I Agree</string>
     <string name="terms_of_use_scroll_to_continue">Please scroll to the bottom to continue</string>
     <string name="terms_of_use_required">You must agree to the terms of use to continue</string>
+    
+    <!-- Date and Time Picker -->
+    <string name="date_and_time">Date &amp; Time</string>
+    <string name="hour">HH</string>
+    <string name="minute">MM</string>
 </resources>

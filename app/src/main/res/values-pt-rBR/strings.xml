@@ -298,4 +298,9 @@ GERAL
     <string name="weight_units">Unidades de Peso</string>
     <string name="your_meals">Suas Refeições</string>
     <string name="yuhonas">Yuhonas</string>
+    
+    <!-- Date and Time Picker -->
+    <string name="date_and_time">Data e Hora</string>
+    <string name="hour">HH</string>
+    <string name="minute">MM</string>
 </resources>

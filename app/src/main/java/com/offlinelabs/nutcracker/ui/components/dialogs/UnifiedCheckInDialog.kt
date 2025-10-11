@@ -26,6 +26,9 @@ import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.CheckInData
+import com.offlinelabs.nutcracker.ui.components.DateTimePicker
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,6 +132,23 @@ private fun ExerciseCheckInContent(
             }
         )
     }
+    
+    // Date and time state
+    var selectedDateTime by remember {
+        mutableStateOf(
+            if (isEditMode && existingExerciseLog != null) {
+                // Parse existing timestamp
+                try {
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+                        .parse(existingExerciseLog.logDateTime) ?: Date()
+                } catch (e: Exception) {
+                    Date()
+                }
+            } else {
+                Date()
+            }
+        )
+    }
 
     // Calculate calories burned
     val caloriesBurned = remember(weight, reps, sets, exercise) {
@@ -179,6 +199,12 @@ private fun ExerciseCheckInContent(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Date and Time Picker
+                DateTimePicker(
+                    selectedDateTime = selectedDateTime,
+                    onDateTimeChanged = { selectedDateTime = it }
+                )
+                
                 // Weight field (for strength exercises)
                 val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
                 if (exerciseType == ExerciseType.STRENGTH) {
@@ -194,31 +220,42 @@ private fun ExerciseCheckInContent(
                     )
                 }
 
-                // Reps field
-                OutlinedTextField(
-                    value = reps,
-                    onValueChange = { reps = it },
-                    label = { 
-                        Text(
-                            when (exerciseType) {
-                                ExerciseType.CARDIO -> stringResource(R.string.minutes)
-                                else -> stringResource(R.string.reps)
-                            }
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                    )
-                )
-
-                // Sets field (for strength and bodyweight exercises)
+                // Reps and Sets fields side by side
                 if (exerciseType != ExerciseType.CARDIO) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Reps field
+                        OutlinedTextField(
+                            value = reps,
+                            onValueChange = { reps = it },
+                            label = { Text(stringResource(R.string.reps)) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                            )
+                        )
+                        
+                        // Sets field
+                        OutlinedTextField(
+                            value = sets,
+                            onValueChange = { sets = it },
+                            label = { Text(stringResource(R.string.sets)) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                            )
+                        )
+                    }
+                } else {
+                    // For cardio, only show minutes field (full width)
                     OutlinedTextField(
-                        value = sets,
-                        onValueChange = { sets = it },
-                        label = { Text(stringResource(R.string.sets)) },
+                        value = reps,
+                        onValueChange = { reps = it },
+                        label = { Text(stringResource(R.string.minutes)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -257,8 +294,12 @@ private fun ExerciseCheckInContent(
                 Button(
                     onClick = {
                         val exerciseLog = if (isEditMode && existingExerciseLog != null) {
-                            // Update existing log with new values but preserve ID and timestamps
+                            // Update existing log with new values including timestamp
+                            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
                             existingExerciseLog.copy(
+                                logDate = dateFormatter.format(selectedDateTime),
+                                logDateTime = dateTimeFormatter.format(selectedDateTime),
                                 weight = weight.toDoubleOrNull() ?: 0.0,
                                 reps = reps.toIntOrNull() ?: 0,
                                 sets = sets.toIntOrNull() ?: 0,
@@ -266,14 +307,15 @@ private fun ExerciseCheckInContent(
                                 notes = notes.takeIf { it.isNotBlank() }
                             )
                         } else {
-                            // Create new log
+                            // Create new log with custom timestamp
                             ExerciseLog.create(
                                 exerciseId = exercise.id,
                                 weight = weight.toDoubleOrNull() ?: 0.0,
                                 reps = reps.toIntOrNull() ?: 0,
                                 sets = sets.toIntOrNull() ?: 0,
                                 caloriesBurned = caloriesBurned,
-                                notes = notes.takeIf { it.isNotBlank() }
+                                notes = notes.takeIf { it.isNotBlank() },
+                                customDateTime = selectedDateTime
                             )
                         }
                         onCheckIn(exerciseLog)
@@ -333,6 +375,23 @@ private fun MealCheckInContent(
             }
         )
     }
+    
+    // Date and time state
+    var selectedDateTime by remember {
+        mutableStateOf(
+            if (isEditMode && existingMealCheckIn != null) {
+                // Parse existing timestamp
+                try {
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+                        .parse(existingMealCheckIn.checkInDateTime) ?: Date()
+                } catch (e: Exception) {
+                    Date()
+                }
+            } else {
+                Date()
+            }
+        )
+    }
 
     // Calculate total calories based on serving size
     val totalCalories = remember(servingSize, meal) {
@@ -367,6 +426,12 @@ private fun MealCheckInContent(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Date and Time Picker
+                DateTimePicker(
+                    selectedDateTime = selectedDateTime,
+                    onDateTimeChanged = { selectedDateTime = it }
+                )
+                
                 // Serving size slider
                 Column {
                     Text(
@@ -509,17 +574,22 @@ private fun MealCheckInContent(
                 Button(
                     onClick = {
                         val checkIn = if (isEditMode && existingMealCheckIn != null) {
-                            // Update existing check-in with new values but preserve ID and timestamps
+                            // Update existing check-in with new values including timestamp
+                            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
                             existingMealCheckIn.copy(
+                                checkInDate = dateFormatter.format(selectedDateTime),
+                                checkInDateTime = dateTimeFormatter.format(selectedDateTime),
                                 servingSize = servingSize,
                                 notes = notes.takeIf { it.isNotBlank() }
                             )
                         } else {
-                            // Create new check-in
+                            // Create new check-in with custom timestamp
                             MealCheckIn.create(
                                 mealId = meal.id,
                                 servingSize = servingSize,
-                                notes = notes.takeIf { it.isNotBlank() }
+                                notes = notes.takeIf { it.isNotBlank() },
+                                customDateTime = selectedDateTime
                             )
                         }
                         onCheckIn(checkIn)

@@ -39,16 +39,17 @@ data class ExerciseLog(
             reps: Int,
             sets: Int,
             caloriesBurned: Double,
-            notes: String? = null
+            notes: String? = null,
+            customDateTime: Date? = null // Optional custom timestamp
         ): ExerciseLog {
-            val now = Date()
+            val dateTime = customDateTime ?: Date() // Use custom or current time
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
             val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
             
             return ExerciseLog(
                 exerciseId = exerciseId,
-                logDate = dateFormatter.format(now),
-                logDateTime = dateTimeFormatter.format(now),
+                logDate = dateFormatter.format(dateTime),
+                logDateTime = dateTimeFormatter.format(dateTime),
                 weight = weight,
                 reps = reps,
                 sets = sets,

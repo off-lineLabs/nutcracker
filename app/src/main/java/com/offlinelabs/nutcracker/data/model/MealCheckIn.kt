@@ -30,15 +30,20 @@ data class MealCheckIn(
     val notes: String? = null
 ) {
     companion object {
-        fun create(mealId: Long, servingSize: Double = 1.0, notes: String? = null): MealCheckIn {
-            val now = Date()
+        fun create(
+            mealId: Long, 
+            servingSize: Double = 1.0, 
+            notes: String? = null,
+            customDateTime: Date? = null // Optional custom timestamp
+        ): MealCheckIn {
+            val dateTime = customDateTime ?: Date() // Use custom or current time
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
             val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
             
             return MealCheckIn(
                 mealId = mealId,
-                checkInDate = dateFormatter.format(now),
-                checkInDateTime = dateTimeFormatter.format(now),
+                checkInDate = dateFormatter.format(dateTime),
+                checkInDateTime = dateTimeFormatter.format(dateTime),
                 servingSize = servingSize,
                 notes = notes
             )
