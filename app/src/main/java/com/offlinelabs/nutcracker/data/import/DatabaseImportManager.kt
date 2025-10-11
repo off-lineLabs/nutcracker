@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import androidx.room.withTransaction
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.zip.ZipEntry
@@ -62,6 +63,7 @@ class DatabaseImportManager(
     val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
     
     private val idMappingManager = IdMappingManager()
+    private var imagePathMappings: Map<String, String> = emptyMap()
     
     /**
      * Import database from TSV files in ZIP archive
@@ -101,7 +103,8 @@ class DatabaseImportManager(
                 ?: return@withContext Result.failure(Exception("Cannot open source file"))
             
             ZipInputStream(inputStream).use { zipIn ->
-                val tsvFiles = extractCsvFiles(zipIn)
+                val (tsvFiles, mappings) = extractZipContents(zipIn)
+                imagePathMappings = mappings
                 
                 // Import tables in correct order
                 for ((index, tableName) in IMPORT_ORDER.withIndex()) {
@@ -181,22 +184,61 @@ class DatabaseImportManager(
     }
     
     /**
-     * Extract TSV files from ZIP archive
+     * Extract both TSV files and images from ZIP archive in a single pass
+     * @return Pair of (TSV files map, image path mappings)
      */
-    private fun extractCsvFiles(zipIn: ZipInputStream): Map<String, String> {
+    private fun extractZipContents(zipIn: ZipInputStream): Pair<Map<String, String>, Map<String, String>> {
         val tsvFiles = mutableMapOf<String, String>()
+        val imagePathMappings = mutableMapOf<String, String>() // Old path -> New path
         var entry: ZipEntry? = zipIn.nextEntry
         
+        // Create image directories
+        val mealImagesDir = File(context.filesDir, "food_images")
+        val exerciseImagesDir = File(context.filesDir, "exercise_images")
+        if (!mealImagesDir.exists()) mealImagesDir.mkdirs()
+        if (!exerciseImagesDir.exists()) exerciseImagesDir.mkdirs()
+        
         while (entry != null) {
-            if (entry.name.endsWith(".tsv")) {
-                val tsvContent = zipIn.readBytes().toString(Charsets.UTF_8)
-                tsvFiles[entry.name] = tsvContent
+            when {
+                // Extract TSV files
+                entry.name.endsWith(".tsv") -> {
+                    val tsvContent = zipIn.readBytes().toString(Charsets.UTF_8)
+                    tsvFiles[entry.name] = tsvContent
+                }
+                // Extract meal images
+                entry.name.startsWith("images/meals/") && !entry.isDirectory -> {
+                    val fileName = File(entry.name).name
+                    val localFile = File(mealImagesDir, fileName)
+                    
+                    // Write image to local storage
+                    localFile.outputStream().use { output ->
+                        zipIn.copyTo(output)
+                    }
+                    
+                    // Map old path to new path
+                    imagePathMappings[entry.name] = localFile.absolutePath
+                    com.offlinelabs.nutcracker.util.logger.AppLogger.d("DatabaseImportManager", "Extracted meal image: ${entry.name} -> ${localFile.absolutePath}")
+                }
+                // Extract exercise images
+                entry.name.startsWith("images/exercises/") && !entry.isDirectory -> {
+                    val fileName = File(entry.name).name
+                    val localFile = File(exerciseImagesDir, fileName)
+                    
+                    // Write image to local storage
+                    localFile.outputStream().use { output ->
+                        zipIn.copyTo(output)
+                    }
+                    
+                    // Map old path to new path
+                    imagePathMappings[entry.name] = localFile.absolutePath
+                    com.offlinelabs.nutcracker.util.logger.AppLogger.d("DatabaseImportManager", "Extracted exercise image: ${entry.name} -> ${localFile.absolutePath}")
+                }
             }
             zipIn.closeEntry()
             entry = zipIn.nextEntry
         }
         
-        return tsvFiles
+        return Pair(tsvFiles, imagePathMappings)
     }
     
     /**
@@ -296,6 +338,10 @@ class DatabaseImportManager(
                 
                 if (validation.isValid) {
                     try {
+                        // Map old local image path to new extracted path
+                        val oldLocalImagePath = row.getValue("localImagePath")
+                        val newLocalImagePath = mapImagePath(oldLocalImagePath, "meals")
+                        
                         val meal = Meal(
                             id = 0, // Let Room auto-generate
                             name = row.getValueOrEmpty("name"),
@@ -317,7 +363,7 @@ class DatabaseImportManager(
                             calcium_mg = row.getDoubleValue("calcium_mg"),
                             iron_mg = row.getDoubleValue("iron_mg"),
                             imageUrl = row.getValue("imageUrl").takeIf { !it.isNullOrBlank() },
-                            localImagePath = row.getValue("localImagePath").takeIf { !it.isNullOrBlank() },
+                            localImagePath = newLocalImagePath,
                             novaClassification = row.getValue("novaClassification")?.let { parseNovaClassification(it) },
                             greenScore = row.getValue("greenScore")?.let { parseGreenScore(it) },
                             nutriscore = row.getValue("nutriscore")?.let { parseNutriscore(it) },
@@ -504,6 +550,10 @@ class DatabaseImportManager(
                 
                 if (validation.isValid) {
                     try {
+                        // Map old image paths to new extracted paths
+                        val oldImagePaths = parseMuscleList(row.getValue("imagePaths"))
+                        val newImagePaths = mapImagePaths(oldImagePaths, "exercises")
+                        
                         val exercise = Exercise(
                             id = 0, // Let Room auto-generate
                             name = row.getValueOrEmpty("name"),
@@ -520,7 +570,7 @@ class DatabaseImportManager(
                             mechanic = row.getValue("mechanic").takeIf { !it.isNullOrBlank() },
                             instructions = parseMuscleList(row.getValue("instructions")),
                             notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
-                            imagePaths = parseMuscleList(row.getValue("imagePaths")),
+                            imagePaths = newImagePaths,
                             isVisible = row.getValue("isVisible")?.toBoolean() ?: true
                         )
                         
@@ -946,6 +996,32 @@ class DatabaseImportManager(
         } else {
             muscleString.split(";").map { it.trim() }.filter { it.isNotBlank() }
         }
+    }
+    
+    /**
+     * Map old image path to new extracted image path
+     * @param oldPath The old local path from the export
+     * @param imageType "meals" or "exercises"
+     * @return The new local path, or null if image wasn't found
+     */
+    private fun mapImagePath(oldPath: String?, imageType: String): String? {
+        if (oldPath.isNullOrBlank()) return null
+        
+        // Extract just the filename from the old path
+        val fileName = File(oldPath).name
+        
+        // Construct the ZIP path
+        val zipPath = "images/$imageType/$fileName"
+        
+        // Look up the new local path
+        return imagePathMappings[zipPath]
+    }
+    
+    /**
+     * Map list of old image paths to new extracted paths
+     */
+    private fun mapImagePaths(oldPaths: List<String>, imageType: String): List<String> {
+        return oldPaths.mapNotNull { mapImagePath(it, imageType) }
     }
     
     /**
