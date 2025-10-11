@@ -1032,49 +1032,48 @@ private fun FormattedTermsText(
     text: String,
     textColor: Color
 ) {
-    val paragraphs = text.split("\n\n").filter { it.isNotBlank() }
-    
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        paragraphs.forEach { paragraph ->
-            val trimmedParagraph = paragraph.trim()
-            if (trimmedParagraph.isNotEmpty()) {
-                // Check if it's a section header (all caps or starts with specific patterns)
-                val isHeader = trimmedParagraph.let { p ->
-                    p.all { it.isUpperCase() || it.isWhitespace() || it == '•' } ||
-                    p.startsWith("LICENSE") || p.startsWith("NO GUARANTEES") || 
-                    p.startsWith("DISCLAIMER") || p.startsWith("DATA COLLECTION") || 
-                    p.startsWith("SUPPORT") || p.startsWith("GENERAL")
-                }
-                
-                if (isHeader) {
-                    Text(
-                        text = trimmedParagraph,
-                        color = textColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 24.sp,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                } else {
-                    // Handle bullet points and regular text
-                    val lines = trimmedParagraph.split("\n")
-                    lines.forEach { line ->
-                        val trimmedLine = line.trim()
-                        if (trimmedLine.isNotEmpty()) {
-                            Text(
-                                text = trimmedLine,
-                                color = textColor,
-                                fontSize = 14.sp,
-                                lineHeight = 20.sp,
-                                fontWeight = FontWeight.Normal,
-                                modifier = Modifier.padding(start = if (trimmedLine.startsWith("•")) 0.dp else 8.dp)
-                            )
-                        }
-                    }
-                }
+    // Parse text with bold tags
+    val annotatedText = buildAnnotatedString {
+        var currentIndex = 0
+        while (currentIndex < text.length) {
+            val boldStart = text.indexOf("<b>", currentIndex)
+            if (boldStart == -1) {
+                // No more bold tags, append the rest
+                append(text.substring(currentIndex))
+                break
             }
+            
+            // Add text before bold
+            if (boldStart > currentIndex) {
+                append(text.substring(currentIndex, boldStart))
+            }
+            
+            val boldEnd = text.indexOf("</b>", boldStart)
+            if (boldEnd == -1) {
+                // No closing tag, append rest as normal
+                append(text.substring(boldStart))
+                break
+            }
+            
+            // Add bold text with increased font size for headers
+            val boldText = text.substring(boldStart + 3, boldEnd)
+            withStyle(
+                style = SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            ) {
+                append(boldText)
+            }
+            
+            currentIndex = boldEnd + 4
         }
     }
+    
+    Text(
+        text = annotatedText,
+        color = textColor,
+        fontSize = 14.sp,
+        lineHeight = 20.sp
+    )
 }

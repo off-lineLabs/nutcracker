@@ -40,7 +40,7 @@ class SettingsManager(context: Context) {
             "LIGHT" -> ThemeMode.LIGHT
             "DARK" -> ThemeMode.DARK
             "SYSTEM" -> ThemeMode.SYSTEM
-            else -> ThemeMode.SYSTEM // Default to system
+            else -> ThemeMode.DARK // Default to dark theme
         }
     }
     

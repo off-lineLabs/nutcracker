@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.offlinelabs.nutcracker.R
@@ -42,28 +43,38 @@ fun TermsOfUseDialog(
     }
     
     // Parse the text content to handle bold tags
-    fun parseTermsText(text: String): AnnotatedString {
-        return buildAnnotatedString {
+    val termsText = stringResource(id = R.string.terms_of_use_dialog_content)
+    val annotatedText = remember(termsText) {
+        buildAnnotatedString {
             var currentIndex = 0
-            while (currentIndex < text.length) {
-                val boldStart = text.indexOf("<b>", currentIndex)
+            while (currentIndex < termsText.length) {
+                val boldStart = termsText.indexOf("<b>", currentIndex)
                 if (boldStart == -1) {
-                    append(text.substring(currentIndex))
+                    // No more bold tags, append the rest
+                    append(termsText.substring(currentIndex))
                     break
                 }
                 
                 // Add text before bold
-                append(text.substring(currentIndex, boldStart))
+                if (boldStart > currentIndex) {
+                    append(termsText.substring(currentIndex, boldStart))
+                }
                 
-                val boldEnd = text.indexOf("</b>", boldStart)
+                val boldEnd = termsText.indexOf("</b>", boldStart)
                 if (boldEnd == -1) {
-                    append(text.substring(currentIndex))
+                    // No closing tag, append rest as normal
+                    append(termsText.substring(boldStart))
                     break
                 }
                 
-                // Add bold text
-                val boldText = text.substring(boldStart + 3, boldEnd)
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                // Add bold text with increased font size for headers
+                val boldText = termsText.substring(boldStart + 3, boldEnd)
+                withStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                ) {
                     append(boldText)
                 }
                 
@@ -125,9 +136,8 @@ fun TermsOfUseDialog(
                                 .verticalScroll(scrollState)
                                 .padding(end = 8.dp)
                         ) {
-                            val termsText = stringResource(id = R.string.terms_of_use_dialog_content)
                             Text(
-                                text = parseTermsText(termsText),
+                                text = annotatedText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = appTextPrimaryColor(),
                                 lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.5

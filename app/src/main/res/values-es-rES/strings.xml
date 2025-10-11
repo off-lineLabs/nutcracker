@@ -242,27 +242,7 @@
     <string name="temf_bonus_off">Desactivado</string>
     <string name="temf_bonus_on">Activado</string>
     <string name="terms_of_use">Términos de Uso</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Términos de Uso
-Nutcracker es una aplicación gratuita y de código abierto lanzada por Offline Labs bajo la Licencia Pública General GNU v3 (GPLv3). Al descargar, instalar o usar esta aplicación, aceptas los siguientes términos:
-LICENCIA Y LIBERTAD
-• Nutcracker está licenciado bajo GNU GPL v3.
-• Eres libre de usar, estudiar, compartir y modificar la aplicación según la licencia.
-• Cualquier versión distribuida de Nutcracker debe permanecer gratuita y sin publicidad, de acuerdo con esta licencia.
-SIN GARANTÍAS
-• Nutcracker es un proyecto beta. Puede dejar de funcionar, perder datos o contener errores en cualquier momento.
-• No hay garantía de que la aplicación sea mantenida, actualizada o soportada en el futuro.
-• No debes confiar en Nutcracker para nada crítico. Úsala completamente bajo tu propio riesgo.
-DESCARGO DE RESPONSABILIDAD
-• Offline Labs y los desarrolladores no se hacen responsables de ningún problema, pérdida, daño o costo causado por el uso de esta aplicación.
-• Esto incluye (pero no se limita a) pérdida de datos, falla del dispositivo, corrupción de archivos o cualquier daño indirecto o directo.
-• Al usar Nutcracker, aceptas la responsabilidad completa por cualquier consecuencia.
-SOPORTE Y PROBLEMAS
-• Este es un proyecto impulsado por la comunidad. No hay soporte oficial.
-• Para errores, solicitudes o problemas técnicos, por favor abre un issue en el repositorio de GitHub.
-• Para cualquier otra cosa, puedes contactarnos en offlinelabs@duck.com.
-GENERAL
-• Al usar Nutcracker, aceptas que estos términos se aplican independientemente de dónde o cómo accedas a la aplicación.
-• Estos términos pueden cambiar en cualquier momento sin previo aviso.</string>
+    <string name="terms_of_use_dialog_content">Nutcracker – Terms of Use\n\nNutcracker is a free and open-source application released by Offline Labs under the GNU General Public License v3 (GPLv3). By downloading, installing, or using this app, you agree to the following terms:\n\n\n&lt;b&gt;LICENSE AND FREEDOM&lt;/b&gt;\n• Nutcracker is licensed under the GNU GPL v3.\n• You are free to use, study, share, and modify the app according to the license.\n• Any distributed version of Nutcracker must remain free of charge and free of advertising, in line with this license.\n\n\n&lt;b&gt;NO GUARANTEES&lt;/b&gt;\n• Nutcracker is a beta project. It may stop working, lose data, or contain errors at any time.\n• There is no guarantee the app will be maintained, updated, or supported in the future.\n• You should not rely on Nutcracker for anything critical. Use it entirely at your own risk.\n\n\n&lt;b&gt;DISCLAIMER OF LIABILITY&lt;/b&gt;\n• Offline Labs and the developers take no responsibility for any problems, losses, damages, or costs caused by the use of this app.\n• This includes (but is not limited to) data loss, device failure, corruption of files, or any indirect or direct damage.\n• By using Nutcracker, you accept full responsibility for any consequences.\n\n\n&lt;b&gt;DATA COLLECTION AND PRIVACY&lt;/b&gt;\n• Offline Labs does not collect any personal data from users of this application.\n• We do not use analytics tools (such as Google Analytics) or any other data collection mechanisms.\n• However, we cannot guarantee that third-party functionalities used by the app (such as the barcode scanner by Google) or requests to external databases will behave in the same manner.\n\n\n&lt;b&gt;SUPPORT AND ISSUES&lt;/b&gt;\n• This is a community-driven project. There is no official support.\n• For bugs, requests, or technical issues, please open an issue on the GitHub repository.\n• For anything else, you can contact us at online@offline-labs.com.\n\n\n&lt;b&gt;GENERAL&lt;/b&gt;\n• By using Nutcracker, you agree that these terms apply regardless of where or how you access the app.\n• These terms may change at any point without notice.</string>
     <string name="terms_of_use_dialog_title">Términos de Uso</string>
     <string name="terms_of_use_text">Al usar esta app aceptas los términos de uso</string>
     <string name="theme">Tema</string>
