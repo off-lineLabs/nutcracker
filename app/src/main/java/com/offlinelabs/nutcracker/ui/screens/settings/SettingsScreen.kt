@@ -286,7 +286,7 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    text = "Language changed. The app will restart to apply the new language.",
+                    text = stringResource(R.string.language_change_message),
                     color = appTextSecondaryColor()
                 )
             },
@@ -558,7 +558,7 @@ private fun ImportProgressDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Processing: ${progress.currentTable}",
+                    text = stringResource(R.string.processing_format, progress.currentTable),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 
@@ -572,7 +572,7 @@ private fun ImportProgressDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "${progress.overallProgress}% Complete",
+                    text = stringResource(R.string.progress_percentage_format, progress.overallProgress),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -584,11 +584,11 @@ private fun ImportProgressDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Records processed: ${progress.recordsProcessed}",
+                        text = stringResource(R.string.records_processed_format, progress.recordsProcessed),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = "Records imported: ${progress.recordsImported}",
+                        text = stringResource(R.string.records_imported_format, progress.recordsImported),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -710,7 +710,7 @@ private fun ImportResultDialog(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Errors (${result.errors.size})",
+                        text = stringResource(R.string.errors_count_format, result.errors.size),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.error
@@ -720,7 +720,7 @@ private fun ImportResultDialog(
                     
                     result.errors.take(5).forEach { error ->
                         Text(
-                            text = "• ${error.tableName} (Row ${error.rowNumber}): ${error.errorMessage}",
+                            text = stringResource(R.string.error_item_format, error.tableName, error.rowNumber, error.errorMessage),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -728,7 +728,7 @@ private fun ImportResultDialog(
                     
                     if (result.errors.size > 5) {
                         Text(
-                            text = "... and ${result.errors.size - 5} more errors",
+                            text = stringResource(R.string.more_errors_format, result.errors.size - 5),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -740,7 +740,7 @@ private fun ImportResultDialog(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Warnings (${result.warnings.size})",
+                        text = stringResource(R.string.warnings_count_format, result.warnings.size),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.tertiary
@@ -750,7 +750,7 @@ private fun ImportResultDialog(
                     
                     result.warnings.take(3).forEach { warning ->
                         Text(
-                            text = "• ${warning.tableName} (Row ${warning.rowNumber}): ${warning.warningMessage}",
+                            text = stringResource(R.string.warning_item_format, warning.tableName, warning.rowNumber, warning.warningMessage),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -758,7 +758,7 @@ private fun ImportResultDialog(
                     
                     if (result.warnings.size > 3) {
                         Text(
-                            text = "... and ${result.warnings.size - 3} more warnings",
+                            text = stringResource(R.string.more_warnings_format, result.warnings.size - 3),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

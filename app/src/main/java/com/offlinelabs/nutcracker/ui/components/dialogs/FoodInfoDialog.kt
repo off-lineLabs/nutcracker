@@ -218,13 +218,13 @@ private fun NutritionInfoCard(nutrition: com.offlinelabs.nutcracker.data.model.N
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nutrition Facts",
+                text = stringResource(R.string.nutrition_facts),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = contrastingTextColor
             )
             Text(
-                text = "per 100g/100ml",
+                text = stringResource(R.string.per_100g_100ml),
                 style = MaterialTheme.typography.bodySmall,
                 color = contrastingTextColor
             )

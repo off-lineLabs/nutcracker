@@ -114,7 +114,7 @@ fun DateTimePicker(
             )
             
             Text(
-                text = ":",
+                text = stringResource(R.string.time_separator),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )

@@ -451,7 +451,7 @@ private fun MealCheckInContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${minRange}x",
+                            text = stringResource(R.string.serving_multiplier_format, minRange),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Slider(
@@ -467,12 +467,12 @@ private fun MealCheckInContent(
                             )
                         )
                         Text(
-                            text = "${String.format(Locale.US, "%.1f", maxRange)}x",
+                            text = stringResource(R.string.serving_multiplier_format, maxRange),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
                     Text(
-                        text = "${String.format(Locale.US, "%.1f", servingSize)}x",
+                        text = stringResource(R.string.serving_multiplier_format, servingSize),
                         style = MaterialTheme.typography.bodyMedium,
                         color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth(),

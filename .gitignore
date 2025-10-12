@@ -14,3 +14,4 @@
 .cxx
 local.properties
 /.cursor
+/find_hardcoded_strings.ps1

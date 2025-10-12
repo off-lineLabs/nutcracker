@@ -300,8 +300,8 @@ fun SectionTabs(
     ) {
         // Exercise Tab
         SectionTabButton(
-            icon = { Icon(painterResource(R.drawable.ic_sprint), contentDescription = "Exercise") },
-            label = "Exercise",
+            icon = { Icon(painterResource(R.drawable.ic_sprint), contentDescription = stringResource(R.string.analytics_exercise)) },
+            label = stringResource(R.string.analytics_exercise),
             isSelected = currentSection == AnalyticsSection.EXERCISE,
             onClick = { onSectionChange(AnalyticsSection.EXERCISE) },
             selectedColor = BrandRed
@@ -311,8 +311,8 @@ fun SectionTabs(
         
         // Nutrition Tab
         SectionTabButton(
-            icon = { Icon(Icons.Filled.Restaurant, contentDescription = "Nutrition") },
-            label = "Nutrition",
+            icon = { Icon(Icons.Filled.Restaurant, contentDescription = stringResource(R.string.analytics_nutrition)) },
+            label = stringResource(R.string.analytics_nutrition),
             isSelected = currentSection == AnalyticsSection.NUTRITION,
             onClick = { onSectionChange(AnalyticsSection.NUTRITION) },
             selectedColor = BrandGold
@@ -422,9 +422,9 @@ fun TimePeriodTabButton(
     ) {
         Text(
             text = when (period) {
-                TimePeriod.DAYS -> "Days"
-                TimePeriod.WEEKS -> "Weeks"
-                TimePeriod.MONTHS -> "Months"
+                TimePeriod.DAYS -> stringResource(R.string.analytics_days)
+                TimePeriod.WEEKS -> stringResource(R.string.analytics_weeks)
+                TimePeriod.MONTHS -> stringResource(R.string.analytics_months)
             },
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 14.sp
@@ -691,7 +691,7 @@ fun NutritionAnalyticsContent(
         item {
             // Stats Cards Title
             Text(
-                text = "Selected Period Overview",
+                text = stringResource(R.string.analytics_selected_period_overview),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = getContrastingTextColor(appBackgroundColor()),
@@ -707,7 +707,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (dayData.size - 1).coerceAtLeast(0)
                     dayData.getOrNull(selectedIndex)?.let { 
                         SelectedPeriodData(
-                            period = "Day",
+                            period = stringResource(R.string.analytics_day),
                             calories = it.calories,
                             date = it.date
                         )
@@ -718,7 +718,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (weekData.size - 1).coerceAtLeast(0)
                     weekData.getOrNull(selectedIndex)?.let {
                         SelectedPeriodData(
-                            period = "Week",
+                            period = stringResource(R.string.analytics_week),
                             calories = it.calories,
                             date = it.weekStart
                         )
@@ -729,7 +729,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (monthData.size - 1).coerceAtLeast(0)
                     monthData.getOrNull(selectedIndex)?.let {
                         SelectedPeriodData(
-                            period = "Month",
+                            period = stringResource(R.string.analytics_month),
                             calories = it.calories,
                             date = it.monthStart
                         )
@@ -834,7 +834,7 @@ fun CaloriesBarChartImpl(
                         .background(goalLineColor)
                 )
                 Text(
-                    text = "Goal: ${calorieGoal.toInt()} kcal",
+                    text = stringResource(R.string.analytics_goal_format, calorieGoal.toInt()),
                     fontSize = 11.sp,
                     color = textSecondaryColor
                 )
@@ -1062,7 +1062,7 @@ fun StatsCards(
     ) {
         // Card 1: Total calories consumed
         EnhancedStatCard(
-            title = "Total calories consumed",
+            title = stringResource(R.string.analytics_total_calories_consumed),
             value = "${totalCalories.toInt()} kcal",
             icon = Icons.Filled.LocalDining,
             gradientColors = listOf(
@@ -1073,7 +1073,7 @@ fun StatsCards(
         
         // Card 2: Final balance
         EnhancedStatCard(
-            title = "Your final balance",
+            title = stringResource(R.string.analytics_your_final_balance),
             value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
             valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor,
             icon = if (balance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
@@ -1092,7 +1092,7 @@ fun StatsCards(
         
         // Card 3: Average balance
         EnhancedStatCard(
-            title = "Average balance per day",
+            title = stringResource(R.string.analytics_average_balance_per_day),
             value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
             valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor,
             icon = if (averageBalance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
@@ -1308,7 +1308,7 @@ fun ExerciseAnalyticsContent() {
         // Weekly Stats Section Title
         item {
             Text(
-                text = "Exercise Analytics",
+                text = stringResource(R.string.analytics_exercise_analytics),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = getContrastingTextColor(appBackgroundColor()),
@@ -1335,7 +1335,7 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
-                        title = "Calories Burned",
+                        title = stringResource(R.string.analytics_calories_burned),
                         value = "${caloriesBurnedLast7Days.toInt()}",
                         icon = Icons.Filled.LocalFireDepartment,
                         color = BrandRed
@@ -1346,7 +1346,7 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
-                        title = "Exercise Days",
+                        title = stringResource(R.string.analytics_exercise_days),
                         value = "$exerciseDaysLastWeek",
                         icon = Icons.Filled.FitnessCenter,
                         color = BrandRed
@@ -1357,8 +1357,8 @@ fun ExerciseAnalyticsContent() {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
-                        title = "Days Since Last Exercise",
-                        value = if (daysSinceLastExercise == -1) "Never" else "$daysSinceLastExercise",
+                        title = stringResource(R.string.analytics_days_since_last_exercise),
+                        value = if (daysSinceLastExercise == -1) stringResource(R.string.analytics_never) else "$daysSinceLastExercise",
                         icon = painterResource(R.drawable.ic_pause),
                         color = BrandRed
                     )
@@ -1372,7 +1372,7 @@ fun ExerciseAnalyticsContent() {
                     // Card 4: Primary muscles from last exercise
                     ExerciseAnalyticsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        title = "Last Exercise Muscles",
+                        title = stringResource(R.string.analytics_last_exercise_muscles),
                         value = primaryMusclesLastExercise.joinToString(", ") { 
                             it.replaceFirstChar { char -> char.uppercase() }
                         }.takeIf { it.isNotEmpty() } ?: "None",
@@ -1430,7 +1430,7 @@ fun ExerciseCalendar(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Previous Month",
+                        contentDescription = stringResource(R.string.analytics_previous_month),
                         tint = appTextPrimaryColor(),
                         modifier = Modifier.size(20.dp)
                     )
@@ -1449,7 +1449,7 @@ fun ExerciseCalendar(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Next Month",
+                        contentDescription = stringResource(R.string.analytics_next_month),
                         tint = appTextPrimaryColor(),
                         modifier = Modifier
                             .size(20.dp)
@@ -1463,7 +1463,15 @@ fun ExerciseCalendar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
+                listOf(
+                    stringResource(R.string.analytics_monday),
+                    stringResource(R.string.analytics_tuesday),
+                    stringResource(R.string.analytics_wednesday),
+                    stringResource(R.string.analytics_thursday),
+                    stringResource(R.string.analytics_friday),
+                    stringResource(R.string.analytics_saturday),
+                    stringResource(R.string.analytics_sunday)
+                ).forEach { day ->
                     Text(
                         text = day,
                         fontSize = 12.sp,

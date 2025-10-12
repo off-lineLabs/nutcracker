@@ -343,4 +343,51 @@
     <string name="date_and_time">Date &amp; Time</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
+    
+    <!-- Analytics Screen Strings -->
+    <string name="analytics_exercise">Exercise</string>
+    <string name="analytics_nutrition">Nutrition</string>
+    <string name="analytics_days">Days</string>
+    <string name="analytics_weeks">Weeks</string>
+    <string name="analytics_months">Months</string>
+    <string name="analytics_goal_format">Goal: %1$d kcal</string>
+    <string name="analytics_selected_period_overview">Selected Period Overview</string>
+    <string name="analytics_total_calories_consumed">Total calories consumed</string>
+    <string name="analytics_your_final_balance">Your final balance</string>
+    <string name="analytics_average_balance_per_day">Average balance per day</string>
+    <string name="analytics_exercise_analytics">Exercise Analytics</string>
+    <string name="analytics_calories_burned">Calories Burned</string>
+    <string name="analytics_exercise_days">Exercise Days</string>
+    <string name="analytics_days_since_last_exercise">Days Since Last Exercise</string>
+    <string name="analytics_last_exercise_muscles">Last Exercise Muscles</string>
+    <string name="analytics_never">Never</string>
+    <string name="analytics_previous_month">Previous Month</string>
+    <string name="analytics_next_month">Next Month</string>
+    <string name="analytics_monday">Mon</string>
+    <string name="analytics_tuesday">Tue</string>
+    <string name="analytics_wednesday">Wed</string>
+    <string name="analytics_thursday">Thu</string>
+    <string name="analytics_friday">Fri</string>
+    <string name="analytics_saturday">Sat</string>
+    <string name="analytics_sunday">Sun</string>
+    <string name="analytics_day">Day</string>
+    <string name="analytics_week">Week</string>
+    <string name="analytics_month">Month</string>
+    
+    <!-- Additional hardcoded strings found in UI components -->
+    <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="time_separator">:</string>
+    <string name="language_change_message">Language changed. The app will restart to apply the new language.</string>
+    <string name="processing_format">Processing: %1$s</string>
+    <string name="progress_percentage_format">%1$d%% Complete</string>
+    <string name="records_processed_format">Records processed: %1$d</string>
+    <string name="records_imported_format">Records imported: %1$d</string>
+    <string name="errors_count_format">Errors (%1$d)</string>
+    <string name="error_item_format">• %1$s (Row %2$d): %3$s</string>
+    <string name="more_errors_format">... and %1$d more errors</string>
+    <string name="warnings_count_format">Warnings (%1$d)</string>
+    <string name="warning_item_format">• %1$s (Row %2$d): %3$s</string>
+    <string name="more_warnings_format">... and %1$d more warnings</string>
+    <string name="nutrition_facts">Nutrition Facts</string>
+    <string name="per_100g_100ml">per 100g/100ml</string>
 </resources>
