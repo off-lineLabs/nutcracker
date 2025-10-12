@@ -236,7 +236,7 @@ fun SearchExternalExercisesDialog(
                 // Filter count info - only show when there are many results
                 if (currentFilterCount > 15) {
                     Text(
-                        text = "Found $currentFilterCount exercises matching your filters",
+                        text = stringResource(R.string.search_found_exercises, currentFilterCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -246,13 +246,13 @@ fun SearchExternalExercisesDialog(
                 // Search results
                 if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount > 15) {
                     Text(
-                        text = "Too many results ($currentFilterCount). Use more filters or type 3+ characters to narrow down.",
+                        text = stringResource(R.string.search_too_many_results, currentFilterCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount == 0) {
                     Text(
-                        text = "Use filters or type 3+ characters to search",
+                        text = stringResource(R.string.search_use_filters),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -266,7 +266,7 @@ fun SearchExternalExercisesDialog(
                 } else if (searchResults.isEmpty()) {
                     if (searchQuery.length >= 3) {
                         Text(
-                            text = "No exercises found. Check your internet connection and try again.",
+                            text = stringResource(R.string.search_no_exercises_found),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -324,13 +324,13 @@ fun SearchExternalExercisesDialog(
                                             color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
                                         )
                                         Text(
-                                            text = "${exercise.category} • ${exercise.equipment ?: "No equipment"}",
+                                            text = "${exercise.category} • ${exercise.equipment ?: stringResource(R.string.search_no_equipment)}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                         )
                                         if (exercise.primaryMuscles.isNotEmpty()) {
                                             Text(
-                                                text = "Muscles: ${exercise.primaryMuscles.joinToString(", ")}",
+                                                text = stringResource(R.string.search_exercise_muscles, exercise.primaryMuscles.joinToString(", ")),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                             )

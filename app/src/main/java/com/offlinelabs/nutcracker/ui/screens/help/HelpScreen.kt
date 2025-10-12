@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.appBackgroundColor
 import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
 import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
@@ -34,50 +36,48 @@ fun HelpScreen(
     onNavigateBack: () -> Unit,
     isDarkTheme: Boolean
 ) {
-    val faqItems = remember {
-        listOf(
-            FAQItem(
-                question = "How do I add a meal?",
-                answer = "To add a meal, tap the '+' button on the dashboard. You can then search for food items, scan a barcode, or manually enter nutrition information."
-            ),
-            FAQItem(
-                question = "How do I track my calories?",
-                answer = "Your calories are automatically tracked when you add meals. The dashboard shows your daily calorie intake and progress toward your goals."
-            ),
-            FAQItem(
-                question = "How do I set my nutrition goals?",
-                answer = "Go to Settings and scroll down to 'Nutrition Goals'. You can set daily targets for calories, protein, carbs, fat, fiber, and sodium."
-            ),
-            FAQItem(
-                question = "How do I add an exercise?",
-                answer = "Tap the '+' button on the dashboard and select 'Add Exercise'. You can choose from cardio, strength training, or bodyweight exercises."
-            ),
-            FAQItem(
-                question = "How do I view my progress?",
-                answer = "Tap the analytics icon (bar chart) on the dashboard to view your weekly and monthly progress, including exercise history and nutrition trends."
-            ),
-            FAQItem(
-                question = "How do I change the date?",
-                answer = "Use the calendar icon on the dashboard to select a different date, or use the arrow buttons to navigate day by day."
-            ),
-            FAQItem(
-                question = "How do I scan a barcode?",
-                answer = "When adding a meal, tap the barcode scanner icon. Point your camera at the product's barcode to automatically find nutrition information."
-            ),
-            FAQItem(
-                question = "How do I edit or delete entries?",
-                answer = "Tap on any meal or exercise entry in your daily log to view details. From there, you can edit or delete the entry."
-            ),
-            FAQItem(
-                question = "How do I change the app theme?",
-                answer = "Go to Settings and select your preferred theme: Light, Dark, or System Default."
-            ),
-            FAQItem(
-                question = "How do I change the language?",
-                answer = "Go to Settings and select your preferred language from the Language option."
-            )
+    val faqItems = listOf(
+        FAQItem(
+            question = stringResource(R.string.faq_how_add_meal),
+            answer = stringResource(R.string.faq_answer_add_meal)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_track_calories),
+            answer = stringResource(R.string.faq_answer_track_calories)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_set_goals),
+            answer = stringResource(R.string.faq_answer_set_goals)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_add_exercise),
+            answer = stringResource(R.string.faq_answer_add_exercise)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_view_progress),
+            answer = stringResource(R.string.faq_answer_view_progress)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_change_date),
+            answer = stringResource(R.string.faq_answer_change_date)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_scan_barcode),
+            answer = stringResource(R.string.faq_answer_scan_barcode)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_edit_entries),
+            answer = stringResource(R.string.faq_answer_edit_entries)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_change_theme),
+            answer = stringResource(R.string.faq_answer_change_theme)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_change_language),
+            answer = stringResource(R.string.faq_answer_change_language)
         )
-    }
+    )
 
     var expandedItems by remember { mutableStateOf(setOf<Int>()) }
 
@@ -86,7 +86,7 @@ fun HelpScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Help & FAQ",
+                        text = stringResource(R.string.help_faq_title),
                         color = getContrastingTextColor(appBackgroundColor()),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold
@@ -96,7 +96,7 @@ fun HelpScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = getContrastingTextColor(appBackgroundColor())
                         )
                     }
@@ -118,7 +118,7 @@ fun HelpScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Frequently Asked Questions",
+                    text = stringResource(R.string.help_faq_subtitle),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = getContrastingTextColor(appBackgroundColor()),
@@ -129,7 +129,7 @@ fun HelpScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "Find answers to common questions about using the app",
+                    text = stringResource(R.string.help_faq_description),
                     fontSize = 16.sp,
                     color = appTextSecondaryColor(),
                     textAlign = TextAlign.Center,
@@ -227,7 +227,7 @@ fun HelpScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Still need help?",
+                            text = stringResource(R.string.help_still_need_help),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = appTextPrimaryColor(),
@@ -237,7 +237,7 @@ fun HelpScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            text = "If you can't find the answer you're looking for, try exploring the app features or check the settings for more options.",
+                            text = stringResource(R.string.help_still_need_help_description),
                             fontSize = 14.sp,
                             color = appTextSecondaryColor(),
                             textAlign = TextAlign.Center,

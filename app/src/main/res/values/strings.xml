@@ -390,4 +390,82 @@
     <string name="more_warnings_format">... and %1$d more warnings</string>
     <string name="nutrition_facts">Nutrition Facts</string>
     <string name="per_100g_100ml">per 100g/100ml</string>
+    
+    <!-- Help Screen Strings -->
+    <string name="help_faq_title">Help &amp; FAQ</string>
+    <string name="help_faq_subtitle">Frequently Asked Questions</string>
+    <string name="help_faq_description">Find answers to common questions about using the app</string>
+    <string name="help_still_need_help">Still need help?</string>
+    <string name="help_still_need_help_description">If you can\'t find the answer you\'re looking for, try exploring the app features or check the settings for more options.</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_how_add_meal">How do I add a meal?</string>
+    <string name="faq_how_track_calories">How do I track my calories?</string>
+    <string name="faq_how_set_goals">How do I set my nutrition goals?</string>
+    <string name="faq_how_add_exercise">How do I add an exercise?</string>
+    <string name="faq_how_view_progress">How do I view my progress?</string>
+    <string name="faq_how_change_date">How do I change the date?</string>
+    <string name="faq_how_scan_barcode">How do I scan a barcode?</string>
+    <string name="faq_how_edit_entries">How do I edit or delete entries?</string>
+    <string name="faq_how_change_theme">How do I change the app theme?</string>
+    <string name="faq_how_change_language">How do I change the language?</string>
+    
+    <!-- FAQ Answers -->
+    <string name="faq_answer_add_meal">To add a meal, tap the \'+\' button on the dashboard. You can then search for food items, scan a barcode, or manually enter nutrition information.</string>
+    <string name="faq_answer_track_calories">Your calories are automatically tracked when you add meals. The dashboard shows your daily calorie intake and progress toward your goals.</string>
+    <string name="faq_answer_set_goals">Go to Settings and scroll down to \'Nutrition Goals\'. You can set daily targets for calories, protein, carbs, fat, fiber, and sodium.</string>
+    <string name="faq_answer_add_exercise">Tap the \'+\' button on the dashboard and select \'Add Exercise\'. You can choose from cardio, strength training, or bodyweight exercises.</string>
+    <string name="faq_answer_view_progress">Tap the analytics icon (bar chart) on the dashboard to view your weekly and monthly progress, including exercise history and nutrition trends.</string>
+    <string name="faq_answer_change_date">Use the calendar icon on the dashboard to select a different date, or use the arrow buttons to navigate day by day.</string>
+    <string name="faq_answer_scan_barcode">When adding a meal, tap the barcode scanner icon. Point your camera at the product\'s barcode to automatically find nutrition information.</string>
+    <string name="faq_answer_edit_entries">Tap on any meal or exercise entry in your daily log to view details. From there, you can edit or delete the entry.</string>
+    <string name="faq_answer_change_theme">Go to Settings and select your preferred theme: Light, Dark, or System Default.</string>
+    <string name="faq_answer_change_language">Go to Settings and select your preferred language from the Language option.</string>
+    
+    <!-- Search External Exercises Dialog -->
+    <string name="search_found_exercises">Found %1$d exercises matching your filters</string>
+    <string name="search_too_many_results">Too many results (%1$d). Use more filters or type 3+ characters to narrow down.</string>
+    <string name="search_use_filters">Use filters or type 3+ characters to search</string>
+    <string name="search_no_exercises_found">No exercises found. Check your internet connection and try again.</string>
+    <string name="search_exercise_muscles">Muscles: %1$s</string>
+    <string name="search_no_equipment">No equipment</string>
+    
+    <!-- Settings Screen -->
+    <string name="terms_agreement_text">By using this app you agree with the</string>
+    <string name="terms_agreement_link">terms of use</string>
+    
+    <!-- Food Info Dialog -->
+    <string name="food_classification_scores">Classification &amp; Scores</string>
+    <string name="food_open_facts_contributors">© Open Food Facts contributors</string>
+    
+    <!-- Barcode Scanner -->
+    <string name="barcode_scanned_successfully">Barcode Scanned Successfully!</string>
+    <string name="barcode_error_format">Error: %1$s</string>
+    <string name="barcode_opening_camera">Opening camera scanner...</string>
+    <string name="barcode_scanning">Scanning for barcodes...</string>
+    <string name="barcode_point_camera">Point camera at a barcode\n\nTap to scan again</string>
+    <string name="barcode_camera_error_format">Camera error: %1$s</string>
+    
+    <!-- Food Search -->
+    <string name="food_searching">Searching...</string>
+    <string name="food_calories_format">%1$d kcal/100g</string>
+    <string name="food_protein_format"> • %1$dg protein</string>
+    
+    <!-- Meal Details -->
+    <string name="meal_nutrition_facts">Nutrition Facts</string>
+    <string name="meal_per_serving_format">per %1$d%2$s</string>
+    <string name="meal_brand_format">Brand: %1$s</string>
+    <string name="meal_calories_label">Calories: </string>
+    <string name="meal_protein_label">Protein: </string>
+    <string name="meal_carbs_label">Carbs: </string>
+    <string name="meal_fat_label">Fat: </string>
+    <string name="meal_notes_label">Notes:</string>
+    <string name="meal_scanned">Scanned</string>
+    <string name="meal_searched">Searched</string>
+    <string name="meal_manual">Manual</string>
+    
+    <!-- Exercise Details -->
+    <string name="exercise_notes_label">Notes:</string>
+    <string name="exercise_set_number_format">%1$d.</string>
+    <string name="exercise_label_format">%1$s:</string>
 </resources>

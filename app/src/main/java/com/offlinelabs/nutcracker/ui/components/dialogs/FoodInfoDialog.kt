@@ -336,7 +336,7 @@ private fun ClassificationCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Classification & Scores",
+                text = stringResource(R.string.food_classification_scores),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant)
@@ -458,7 +458,7 @@ private fun AttributionCard() {
             color = contrastingTextColor
         )
         Text(
-            text = "© Open Food Facts contributors",
+            text = stringResource(R.string.food_open_facts_contributors),
             style = MaterialTheme.typography.bodySmall,
             color = linkColor,
             modifier = Modifier.clickable {

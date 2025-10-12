@@ -972,7 +972,7 @@ private fun LegalInformation(
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = appTextSecondaryColor())) {
-                    append("By using this app you agree with the\n")
+                    append(stringResource(R.string.terms_agreement_text) + "\n")
                 }
                 withStyle(
                     style = SpanStyle(
@@ -980,7 +980,7 @@ private fun LegalInformation(
                         textDecoration = TextDecoration.Underline
                     )
                 ) {
-                    append("terms of use")
+                    append(stringResource(R.string.terms_agreement_link))
                 }
             },
             fontSize = 12.sp,

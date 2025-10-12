@@ -335,4 +335,51 @@
     <string name="more_warnings_format">... y %1$d advertencias más</string>
     <string name="nutrition_facts">Información Nutricional</string>
     <string name="per_100g_100ml">por 100g/100ml</string>
+    
+    <!-- Help Screen Strings -->
+    <string name="help_faq_title">Ayuda y FAQ</string>
+    <string name="help_faq_subtitle">Preguntas Frecuentes</string>
+    <string name="help_faq_description">Encuentra respuestas a preguntas comunes sobre el uso de la aplicación</string>
+    <string name="help_still_need_help">¿Aún necesitas ayuda?</string>
+    <string name="help_still_need_help_description">Si no puedes encontrar la respuesta que buscas, intenta explorar las funciones de la aplicación o revisa la configuración para más opciones.</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_how_add_meal">¿Cómo agregar una comida?</string>
+    <string name="faq_how_track_calories">¿Cómo rastrear mis calorías?</string>
+    <string name="faq_how_set_goals">¿Cómo establecer mis metas nutricionales?</string>
+    <string name="faq_how_add_exercise">¿Cómo agregar un ejercicio?</string>
+    <string name="faq_how_view_progress">¿Cómo ver mi progreso?</string>
+    <string name="faq_how_change_date">¿Cómo cambiar la fecha?</string>
+    <string name="faq_how_scan_barcode">¿Cómo escanear un código de barras?</string>
+    <string name="faq_how_edit_entries">¿Cómo editar o eliminar entradas?</string>
+    <string name="faq_how_change_theme">¿Cómo cambiar el tema de la aplicación?</string>
+    <string name="faq_how_change_language">¿Cómo cambiar el idioma?</string>
+    
+    <!-- FAQ Answers -->
+    <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
+    <string name="faq_answer_track_calories">Tus calorías se rastrean automáticamente cuando agregas comidas. El panel muestra tu ingesta calórica diaria y progreso hacia tus metas.</string>
+    <string name="faq_answer_set_goals">Ve a Configuración y desplázate hacia abajo hasta \'Metas Nutricionales\'. Puedes establecer objetivos diarios para calorías, proteína, carbohidratos, grasa, fibra y sodio.</string>
+    <string name="faq_answer_add_exercise">Toca el botón \'+\' en el panel y selecciona \'Agregar Ejercicio\'. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
+    <string name="faq_answer_view_progress">Toca el ícono de análisis (gráfico de barras) en el panel para ver tu progreso semanal y mensual, incluyendo historial de ejercicios y tendencias nutricionales.</string>
+    <string name="faq_answer_change_date">Usa el ícono de calendario en el panel para seleccionar una fecha diferente, o usa los botones de flecha para navegar día a día.</string>
+    <string name="faq_answer_scan_barcode">Al agregar una comida, toca el ícono del escáner de código de barras. Apunta tu cámara al código de barras del producto para encontrar automáticamente la información nutricional.</string>
+    <string name="faq_answer_edit_entries">Toca cualquier entrada de comida o ejercicio en tu registro diario para ver detalles. Desde ahí, puedes editar o eliminar la entrada.</string>
+    <string name="faq_answer_change_theme">Ve a Configuración y selecciona tu tema preferido: Claro, Oscuro o Predeterminado del Sistema.</string>
+    <string name="faq_answer_change_language">Ve a Configuración y selecciona tu idioma preferido de la opción Idioma.</string>
+    
+    <!-- Search External Exercises Dialog -->
+    <string name="search_found_exercises">Encontrados %1$d ejercicios que coinciden con tus filtros</string>
+    <string name="search_too_many_results">Demasiados resultados (%1$d). Usa más filtros o escribe 3+ caracteres para reducir.</string>
+    <string name="search_use_filters">Usa filtros o escribe 3+ caracteres para buscar</string>
+    <string name="search_no_exercises_found">No se encontraron ejercicios. Verifica tu conexión a internet e inténtalo de nuevo.</string>
+    <string name="search_exercise_muscles">Músculos: %1$s</string>
+    <string name="search_no_equipment">Sin equipo</string>
+    
+    <!-- Settings Screen -->
+    <string name="terms_agreement_text">Al usar esta aplicación aceptas los</string>
+    <string name="terms_agreement_link">términos de uso</string>
+    
+    <!-- Food Info Dialog -->
+    <string name="food_classification_scores">Clasificación y Puntuaciones</string>
+    <string name="food_open_facts_contributors">© Colaboradores de Open Food Facts</string>
 </resources>
