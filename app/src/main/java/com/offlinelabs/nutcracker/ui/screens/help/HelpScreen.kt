@@ -37,6 +37,7 @@ fun HelpScreen(
     isDarkTheme: Boolean
 ) {
     val faqItems = listOf(
+        // Basic Usage
         FAQItem(
             question = stringResource(R.string.faq_how_add_meal),
             answer = stringResource(R.string.faq_answer_add_meal)
@@ -69,6 +70,7 @@ fun HelpScreen(
             question = stringResource(R.string.faq_how_edit_entries),
             answer = stringResource(R.string.faq_answer_edit_entries)
         ),
+        // App Features & Settings
         FAQItem(
             question = stringResource(R.string.faq_how_change_theme),
             answer = stringResource(R.string.faq_answer_change_theme)
@@ -76,6 +78,32 @@ fun HelpScreen(
         FAQItem(
             question = stringResource(R.string.faq_how_change_language),
             answer = stringResource(R.string.faq_answer_change_language)
+        ),
+        // App Information & Sources
+        FAQItem(
+            question = stringResource(R.string.faq_what_tef_bonus),
+            answer = stringResource(R.string.faq_answer_tef_bonus)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_what_food_source),
+            answer = stringResource(R.string.faq_answer_food_source)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_what_exercise_source),
+            answer = stringResource(R.string.faq_answer_exercise_source)
+        ),
+        // Privacy & Business
+        FAQItem(
+            question = stringResource(R.string.faq_what_data_collected),
+            answer = stringResource(R.string.faq_answer_data_collected)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_how_make_money),
+            answer = stringResource(R.string.faq_answer_make_money)
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_what_logo_means),
+            answer = stringResource(R.string.faq_answer_logo_means)
         )
     )
 

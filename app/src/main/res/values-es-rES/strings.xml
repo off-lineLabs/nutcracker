@@ -200,7 +200,7 @@
     <string name="restart_app">Reiniciar App</string>
     <string name="scan_again">Escanear de Nuevo</string>
     <string name="scan_barcode">Escanear código de barras</string>
-    <string name="search_exercise_database">Buscar en Base de Datos de Ejercicios</string>
+    <string name="search_exercise_database">Buscar en Base de Datos de Ejercicios (solo en inglés)</string>
     <string name="search_food">Buscar Comida</string>
     <string name="search_meal_database">Buscar en Base de Datos de Comidas</string>
     <string name="select_date">Seleccionar Fecha</string>
@@ -354,6 +354,12 @@
     <string name="faq_how_edit_entries">¿Cómo editar o eliminar entradas?</string>
     <string name="faq_how_change_theme">¿Cómo cambiar el tema de la aplicación?</string>
     <string name="faq_how_change_language">¿Cómo cambiar el idioma?</string>
+    <string name="faq_what_tef_bonus">¿Qué es el Bono TEF?</string>
+    <string name="faq_what_food_source">¿Cuál es la fuente de los alimentos que escaneo / busco?</string>
+    <string name="faq_what_exercise_source">¿Cuál es la fuente de los ejercicios y por qué solo está disponible en inglés?</string>
+    <string name="faq_what_data_collected">¿Qué datos recopila NutCracker?</string>
+    <string name="faq_how_make_money">¿Cómo ganan dinero?</string>
+    <string name="faq_what_logo_means">¿Qué se supone que significa el logo?</string>
     
     <!-- FAQ Answers -->
     <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
@@ -366,6 +372,12 @@
     <string name="faq_answer_edit_entries">Toca cualquier entrada de comida o ejercicio en tu registro diario para ver detalles. Desde ahí, puedes editar o eliminar la entrada.</string>
     <string name="faq_answer_change_theme">Ve a Configuración y selecciona tu tema preferido: Claro, Oscuro o Predeterminado del Sistema.</string>
     <string name="faq_answer_change_language">Ve a Configuración y selecciona tu idioma preferido de la opción Idioma.</string>
+    <string name="faq_answer_tef_bonus">El Bono TEF refleja las calorías extra que tu cuerpo quema al digerir y procesar alimentos, especialmente proteínas. Diferentes macronutrientes aumentan el metabolismo en cantidades variables: grasas alrededor del 0-5%, carbohidratos 5-15%, y proteína 20-30%. Aunque no deberías depender mucho de este bono para un presupuesto calórico preciso, es una ayuda útil hacia comer más comidas ricas en proteínas, lo que puede aumentar ligeramente tu quema calórica diaria y ayudar con la saciedad. Para una revisión científica detallada, puedes consultar esta revisión completa sobre el efecto térmico de los alimentos: https://nutritionandmetabolism.biomedcentral.com/articles/10.1186/1743-7075-1-5</string>
+    <string name="faq_answer_food_source">Utilizamos Open Food Facts, una base de datos colaborativa de productos alimenticios de todo el mundo. Es un proyecto gratuito y de código abierto que depende de las contribuciones de usuarios de todo el mundo. La base de datos incluye información nutricional, ingredientes e incluso puntuaciones de impacto ambiental. Si quieres contribuir a esta base de datos abierta, puedes descargar su aplicación móvil: https://es.openfoodfacts.org/open-food-facts-mobile-app</string>
+    <string name="faq_answer_exercise_source">La base de datos de ejercicios proviene de un repositorio de código abierto mantenido por Yuhonas. Aunque NutCracker podría incorporar sus propias traducciones en el futuro, esto no es una prioridad en este momento. Los ejercicios están actualmente solo disponibles en inglés, pero la base de datos es completa e incluye instrucciones detalladas para varios tipos de entrenamientos.</string>
+    <string name="faq_answer_data_collected">NutCracker ni siquiera tiene un servidor, por lo que no se recopilan datos individuales. No sabemos cuántos usuarios tenemos ni qué están haciendo con esta aplicación. Si tu información se pierde alguna vez, no tenemos a nadie para recuperarla. Consulta nuestros Términos de Uso en la pantalla de configuración para más información.</string>
+    <string name="faq_answer_make_money">No lo hacemos. Dado que la información proviene de bases de datos públicamente disponibles, no tenemos servidores, por lo que el único costo involucrado en esta aplicación son las horas de los desarrolladores, que se dan gratis como hobby. Tampoco hay rastreadores, corretaje de datos ni anuncios, así que incluso si 3 millones de personas lo descargan mañana, no se ganará ni un centavo de esto y queremos mantenerlo así.</string>
+    <string name="faq_answer_logo_means">Es un primer plano de la barriga de un Cascanueces y también una persona haciendo un estiramiento. ¿Lo notaste antes?</string>
     
     <!-- Search External Exercises Dialog -->
     <string name="search_found_exercises">Encontrados %1$d ejercicios que coinciden con tus filtros</string>
