@@ -14,11 +14,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
+import android.content.Intent
+import android.net.Uri
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.appBackgroundColor
 import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
@@ -30,12 +39,77 @@ data class FAQItem(
     val answer: String
 )
 
+@Composable
+fun createClickableText(
+    text: String,
+    isDarkTheme: Boolean
+): androidx.compose.ui.text.AnnotatedString {
+    return buildAnnotatedString {
+        val linkPatterns = mapOf(
+            "this comprehensive review" to "https://nutritionandmetabolism.biomedcentral.com/articles/10.1186/1743-7075-1-5",
+            "their mobile app" to "https://es.openfoodfacts.org/open-food-facts-mobile-app",
+            "esta revisión completa" to "https://nutritionandmetabolism.biomedcentral.com/articles/10.1186/1743-7075-1-5",
+            "su aplicación móvil" to "https://es.openfoodfacts.org/open-food-facts-mobile-app",
+            "esta revisão abrangente" to "https://nutritionandmetabolism.biomedcentral.com/articles/10.1186/1743-7075-1-5",
+            "o aplicativo móvel deles" to "https://es.openfoodfacts.org/open-food-facts-mobile-app"
+        )
+        
+        var currentText = text
+        val linkRanges = mutableListOf<Pair<String, String>>()
+        
+        // Find all link patterns in the text
+        linkPatterns.forEach { (pattern, url) ->
+            val index = currentText.indexOf(pattern)
+            if (index != -1) {
+                linkRanges.add(Pair(pattern, url))
+            }
+        }
+        
+        // Sort by position in text
+        linkRanges.sortBy { currentText.indexOf(it.first) }
+        
+        var lastIndex = 0
+        linkRanges.forEach { (pattern, url) ->
+            val startIndex = currentText.indexOf(pattern, lastIndex)
+            if (startIndex != -1) {
+                // Add text before the link
+                if (startIndex > lastIndex) {
+                    append(currentText.substring(lastIndex, startIndex))
+                }
+                
+                // Add the clickable link with theme-aware colors
+                withStyle(
+                    style = SpanStyle(
+                        color = if (isDarkTheme) androidx.compose.ui.graphics.Color(0xFF64B5F6) else androidx.compose.ui.graphics.Color(0xFF1976D2),
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    pushStringAnnotation(
+                        tag = "URL",
+                        annotation = url
+                    )
+                    append(pattern)
+                    pop()
+                }
+                
+                lastIndex = startIndex + pattern.length
+            }
+        }
+        
+        // Add remaining text
+        if (lastIndex < currentText.length) {
+            append(currentText.substring(lastIndex))
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpScreen(
     onNavigateBack: () -> Unit,
     isDarkTheme: Boolean
 ) {
+    val context = LocalContext.current
     val faqItems = listOf(
         // Basic Usage
         FAQItem(
@@ -223,11 +297,29 @@ fun HelpScreen(
                                     thickness = 1.dp
                                 )
                                 
-                                Text(
-                                    text = faq.answer,
-                                    fontSize = 14.sp,
-                                    color = appTextSecondaryColor(),
-                                    lineHeight = 20.sp,
+                                val clickableText = createClickableText(faq.answer, isDarkTheme)
+                                @Suppress("DEPRECATION")
+                                ClickableText(
+                                    text = clickableText,
+                                    onClick = { offset ->
+                                        clickableText.getStringAnnotations(
+                                            tag = "URL",
+                                            start = offset,
+                                            end = offset
+                                        ).firstOrNull()?.let { annotation ->
+                                            try {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                // Handle error if no browser is available
+                                            }
+                                        }
+                                    },
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        fontSize = 14.sp,
+                                        color = appTextSecondaryColor(),
+                                        lineHeight = 20.sp
+                                    ),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp)
