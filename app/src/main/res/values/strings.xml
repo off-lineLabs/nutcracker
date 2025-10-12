@@ -134,6 +134,8 @@
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
     <string name="progress_details">Progress Details</string>
+    <string name="analytics_title">Analytics</string>
+    <string name="back">Back</string>
     
     <!-- Serving Size -->
     <string name="serving_size_label">Serving Size</string>
@@ -321,7 +323,7 @@
     <string name="donate">Donate</string>
     <string name="donate_message">Support the development of this app</string>
     <string name="terms_of_use_dialog_title">Terms of Use</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Terms of Use\n\nNutcracker is a free and open-source application released by Offline Labs under the GNU General Public License v3 (GPLv3). By downloading, installing, or using this app, you agree to the following terms:\n\n\nLICENSE AND FREEDOM\n• Nutcracker is licensed under the GNU GPL v3.\n• You are free to use, study, share, and modify the app according to the license.\n• Any distributed version of Nutcracker must remain free of charge and free of advertising, in line with this license.\n\n\nNO GUARANTEES\n• Nutcracker is a beta project. It may stop working, lose data, or contain errors at any time.\n• There is no guarantee the app will be maintained, updated, or supported in the future.\n• You should not rely on Nutcracker for anything critical. Use it entirely at your own risk.\n\n\nDISCLAIMER OF LIABILITY\n• Offline Labs and the developers take no responsibility for any problems, losses, damages, or costs caused by the use of this app.\n• This includes (but is not limited to) data loss, device failure, corruption of files, or any indirect or direct damage.\n• By using Nutcracker, you accept full responsibility for any consequences.\n\n\nSUPPORT AND ISSUES\n• This is a community-driven project. There is no official support.\n• For bugs, requests, or technical issues, please open an issue on the GitHub repository.\n• For anything else, you can contact us at offlinelabs@duck.com.\n\n\nGENERAL\n• By using Nutcracker, you agree that these terms apply regardless of where or how you access the app.\n• These terms may change at any point without notice.</string>
+    <string name="terms_of_use_dialog_content">Nutcracker – Terms of Use\n\nNutcracker is a free and open-source application released by Offline Labs under the GNU General Public License v3 (GPLv3). By downloading, installing, or using this app, you agree to the following terms:\n\n\n&lt;b&gt;LICENSE AND FREEDOM&lt;/b&gt;\n• Nutcracker is licensed under the GNU GPL v3.\n• You are free to use, study, share, and modify the app according to the license.\n• Any distributed version of Nutcracker must remain free of charge and free of advertising, in line with this license.\n\n\n&lt;b&gt;NO GUARANTEES&lt;/b&gt;\n• Nutcracker is a beta project. It may stop working, lose data, or contain errors at any time.\n• There is no guarantee the app will be maintained, updated, or supported in the future.\n• You should not rely on Nutcracker for anything critical. Use it entirely at your own risk.\n\n\n&lt;b&gt;DISCLAIMER OF LIABILITY&lt;/b&gt;\n• Offline Labs and the developers take no responsibility for any problems, losses, damages, or costs caused by the use of this app.\n• This includes (but is not limited to) data loss, device failure, corruption of files, or any indirect or direct damage.\n• By using Nutcracker, you accept full responsibility for any consequences.\n\n\n&lt;b&gt;DATA COLLECTION AND PRIVACY&lt;/b&gt;\n• Offline Labs does not collect any personal data from users of this application.\n• We do not use analytics tools (such as Google Analytics) or any other data collection mechanisms.\n• However, we cannot guarantee that third-party functionalities used by the app (such as the barcode scanner by Google) or requests to external databases will behave in the same manner.\n\n\n&lt;b&gt;SUPPORT AND ISSUES&lt;/b&gt;\n• This is a community-driven project. There is no official support.\n• For bugs, requests, or technical issues, please open an issue on the GitHub repository.\n• For anything else, you can contact us at online@offline-labs.com.\n\n\n&lt;b&gt;GENERAL&lt;/b&gt;\n• By using Nutcracker, you agree that these terms apply regardless of where or how you access the app.\n• These terms may change at any point without notice.</string>
     <string name="close">Close</string>
     <string name="settings_icon_description">Settings</string>
     
@@ -330,4 +332,152 @@
     <string name="type_information">Type information</string>
     <string name="search_exercise_database">Search Exercise Database</string>
     <string name="edit_exercise">Edit exercise</string>
+    
+    <!-- Terms of Use Screen -->
+    <string name="terms_of_use_title">Terms of Use</string>
+    <string name="terms_of_use_agree">I Agree</string>
+    <string name="terms_of_use_scroll_to_continue">Please scroll to the bottom to continue</string>
+    <string name="terms_of_use_required">You must agree to the terms of use to continue</string>
+    
+    <!-- Date and Time Picker -->
+    <string name="date_and_time">Date &amp; Time</string>
+    <string name="hour">HH</string>
+    <string name="minute">MM</string>
+    
+    <!-- Analytics Screen Strings -->
+    <string name="analytics_exercise">Exercise</string>
+    <string name="analytics_nutrition">Nutrition</string>
+    <string name="analytics_days">Days</string>
+    <string name="analytics_weeks">Weeks</string>
+    <string name="analytics_months">Months</string>
+    <string name="analytics_goal_format">Goal: %1$d kcal</string>
+    <string name="analytics_selected_period_overview">Selected Period Overview</string>
+    <string name="analytics_total_calories_consumed">Total calories consumed</string>
+    <string name="analytics_your_final_balance">Your final balance</string>
+    <string name="analytics_average_balance_per_day">Average balance per day</string>
+    <string name="analytics_exercise_analytics">Exercise Analytics</string>
+    <string name="analytics_calories_burned">Calories Burned</string>
+    <string name="analytics_exercise_days">Exercise Days</string>
+    <string name="analytics_days_since_last_exercise">Days Since Last Exercise</string>
+    <string name="analytics_last_exercise_muscles">Last Exercise Muscles</string>
+    <string name="analytics_never">Never</string>
+    <string name="analytics_previous_month">Previous Month</string>
+    <string name="analytics_next_month">Next Month</string>
+    <string name="analytics_monday">Mon</string>
+    <string name="analytics_tuesday">Tue</string>
+    <string name="analytics_wednesday">Wed</string>
+    <string name="analytics_thursday">Thu</string>
+    <string name="analytics_friday">Fri</string>
+    <string name="analytics_saturday">Sat</string>
+    <string name="analytics_sunday">Sun</string>
+    <string name="analytics_day">Day</string>
+    <string name="analytics_week">Week</string>
+    <string name="analytics_month">Month</string>
+    
+    <!-- Additional hardcoded strings found in UI components -->
+    <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="time_separator">:</string>
+    <string name="language_change_message">Language changed. The app will restart to apply the new language.</string>
+    <string name="processing_format">Processing: %1$s</string>
+    <string name="progress_percentage_format">%1$d%% Complete</string>
+    <string name="records_processed_format">Records processed: %1$d</string>
+    <string name="records_imported_format">Records imported: %1$d</string>
+    <string name="errors_count_format">Errors (%1$d)</string>
+    <string name="error_item_format">• %1$s (Row %2$d): %3$s</string>
+    <string name="more_errors_format">... and %1$d more errors</string>
+    <string name="warnings_count_format">Warnings (%1$d)</string>
+    <string name="warning_item_format">• %1$s (Row %2$d): %3$s</string>
+    <string name="more_warnings_format">... and %1$d more warnings</string>
+    <string name="nutrition_facts">Nutrition Facts</string>
+    <string name="per_100g_100ml">per 100g/100ml</string>
+    
+    <!-- Help Screen Strings -->
+    <string name="help_faq_title">Help &amp; FAQ</string>
+    <string name="help_faq_subtitle">Frequently Asked Questions</string>
+    <string name="help_faq_description">Find answers to common questions about using the app</string>
+    <string name="help_still_need_help">Still need help?</string>
+    <string name="help_still_need_help_description">If you can\'t find the answer you\'re looking for, try exploring the app features or check the settings for more options.</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_how_add_meal">How do I add a meal?</string>
+    <string name="faq_how_track_calories">How do I track my calories?</string>
+    <string name="faq_how_set_goals">How do I set my nutrition goals?</string>
+    <string name="faq_how_add_exercise">How do I add an exercise?</string>
+    <string name="faq_how_view_progress">How do I view my progress?</string>
+    <string name="faq_how_change_date">How do I change the date?</string>
+    <string name="faq_how_scan_barcode">How do I scan a barcode?</string>
+    <string name="faq_how_edit_entries">How do I edit or delete entries?</string>
+    <string name="faq_how_change_theme">How do I change the app theme?</string>
+    <string name="faq_how_change_language">How do I change the language?</string>
+    <string name="faq_what_tef_bonus">What is TEF Bonus?</string>
+    <string name="faq_what_food_source">What is the source for the food I scan / search?</string>
+    <string name="faq_what_exercise_source">What is the source for the exercises and why is it only available in English?</string>
+    <string name="faq_what_data_collected">What data is collected by NutCracker?</string>
+    <string name="faq_how_make_money">How do you make money?</string>
+    <string name="faq_what_logo_means">What is the logo supposed to mean?</string>
+    
+    <!-- FAQ Answers -->
+    <string name="faq_answer_add_meal">To add a meal, tap the \'+\' button on the dashboard. You can then search for food items, scan a barcode, or manually enter nutrition information.</string>
+    <string name="faq_answer_track_calories">Your calories are automatically tracked when you add meals. The dashboard shows your daily calorie intake and progress toward your goals.</string>
+    <string name="faq_answer_set_goals">Go to Settings and scroll down to \'Nutrition Goals\'. You can set daily targets for calories, protein, carbs, fat, fiber, and sodium.</string>
+    <string name="faq_answer_add_exercise">Tap the \'+\' button on the dashboard and select \'Add Exercise\'. You can choose from cardio, strength training, or bodyweight exercises.</string>
+    <string name="faq_answer_view_progress">Tap the analytics icon (bar chart) on the dashboard to view your weekly and monthly progress, including exercise history and nutrition trends.</string>
+    <string name="faq_answer_change_date">Use the calendar icon on the dashboard to select a different date, or use the arrow buttons to navigate day by day.</string>
+    <string name="faq_answer_scan_barcode">When adding a meal, tap the barcode scanner icon. Point your camera at the product\'s barcode to automatically find nutrition information.</string>
+    <string name="faq_answer_edit_entries">Tap on any meal or exercise entry in your daily log to view details. From there, you can edit or delete the entry.</string>
+    <string name="faq_answer_change_theme">Go to Settings and select your preferred theme: Light, Dark, or System Default.</string>
+    <string name="faq_answer_change_language">Go to Settings and select your preferred language from the Language option.</string>
+    <string name="faq_answer_tef_bonus" formatted="false">The TEF Bonus reflects the extra calories your body burns when digesting and processing food, especially proteins. Different macronutrients raise metabolism by varying amounts: fats about 0-5%, carbohydrates 5-15%, and protein 20-30%. Although you shouldn\'t rely heavily on this bonus for precise calorie budgeting, it\'s a helpful nudge towards eating more protein-rich meals, which can slightly boost your daily calorie burn and help with satiety. For a detailed scientific overview, you can check out this comprehensive review on the thermic effect of food.</string>
+    <string name="faq_answer_food_source">We use Open Food Facts, a collaborative database of food products from around the world. It\'s a free, open-source project that relies on contributions from users worldwide. The database includes nutritional information, ingredients, and even environmental impact scores. If you want to contribute to this open database, you can download their mobile app.</string>
+    <string name="faq_answer_exercise_source">The exercise database comes from an open-source repository maintained by Yuhonas. While NutCracker might incorporate its own translations in the future, this is not a priority at the moment. The exercises are currently only available in English, but the database is comprehensive and includes detailed instructions for various types of workouts.</string>
+    <string name="faq_answer_data_collected">NutCracker doesn\'t even have a server, so no individual data is collected. We don\'t know how many users we have nor what they are doing with this app. If your information is ever lost, we have no one to recover it. Refer to our Terms of Use on the settings screen for more info.</string>
+    <string name="faq_answer_make_money">We don\'t. Since the information comes from publicly available databases we have no servers so the only cost involved in this app is the hours of the developers, which is given for free as a hobby. There are also no trackers, no data brokerage, and no ads so even if 3 million people download it tomorrow, not a single penny will be made from this and we want to keep it like that.</string>
+    <string name="faq_answer_logo_means">It is a close-up of a NutCracker belly and also a person doing a stretch. Did you notice it before?</string>
+    
+    <!-- Search External Exercises Dialog -->
+    <string name="search_found_exercises">Found %1$d exercises matching your filters</string>
+    <string name="search_too_many_results">Too many results (%1$d). Use more filters or type 3+ characters to narrow down.</string>
+    <string name="search_use_filters">Use filters or type 3+ characters to search</string>
+    <string name="search_no_exercises_found">No exercises found. Check your internet connection and try again.</string>
+    <string name="search_exercise_muscles">Muscles: %1$s</string>
+    <string name="search_no_equipment">No equipment</string>
+    
+    <!-- Settings Screen -->
+    <string name="terms_agreement_text">By using this app you agree with the</string>
+    <string name="terms_agreement_link">terms of use</string>
+    
+    <!-- Food Info Dialog -->
+    <string name="food_classification_scores">Classification &amp; Scores</string>
+    <string name="food_open_facts_contributors">© Open Food Facts contributors</string>
+    
+    <!-- Barcode Scanner -->
+    <string name="barcode_scanned_successfully">Barcode Scanned Successfully!</string>
+    <string name="barcode_error_format">Error: %1$s</string>
+    <string name="barcode_opening_camera">Opening camera scanner...</string>
+    <string name="barcode_scanning">Scanning for barcodes...</string>
+    <string name="barcode_point_camera">Point camera at a barcode\n\nTap to scan again</string>
+    <string name="barcode_camera_error_format">Camera error: %1$s</string>
+    
+    <!-- Food Search -->
+    <string name="food_searching">Searching...</string>
+    <string name="food_calories_format">%1$d kcal/100g</string>
+    <string name="food_protein_format"> • %1$dg protein</string>
+    
+    <!-- Meal Details -->
+    <string name="meal_nutrition_facts">Nutrition Facts</string>
+    <string name="meal_per_serving_format">per %1$d%2$s</string>
+    <string name="meal_brand_format">Brand: %1$s</string>
+    <string name="meal_calories_label">Calories: </string>
+    <string name="meal_protein_label">Protein: </string>
+    <string name="meal_carbs_label">Carbs: </string>
+    <string name="meal_fat_label">Fat: </string>
+    <string name="meal_notes_label">Notes:</string>
+    <string name="meal_scanned">Scanned</string>
+    <string name="meal_searched">Searched</string>
+    <string name="meal_manual">Manual</string>
+    
+    <!-- Exercise Details -->
+    <string name="exercise_notes_label">Notes:</string>
+    <string name="exercise_set_number_format">%1$d.</string>
+    <string name="exercise_label_format">%1$s:</string>
 </resources>

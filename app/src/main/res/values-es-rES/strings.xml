@@ -200,7 +200,7 @@
     <string name="restart_app">Reiniciar App</string>
     <string name="scan_again">Escanear de Nuevo</string>
     <string name="scan_barcode">Escanear código de barras</string>
-    <string name="search_exercise_database">Buscar en Base de Datos de Ejercicios</string>
+    <string name="search_exercise_database">Buscar en Base de Datos de Ejercicios (solo en inglés)</string>
     <string name="search_food">Buscar Comida</string>
     <string name="search_meal_database">Buscar en Base de Datos de Comidas</string>
     <string name="select_date">Seleccionar Fecha</string>
@@ -242,27 +242,7 @@
     <string name="temf_bonus_off">Desactivado</string>
     <string name="temf_bonus_on">Activado</string>
     <string name="terms_of_use">Términos de Uso</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Términos de Uso
-Nutcracker es una aplicación gratuita y de código abierto lanzada por Offline Labs bajo la Licencia Pública General GNU v3 (GPLv3). Al descargar, instalar o usar esta aplicación, aceptas los siguientes términos:
-LICENCIA Y LIBERTAD
-• Nutcracker está licenciado bajo GNU GPL v3.
-• Eres libre de usar, estudiar, compartir y modificar la aplicación según la licencia.
-• Cualquier versión distribuida de Nutcracker debe permanecer gratuita y sin publicidad, de acuerdo con esta licencia.
-SIN GARANTÍAS
-• Nutcracker es un proyecto beta. Puede dejar de funcionar, perder datos o contener errores en cualquier momento.
-• No hay garantía de que la aplicación sea mantenida, actualizada o soportada en el futuro.
-• No debes confiar en Nutcracker para nada crítico. Úsala completamente bajo tu propio riesgo.
-DESCARGO DE RESPONSABILIDAD
-• Offline Labs y los desarrolladores no se hacen responsables de ningún problema, pérdida, daño o costo causado por el uso de esta aplicación.
-• Esto incluye (pero no se limita a) pérdida de datos, falla del dispositivo, corrupción de archivos o cualquier daño indirecto o directo.
-• Al usar Nutcracker, aceptas la responsabilidad completa por cualquier consecuencia.
-SOPORTE Y PROBLEMAS
-• Este es un proyecto impulsado por la comunidad. No hay soporte oficial.
-• Para errores, solicitudes o problemas técnicos, por favor abre un issue en el repositorio de GitHub.
-• Para cualquier otra cosa, puedes contactarnos en offlinelabs@duck.com.
-GENERAL
-• Al usar Nutcracker, aceptas que estos términos se aplican independientemente de dónde o cómo accedas a la aplicación.
-• Estos términos pueden cambiar en cualquier momento sin previo aviso.</string>
+    <string name="terms_of_use_dialog_content">Nutcracker – Términos de Uso\n\nNutcracker es una aplicación gratuita y de código abierto lanzada por Offline Labs bajo la Licencia Pública General GNU v3 (GPLv3). Al descargar, instalar o usar esta aplicación, aceptas los siguientes términos:\n\n\n&lt;b&gt;LICENCIA Y LIBERTAD&lt;/b&gt;\n• Nutcracker está licenciado bajo GNU GPL v3.\n• Eres libre de usar, estudiar, compartir y modificar la aplicación de acuerdo con la licencia.\n• Cualquier versión distribuida de Nutcracker debe permanecer gratuita y sin publicidad, de acuerdo con esta licencia.\n\n\n&lt;b&gt;SIN GARANTÍAS&lt;/b&gt;\n• Nutcracker es un proyecto beta. Puede dejar de funcionar, perder datos o contener errores en cualquier momento.\n• No hay garantía de que la aplicación será mantenida, actualizada o soportada en el futuro.\n• No debes confiar en Nutcracker para nada crítico. Úsalo enteramente bajo tu propio riesgo.\n\n\n&lt;b&gt;EXENCIÓN DE RESPONSABILIDAD&lt;/b&gt;\n• Offline Labs y los desarrolladores no se responsabilizan por ningún problema, pérdida, daño o costo causado por el uso de esta aplicación.\n• Esto incluye (pero no se limita a) pérdida de datos, falla del dispositivo, corrupción de archivos o cualquier daño indirecto o directo.\n• Al usar Nutcracker, aceptas total responsabilidad por cualquier consecuencia.\n\n\n&lt;b&gt;RECOLECCIÓN DE DATOS Y PRIVACIDAD&lt;/b&gt;\n• Offline Labs no recolecta datos personales de los usuarios de esta aplicación.\n• No utilizamos herramientas de análisis (como Google Analytics) u otros mecanismos de recolección de datos.\n• Sin embargo, no podemos garantizar que las funcionalidades de terceros utilizadas por la aplicación (como el escáner de códigos de barras de Google) o solicitudes a bases de datos externas se comporten de la misma manera.\n\n\n&lt;b&gt;SOPORTE Y PROBLEMAS&lt;/b&gt;\n• Este es un proyecto comunitario. No hay soporte oficial.\n• Para errores, solicitudes o problemas técnicos, por favor abre una issue en el repositorio de GitHub.\n• Para cualquier otra cosa, puedes contactarnos en online@offline-labs.com.\n\n\n&lt;b&gt;GENERAL&lt;/b&gt;\n• Al usar Nutcracker, aceptas que estos términos se aplican independientemente de dónde o cómo accedas a la aplicación.\n• Estos términos pueden cambiar en cualquier momento sin aviso previo.</string>
     <string name="terms_of_use_dialog_title">Términos de Uso</string>
     <string name="terms_of_use_text">Al usar esta app aceptas los términos de uso</string>
     <string name="theme">Tema</string>
@@ -303,4 +283,115 @@ GENERAL
     <string name="weight_units">Unidades de Peso</string>
     <string name="your_meals">Tus Comidas</string>
     <string name="yuhonas">Yuhonas</string>
+    
+    <!-- Date and Time Picker -->
+    <string name="date_and_time">Fecha y Hora</string>
+    <string name="hour">HH</string>
+    <string name="minute">MM</string>
+    
+    <!-- Analytics Screen Strings -->
+    <string name="analytics_exercise">Ejercicio</string>
+    <string name="analytics_nutrition">Nutrición</string>
+    <string name="analytics_days">Días</string>
+    <string name="analytics_weeks">Semanas</string>
+    <string name="analytics_months">Meses</string>
+    <string name="analytics_goal_format">Meta: %1$d kcal</string>
+    <string name="analytics_selected_period_overview">Resumen del Período Seleccionado</string>
+    <string name="analytics_total_calories_consumed">Total de calorías consumidas</string>
+    <string name="analytics_your_final_balance">Tu saldo final</string>
+    <string name="analytics_average_balance_per_day">Saldo promedio por día</string>
+    <string name="analytics_exercise_analytics">Análisis de Ejercicios</string>
+    <string name="analytics_calories_burned">Calorías Quemadas</string>
+    <string name="analytics_exercise_days">Días de Ejercicio</string>
+    <string name="analytics_days_since_last_exercise">Días Desde el Último Ejercicio</string>
+    <string name="analytics_last_exercise_muscles">Músculos del Último Ejercicio</string>
+    <string name="analytics_never">Nunca</string>
+    <string name="analytics_previous_month">Mes Anterior</string>
+    <string name="analytics_next_month">Próximo Mes</string>
+    <string name="analytics_monday">Lun</string>
+    <string name="analytics_tuesday">Mar</string>
+    <string name="analytics_wednesday">Mié</string>
+    <string name="analytics_thursday">Jue</string>
+    <string name="analytics_friday">Vie</string>
+    <string name="analytics_saturday">Sáb</string>
+    <string name="analytics_sunday">Dom</string>
+    <string name="analytics_day">Día</string>
+    <string name="analytics_week">Semana</string>
+    <string name="analytics_month">Mes</string>
+    
+    <!-- Additional hardcoded strings found in UI components -->
+    <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="time_separator">:</string>
+    <string name="language_change_message">Idioma cambiado. La app se reiniciará para aplicar el nuevo idioma.</string>
+    <string name="processing_format">Procesando: %1$s</string>
+    <string name="progress_percentage_format">%1$d%% Completo</string>
+    <string name="records_processed_format">Registros procesados: %1$d</string>
+    <string name="records_imported_format">Registros importados: %1$d</string>
+    <string name="errors_count_format">Errores (%1$d)</string>
+    <string name="error_item_format">• %1$s (Fila %2$d): %3$s</string>
+    <string name="more_errors_format">... y %1$d errores más</string>
+    <string name="warnings_count_format">Advertencias (%1$d)</string>
+    <string name="warning_item_format">• %1$s (Fila %2$d): %3$s</string>
+    <string name="more_warnings_format">... y %1$d advertencias más</string>
+    <string name="nutrition_facts">Información Nutricional</string>
+    <string name="per_100g_100ml">por 100g/100ml</string>
+    
+    <!-- Help Screen Strings -->
+    <string name="help_faq_title">Ayuda y FAQ</string>
+    <string name="help_faq_subtitle">Preguntas Frecuentes</string>
+    <string name="help_faq_description">Encuentra respuestas a preguntas comunes sobre el uso de la aplicación</string>
+    <string name="help_still_need_help">¿Aún necesitas ayuda?</string>
+    <string name="help_still_need_help_description">Si no puedes encontrar la respuesta que buscas, intenta explorar las funciones de la aplicación o revisa la configuración para más opciones.</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_how_add_meal">¿Cómo agregar una comida?</string>
+    <string name="faq_how_track_calories">¿Cómo rastrear mis calorías?</string>
+    <string name="faq_how_set_goals">¿Cómo establecer mis metas nutricionales?</string>
+    <string name="faq_how_add_exercise">¿Cómo agregar un ejercicio?</string>
+    <string name="faq_how_view_progress">¿Cómo ver mi progreso?</string>
+    <string name="faq_how_change_date">¿Cómo cambiar la fecha?</string>
+    <string name="faq_how_scan_barcode">¿Cómo escanear un código de barras?</string>
+    <string name="faq_how_edit_entries">¿Cómo editar o eliminar entradas?</string>
+    <string name="faq_how_change_theme">¿Cómo cambiar el tema de la aplicación?</string>
+    <string name="faq_how_change_language">¿Cómo cambiar el idioma?</string>
+    <string name="faq_what_tef_bonus">¿Qué es el Bono TEF?</string>
+    <string name="faq_what_food_source">¿Cuál es la fuente de los alimentos que escaneo / busco?</string>
+    <string name="faq_what_exercise_source">¿Cuál es la fuente de los ejercicios y por qué solo está disponible en inglés?</string>
+    <string name="faq_what_data_collected">¿Qué datos recopila NutCracker?</string>
+    <string name="faq_how_make_money">¿Cómo ganan dinero?</string>
+    <string name="faq_what_logo_means">¿Qué se supone que significa el logo?</string>
+    
+    <!-- FAQ Answers -->
+    <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
+    <string name="faq_answer_track_calories">Tus calorías se rastrean automáticamente cuando agregas comidas. El panel muestra tu ingesta calórica diaria y progreso hacia tus metas.</string>
+    <string name="faq_answer_set_goals">Ve a Configuración y desplázate hacia abajo hasta \'Metas Nutricionales\'. Puedes establecer objetivos diarios para calorías, proteína, carbohidratos, grasa, fibra y sodio.</string>
+    <string name="faq_answer_add_exercise">Toca el botón \'+\' en el panel y selecciona \'Agregar Ejercicio\'. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
+    <string name="faq_answer_view_progress">Toca el ícono de análisis (gráfico de barras) en el panel para ver tu progreso semanal y mensual, incluyendo historial de ejercicios y tendencias nutricionales.</string>
+    <string name="faq_answer_change_date">Usa el ícono de calendario en el panel para seleccionar una fecha diferente, o usa los botones de flecha para navegar día a día.</string>
+    <string name="faq_answer_scan_barcode">Al agregar una comida, toca el ícono del escáner de código de barras. Apunta tu cámara al código de barras del producto para encontrar automáticamente la información nutricional.</string>
+    <string name="faq_answer_edit_entries">Toca cualquier entrada de comida o ejercicio en tu registro diario para ver detalles. Desde ahí, puedes editar o eliminar la entrada.</string>
+    <string name="faq_answer_change_theme">Ve a Configuración y selecciona tu tema preferido: Claro, Oscuro o Predeterminado del Sistema.</string>
+    <string name="faq_answer_change_language">Ve a Configuración y selecciona tu idioma preferido de la opción Idioma.</string>
+    <string name="faq_answer_tef_bonus" formatted="false">El Bono TEF refleja las calorías extra que tu cuerpo quema al digerir y procesar alimentos, especialmente proteínas. Diferentes macronutrientes aumentan el metabolismo en cantidades variables: grasas alrededor del 0-5%, carbohidratos 5-15%, y proteína 20-30%. Aunque no deberías depender mucho de este bono para un presupuesto calórico preciso, es una ayuda útil hacia comer más comidas ricas en proteínas, lo que puede aumentar ligeramente tu quema calórica diaria y ayudar con la saciedad. Para una revisión científica detallada, puedes consultar esta revisión completa sobre el efecto térmico de los alimentos.</string>
+    <string name="faq_answer_food_source">Utilizamos Open Food Facts, una base de datos colaborativa de productos alimenticios de todo el mundo. Es un proyecto gratuito y de código abierto que depende de las contribuciones de usuarios de todo el mundo. La base de datos incluye información nutricional, ingredientes e incluso puntuaciones de impacto ambiental. Si quieres contribuir a esta base de datos abierta, puedes descargar su aplicación móvil.</string>
+    <string name="faq_answer_exercise_source">La base de datos de ejercicios proviene de un repositorio de código abierto mantenido por Yuhonas. Aunque NutCracker podría incorporar sus propias traducciones en el futuro, esto no es una prioridad en este momento. Los ejercicios están actualmente solo disponibles en inglés, pero la base de datos es completa e incluye instrucciones detalladas para varios tipos de entrenamientos.</string>
+    <string name="faq_answer_data_collected">NutCracker ni siquiera tiene un servidor, por lo que no se recopilan datos individuales. No sabemos cuántos usuarios tenemos ni qué están haciendo con esta aplicación. Si tu información se pierde alguna vez, no tenemos a nadie para recuperarla. Consulta nuestros Términos de Uso en la pantalla de configuración para más información.</string>
+    <string name="faq_answer_make_money">No lo hacemos. Dado que la información proviene de bases de datos públicamente disponibles, no tenemos servidores, por lo que el único costo involucrado en esta aplicación son las horas de los desarrolladores, que se dan gratis como hobby. Tampoco hay rastreadores, corretaje de datos ni anuncios, así que incluso si 3 millones de personas lo descargan mañana, no se ganará ni un centavo de esto y queremos mantenerlo así.</string>
+    <string name="faq_answer_logo_means">Es un primer plano de la barriga de un Cascanueces y también una persona haciendo un estiramiento. ¿Lo notaste antes?</string>
+    
+    <!-- Search External Exercises Dialog -->
+    <string name="search_found_exercises">Encontrados %1$d ejercicios que coinciden con tus filtros</string>
+    <string name="search_too_many_results">Demasiados resultados (%1$d). Usa más filtros o escribe 3+ caracteres para reducir.</string>
+    <string name="search_use_filters">Usa filtros o escribe 3+ caracteres para buscar</string>
+    <string name="search_no_exercises_found">No se encontraron ejercicios. Verifica tu conexión a internet e inténtalo de nuevo.</string>
+    <string name="search_exercise_muscles">Músculos: %1$s</string>
+    <string name="search_no_equipment">Sin equipo</string>
+    
+    <!-- Settings Screen -->
+    <string name="terms_agreement_text">Al usar esta aplicación aceptas los</string>
+    <string name="terms_agreement_link">términos de uso</string>
+    
+    <!-- Food Info Dialog -->
+    <string name="food_classification_scores">Clasificación y Puntuaciones</string>
+    <string name="food_open_facts_contributors">© Colaboradores de Open Food Facts</string>
 </resources>
