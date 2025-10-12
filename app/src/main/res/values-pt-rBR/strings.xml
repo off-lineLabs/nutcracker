@@ -237,27 +237,7 @@
     <string name="temf_bonus_off">Desativado</string>
     <string name="temf_bonus_on">Ativado</string>
     <string name="terms_of_use">Termos de Uso</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Termos de Uso
-Nutcracker é um aplicativo gratuito e de código aberto lançado pela Offline Labs sob a Licença Pública Geral GNU v3 (GPLv3). Ao baixar, instalar ou usar este aplicativo, você concorda com os seguintes termos:
-LICENÇA E LIBERDADE
-• Nutcracker está licenciado sob GNU GPL v3.
-• Você é livre para usar, estudar, compartilhar e modificar o aplicativo de acordo com a licença.
-• Qualquer versão distribuída do Nutcracker deve permanecer gratuita e sem publicidade, de acordo com esta licença.
-SEM GARANTIAS
-• Nutcracker é um projeto beta. Pode parar de funcionar, perder dados ou conter erros a qualquer momento.
-• Não há garantia de que o aplicativo será mantido, atualizado ou suportado no futuro.
-• Você não deve confiar no Nutcracker para nada crítico. Use-o inteiramente por sua conta e risco.
-ISENÇÃO DE RESPONSABILIDADE
-• Offline Labs e os desenvolvedores não se responsabilizam por quaisquer problemas, perdas, danos ou custos causados pelo uso deste aplicativo.
-• Isso inclui (mas não se limita a) perda de dados, falha do dispositivo, corrupção de arquivos ou qualquer dano indireto ou direto.
-• Ao usar o Nutcracker, você aceita total responsabilidade por quaisquer consequências.
-SUPORTE E PROBLEMAS
-• Este é um projeto comunitário. Não há suporte oficial.
-• Para bugs, solicitações ou problemas técnicos, por favor abra uma issue no repositório do GitHub.
-• Para qualquer outra coisa, você pode nos contatar em offlinelabs@duck.com.
-GERAL
-• Ao usar o Nutcracker, você concorda que estes termos se aplicam independentemente de onde ou como você acessa o aplicativo.
-• Estes termos podem mudar a qualquer momento sem aviso prévio.</string>
+    <string name="terms_of_use_dialog_content">Nutcracker – Termos de Uso\n\nNutcracker é um aplicativo gratuito e de código aberto lançado pela Offline Labs sob a Licença Pública Geral GNU v3 (GPLv3). Ao baixar, instalar ou usar este aplicativo, você concorda com os seguintes termos:\n\n\n&lt;b&gt;LICENÇA E LIBERDADE&lt;/b&gt;\n• Nutcracker está licenciado sob GNU GPL v3.\n• Você é livre para usar, estudar, compartilhar e modificar o aplicativo de acordo com a licença.\n• Qualquer versão distribuída do Nutcracker deve permanecer gratuita e sem publicidade, de acordo com esta licença.\n\n\n&lt;b&gt;SEM GARANTIAS&lt;/b&gt;\n• Nutcracker é um projeto beta. Pode parar de funcionar, perder dados ou conter erros a qualquer momento.\n• Não há garantia de que o aplicativo será mantido, atualizado ou suportado no futuro.\n• Você não deve confiar no Nutcracker para nada crítico. Use-o inteiramente por sua conta e risco.\n\n\n&lt;b&gt;ISENÇÃO DE RESPONSABILIDADE&lt;/b&gt;\n• Offline Labs e os desenvolvedores não se responsabilizam por quaisquer problemas, perdas, danos ou custos causados pelo uso deste aplicativo.\n• Isso inclui (mas não se limita a) perda de dados, falha do dispositivo, corrupção de arquivos ou qualquer dano indireto ou direto.\n• Ao usar o Nutcracker, você aceita total responsabilidade por quaisquer consequências.\n\n\n&lt;b&gt;COLETA DE DADOS E PRIVACIDADE&lt;/b&gt;\n• Offline Labs não coleta dados pessoais dos usuários deste aplicativo.\n• Não utilizamos ferramentas de análise (como Google Analytics) ou outros mecanismos de coleta de dados.\n• No entanto, não podemos garantir que funcionalidades de terceiros utilizadas pelo aplicativo (como o scanner de código de barras do Google) ou solicitações a bancos de dados externos se comportem da mesma forma.\n\n\n&lt;b&gt;SUPORTE E PROBLEMAS&lt;/b&gt;\n• Este é um projeto comunitário. Não há suporte oficial.\n• Para bugs, solicitações ou problemas técnicos, por favor abra uma issue no repositório do GitHub.\n• Para qualquer outra coisa, você pode nos contatar em online@offline-labs.com.\n\n\n&lt;b&gt;GERAL&lt;/b&gt;\n• Ao usar o Nutcracker, você concorda que estes termos se aplicam independentemente de onde ou como você acessa o aplicativo.\n• Estes termos podem mudar a qualquer momento sem aviso prévio.</string>
     <string name="terms_of_use_dialog_title">Termos de Uso</string>
     <string name="terms_of_use_text">Ao usar este app você concorda com os termos de uso</string>
     <string name="theme">Tema</string>
@@ -303,4 +283,51 @@ GERAL
     <string name="date_and_time">Data e Hora</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
+    
+    <!-- Analytics Screen Strings -->
+    <string name="analytics_exercise">Exercício</string>
+    <string name="analytics_nutrition">Nutrição</string>
+    <string name="analytics_days">Dias</string>
+    <string name="analytics_weeks">Semanas</string>
+    <string name="analytics_months">Meses</string>
+    <string name="analytics_goal_format">Meta: %1$d kcal</string>
+    <string name="analytics_selected_period_overview">Visão Geral do Período Selecionado</string>
+    <string name="analytics_total_calories_consumed">Total de calorias consumidas</string>
+    <string name="analytics_your_final_balance">Seu saldo final</string>
+    <string name="analytics_average_balance_per_day">Saldo médio por dia</string>
+    <string name="analytics_exercise_analytics">Análise de Exercícios</string>
+    <string name="analytics_calories_burned">Calorias Queimadas</string>
+    <string name="analytics_exercise_days">Dias de Exercício</string>
+    <string name="analytics_days_since_last_exercise">Dias Desde o Último Exercício</string>
+    <string name="analytics_last_exercise_muscles">Músculos do Último Exercício</string>
+    <string name="analytics_never">Nunca</string>
+    <string name="analytics_previous_month">Mês Anterior</string>
+    <string name="analytics_next_month">Próximo Mês</string>
+    <string name="analytics_monday">Seg</string>
+    <string name="analytics_tuesday">Ter</string>
+    <string name="analytics_wednesday">Qua</string>
+    <string name="analytics_thursday">Qui</string>
+    <string name="analytics_friday">Sex</string>
+    <string name="analytics_saturday">Sáb</string>
+    <string name="analytics_sunday">Dom</string>
+    <string name="analytics_day">Dia</string>
+    <string name="analytics_week">Semana</string>
+    <string name="analytics_month">Mês</string>
+    
+    <!-- Additional hardcoded strings found in UI components -->
+    <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="time_separator">:</string>
+    <string name="language_change_message">Idioma alterado. O app será reiniciado para aplicar o novo idioma.</string>
+    <string name="processing_format">Processando: %1$s</string>
+    <string name="progress_percentage_format">%1$d%% Completo</string>
+    <string name="records_processed_format">Registros processados: %1$d</string>
+    <string name="records_imported_format">Registros importados: %1$d</string>
+    <string name="errors_count_format">Erros (%1$d)</string>
+    <string name="error_item_format">• %1$s (Linha %2$d): %3$s</string>
+    <string name="more_errors_format">... e mais %1$d erros</string>
+    <string name="warnings_count_format">Avisos (%1$d)</string>
+    <string name="warning_item_format">• %1$s (Linha %2$d): %3$s</string>
+    <string name="more_warnings_format">... e mais %1$d avisos</string>
+    <string name="nutrition_facts">Informações Nutricionais</string>
+    <string name="per_100g_100ml">por 100g/100ml</string>
 </resources>
