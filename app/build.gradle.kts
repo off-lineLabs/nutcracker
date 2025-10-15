@@ -5,6 +5,32 @@ plugins {
     alias(libs.plugins.kotlin.ksp) // Apply KSP plugin
 }
 
+// Git-based versioning functions
+fun getGitCommitCount(): Int {
+    return try {
+        val process = Runtime.getRuntime().exec("git rev-list --count HEAD")
+        process.inputStream.bufferedReader().readText().trim().toInt()
+    } catch (e: Exception) {
+        println("Warning: Could not get git commit count, using fallback: ${e.message}")
+        1
+    }
+}
+
+fun getGitVersionName(): String {
+    return try {
+        val process = Runtime.getRuntime().exec("git describe --tags --abbrev=0")
+        val version = process.inputStream.bufferedReader().readText().trim()
+        if (version.isNotEmpty()) {
+            version.removePrefix("v")
+        } else {
+            "1.0.0"
+        }
+    } catch (e: Exception) {
+        println("Warning: Could not get git tag, using fallback: ${e.message}")
+        "1.0.0"
+    }
+}
+
 android {
     namespace = "com.offlinelabs.nutcracker"
     compileSdk = 36
@@ -13,8 +39,8 @@ android {
         applicationId = "com.offlinelabs.nutcracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = getGitCommitCount()
+        versionName = getGitVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

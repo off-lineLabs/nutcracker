@@ -4,6 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.content.Intent
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,7 +50,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
-import android.content.Intent
 import com.offlinelabs.nutcracker.R
 import kotlinx.coroutines.launch
 import androidx.compose.ui.window.Dialog
@@ -235,7 +239,7 @@ fun SettingsScreen(
         }
     }
     
-    // Terms of Use Dialog
+    // Terms of Use Dialog (HTML)
     if (showTermsDialog) {
         AlertDialog(
             onDismissRequest = { showTermsDialog = false },
@@ -246,16 +250,63 @@ fun SettingsScreen(
                 )
             },
             text = {
-                LazyColumn(
-                    modifier = Modifier.heightIn(max = 400.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    item {
-                        FormattedTermsText(
-                            text = stringResource(R.string.terms_of_use_dialog_content),
-                            textColor = appTextPrimaryColor()
+                // Resolve themed text color in composable scope
+                val themedTextHex = run {
+                    val c = appTextPrimaryColor()
+                    String.format("#%06X", (0xFFFFFF and c.toArgb()))
+                }
+                Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                    AndroidView(factory = { context: android.content.Context ->
+                        WebView(context).apply {
+                            settings.apply {
+                                javaScriptEnabled = false
+                                domStorageEnabled = false
+                                loadWithOverviewMode = true
+                                useWideViewPort = true
+                                defaultTextEncodingName = "utf-8"
+                            }
+                            // Transparent background to match dialog
+                            setBackgroundColor(0x00000000)
+                            isHorizontalScrollBarEnabled = false
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                                    val uri = request?.url ?: return false
+                                    return try {
+                                        view?.context?.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                        true
+                                    } catch (_: Exception) {
+                                        false
+                                    }
+                                }
+                            }
+                        }
+                    }, update = { webView: WebView ->
+                        // Read raw HTML and inject theme-aware CSS for proper contrast
+                        val raw = webView.context.resources.openRawResource(com.offlinelabs.nutcracker.R.raw.terms)
+                            .bufferedReader().use { it.readText() }
+                        val css = """
+                            <style>
+                              html, body { background: transparent !important; }
+                              body { color: $themedTextHex !important; }
+                              h1, h2, h3, h4, h5, h6 { color: $themedTextHex !important; }
+                              a { color: inherit; text-decoration: underline; }
+                              html, body { overflow-x: hidden; }
+                              img, table, pre, code, div { max-width: 100%; box-sizing: border-box; }
+                            </style>
+                        """.trimIndent()
+                        val themedHtml = if (raw.contains("</head>", ignoreCase = true)) {
+                            raw.replace(Regex("</head>", RegexOption.IGNORE_CASE), css + "</head>")
+                        } else {
+                            "<head>" + css + "</head>" + raw
+                        }
+                        webView.loadDataWithBaseURL(
+                            "file:///android_res/raw/",
+                            themedHtml,
+                            "text/html",
+                            "utf-8",
+                            null
                         )
-                    }
+                    }, modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
@@ -945,6 +996,11 @@ private fun LegalInformation(
         LegalItem(
             title = stringResource(R.string.publisher_brand),
             icon = Icons.Filled.Info
+            isClickable = true,
+            onClick = { 
+                val intent = Intent(Intent.ACTION_VIEW, "https://offline-labs.com".toUri())
+                context.startActivity(intent)
+            }
         )
         LegalItem(
             title = stringResource(R.string.license_info),
@@ -955,15 +1011,9 @@ private fun LegalInformation(
             icon = Icons.Filled.Code,
             isClickable = true,
             onClick = { 
-                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/JnCoe/offline-calorie-calculator".toUri())
+                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/off-lineLabs/nutcracker".toUri())
                 context.startActivity(intent)
             }
-        )
-        LegalItem(
-            title = stringResource(R.string.donate),
-            icon = Icons.Filled.Favorite,
-            isClickable = true,
-            onClick = { /* TODO: Open donation link */ }
         )
         
         Spacer(modifier = Modifier.height(8.dp))

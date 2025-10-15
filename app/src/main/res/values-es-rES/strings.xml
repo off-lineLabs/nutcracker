@@ -57,6 +57,12 @@
     <string name="check_in_meal_title">Registrar %1$s</string>
     <string name="check_in_success">Registro completado exitosamente</string>
     <string name="close">Cerrar</string>
+    
+    <!-- Legal Document Screen -->
+    <string name="privacy_policy">Política de Privacidad</string>
+    <string name="back">Atrás</string>
+    <string name="error_loading_document">Error al cargar documento</string>
+    <string name="retry">Reintentar</string>
     <string name="common_units">Unidades Comunes</string>
     <string name="cups">Tazas</string>
     <string name="daily_supplement_removed">Suplemento diario eliminado</string>

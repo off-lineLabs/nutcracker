@@ -52,6 +52,12 @@
     <string name="check_in_meal_title">Registrar %1$s</string>
     <string name="check_in_success">Registro realizado com sucesso</string>
     <string name="close">Fechar</string>
+    
+    <!-- Legal Document Screen -->
+    <string name="privacy_policy">Política de Privacidade</string>
+    <string name="back">Voltar</string>
+    <string name="error_loading_document">Erro ao carregar documento</string>
+    <string name="retry">Tentar novamente</string>
     <string name="common_units">Unidades Comuns</string>
     <string name="cups">Xícaras</string>
     <string name="daily_supplement_removed">Suplemento diário removido</string>
