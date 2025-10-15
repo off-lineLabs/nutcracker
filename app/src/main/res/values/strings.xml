@@ -327,6 +327,11 @@
     <string name="close">Close</string>
     <string name="settings_icon_description">Settings</string>
     
+    <!-- Legal Document Screen -->
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="error_loading_document">Error loading document</string>
+    <string name="retry">Retry</string>
+    
     <!-- Exercise dialog strings -->
     <string name="my_exercises">My exercises</string>
     <string name="type_information">Type information</string>
