@@ -995,7 +995,7 @@ private fun LegalInformation(
     Column {
         LegalItem(
             title = stringResource(R.string.publisher_brand),
-            icon = Icons.Filled.Info
+            icon = Icons.Filled.Info,
             isClickable = true,
             onClick = { 
                 val intent = Intent(Intent.ACTION_VIEW, "https://offline-labs.com".toUri())
