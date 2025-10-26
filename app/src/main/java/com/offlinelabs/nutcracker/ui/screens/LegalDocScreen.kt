@@ -98,19 +98,6 @@ fun LegalDocScreen(
                                     isLoading = false
                                 }
                                 
-                                @Deprecated("Deprecated in Java", ReplaceWith("onReceivedError(WebView, WebResourceRequest, WebResourceError)"))
-                                @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-                                override fun onReceivedError(
-                                    view: WebView?,
-                                    errorCode: Int,
-                                    description: String?,
-                                    failingUrl: String?
-                                ) {
-                                    super.onReceivedError(view, errorCode, description, failingUrl)
-                                    hasError = true
-                                    isLoading = false
-                                }
-                                
                                 override fun onReceivedError(
                                     view: WebView?,
                                     request: WebResourceRequest?,
