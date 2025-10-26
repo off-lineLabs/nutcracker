@@ -18,6 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.LayoutCoordinates
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.ui.components.items.MealItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
@@ -32,7 +37,8 @@ fun SelectMealForCheckInDialog(
     onSelectMeal: (Meal) -> Unit,
     onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
-    onScanBarcode: () -> Unit = {}
+    onScanBarcode: () -> Unit = {},
+    registerElementCoordinates: ((String, Offset, androidx.compose.ui.unit.Dp) -> Unit)? = null
 ) {
     var selectedMeal by remember { mutableStateOf<Meal?>(null) }
     var showUnifiedDialog by remember { mutableStateOf(false) }
@@ -107,7 +113,15 @@ fun SelectMealForCheckInDialog(
                 // Scan barcode button
                 Button(
                     onClick = onScanBarcode,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                            registerElementCoordinates?.invoke(
+                                "barcode_button",
+                                coordinates.boundsInWindow().center,
+                                30.dp
+                            )
+                        },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = brandAccentShade(0)
                     )

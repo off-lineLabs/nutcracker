@@ -322,4 +322,38 @@
     <string name="terms_of_use_title">Termos de uso</string>
     <string name="terms_of_use_agree">Eu concordo</string>
     <string name="terms_of_use_scroll_to_continue">Por favor leia até o final</string>
+
+    <!-- Tutorial Strings -->
+    <string name="tutorial_welcome_title">Bem-vindo ao Nutcracker!</string>
+    <string name="tutorial_welcome_description">Vamos fazer um tour rápido do seu app de rastreamento de calorias. Vou mostrar as principais funcionalidades para você começar.</string>
+    
+    <string name="tutorial_calorie_ring_title">Rastreamento Diário de Calorias</string>
+    <string name="tutorial_calorie_ring_description">Este anel mostra seu progresso diário de calorias. Verde significa que você está no caminho certo, vermelho significa que excedeu sua meta.</string>
+    
+    <string name="tutorial_add_meal_title">Adicionar Refeições</string>
+    <string name="tutorial_add_meal_description">Toque aqui para registrar suas refeições. Você pode adicionar refeições personalizadas, escanear códigos de barras ou pesquisar alimentos.</string>
+    
+    <string name="tutorial_add_exercise_title">Adicionar Exercício</string>
+    <string name="tutorial_add_exercise_description">Registre seus treinos aqui. Escolha entre centenas de exercícios ou adicione suas próprias atividades personalizadas.</string>
+    
+    <string name="tutorial_calendar_title">Alterar Data</string>
+    <string name="tutorial_calendar_description">Visualize ou edite entradas de diferentes dias. Perfeito para registrar refeições que você esqueceu de rastrear.</string>
+    
+    <string name="tutorial_analytics_title">Ver Progresso</string>
+    <string name="tutorial_analytics_description">Veja análises detalhadas e gráficos do seu progresso nutricional e de exercícios ao longo do tempo.</string>
+    
+    <string name="tutorial_settings_title">Configurações do App</string>
+    <string name="tutorial_settings_description">Personalize sua experiência, defina metas, altere temas e gerencie seus dados.</string>
+    
+    <string name="tutorial_barcode_title">Scanner de Código de Barras</string>
+    <string name="tutorial_barcode_description">Adicione alimentos rapidamente escaneando seu código de barras. O app encontrará automaticamente as informações nutricionais!</string>
+    
+    <string name="tutorial_completion_title">Tudo Pronto!</string>
+    <string name="tutorial_completion_description">Pronto! Agora você sabe como usar o Nutcracker. Comece a rastrear suas refeições e exercícios para alcançar seus objetivos de saúde.</string>
+    
+    <string name="tutorial_next">Próximo</string>
+    <string name="tutorial_previous">Anterior</string>
+    <string name="tutorial_skip">Pular</string>
+    <string name="tutorial_done">Concluído</string>
+    <string name="tutorial_replay">Repetir Tutorial</string>
 </resources>

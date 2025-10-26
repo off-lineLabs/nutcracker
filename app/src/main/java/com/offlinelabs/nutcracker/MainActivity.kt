@@ -3,6 +3,7 @@ package com.offlinelabs.nutcracker
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
@@ -71,6 +72,15 @@ fun AppNavigation(settingsManager: SettingsManager) {
     val context = LocalContext.current
     val database = (context.applicationContext as FoodLogApplication).database
     var currentScreen by remember { mutableStateOf("dashboard") }
+    var shouldShowTutorial by remember { mutableStateOf(false) }
+    
+    // Check tutorial completion status on first launch
+    LaunchedEffect(Unit) {
+        val hasCompleted = settingsManager.hasCompletedTutorial()
+        if (!hasCompleted) {
+            shouldShowTutorial = true
+        }
+    }
     
     // Check if user has agreed to terms
     var showTermsDialog by remember { mutableStateOf(!settingsManager.hasAgreedToTerms()) }
@@ -86,7 +96,10 @@ fun AppNavigation(settingsManager: SettingsManager) {
             onNavigateToSettings = { currentScreen = "settings" },
             onNavigateToAnalytics = { currentScreen = "analytics" },
             onNavigateToHelp = { currentScreen = "help" },
-            isDarkTheme = settingsManager.isDarkTheme(LocalContext.current)
+            isDarkTheme = settingsManager.isDarkTheme(LocalContext.current),
+            settingsManager = settingsManager,
+            shouldShowTutorial = shouldShowTutorial,
+            onTutorialCompleted = { shouldShowTutorial = false }
         )
         "settings" -> SettingsScreen(
             onNavigateBack = { currentScreen = "dashboard" },
@@ -99,7 +112,11 @@ fun AppNavigation(settingsManager: SettingsManager) {
         )
         "help" -> HelpScreen(
             onNavigateBack = { currentScreen = "dashboard" },
-            isDarkTheme = settingsManager.isDarkTheme(context)
+            isDarkTheme = settingsManager.isDarkTheme(context),
+            onReplayTutorial = { 
+                currentScreen = "dashboard"
+                shouldShowTutorial = true
+            }
         )
     }
     

@@ -391,4 +391,38 @@
     <!-- Meal Details -->
 
     <!-- Exercise Details -->
+
+    <!-- Tutorial Strings -->
+    <string name="tutorial_welcome_title">Welcome to Nutcracker!</string>
+    <string name="tutorial_welcome_description">Let\'s take a quick tour of your calorie tracking app. I\'ll show you the key features to get you started.</string>
+    
+    <string name="tutorial_calorie_ring_title">Daily Calorie Tracking</string>
+    <string name="tutorial_calorie_ring_description">This ring shows your daily calorie progress. Green means you\'re on track, red means you\'ve exceeded your goal.</string>
+    
+    <string name="tutorial_add_meal_title">Add Meals</string>
+    <string name="tutorial_add_meal_description">Tap here to log your meals. You can add custom meals, scan barcodes, or search for foods.</string>
+    
+    <string name="tutorial_add_exercise_title">Add Exercise</string>
+    <string name="tutorial_add_exercise_description">Track your workouts here. Choose from hundreds of exercises or add your own custom activities.</string>
+    
+    <string name="tutorial_calendar_title">Change Date</string>
+    <string name="tutorial_calendar_description">View or edit entries from different days. Perfect for logging meals you forgot to track.</string>
+    
+    <string name="tutorial_analytics_title">View Progress</string>
+    <string name="tutorial_analytics_description">See detailed analytics and charts of your nutrition and exercise progress over time.</string>
+    
+    <string name="tutorial_settings_title">App Settings</string>
+    <string name="tutorial_settings_description">Customize your experience, set goals, change themes, and manage your data.</string>
+    
+    <string name="tutorial_barcode_title">Barcode Scanner</string>
+    <string name="tutorial_barcode_description">Quickly add foods by scanning their barcode. The app will automatically find nutritional information!</string>
+    
+    <string name="tutorial_completion_title">You\'re All Set!</string>
+    <string name="tutorial_completion_description">That\'s it! You now know how to use Nutcracker. Start tracking your meals and exercises to reach your health goals.</string>
+    
+    <string name="tutorial_next">Next</string>
+    <string name="tutorial_previous">Previous</string>
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_done">Done</string>
+    <string name="tutorial_replay">Replay Tutorial</string>
 </resources>

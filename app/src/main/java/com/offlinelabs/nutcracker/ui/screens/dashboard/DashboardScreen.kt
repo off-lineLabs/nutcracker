@@ -2,7 +2,6 @@ package com.offlinelabs.nutcracker.ui.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -29,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,7 +38,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.offlinelabs.nutcracker.R
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
@@ -83,6 +82,8 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
 import com.offlinelabs.nutcracker.data.model.CheckInData
 import com.offlinelabs.nutcracker.ui.components.FilterableHistoryView
+import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialManager
+import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialState
 import com.offlinelabs.nutcracker.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -91,6 +92,17 @@ import java.util.Locale
 import com.offlinelabs.nutcracker.util.logger.AppLogger
 import com.offlinelabs.nutcracker.util.logger.logUserAction
 import com.offlinelabs.nutcracker.util.logger.safeSuspendExecute
+import androidx.compose.ui.geometry.Offset as ComposeOffset
+import androidx.compose.ui.unit.Dp as ComposeDp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.LayoutCoordinates
+import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
+import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
+import android.content.Context
 
 @Composable
 fun NutrientProgressDisplay(
@@ -154,8 +166,8 @@ private fun CaloriesRing(
     goalColor: Color,
     ringTrackColor: Color = Color(0xFF374151),
     ringProgressColor: Color = Color(0xFFFFA94D),
-    sizeDp: Dp = 160.dp,
-    strokeWidthDp: Dp = 12.dp
+    sizeDp: ComposeDp = 160.dp,
+    strokeWidthDp: ComposeDp = 12.dp
 ) {
     // Calculate booster bonuses
     val exerciseBonus = if (includeExercise) exerciseCalories else 0.0
@@ -172,7 +184,7 @@ private fun CaloriesRing(
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
             val strokeWidthPx = strokeWidthDp.toPx()
             val diameter = size.minDimension - strokeWidthPx
-            val topLeft = Offset(
+            val topLeft = ComposeOffset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
             )
@@ -364,7 +376,10 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToHelp: () -> Unit = {},
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    settingsManager: com.offlinelabs.nutcracker.data.SettingsManager? = null,
+    shouldShowTutorial: Boolean = false,
+    onTutorialCompleted: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
@@ -676,6 +691,43 @@ fun DashboardScreen(
         }
     }
 
+    // Tutorial state management
+    val tutorialState = remember { TutorialState() }
+    var elementCoordinates by remember { mutableStateOf<Map<String, Pair<ComposeOffset, ComposeDp>>>(emptyMap()) }
+    
+    // Function to register element coordinates
+    val registerElementCoordinates: (String, ComposeOffset, ComposeDp) -> Unit = { id, offset, radius ->
+        elementCoordinates = elementCoordinates + (id to (offset to radius))
+    }
+    
+    // Start tutorial if needed
+    LaunchedEffect(shouldShowTutorial, settingsManager?.hasCompletedTutorial()) {
+        if (settingsManager != null) {
+            val hasCompleted = settingsManager.hasCompletedTutorial()
+            val shouldStartTutorial = shouldShowTutorial || !hasCompleted
+            if (shouldStartTutorial) {
+                val steps = createTutorialSteps(elementCoordinates, context)
+                tutorialState.startTutorial(steps)
+            }
+        }
+    }
+    
+    // Update current step with coordinates
+    LaunchedEffect(elementCoordinates, tutorialState.currentStepIndex) {
+        val currentStep = tutorialState.getCurrentStep()
+        if (currentStep != null && elementCoordinates.isNotEmpty()) {
+            val stepId = getStepIdFromIndex(tutorialState.currentStepIndex)
+            val coordinates = elementCoordinates[stepId]
+            if (coordinates != null) {
+                val updatedStep = currentStep.copy(
+                    targetOffset = coordinates.first,
+                    targetRadius = coordinates.second
+                )
+                tutorialState.steps[tutorialState.currentStepIndex] = updatedStep
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             // Custom header with date navigation
@@ -709,7 +761,12 @@ fun DashboardScreen(
                         // Calendar icon
                         IconButton(
                             onClick = { showCalendarDialog = true },
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val center = coordinates.boundsInWindow().center
+                                    registerElementCoordinates("calendar_icon", center, 25.dp)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.DateRange,
@@ -783,7 +840,12 @@ fun DashboardScreen(
                         // Settings button
                         IconButton(
                             onClick = onNavigateToSettings,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val center = coordinates.boundsInWindow().center
+                                    registerElementCoordinates("settings_icon", center, 25.dp)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Settings,
@@ -796,7 +858,12 @@ fun DashboardScreen(
                         // Progress bar button
                         IconButton(
                             onClick = onNavigateToAnalytics,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val center = coordinates.boundsInWindow().center
+                                    registerElementCoordinates("analytics_icon", center, 25.dp)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.BarChart,
@@ -822,7 +889,12 @@ fun DashboardScreen(
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
-                    )
+                    ),
+                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
+                        val center = coordinates.boundsInWindow().center
+                        val radius = with(density) { 30.dp.toPx() }
+                        registerElementCoordinates("add_exercise_fab", center, 30.dp)
+                    }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_sprint), 
@@ -839,7 +911,12 @@ fun DashboardScreen(
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
-                    )
+                    ),
+                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
+                        val center = coordinates.boundsInWindow().center
+                        val radius = with(density) { 30.dp.toPx() }
+                        registerElementCoordinates("add_meal_fab", center, 30.dp)
+                    }
                 ) {
                     Icon(
                         Icons.Filled.Restaurant, 
@@ -881,7 +958,12 @@ fun DashboardScreen(
                     item {
                         // Calories ring section with symmetrical toggles
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val center = coordinates.boundsInWindow().center
+                                    registerElementCoordinates("calorie_ring", center, 60.dp)
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             // Calories ring - centered as before
@@ -1052,7 +1134,8 @@ fun DashboardScreen(
             onScanBarcode = {
                 showSelectMealDialog = false
                 showBarcodeScanDialog = true
-            }
+            },
+            registerElementCoordinates = registerElementCoordinates
         )
     }
 
@@ -2171,5 +2254,112 @@ fun DashboardScreen(
                 showEditMealDefinitionDialog = null
             }
         )
+    }
+    
+    // Tutorial overlay
+    if (tutorialState.isActive) {
+        val currentStep = tutorialState.getCurrentStep()
+        SpotlightOverlay(
+            step = currentStep,
+            onNext = {
+                if (currentStep?.showDialog != null) {
+                    currentStep.showDialog()
+                } else {
+                    val wasLastStep = tutorialState.currentStepIndex == tutorialState.steps.size - 1
+                    tutorialState.nextStep()
+                    if (wasLastStep) {
+                        settingsManager?.setTutorialCompleted()
+                        onTutorialCompleted()
+                    }
+                }
+            },
+            onSkip = {
+                tutorialState.skipTutorial()
+                settingsManager?.setTutorialCompleted()
+                onTutorialCompleted()
+            },
+            onPrevious = {
+                tutorialState.previousStep()
+            }
+        )
+    }
+}
+
+private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffset, ComposeDp>>, context: Context): List<TutorialStep> {
+    return listOf(
+        TutorialStep(
+            id = "dashboard_overview",
+            title = context.getString(R.string.tutorial_welcome_title),
+            description = context.getString(R.string.tutorial_welcome_description)
+        ),
+        TutorialStep(
+            id = "calorie_ring",
+            title = context.getString(R.string.tutorial_calorie_ring_title),
+            description = context.getString(R.string.tutorial_calorie_ring_description),
+            targetOffset = elementCoordinates["calorie_ring"]?.first,
+            targetRadius = elementCoordinates["calorie_ring"]?.second ?: 60.dp
+        ),
+        TutorialStep(
+            id = "add_meal_fab",
+            title = context.getString(R.string.tutorial_add_meal_title),
+            description = context.getString(R.string.tutorial_add_meal_description),
+            targetOffset = elementCoordinates["add_meal_fab"]?.first,
+            targetRadius = elementCoordinates["add_meal_fab"]?.second ?: 30.dp
+        ),
+        TutorialStep(
+            id = "add_exercise_fab",
+            title = context.getString(R.string.tutorial_add_exercise_title),
+            description = context.getString(R.string.tutorial_add_exercise_description),
+            targetOffset = elementCoordinates["add_exercise_fab"]?.first,
+            targetRadius = elementCoordinates["add_exercise_fab"]?.second ?: 30.dp
+        ),
+        TutorialStep(
+            id = "calendar_icon",
+            title = context.getString(R.string.tutorial_calendar_title),
+            description = context.getString(R.string.tutorial_calendar_description),
+            targetOffset = elementCoordinates["calendar_icon"]?.first,
+            targetRadius = elementCoordinates["calendar_icon"]?.second ?: 25.dp
+        ),
+        TutorialStep(
+            id = "analytics_icon",
+            title = context.getString(R.string.tutorial_analytics_title),
+            description = context.getString(R.string.tutorial_analytics_description),
+            targetOffset = elementCoordinates["analytics_icon"]?.first,
+            targetRadius = elementCoordinates["analytics_icon"]?.second ?: 25.dp
+        ),
+        TutorialStep(
+            id = "settings_icon",
+            title = context.getString(R.string.tutorial_settings_title),
+            description = context.getString(R.string.tutorial_settings_description),
+            targetOffset = elementCoordinates["settings_icon"]?.first,
+            targetRadius = elementCoordinates["settings_icon"]?.second ?: 25.dp
+        ),
+        TutorialStep(
+            id = "meal_dialog_barcode",
+            title = context.getString(R.string.tutorial_barcode_title),
+            description = context.getString(R.string.tutorial_barcode_description),
+            targetOffset = elementCoordinates["barcode_button"]?.first,
+            targetRadius = elementCoordinates["barcode_button"]?.second ?: 30.dp
+        ),
+        TutorialStep(
+            id = "completion",
+            title = context.getString(R.string.tutorial_completion_title),
+            description = context.getString(R.string.tutorial_completion_description)
+        )
+    )
+}
+
+private fun getStepIdFromIndex(index: Int): String {
+    return when (index) {
+        0 -> "dashboard_overview"
+        1 -> "calorie_ring"
+        2 -> "add_meal_fab"
+        3 -> "add_exercise_fab"
+        4 -> "calendar_icon"
+        5 -> "analytics_icon"
+        6 -> "settings_icon"
+        7 -> "meal_dialog_barcode"
+        8 -> "completion"
+        else -> ""
     }
 }
