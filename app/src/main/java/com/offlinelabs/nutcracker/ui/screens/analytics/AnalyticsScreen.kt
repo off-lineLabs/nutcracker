@@ -1375,9 +1375,16 @@ fun ExerciseAnalyticsContent() {
                     ExerciseAnalyticsCard(
                         modifier = Modifier.fillMaxWidth(),
                         title = stringResource(R.string.analytics_last_exercise_muscles),
-                        value = primaryMusclesLastExercise.joinToString(", ") { 
-                            it.replaceFirstChar { char -> char.uppercase() }
-                        }.takeIf { it.isNotEmpty() } ?: "None",
+                        value = primaryMusclesLastExercise
+                            .flatMap { musclesString -> 
+                                // Split the pipe-delimited string and filter out empty strings
+                                musclesString.split("|").filter { it.isNotBlank() }
+                            }
+                            .distinct() // Remove duplicates
+                            .joinToString(", ") { muscle -> 
+                                muscle.replaceFirstChar { char -> char.uppercase() }
+                            }
+                            .takeIf { it.isNotEmpty() } ?: "None",
                         icon = painterResource(R.drawable.ic_attribution),
                         color = BrandRed,
                         isSmallValue = true
