@@ -32,12 +32,9 @@
     <string name="bodyweight">Peso Corporal</string>
     <string name="calories">Kcal</string>
     <string name="calories_burned">Calorías Quemadas</string>
-    <string name="calories_consumed">500</string>
-    <string name="calories_goal_value">500 / 2500 kcal</string>
     <string name="calories_kcal">Calorías (kcal)</string>
     <string name="calories_placeholder">Ingresa calorías</string>
     <string name="calories_remaining_label">Restante</string>
-    <string name="calories_remaining_value">1250</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="camera_permission_required">Se requiere permiso de cámara para escanear códigos de barras</string>
     <string name="cancel">Cancelar</string>
@@ -60,6 +57,7 @@
     
     <!-- Legal Document Screen -->
     <string name="privacy_policy">Política de Privacidad</string>
+    <string name="analytics_title">Analítica</string>
     <string name="back">Atrás</string>
     <string name="error_loading_document">Error al cargar documento</string>
     <string name="retry">Reintentar</string>
@@ -291,6 +289,7 @@
     <string name="yuhonas">Yuhonas</string>
     
     <!-- Date and Time Picker -->
+    <string name="terms_of_use_required">Debes aceptar los términos de uso para continuar</string>
     <string name="date_and_time">Fecha y Hora</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
@@ -400,4 +399,29 @@
     <!-- Food Info Dialog -->
     <string name="food_classification_scores">Clasificación y Puntuaciones</string>
     <string name="food_open_facts_contributors">© Colaboradores de Open Food Facts</string>
+    <string name="terms_of_use_title">"Términos de Uso  "</string>
+    <string name="terms_of_use_agree">Acepto</string>
+    <string name="terms_of_use_scroll_to_continue">Por favor, desplázate hasta el final para continuar</string>
+    <string name="exercise_notes_label">Manual</string>
+    <string name="exercise_set_number_format">%1$d.</string>
+    <string name="exercise_label_format">%1$s:</string>
+    <string name="meal_nutrition_facts">Buscando...</string>
+    <string name="meal_per_serving_format">por %1$d%2$s</string>
+    <string name="meal_brand_format">Marca: %1$s</string>
+    <string name="food_searching">Error de cámara: %1$s</string>
+    <string name="food_calories_format">%1$d kcal/100g</string>
+    <string name="barcode_scanned_successfully">¡Código de barras escaneado correctamente!</string>
+    <string name="barcode_error_format">Error: %1$s</string>
+    <string name="barcode_opening_camera">Abriendo escáner de cámara...</string>
+    <string name="barcode_scanning">Escaneando códigos de barras...</string>
+    <string name="barcode_point_camera">Apunta la cámara a un código de barras</string>
+    <string name="barcode_camera_error_format">Toca para escanear de nuevo</string>
+    <string name="meal_calories_label">Información Nutricional</string>
+    <string name="meal_protein_label">Calorías:</string>
+    <string name="meal_carbs_label">Proteína:</string>
+    <string name="meal_fat_label">Carbohidratos:</string>
+    <string name="meal_notes_label">Grasa:</string>
+    <string name="meal_scanned">Notas:</string>
+    <string name="meal_searched">Escaneado</string>
+    <string name="meal_manual">Buscado</string>
 </resources>

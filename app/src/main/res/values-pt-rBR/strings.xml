@@ -21,18 +21,16 @@
     <string name="add_to_my_meals">Adicionar às Minhas Refeições</string>
     <string name="additional_nutrition">Nutrição Adicional</string>
     <string name="all">Todos</string>
+    <string name="just_check_in">Apenas registrar</string>
     <string name="amount">Quantidade</string>
     <string name="app_name">NutCracker</string>
     <string name="app_version">Versão do App</string>
     <string name="bodyweight">Peso Corporal</string>
     <string name="calories">Kcal</string>
     <string name="calories_burned">Calorias Queimadas</string>
-    <string name="calories_consumed">500</string>
-    <string name="calories_goal_value">500 / 2500 kcal</string>
     <string name="calories_kcal">Calorias (kcal)</string>
     <string name="calories_placeholder">Digite as calorias</string>
     <string name="calories_remaining_label">Restante</string>
-    <string name="calories_remaining_value">1250</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="camera_permission_required">Permissão de câmera é necessária para escanear códigos de barras</string>
     <string name="cancel">Cancelar</string>
@@ -55,6 +53,7 @@
     
     <!-- Legal Document Screen -->
     <string name="privacy_policy">Política de Privacidade</string>
+    <string name="analytics_title">Análise</string>
     <string name="back">Voltar</string>
     <string name="error_loading_document">Erro ao carregar documento</string>
     <string name="retry">Tentar novamente</string>
@@ -286,6 +285,7 @@
     <string name="yuhonas">Yuhonas</string>
     
     <!-- Date and Time Picker -->
+    <string name="terms_of_use_required">Você precisa concordar com os termos para continuar</string>
     <string name="date_and_time">Data e Hora</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
@@ -395,4 +395,33 @@
     <!-- Food Info Dialog -->
     <string name="food_classification_scores">Classificação e Pontuações</string>
     <string name="food_open_facts_contributors">© Colaboradores do Open Food Facts</string>
+    <string name="save">Salvar</string>
+    <string name="select">Selecionar</string>
+    <string name="save_and_check_in">Salvar e registrar</string>
+    <string name="just_save">Apenas salvar</string>
+    <string name="terms_of_use_title">Termos de uso</string>
+    <string name="terms_of_use_agree">Eu concordo</string>
+    <string name="terms_of_use_scroll_to_continue">Por favor leia até o final</string>
+    <string name="exercise_notes_label">Manual</string>
+    <string name="exercise_set_number_format">%1$d.</string>
+    <string name="exercise_label_format">%1$s:</string>
+    <string name="meal_nutrition_facts">Buscando...</string>
+    <string name="meal_per_serving_format">por %1$d%2$s</string>
+    <string name="meal_brand_format">Marca: %1$s</string>
+    <string name="food_searching">Erro de câmera: %1$s</string>
+    <string name="food_calories_format">%1$d kcal/100g</string>
+    <string name="barcode_scanned_successfully">Código de barras escaneado com sucesso!</string>
+    <string name="barcode_error_format">Erro: %1$s</string>
+    <string name="barcode_opening_camera">Abrindo escâner de câmera...</string>
+    <string name="barcode_scanning">Escaneando códigos de barras...</string>
+    <string name="barcode_point_camera">Aponte a câmera para um código de barras</string>
+    <string name="barcode_camera_error_format">Toque para escanear novamente</string>
+    <string name="meal_calories_label">Informação Nutricional</string>
+    <string name="meal_protein_label">Calorias:</string>
+    <string name="meal_carbs_label">Proteína:</string>
+    <string name="meal_fat_label">Carboidratos:</string>
+    <string name="meal_notes_label">Gordura:</string>
+    <string name="meal_scanned">Notas:</string>
+    <string name="meal_searched">Escaneado</string>
+    <string name="meal_manual">Buscado</string>
 </resources>
