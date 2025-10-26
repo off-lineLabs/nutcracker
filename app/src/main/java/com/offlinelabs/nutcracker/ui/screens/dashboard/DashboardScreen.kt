@@ -1340,7 +1340,6 @@ fun DashboardScreen(
                                 ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
                                 ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
                                 ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
-                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
                             }
                             
                             // Calculate calories burned based on exercise type
@@ -1357,7 +1356,6 @@ fun DashboardScreen(
                                     val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
                                     reps * kcalPerRep
                                 }
-                                else -> 0.0
                             }
                             
                             val exerciseLog = ExerciseLog.create(
@@ -1480,7 +1478,6 @@ fun DashboardScreen(
                                 ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
                                 ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
                                 ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
-                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
                             }
                             
                             // Calculate calories burned based on exercise type
@@ -1497,7 +1494,6 @@ fun DashboardScreen(
                                     val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
                                     reps * kcalPerRep
                                 }
-                                else -> 0.0
                             }
                             
                             val exerciseLog = ExerciseLog.create(

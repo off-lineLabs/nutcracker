@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -655,7 +655,9 @@ fun NutritionAnalyticsContent(
                     kotlinx.coroutines.flow.combine(
                         exerciseFlows + tefFlows
                     ) { values ->
+                        @Suppress("UNCHECKED_CAST")
                         val exerciseValues = values.take(7) as List<Double>
+                        @Suppress("UNCHECKED_CAST")
                         val tefTotals = values.drop(7) as List<DailyTotals?>
                         
                         val exerciseSum = exerciseValues.sum()
@@ -1076,7 +1078,7 @@ fun StatsCards(
             title = stringResource(R.string.analytics_your_final_balance),
             value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
             valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor,
-            icon = if (balance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            icon = if (balance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (balance >= 0) {
                 listOf(
                     ProteinFiberColor.copy(alpha = 0.15f),
@@ -1095,7 +1097,7 @@ fun StatsCards(
             title = stringResource(R.string.analytics_average_balance_per_day),
             value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
             valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor,
-            icon = if (averageBalance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            icon = if (averageBalance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (averageBalance >= 0) {
                 listOf(
                     ProteinFiberColor.copy(alpha = 0.12f),

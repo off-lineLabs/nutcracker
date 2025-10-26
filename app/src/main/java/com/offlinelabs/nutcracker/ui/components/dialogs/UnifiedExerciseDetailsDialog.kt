@@ -304,7 +304,6 @@ private fun PersonalDataCard(exercise: Exercise, onEdit: () -> Unit) {
                     ExerciseType.STRENGTH -> "Kcal per Set"
                     ExerciseType.CARDIO -> "Kcal per Minute"
                     ExerciseType.BODYWEIGHT -> "Kcal per Rep"
-                    else -> "Kcal per Unit"
                 }
                 PersonalDataRow(label, it.toString(), contrastingTextColor) 
             }

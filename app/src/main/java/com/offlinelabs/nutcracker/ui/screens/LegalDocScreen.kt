@@ -2,8 +2,11 @@ package com.offlinelabs.nutcracker.ui.screens
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceError
+import android.os.Build
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -42,7 +45,7 @@ fun LegalDocScreen(
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back)
                     )
                 }
@@ -95,6 +98,8 @@ fun LegalDocScreen(
                                     isLoading = false
                                 }
                                 
+                                @Deprecated("Deprecated in Java", ReplaceWith("onReceivedError(WebView, WebResourceRequest, WebResourceError)"))
+                                @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
                                 override fun onReceivedError(
                                     view: WebView?,
                                     errorCode: Int,
@@ -102,6 +107,16 @@ fun LegalDocScreen(
                                     failingUrl: String?
                                 ) {
                                     super.onReceivedError(view, errorCode, description, failingUrl)
+                                    hasError = true
+                                    isLoading = false
+                                }
+                                
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: WebResourceError?
+                                ) {
+                                    super.onReceivedError(view, request, error)
                                     hasError = true
                                     isLoading = false
                                 }

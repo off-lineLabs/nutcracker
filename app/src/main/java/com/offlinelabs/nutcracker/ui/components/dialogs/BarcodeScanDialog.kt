@@ -330,6 +330,7 @@ private fun openCamera(
                     }
                 }
                 
+                @Suppress("DEPRECATION")
                 camera.createCaptureSession(
                     listOf(textureSurface, imageReader.surface),
                     sessionCallback,
