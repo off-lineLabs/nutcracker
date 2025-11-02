@@ -1015,6 +1015,10 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .align(Alignment.CenterEnd)
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val center = coordinates.boundsInWindow().center
+                                        registerElementCoordinates("edit_goals_icon", center, 25.dp)
+                                    }
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Edit,
@@ -1035,7 +1039,12 @@ fun DashboardScreen(
 
                         // Pill tracker - positioned after nutrients box
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val center = coordinates.boundsInWindow().center
+                                    registerElementCoordinates("supplement_pill", center, 30.dp)
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             PillTracker(
@@ -2314,13 +2323,6 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             targetRadius = elementCoordinates["add_exercise_fab"]?.second ?: 30.dp
         ),
         TutorialStep(
-            id = "calendar_icon",
-            title = context.getString(R.string.tutorial_calendar_title),
-            description = context.getString(R.string.tutorial_calendar_description),
-            targetOffset = elementCoordinates["calendar_icon"]?.first,
-            targetRadius = elementCoordinates["calendar_icon"]?.second ?: 25.dp
-        ),
-        TutorialStep(
             id = "analytics_icon",
             title = context.getString(R.string.tutorial_analytics_title),
             description = context.getString(R.string.tutorial_analytics_description),
@@ -2335,11 +2337,18 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             targetRadius = elementCoordinates["settings_icon"]?.second ?: 25.dp
         ),
         TutorialStep(
-            id = "meal_dialog_barcode",
-            title = context.getString(R.string.tutorial_barcode_title),
-            description = context.getString(R.string.tutorial_barcode_description),
-            targetOffset = elementCoordinates["barcode_button"]?.first,
-            targetRadius = elementCoordinates["barcode_button"]?.second ?: 30.dp
+            id = "edit_goals_icon",
+            title = context.getString(R.string.tutorial_edit_goals_title),
+            description = context.getString(R.string.tutorial_edit_goals_description),
+            targetOffset = elementCoordinates["edit_goals_icon"]?.first,
+            targetRadius = elementCoordinates["edit_goals_icon"]?.second ?: 25.dp
+        ),
+        TutorialStep(
+            id = "supplement_pill",
+            title = context.getString(R.string.tutorial_supplement_pill_title),
+            description = context.getString(R.string.tutorial_supplement_pill_description),
+            targetOffset = elementCoordinates["supplement_pill"]?.first,
+            targetRadius = elementCoordinates["supplement_pill"]?.second ?: 30.dp
         ),
         TutorialStep(
             id = "completion",
@@ -2355,10 +2364,10 @@ private fun getStepIdFromIndex(index: Int): String {
         1 -> "calorie_ring"
         2 -> "add_meal_fab"
         3 -> "add_exercise_fab"
-        4 -> "calendar_icon"
-        5 -> "analytics_icon"
-        6 -> "settings_icon"
-        7 -> "meal_dialog_barcode"
+        4 -> "analytics_icon"
+        5 -> "settings_icon"
+        6 -> "edit_goals_icon"
+        7 -> "supplement_pill"
         8 -> "completion"
         else -> ""
     }

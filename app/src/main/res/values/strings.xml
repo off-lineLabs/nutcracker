@@ -409,13 +409,13 @@
     <string name="tutorial_welcome_description">Let\'s take a quick tour of your calorie tracking app. I\'ll show you the key features to get you started.</string>
     
     <string name="tutorial_calorie_ring_title">Daily Calorie Tracking</string>
-    <string name="tutorial_calorie_ring_description">This ring shows your daily calorie progress. Green means you\'re on track, red means you\'ve exceeded your goal.</string>
+    <string name="tutorial_calorie_ring_description">This ring shows your daily calorie progress. You can see how many calories you still have available, how many you’ve consumed, and your daily goal.</string>
     
     <string name="tutorial_add_meal_title">Add Meals</string>
-    <string name="tutorial_add_meal_description">Tap here to log your meals. You can add custom meals, scan barcodes, or search for foods.</string>
+    <string name="tutorial_add_meal_description">Tap here to manage your meals. Scan a barcode to automatically get a product’s nutritional data or enter the information manually.</string>
     
     <string name="tutorial_add_exercise_title">Add Exercise</string>
-    <string name="tutorial_add_exercise_description">Track your workouts here. Choose from hundreds of exercises or add your own custom activities.</string>
+    <string name="tutorial_add_exercise_description">Manage your exercises here. You can search among hundreds of preloaded exercises or enter the data manually.</string>
     
     <string name="tutorial_calendar_title">Change Date</string>
     <string name="tutorial_calendar_description">View or edit entries from different days. Perfect for logging meals you forgot to track.</string>
@@ -426,8 +426,11 @@
     <string name="tutorial_settings_title">App Settings</string>
     <string name="tutorial_settings_description">Customize your experience, set goals, change themes, and manage your data.</string>
     
-    <string name="tutorial_barcode_title">Barcode Scanner</string>
-    <string name="tutorial_barcode_description">Quickly add foods by scanning their barcode. The app will automatically find nutritional information!</string>
+    <string name="tutorial_edit_goals_title">Edit Daily Goals</string>
+    <string name="tutorial_edit_goals_description">You can (and should) edit your daily goals according to your needs. Tap this icon to customize your calorie and nutrient targets.</string>
+    
+    <string name="tutorial_supplement_pill_title">Track Supplements</string>
+    <string name="tutorial_supplement_pill_description">Keep track of whether you took your daily supplement by toggling this icon. It will glow when marked as taken.</string>
     
     <string name="tutorial_completion_title">You\'re All Set!</string>
     <string name="tutorial_completion_description">That\'s it! You now know how to use Nutcracker. Start tracking your meals and exercises to reach your health goals.</string>

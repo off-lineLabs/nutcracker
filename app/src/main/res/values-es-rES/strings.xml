@@ -342,13 +342,13 @@
     <string name="tutorial_welcome_description">Hagamos un recorrido rápido de tu app de seguimiento de calorías. Te mostraré las características clave para que puedas empezar.</string>
     
     <string name="tutorial_calorie_ring_title">Seguimiento Diario de Calorías</string>
-    <string name="tutorial_calorie_ring_description">Este anillo muestra tu progreso diario de calorías. Verde significa que vas por buen camino, rojo significa que has excedido tu meta.</string>
+    <string name="tutorial_calorie_ring_description">Puedes ver cuántas calorías disponibles te quedan, cuántas has consumido y tu objetivo diario.</string>
     
     <string name="tutorial_add_meal_title">Agregar Comidas</string>
-    <string name="tutorial_add_meal_description">Toca aquí para registrar tus comidas. Puedes agregar comidas personalizadas, escanear códigos de barras o buscar alimentos.</string>
+    <string name="tutorial_add_meal_description">Toca aquí para gestionar tus comidas. Escanea un código de barras para obtener automáticamente los datos nutricionales de un producto o introduce la información manualmente.﻿</string>
     
     <string name="tutorial_add_exercise_title">Agregar Ejercicio</string>
-    <string name="tutorial_add_exercise_description">Registra tus entrenamientos aquí. Elige entre cientos de ejercicios o agrega tus propias actividades personalizadas.</string>
+    <string name="tutorial_add_exercise_description">Gestiona tus ejercicios aquí. Puedes buscar entre cientos de ejercicios preprogramados o introducir los datos manualmente.</string>
     
     <string name="tutorial_calendar_title">Cambiar Fecha</string>
     <string name="tutorial_calendar_description">Ve o edita entradas de diferentes días. Perfecto para registrar comidas que olvidaste rastrear.</string>
@@ -359,8 +359,11 @@
     <string name="tutorial_settings_title">Configuración de la App</string>
     <string name="tutorial_settings_description">Personaliza tu experiencia, establece metas, cambia temas y gestiona tus datos.</string>
     
-    <string name="tutorial_barcode_title">Escáner de Código de Barras</string>
-    <string name="tutorial_barcode_description">Agrega alimentos rápidamente escaneando su código de barras. ¡La app encontrará automáticamente la información nutricional!</string>
+    <string name="tutorial_edit_goals_title">Editar Metas Diarias</string>
+    <string name="tutorial_edit_goals_description">Puedes (y debes) editar tus metas diarias según tus necesidades. Toca este icono para personalizar tus objetivos de calorías y nutrientes.</string>
+    
+    <string name="tutorial_supplement_pill_title">Rastrear Suplementos</string>
+    <string name="tutorial_supplement_pill_description">Lleva un registro de si tomaste tu suplemento diario alternando este icono. Brillará cuando esté marcado como tomado.</string>
     
     <string name="tutorial_completion_title">¡Todo Listo!</string>
     <string name="tutorial_completion_description">¡Eso es todo! Ahora sabes cómo usar Nutcracker. Comienza a rastrear tus comidas y ejercicios para alcanzar tus objetivos de salud.</string>

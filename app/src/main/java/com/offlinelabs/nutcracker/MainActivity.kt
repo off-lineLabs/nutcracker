@@ -74,16 +74,20 @@ fun AppNavigation(settingsManager: SettingsManager) {
     var currentScreen by remember { mutableStateOf("dashboard") }
     var shouldShowTutorial by remember { mutableStateOf(false) }
     
-    // Check tutorial completion status on first launch
+    // Check if user has agreed to terms - use state to track changes
+    var hasAgreedToTerms by remember { mutableStateOf(settingsManager.hasAgreedToTerms()) }
+    var showTermsDialog by remember { mutableStateOf(!hasAgreedToTerms) }
+    
+    // Check tutorial completion status only after terms have been agreed
+    // This only runs on initial composition if terms are already agreed
     LaunchedEffect(Unit) {
-        val hasCompleted = settingsManager.hasCompletedTutorial()
-        if (!hasCompleted) {
-            shouldShowTutorial = true
+        if (hasAgreedToTerms) {
+            val hasCompleted = settingsManager.hasCompletedTutorial()
+            if (!hasCompleted) {
+                shouldShowTutorial = true
+            }
         }
     }
-    
-    // Check if user has agreed to terms
-    var showTermsDialog by remember { mutableStateOf(!settingsManager.hasAgreedToTerms()) }
     
     // Handle system back button
     BackHandler(enabled = currentScreen == "settings" || currentScreen == "analytics" || currentScreen == "help") {
@@ -98,7 +102,8 @@ fun AppNavigation(settingsManager: SettingsManager) {
             onNavigateToHelp = { currentScreen = "help" },
             isDarkTheme = settingsManager.isDarkTheme(LocalContext.current),
             settingsManager = settingsManager,
-            shouldShowTutorial = shouldShowTutorial,
+            // Only show tutorial if terms are agreed and tutorial flag is set
+            shouldShowTutorial = shouldShowTutorial && hasAgreedToTerms && !showTermsDialog,
             onTutorialCompleted = { shouldShowTutorial = false }
         )
         "settings" -> SettingsScreen(
@@ -125,7 +130,13 @@ fun AppNavigation(settingsManager: SettingsManager) {
         TermsOfUseDialog(
             settingsManager = settingsManager,
             onTermsAgreed = { 
+                hasAgreedToTerms = true
                 showTermsDialog = false
+                // After terms are agreed, check if tutorial should be shown
+                val hasCompleted = settingsManager.hasCompletedTutorial()
+                if (!hasCompleted) {
+                    shouldShowTutorial = true
+                }
             }
         )
     }
