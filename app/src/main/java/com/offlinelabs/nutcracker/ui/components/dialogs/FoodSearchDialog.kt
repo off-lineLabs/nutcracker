@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,9 @@ import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
 import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
 import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.*
+import androidx.compose.ui.text.style.TextDecoration
 
 @Composable
 fun FoodSearchDialog(
@@ -47,19 +51,20 @@ fun FoodSearchDialog(
     var searchQuery by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var technicalErrorMessage by remember { mutableStateOf<String?>(null) }
     var hasSearched by remember { mutableStateOf(false) }
     var wholeFoodsOnly by remember { mutableStateOf(false) }
     
     val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val uriHandler = LocalUriHandler.current
     
     // Debounced search effect
     LaunchedEffect(searchQuery, wholeFoodsOnly) {
         if (searchQuery.isNotBlank() && searchQuery.length >= 2) {
             delay(500) // 500ms debounce
             isLoading = true
-            errorMessage = null
+            technicalErrorMessage = null
             
             try {
                 val result = openFoodFactsService.searchProducts(
@@ -79,13 +84,13 @@ fun FoodSearchDialog(
                         hasSearched = true
                     },
                     onFailure = { error ->
-                        errorMessage = "Search failed: ${error.message}"
+                        technicalErrorMessage = error.message ?: "Unknown error"
                         searchResults = emptyList()
                         hasSearched = true
                     }
                 )
             } catch (e: Exception) {
-                errorMessage = "Search failed: ${e.message}"
+                technicalErrorMessage = e.message ?: "Unknown error"
                 searchResults = emptyList()
                 hasSearched = true
             } finally {
@@ -94,7 +99,7 @@ fun FoodSearchDialog(
         } else if (searchQuery.isBlank()) {
             searchResults = emptyList()
             hasSearched = false
-            errorMessage = null
+            technicalErrorMessage = null
         }
     }
     
@@ -128,7 +133,7 @@ fun FoodSearchDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = appTextSecondaryColor()
                         )
                     }
@@ -143,11 +148,7 @@ fun FoodSearchDialog(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text(
-                            text = when (currentLanguage) {
-                                AppLanguage.SPANISH -> "Buscar alimentos..."
-                                AppLanguage.PORTUGUESE -> "Buscar alimentos..."
-                                AppLanguage.ENGLISH -> "Search for food..."
-                            },
+                            text = stringResource(R.string.search_food_placeholder),
                             color = appTextSecondaryColor()
                         )
                     },
@@ -163,7 +164,7 @@ fun FoodSearchDialog(
                             IconButton(onClick = { searchQuery = "" }) {
                                 Icon(
                                     imageVector = Icons.Filled.Clear,
-                                    contentDescription = "Clear",
+                                    contentDescription = stringResource(R.string.clear),
                                     tint = appTextSecondaryColor()
                                 )
                             }
@@ -191,11 +192,7 @@ fun FoodSearchDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = when (currentLanguage) {
-                            AppLanguage.SPANISH -> "Solo alimentos naturales"
-                            AppLanguage.PORTUGUESE -> "Apenas alimentos naturais"
-                            AppLanguage.ENGLISH -> "Whole foods only"
-                        },
+                        text = stringResource(R.string.whole_foods_only),
                         color = appTextPrimaryColor(),
                         fontSize = 14.sp
                     )
@@ -218,8 +215,10 @@ fun FoodSearchDialog(
                 when {
                     isLoading -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 32.dp),
+                            contentAlignment = Alignment.TopCenter
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -229,20 +228,23 @@ fun FoodSearchDialog(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Searching...",
+                                    text = stringResource(R.string.search_loading),
                                     color = appTextSecondaryColor()
                                 )
                             }
                         }
                     }
                     
-                    errorMessage != null -> {
+                    technicalErrorMessage != null -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 32.dp),
+                            contentAlignment = Alignment.TopCenter
                         ) {
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Error,
@@ -252,9 +254,16 @@ fun FoodSearchDialog(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = errorMessage!!,
-                                    color = appTextSecondaryColor(),
+                                    text = stringResource(R.string.search_error_title),
+                                    color = appTextPrimaryColor(),
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.search_error_message, technicalErrorMessage!!),
+                                    color = appTextSecondaryColor(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    fontSize = 11.sp
                                 )
                             }
                         }
@@ -262,11 +271,14 @@ fun FoodSearchDialog(
                     
                     hasSearched && searchResults.isEmpty() -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 32.dp),
+                            contentAlignment = Alignment.TopCenter
                         ) {
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.SearchOff,
@@ -275,25 +287,51 @@ fun FoodSearchDialog(
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = when (currentLanguage) {
-                                        AppLanguage.SPANISH -> "No se encontraron resultados"
-                                        AppLanguage.PORTUGUESE -> "Nenhum resultado encontrado"
-                                        AppLanguage.ENGLISH -> "No results found"
+                                val noResultsText = stringResource(R.string.search_no_results)
+                                val openFoodFactsText = stringResource(R.string.open_food_facts)
+                                val clickableText = buildAnnotatedString {
+                                    val openFoodFactsUrl = "https://world.openfoodfacts.org/"
+                                    val openFoodFactsIndex = noResultsText.indexOf(openFoodFactsText)
+                                    
+                                    if (openFoodFactsIndex != -1) {
+                                        // Add text before the link
+                                        append(noResultsText.substring(0, openFoodFactsIndex))
+                                        
+                                        // Add clickable link
+                                        pushStringAnnotation("URL", openFoodFactsUrl)
+                                        withStyle(
+                                            style = SpanStyle(
+                                                color = Color(0xFF60A5FA),
+                                                textDecoration = TextDecoration.Underline
+                                            )
+                                        ) {
+                                            append(openFoodFactsText)
+                                        }
+                                        pop()
+                                        
+                                        // Add text after the link
+                                        append(noResultsText.substring(openFoodFactsIndex + openFoodFactsText.length))
+                                    } else {
+                                        append(noResultsText)
+                                    }
+                                }
+                                
+                                ClickableText(
+                                    text = clickableText,
+                                    onClick = { offset ->
+                                        clickableText.getStringAnnotations(
+                                            tag = "URL",
+                                            start = offset,
+                                            end = offset
+                                        ).firstOrNull()?.let { annotation ->
+                                            uriHandler.openUri(annotation.item)
+                                        }
                                     },
-                                    color = appTextSecondaryColor(),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = when (currentLanguage) {
-                                        AppLanguage.SPANISH -> "Intenta con otros tÃ©rminos de bÃºsqueda"
-                                        AppLanguage.PORTUGUESE -> "Tente outros termos de busca"
-                                        AppLanguage.ENGLISH -> "Try different search terms"
-                                    },
-                                    color = appTextSecondaryColor(),
-                                    fontSize = 14.sp,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    style = TextStyle(
+                                        color = appTextSecondaryColor(),
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        fontSize = 14.sp
+                                    )
                                 )
                             }
                         }
@@ -329,11 +367,7 @@ fun FoodSearchDialog(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = when (currentLanguage) {
-                                                    AppLanguage.SPANISH -> "Mostrando solo alimentos naturales"
-                                                    AppLanguage.PORTUGUESE -> "Mostrando apenas alimentos naturais"
-                                                    AppLanguage.ENGLISH -> "Showing whole foods only"
-                                                },
+                                                text = stringResource(R.string.showing_whole_foods_only),
                                                 color = Color(0xFF60A5FA),
                                                 fontSize = 12.sp
                                             )
@@ -357,11 +391,14 @@ fun FoodSearchDialog(
                     
                     else -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 32.dp),
+                            contentAlignment = Alignment.TopCenter
                         ) {
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Search,
@@ -371,13 +408,17 @@ fun FoodSearchDialog(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = when (currentLanguage) {
-                                        AppLanguage.SPANISH -> "Busca alimentos por nombre"
-                                        AppLanguage.PORTUGUESE -> "Busque alimentos por nome"
-                                        AppLanguage.ENGLISH -> "Search for food by name"
-                                    },
+                                    text = stringResource(R.string.search_food_by_name),
+                                    color = appTextPrimaryColor(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.search_food_tip),
                                     color = appTextSecondaryColor(),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    fontSize = 12.sp
                                 )
                             }
                         }
@@ -459,7 +500,7 @@ private fun ProductSearchResultItem(
                         }
                         nutriments.proteins100g?.let { proteins ->
                             Text(
-                                text = " • ${proteins.toInt()}g protein",
+                                text = " • ${stringResource(R.string.protein_format, proteins.toInt())}",
                                 color = appTextSecondaryColor(),
                                 fontSize = 12.sp
                             )

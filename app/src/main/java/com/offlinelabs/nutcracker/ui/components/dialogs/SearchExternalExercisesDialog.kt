@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.Alignment
@@ -23,6 +22,8 @@ import androidx.core.net.toUri
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import android.content.Intent
 import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
@@ -102,31 +103,42 @@ fun SearchExternalExercisesDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Filter dropdowns - stacked vertically for better space usage
-                Column(
+                // Filter chips - side by side to save vertical space
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Equipment filter
-                    ExposedDropdownMenuBox(
-                        expanded = showEquipmentFilter,
-                        onExpandedChange = { showEquipmentFilter = !showEquipmentFilter }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedEquipment ?: "All Equipment",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.equipment)) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showEquipmentFilter)
+                    var equipmentChipHeight by remember { mutableStateOf(0) }
+                    Box {
+                        FilterChip(
+                            selected = selectedEquipment != null,
+                            onClick = { showEquipmentFilter = !showEquipmentFilter },
+                            label = {
+                                Text(
+                                    selectedEquipment?.replaceFirstChar { it.uppercase() }
+                                        ?: stringResource(R.string.equipment)
+                                )
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            leadingIcon = if (selectedEquipment != null) {
+                                { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                            } else null,
+                            trailingIcon = {
+                                Icon(
+                                    if (showEquipmentFilter) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            modifier = Modifier.onGloballyPositioned { coordinates ->
+                                equipmentChipHeight = coordinates.size.height
+                            }
                         )
-                        ExposedDropdownMenu(
+                        val density = LocalDensity.current
+                        DropdownMenu(
                             expanded = showEquipmentFilter,
-                            onDismissRequest = { showEquipmentFilter = false }
+                            onDismissRequest = { showEquipmentFilter = false },
+                            modifier = Modifier.offset(y = with(density) { (equipmentChipHeight / density.density).dp + 4.dp })
                         ) {
                             val equipmentOptions = listOf(
                                 "body only", "dumbbell", "barbell", "kettlebells", "machine", 
@@ -149,25 +161,36 @@ fun SearchExternalExercisesDialog(
                     }
                     
                     // Muscle filter
-                    ExposedDropdownMenuBox(
-                        expanded = showMuscleFilter,
-                        onExpandedChange = { showMuscleFilter = !showMuscleFilter }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedMuscle ?: "All Muscles",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.primary_muscle)) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showMuscleFilter)
+                    var muscleChipHeight by remember { mutableStateOf(0) }
+                    Box {
+                        FilterChip(
+                            selected = selectedMuscle != null,
+                            onClick = { showMuscleFilter = !showMuscleFilter },
+                            label = {
+                                Text(
+                                    selectedMuscle?.replaceFirstChar { it.uppercase() }
+                                        ?: stringResource(R.string.primary_muscle)
+                                )
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            leadingIcon = if (selectedMuscle != null) {
+                                { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                            } else null,
+                            trailingIcon = {
+                                Icon(
+                                    if (showMuscleFilter) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            modifier = Modifier.onGloballyPositioned { coordinates ->
+                                muscleChipHeight = coordinates.size.height
+                            }
                         )
-                        ExposedDropdownMenu(
+                        val density = LocalDensity.current
+                        DropdownMenu(
                             expanded = showMuscleFilter,
-                            onDismissRequest = { showMuscleFilter = false }
+                            onDismissRequest = { showMuscleFilter = false },
+                            modifier = Modifier.offset(y = with(density) { (muscleChipHeight / density.density).dp + 4.dp })
                         ) {
                             val muscleOptions = listOf(
                                 "abdominals", "abductors", "adductors", "biceps", "calves", 
@@ -190,42 +213,55 @@ fun SearchExternalExercisesDialog(
                         }
                     }
                     
-                    // Category filter
-                    ExposedDropdownMenuBox(
-                        expanded = showCategoryFilter,
-                        onExpandedChange = { showCategoryFilter = !showCategoryFilter }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedCategory ?: "All Categories",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.category)) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryFilter)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = showCategoryFilter,
-                            onDismissRequest = { showCategoryFilter = false }
-                        ) {
-                            val categoryOptions = listOf(
-                                "strength", "stretching", "strongman", "plyometrics", 
-                                "cardio", "olympic weightlifting"
-                            )
-                            categoryOptions.forEach { category ->
-                                DropdownMenuItem(
-                                    text = { Text(category.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        onCategoryChange(if (category == selectedCategory) null else category)
-                                        showCategoryFilter = false
-                                    },
-                                    leadingIcon = if (category == selectedCategory) {
-                                        { Icon(Icons.Filled.Check, contentDescription = null) }
-                                    } else null
+                    // Category filter - hidden for now but keeping code for potential future use
+                    if (false) {
+                        var categoryChipHeight by remember { mutableStateOf(0) }
+                        Box {
+                            FilterChip(
+                            selected = selectedCategory != null,
+                            onClick = { showCategoryFilter = !showCategoryFilter },
+                            label = {
+                                Text(
+                                    selectedCategory?.replaceFirstChar { it.uppercase() }
+                                        ?: stringResource(R.string.category)
                                 )
+                            },
+                            leadingIcon = if (selectedCategory != null) {
+                                { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                            } else null,
+                            trailingIcon = {
+                                Icon(
+                                    if (showCategoryFilter) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            modifier = Modifier.onGloballyPositioned { coordinates ->
+                                categoryChipHeight = coordinates.size.height
+                            }
+                            )
+                            val density = LocalDensity.current
+                            DropdownMenu(
+                            expanded = showCategoryFilter,
+                            onDismissRequest = { showCategoryFilter = false },
+                            modifier = Modifier.offset(y = with(density) { (categoryChipHeight / density.density).dp + 4.dp })
+                            ) {
+                                val categoryOptions = listOf(
+                                    "strength", "stretching", "strongman", "plyometrics", 
+                                    "cardio", "olympic weightlifting"
+                                )
+                                categoryOptions.forEach { category ->
+                                    DropdownMenuItem(
+                                        text = { Text(category.replaceFirstChar { it.uppercase() }) },
+                                        onClick = {
+                                            onCategoryChange(if (category == selectedCategory) null else category)
+                                            showCategoryFilter = false
+                                        },
+                                        leadingIcon = if (category == selectedCategory) {
+                                            { Icon(Icons.Filled.Check, contentDescription = null) }
+                                        } else null
+                                    )
+                                }
                             }
                         }
                     }
@@ -234,7 +270,7 @@ fun SearchExternalExercisesDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Filter count info - only show when there are many results
-                if (currentFilterCount > 15) {
+                if (currentFilterCount > 30) {
                     Text(
                         text = stringResource(R.string.search_found_exercises, currentFilterCount),
                         style = MaterialTheme.typography.bodySmall,
@@ -244,7 +280,7 @@ fun SearchExternalExercisesDialog(
                 }
                 
                 // Search results
-                if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount > 15) {
+                if (searchQuery.length < 3 && searchResults.isEmpty() && currentFilterCount > 30) {
                     Text(
                         text = stringResource(R.string.search_too_many_results, currentFilterCount),
                         style = MaterialTheme.typography.bodyMedium,

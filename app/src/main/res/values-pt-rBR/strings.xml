@@ -316,6 +316,20 @@
     <!-- Food Info Dialog -->
     <string name="food_classification_scores">Classificação e Pontuações</string>
     <string name="food_open_facts_contributors">© Colaboradores do Open Food Facts</string>
+    
+    <!-- Food Search -->
+    <string name="search_food_by_name">Busque alimentos por nome</string>
+    <string name="search_food_tip">Dica: itens que vêm em uma embalagem com código de barras têm mais chances de serem encontrados, mas você também pode tentar alguns alimentos naturais!</string>
+    <string name="search_food_placeholder">Buscar alimentos…</string>
+    <string name="search_loading">Por favor aguarde enquanto coletamos os resultados</string>
+    <string name="search_error_title">Houve alguns erros técnicos durante sua busca. Por favor, tente novamente e verifique sua conexão com a internet</string>
+    <string name="search_error_message">Mensagem de erro: %1$s</string>
+    <string name="search_no_results">Sentimos muito, mas não houve resultados para sua busca. Se você quiser contribuir com um banco de dados de alimentos pública, você pode ser o primeiro a adicioná-lo ao Open Food Facts.</string>
+    <string name="open_food_facts">Open Food Facts</string>
+    <string name="whole_foods_only">Apenas alimentos naturais</string>
+    <string name="showing_whole_foods_only">Mostrando apenas alimentos naturais</string>
+    <string name="clear">Limpar</string>
+    <string name="protein_format">%1$d g proteína</string>
     <string name="select">Selecionar</string>
     <string name="save_and_check_in">Salvar e registrar</string>
     <string name="just_save">Apenas salvar</string>
