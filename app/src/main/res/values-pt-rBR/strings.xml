@@ -371,6 +371,6 @@
     <string name="tutorial_next">Próximo</string>
     <string name="tutorial_previous">Anterior</string>
     <string name="tutorial_skip">Pular</string>
-    <string name="tutorial_done">Concluído</string>
+    <string name="tutorial_done">Ok</string>
     <string name="tutorial_replay">Repetir Tutorial</string>
 </resources>

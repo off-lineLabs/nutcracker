@@ -138,7 +138,7 @@ fun FilterableHistoryView(
             }
         } else {
             Column {
-                filteredItems.take(10).forEach { item ->
+                filteredItems.take(30).forEach { item ->
                     when (item) {
                         is HistoryItem.MealItem -> {
                             CheckInItem(

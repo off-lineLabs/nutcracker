@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.appBackgroundColor
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
+import com.offlinelabs.nutcracker.ui.theme.getDiscreteTextColor
 
 @Composable
 fun SpotlightOverlay(
@@ -235,7 +236,8 @@ private fun TooltipContent(
                     ) {
                         Text(
                             text = stringResource(R.string.tutorial_skip),
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            color = getDiscreteTextColor(appBackgroundColor())
                         )
                     }
                     
@@ -279,9 +281,9 @@ private fun calculateTooltipPosition(
     
     // Convert dp to pixels for consistent spacing
     val marginDp = 16.dp
-    val tooltipSpacingDp = 20.dp
+    val tooltipSpacingDp = 40.dp // Increased spacing between highlight and tooltip
     val tooltipWidthDp = 320.dp
-    val tooltipHeightDp = 200.dp // Approximate tooltip height
+    val tooltipHeightDp = 280.dp // More realistic tooltip height estimate (accounts for longer text)
     
     val marginPx = with(density) { marginDp.toPx() }
     val tooltipSpacingPx = with(density) { tooltipSpacingDp.toPx() }
