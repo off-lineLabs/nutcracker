@@ -82,7 +82,6 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
 import com.offlinelabs.nutcracker.data.model.CheckInData
 import com.offlinelabs.nutcracker.ui.components.FilterableHistoryView
-import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialManager
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialState
 import com.offlinelabs.nutcracker.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
@@ -2306,7 +2305,7 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             title = context.getString(R.string.tutorial_calorie_ring_title),
             description = context.getString(R.string.tutorial_calorie_ring_description),
             targetOffset = elementCoordinates["calorie_ring"]?.first,
-            targetRadius = elementCoordinates["calorie_ring"]?.second ?: 60.dp
+            targetRadius = elementCoordinates["calorie_ring"]?.second ?: 90.dp
         ),
         TutorialStep(
             id = "add_meal_fab",
