@@ -1272,15 +1272,24 @@ fun ExerciseAnalyticsContent() {
     }
     
     // Load exercise dates for the selected month - this needs to update when month changes
+    // We need to include dates from previous/next month that are visible in the calendar
     LaunchedEffect(selectedMonth, selectedYear) {
         coroutineScope.launch {
             val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
-            val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
             
-            // Get exercise dates in selected month
+            // Calculate the same date range that the calendar uses
+            // Calendar starts from Monday of the week containing the first day of the month
+            val firstDayOfMonth = monthStart.dayOfWeek
+            val daysToSubtract = (firstDayOfMonth.value - 1) % 7
+            val calendarStart = monthStart.minusDays(daysToSubtract.toLong())
+            
+            // Calendar shows 6 weeks = 42 days
+            val calendarEnd = calendarStart.plusDays(41)
+            
+            // Get exercise dates in the visible calendar range (includes overflow from adjacent months)
             exerciseLogDao.getExerciseDatesInRange(
-                monthStart.toString(),
-                monthEnd.toString()
+                calendarStart.toString(),
+                calendarEnd.toString()
             ).collectLatest { dates ->
                 exerciseDatesInMonth = dates
             }
