@@ -1218,10 +1218,6 @@ fun ExerciseAnalyticsContent() {
     var selectedMonth by remember { mutableStateOf(currentDate.month) }
     var selectedYear by remember { mutableStateOf(currentDate.year) }
     
-    // Calculate month boundaries for selected month
-    val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
-    val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
-    
     // Calculate last 7 days (including today)
     val last7DaysEnd = currentDate
     val last7DaysStart = currentDate.minusDays(6)
@@ -1233,7 +1229,7 @@ fun ExerciseAnalyticsContent() {
     var exerciseDatesInMonth by remember { mutableStateOf<List<String>>(emptyList()) }
     var primaryMusclesLastExercise by remember { mutableStateOf<List<String>>(emptyList()) }
     
-    // Load analytics data
+    // Load analytics data that doesn't depend on selected month
     LaunchedEffect(currentDate) {
         coroutineScope.launch {
             // Get calories burned in last 7 days
@@ -1268,19 +1264,25 @@ fun ExerciseAnalyticsContent() {
         }
         
         coroutineScope.launch {
-            // Get exercise dates in current month
+            // Get primary muscles from last exercise
+            exerciseLogDao.getPrimaryMusclesFromLastExercise().collectLatest { muscles ->
+                primaryMusclesLastExercise = muscles
+            }
+        }
+    }
+    
+    // Load exercise dates for the selected month - this needs to update when month changes
+    LaunchedEffect(selectedMonth, selectedYear) {
+        coroutineScope.launch {
+            val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
+            val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
+            
+            // Get exercise dates in selected month
             exerciseLogDao.getExerciseDatesInRange(
                 monthStart.toString(),
                 monthEnd.toString()
             ).collectLatest { dates ->
                 exerciseDatesInMonth = dates
-            }
-        }
-        
-        coroutineScope.launch {
-            // Get primary muscles from last exercise
-            exerciseLogDao.getPrimaryMusclesFromLastExercise().collectLatest { muscles ->
-                primaryMusclesLastExercise = muscles
             }
         }
     }
