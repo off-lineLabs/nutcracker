@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,57 +67,38 @@ fun SpotlightOverlay(
         // Semi-transparent overlay with spotlight cutout (only if there's a target)
         if (step.targetOffset != null) {
             Canvas(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        // Enable blend mode support
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    }
             ) {
                 val radiusPx = with(density) { animatedRadius.toPx() }
                 val overlayColor = Color.Black.copy(alpha = 0.7f)
                 
-                // Draw overlay in sections to create a hole
+                // Draw the full overlay first
+                drawRect(
+                    color = overlayColor,
+                    size = size
+                )
+                
+                // Cut out the spotlight area with rounded corners using blend mode
                 if (radiusPx > 0) {
-                    // Top section
-                    drawRect(
-                        color = overlayColor,
-                        topLeft = Offset(0f, 0f),
-                        size = androidx.compose.ui.geometry.Size(
-                            width = size.width,
-                            height = animatedOffset.y - radiusPx
-                        )
-                    )
+                    val cornerRadius = radiusPx * 0.15f // 15% of radius for smooth corners
                     
-                    // Bottom section
-                    drawRect(
-                        color = overlayColor,
-                        topLeft = Offset(0f, animatedOffset.y + radiusPx),
+                    drawRoundRect(
+                        color = Color.Transparent,
+                        topLeft = Offset(
+                            animatedOffset.x - radiusPx,
+                            animatedOffset.y - radiusPx
+                        ),
                         size = androidx.compose.ui.geometry.Size(
-                            width = size.width,
-                            height = size.height - (animatedOffset.y + radiusPx)
-                        )
-                    )
-                    
-                    // Left section
-                    drawRect(
-                        color = overlayColor,
-                        topLeft = Offset(0f, animatedOffset.y - radiusPx),
-                        size = androidx.compose.ui.geometry.Size(
-                            width = animatedOffset.x - radiusPx,
-                            height = radiusPx * 2
-                        )
-                    )
-                    
-                    // Right section
-                    drawRect(
-                        color = overlayColor,
-                        topLeft = Offset(animatedOffset.x + radiusPx, animatedOffset.y - radiusPx),
-                        size = androidx.compose.ui.geometry.Size(
-                            width = size.width - (animatedOffset.x + radiusPx),
-                            height = radiusPx * 2
-                        )
-                    )
-                } else {
-                    // If no radius, draw full overlay
-                    drawRect(
-                        color = overlayColor,
-                        size = size
+                            radiusPx * 2,
+                            radiusPx * 2
+                        ),
+                        cornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                        blendMode = BlendMode.Clear
                     )
                 }
             }
@@ -276,28 +259,6 @@ private fun TooltipContent(
                 }
             }
         }
-    }
-}
-
-private fun DrawScope.drawSpotlightOverlay(
-    targetOffset: Offset,
-    targetRadius: Float,
-    overlayColor: Color
-) {
-    // Draw the dark overlay
-    drawRect(
-        color = overlayColor,
-        size = size
-    )
-    
-    // Clear the spotlight area using blend mode
-    if (targetRadius > 0) {
-        drawCircle(
-            color = Color.Transparent,
-            radius = targetRadius,
-            center = targetOffset,
-            blendMode = BlendMode.Clear
-        )
     }
 }
 
