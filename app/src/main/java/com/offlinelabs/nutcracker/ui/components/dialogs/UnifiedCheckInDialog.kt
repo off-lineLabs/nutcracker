@@ -29,6 +29,13 @@ import com.offlinelabs.nutcracker.data.model.CheckInData
 import com.offlinelabs.nutcracker.ui.components.DateTimePicker
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import kotlin.math.roundToInt
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -432,51 +439,30 @@ private fun MealCheckInContent(
                     onDateTimeChanged = { selectedDateTime = it }
                 )
                 
-                // Serving size slider
+                // Serving size thumbwheel
                 Column {
                     Text(
                         text = stringResource(R.string.serving_size),
                         style = MaterialTheme.typography.labelLarge
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Horizontal thumbwheel
+                    HorizontalThumbwheel(
+                        value = servingSize,
+                        onValueChange = { servingSize = it }
+                    )
+                    
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Calculate dynamic range based on current serving size
-                    val minRange = 0.1f
-                    val maxRange = maxOf(3.0f, (servingSize * 1.2f).toFloat()) // Expand range by 20% above current value
-                    val currentValue = servingSize.toFloat().coerceIn(minRange, maxRange)
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.serving_multiplier_format, minRange),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Slider(
-                            value = currentValue,
-                            onValueChange = { servingSize = it.toDouble() },
-                            valueRange = minRange..maxRange,
-                            steps = maxOf(0, ((maxRange - minRange) / 0.1f).toInt() - 1), // Dynamic steps based on range
-                            modifier = Modifier.weight(1f),
-                            colors = SliderDefaults.colors(
-                                thumbColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
-                                activeTrackColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
-                                inactiveTrackColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface).copy(alpha = 0.3f)
-                            )
-                        )
-                        Text(
-                            text = stringResource(R.string.serving_multiplier_format, maxRange),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    // Current value display
                     Text(
                         text = stringResource(R.string.serving_multiplier_format, servingSize),
                         style = MaterialTheme.typography.bodyMedium,
                         color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -650,6 +636,157 @@ private fun CaloriesSummaryCard(
                 fontWeight = FontWeight.Bold,
                 color = NeutralLight100
             )
+        }
+    }
+}
+
+@Composable
+private fun HorizontalThumbwheel(
+    value: Double,
+    onValueChange: (Double) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val thumbwheelColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface)
+    val centerIndicatorColor = MaterialTheme.colorScheme.primary
+    val containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+    
+    // Track current value during drag (since recomposition doesn't happen mid-gesture)
+    var currentDragValue by remember { mutableStateOf(value) }
+    
+    // Pixels per 0.1x increment
+    val pixelsPerStep = 45f
+    
+    // Update currentDragValue when external value changes (e.g., from manual input)
+    LaunchedEffect(value) {
+        currentDragValue = value
+    }
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(80.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Thumbwheel container with visual encapsulation
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            // Final sync when drag ends
+                            currentDragValue = value
+                        },
+                        onDragCancel = {
+                            // Reset to current value if cancelled
+                            currentDragValue = value
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            // REVERSED: Negative dragAmount (swipe left) increases, positive (swipe right) decreases
+                            val deltaValue = -(dragAmount / pixelsPerStep) * 0.1
+                            
+                            // Update current drag value
+                            currentDragValue += deltaValue
+                            
+                            // Ensure we don't go below 0.1x
+                            currentDragValue = maxOf(0.1, currentDragValue)
+                            
+                            // Round to nearest 0.1
+                            val roundedValue = (currentDragValue * 10).roundToInt() / 10.0
+                            
+                            // Update external state continuously
+                            onValueChange(roundedValue)
+                        }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+        ) {
+            val centerX = size.width / 2
+            val centerY = size.height / 2
+            
+            // Draw container background (rounded rectangle)
+            drawRoundRect(
+                color = containerColor,
+                topLeft = Offset(8.dp.toPx(), 0f),
+                size = androidx.compose.ui.geometry.Size(
+                    size.width - 16.dp.toPx(),
+                    size.height
+                ),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx())
+            )
+            
+            // Draw border
+            drawRoundRect(
+                color = borderColor,
+                topLeft = Offset(8.dp.toPx(), 0f),
+                size = androidx.compose.ui.geometry.Size(
+                    size.width - 16.dp.toPx(),
+                    size.height
+                ),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+            )
+            
+            // Visible range: ±0.5x from current value (show 11 ticks total)
+            val visibleRange = 0.5
+            val startValue = value - visibleRange
+            
+            // Draw ticks for 0.1x increments
+            for (i in 0..10) {
+                val tickValue = startValue + (i * 0.1)
+                
+                // Skip negative values
+                if (tickValue < 0.1) continue
+                
+                // Calculate position relative to center
+                val offset = (tickValue - value) * 10 // 10 ticks per 1.0x
+                val tickX = (centerX + (offset * pixelsPerStep)).toFloat()
+                
+                // Only draw if within bounds
+                if (tickX >= 0 && tickX <= size.width) {
+                    // Determine tick height based on value
+                    val tickHeight = when {
+                        // Large tick: whole numbers (1.0x, 2.0x, etc)
+                        abs((tickValue * 10).roundToInt() % 10) == 0 -> 16.dp.toPx()
+                        // Medium tick: 0.5x increments (0.5x, 1.5x, etc)
+                        abs((tickValue * 10).roundToInt() % 5) == 0 -> 12.dp.toPx()
+                        // Small tick: 0.1x increments
+                        else -> 8.dp.toPx()
+                    }
+                    
+                    // Determine tick width (thicker for larger marks)
+                    val tickWidth = when {
+                        abs((tickValue * 10).roundToInt() % 10) == 0 -> 3.dp.toPx()
+                        abs((tickValue * 10).roundToInt() % 5) == 0 -> 2.dp.toPx()
+                        else -> 1.5.dp.toPx()
+                    }
+                    
+                    // Draw tick
+                    drawLine(
+                        color = thumbwheelColor.copy(alpha = 0.7f),
+                        start = Offset(tickX, centerY - tickHeight / 2),
+                        end = Offset(tickX, centerY + tickHeight / 2),
+                        strokeWidth = tickWidth
+                    )
+                }
+            }
+            
+            // Draw center indicator (pointer/selector)
+            val indicatorHeight = 24.dp.toPx()
+            drawLine(
+                color = centerIndicatorColor,
+                start = Offset(centerX, centerY - indicatorHeight / 2),
+                end = Offset(centerX, centerY + indicatorHeight / 2),
+                strokeWidth = 4.dp.toPx()
+            )
+        }
         }
     }
 }
