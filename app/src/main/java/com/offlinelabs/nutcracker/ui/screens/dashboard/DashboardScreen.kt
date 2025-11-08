@@ -653,12 +653,20 @@ fun DashboardScreen(
         coroutineScope.launch {
             try {
                 val checkIn = pillCheckInsMap[pillId]
+                val today = java.time.LocalDate.now()
                 
                 if (checkIn == null) {
                     // Create new pill check-in
+                    // If today: use current time, if another date: use 00:00
+                    val timestamp = if (selectedDate == today) {
+                        java.time.LocalDateTime.now()
+                    } else {
+                        java.time.LocalDateTime.of(selectedDate, java.time.LocalTime.of(0, 0))
+                    }
+                    
                     val newCheckIn = PillCheckIn(
                         pillId = pillId,
-                        timestamp = java.time.LocalDateTime.now()
+                        timestamp = timestamp
                     )
                     foodLogRepository.insertPillCheckIn(newCheckIn)
                     snackbarHostState.showSnackbar(
@@ -1833,15 +1841,18 @@ fun DashboardScreen(
                 },
                 dismissButton = {
                     Row {
-                        TextButton(
-                            onClick = { showDeleteConfirm = true },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text(stringResource(R.string.delete))
+                        // Only show delete button if pill ID is not 1 (default pill)
+                        if (pill.id != 1L) {
+                            TextButton(
+                                onClick = { showDeleteConfirm = true },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text(stringResource(R.string.delete))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                         TextButton(onClick = { showEditPillDialog = null }) {
                             Text(stringResource(R.string.cancel))
                         }
