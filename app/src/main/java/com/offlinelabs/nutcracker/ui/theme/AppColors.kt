@@ -1,6 +1,8 @@
 package com.offlinelabs.nutcracker.ui.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -405,6 +407,30 @@ fun brandAccentShade(level: Int): Color {
 @Composable
 fun brandHighlightShade(level: Int): Color {
     return generateThemedColorShade(brandHighlightColor(), level)
+}
+
+/**
+ * Get a maximum contrast primary color for dialogs
+ * Uses BrandNavy as the background for contrast calculation
+ */
+@Composable
+fun dialogPrimaryColorMaxContrast(): Color {
+    val basePrimary = MaterialTheme.colorScheme.primary
+    return generateColorShade(basePrimary, level = 4, backgroundColor = BrandNavy)
+}
+
+/**
+ * Get OutlinedTextField colors with maximum contrast for dialogs
+ * Uses BrandNavy as the background for contrast calculation
+ */
+@Composable
+fun dialogOutlinedTextFieldColorsMaxContrast(): TextFieldColors {
+    val dialogPrimary = dialogPrimaryColorMaxContrast()
+    return OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = dialogPrimary,
+        focusedLabelColor = dialogPrimary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface
+    )
 }
 
 /**

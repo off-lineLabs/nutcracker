@@ -26,6 +26,8 @@ import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.toInternalExercise
 import com.offlinelabs.nutcracker.util.logger.AppLogger
 import com.offlinelabs.nutcracker.ui.theme.brandSecondaryShade
+import com.offlinelabs.nutcracker.ui.theme.dialogOutlinedTextFieldColorsMaxContrast
+import com.offlinelabs.nutcracker.ui.theme.dialogPrimaryColorMaxContrast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +110,10 @@ fun AddExerciseDialog(
         }
     }
 
+    // Get maximum contrast primary color for dialogs
+    val dialogPrimary = dialogPrimaryColorMaxContrast()
+    val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -116,7 +122,11 @@ fun AddExerciseDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = dialogPrimary
+                    )
                 }
                 Text(
                     text = if (existingExercise != null) stringResource(R.string.edit_exercise) else stringResource(R.string.add_exercise),
@@ -137,6 +147,7 @@ fun AddExerciseDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.exercise_name)) },
+                    colors = dialogTextFieldColors,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -214,6 +225,7 @@ fun AddExerciseDialog(
                             }
                         )
                     },
+                    colors = dialogTextFieldColors,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -236,6 +248,7 @@ fun AddExerciseDialog(
                                 value = defaultWeight,
                                 onValueChange = { defaultWeight = it },
                                 label = { Text(stringResource(R.string.default_weight_kg)) },
+                                colors = dialogTextFieldColors,
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -246,6 +259,7 @@ fun AddExerciseDialog(
                                 value = defaultReps,
                                 onValueChange = { defaultReps = it },
                                 label = { Text(stringResource(R.string.default_reps)) },
+                                colors = dialogTextFieldColors,
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -262,6 +276,7 @@ fun AddExerciseDialog(
                                 value = defaultSets,
                                 onValueChange = { defaultSets = it },
                                 label = { Text(stringResource(R.string.default_sets)) },
+                                colors = dialogTextFieldColors,
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -281,6 +296,7 @@ fun AddExerciseDialog(
                             value = defaultMinutes,
                             onValueChange = { defaultMinutes = it },
                             label = { Text("Default Minutes") },
+                            colors = dialogTextFieldColors,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -293,6 +309,7 @@ fun AddExerciseDialog(
                             value = defaultBodyweightReps,
                             onValueChange = { defaultBodyweightReps = it },
                             label = { Text("Default Reps") },
+                            colors = dialogTextFieldColors,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -310,6 +327,7 @@ fun AddExerciseDialog(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text(stringResource(R.string.notes_optional)) },
+                    colors = dialogTextFieldColors,
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 3

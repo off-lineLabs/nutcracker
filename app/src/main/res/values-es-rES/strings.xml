@@ -321,6 +321,26 @@
     <string name="food_classification_scores">Clasificación y Puntuaciones</string>
     <string name="food_open_facts_contributors">© Colaboradores de Open Food Facts</string>
     
+    <!-- Additional Nutrition Labels -->
+    <string name="calories_label">Calorías</string>
+    <string name="saturated_fat_label">Grasa Saturada</string>
+    <string name="sugars_label">Azúcares</string>
+    <string name="cholesterol_label">Colesterol</string>
+    <string name="vitamin_c_label">Vitamina C</string>
+    <string name="calcium_label">Calcio</string>
+    <string name="iron_label">Hierro</string>
+    
+    <!-- Classification Labels -->
+    <string name="nova_classification">Clasificación NOVA</string>
+    <string name="environmental_impact_score">Puntuación de impacto ambiental</string>
+    <string name="nutritional_quality_score">Puntuación de calidad nutricional</string>
+    
+    <!-- Other Labels -->
+    <string name="brand_label">Marca: %1$s</string>
+    <string name="check_in_meal">Registrar Comida</string>
+    <string name="per_serving_size">por %1$d%2$s</string>
+    <string name="food_product_image">Imagen del producto alimenticio</string>
+    
     <!-- Food Search -->
     <string name="search_food_by_name">Busca alimentos por nombre</string>
     <string name="search_food_tip">Consejo: los productos que vienen en un paquete con código de barras tienen más probabilidades de ser encontrados, ¡pero también puedes probar con algunos alimentos naturales!</string>
