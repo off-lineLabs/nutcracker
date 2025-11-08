@@ -243,6 +243,7 @@
     
     <!-- Additional hardcoded strings found in UI components -->
     <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="slide_to_change">&lt; deslize para mudar &gt;</string>
     <string name="time_separator">:</string>
     <string name="language_change_message">Idioma alterado. O app será reiniciado para aplicar o novo idioma.</string>
     <string name="processing_format">Processando: %1$s</string>

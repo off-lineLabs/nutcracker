@@ -451,6 +451,16 @@ private fun MealCheckInContent(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
+                    // Slide instruction text
+                    Text(
+                        text = stringResource(R.string.slide_to_change),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
                     // Horizontal thumbwheel
                     HorizontalThumbwheel(
                         value = servingSize,

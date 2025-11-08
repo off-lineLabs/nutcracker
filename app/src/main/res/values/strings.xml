@@ -310,6 +310,7 @@
     
     <!-- Additional hardcoded strings found in UI components -->
     <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="slide_to_change">&lt; slide to change &gt;</string>
     <string name="time_separator">:</string>
     <string name="language_change_message">Language changed. The app will restart to apply the new language.</string>
     <string name="processing_format">Processing: %1$s</string>
