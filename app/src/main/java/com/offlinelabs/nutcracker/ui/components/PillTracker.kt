@@ -1,6 +1,6 @@
 package com.offlinelabs.nutcracker.ui.components
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,8 +49,7 @@ fun PillTracker(
         )
         
         // Pill icon button with glow effect when taken
-        IconButton(
-            onClick = onPillToggle,
+        Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
@@ -59,11 +57,11 @@ fun PillTracker(
                     isGlowing = isPillTaken,
                     glowColor = pillTakenColor()
                 )
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { onLongPress() }
-                    )
-                }
+                .combinedClickable(
+                    onClick = onPillToggle,
+                    onLongClick = onLongPress
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_pill_24),

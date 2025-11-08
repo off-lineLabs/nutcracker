@@ -1732,58 +1732,123 @@ fun DashboardScreen(
     // Edit Pill Dialog
     showEditPillDialog?.let { pill ->
         var pillName by remember { mutableStateOf(pill.name) }
+        var showDeleteConfirm by remember { mutableStateOf(false) }
         val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
         
-        AlertDialog(
-            onDismissRequest = { showEditPillDialog = null },
-            title = {
-                Text(stringResource(R.string.edit_pill))
-            },
-            text = {
-                OutlinedTextField(
-                    value = pillName,
-                    onValueChange = { pillName = it },
-                    label = { Text(stringResource(R.string.pill_name)) },
-                    placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
-                    colors = dialogTextFieldColors,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (pillName.isNotBlank()) {
+        if (showDeleteConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = false },
+                title = {
+                    Text(stringResource(R.string.delete))
+                },
+                text = {
+                    Text("Are you sure you want to delete this pill? All check-in records will be removed.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
                             coroutineScope.launch {
                                 try {
-                                    val updatedPill = pill.copy(name = pillName.trim())
-                                    foodLogRepository.updatePill(updatedPill)
+                                    // Delete all check-ins for this pill first
+                                    val checkIns = foodLogRepository.getPillCheckInsByPillId(pill.id).first()
+                                    checkIns.forEach { checkIn ->
+                                        foodLogRepository.deletePillCheckIn(checkIn)
+                                    }
+                                    // Then delete the pill
+                                    foodLogRepository.deletePill(pill)
                                     snackbarHostState.showSnackbar(
-                                        message = "Pill updated successfully"
+                                        message = "Pill deleted successfully"
                                     )
                                 } catch (e: Exception) {
-                                    AppLogger.exception("DashboardScreen", "Failed to update pill", e, mapOf(
+                                    AppLogger.exception("DashboardScreen", "Failed to delete pill", e, mapOf(
                                         "pillId" to pill.id.toString()
                                     ))
                                     snackbarHostState.showSnackbar(
-                                        message = "Failed to update pill: ${e.message}"
+                                        message = "Failed to delete pill: ${e.message}"
                                     )
                                 }
                             }
+                            showDeleteConfirm = false
                             showEditPillDialog = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.delete))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { showEditPillDialog = null },
+                title = {
+                    Text(stringResource(R.string.edit_pill))
+                },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = pillName,
+                            onValueChange = { pillName = it },
+                            label = { Text(stringResource(R.string.pill_name)) },
+                            placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
+                            colors = dialogTextFieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (pillName.isNotBlank()) {
+                                coroutineScope.launch {
+                                    try {
+                                        val updatedPill = pill.copy(name = pillName.trim())
+                                        foodLogRepository.updatePill(updatedPill)
+                                        snackbarHostState.showSnackbar(
+                                            message = "Pill updated successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        AppLogger.exception("DashboardScreen", "Failed to update pill", e, mapOf(
+                                            "pillId" to pill.id.toString()
+                                        ))
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to update pill: ${e.message}"
+                                        )
+                                    }
+                                }
+                                showEditPillDialog = null
+                            }
+                        },
+                        enabled = pillName.isNotBlank() && pillName.trim() != pill.name
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                },
+                dismissButton = {
+                    Row {
+                        TextButton(
+                            onClick = { showDeleteConfirm = true },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text(stringResource(R.string.delete))
                         }
-                    },
-                    enabled = pillName.isNotBlank() && pillName.trim() != pill.name
-                ) {
-                    Text(stringResource(R.string.save))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = { showEditPillDialog = null }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditPillDialog = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
+            )
+        }
     }
     
     // Add Pill Dialog

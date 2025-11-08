@@ -7,9 +7,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.offlinelabs.nutcracker.R
@@ -30,14 +35,56 @@ fun MultiPillTracker(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth()
     ) {
-        // Title
-        Text(
-            text = stringResource(R.string.supplement_tracker),
-            style = MaterialTheme.typography.titleMedium,
-            color = appTextPrimaryColor(),
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+        // Title with Add button on the right (like Nutrient Details)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.supplement_tracker),
+                style = MaterialTheme.typography.titleMedium,
+                color = appTextPrimaryColor(),
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+            // Add pill button on the right (only if less than 5 pills)
+            if (pills.size < 5) {
+                IconButton(
+                    onClick = onAddPill,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.CenterEnd)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_pill_24),
+                            contentDescription = "Add pill",
+                            tint = appTextSecondaryColor(),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        // Overlay a "+" text with shadow for visibility
+                        Text(
+                            text = "+",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = Color.Black.copy(alpha = 0.8f),
+                                    offset = Offset(1f, 1f),
+                                    blurRadius = 2f
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        }
         
         // Pills row with centering
         Row(
@@ -56,41 +103,6 @@ fun MultiPillTracker(
                     onLongPress = { onPillLongPress(pill) },
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-            }
-            
-            // Add pill button (smaller, only if less than 5 pills)
-            if (pills.size < 5) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(
-                        onClick = onAddPill,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(20.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_pill_24),
-                                contentDescription = "Add pill",
-                                tint = appTextSecondaryColor(),
-                                modifier = Modifier.size(20.dp)
-                            )
-                            // Overlay a "+" text in the center
-                            Text(
-                                text = "+",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = appTextSecondaryColor()
-                            )
-                        }
-                    }
-                }
             }
         }
     }

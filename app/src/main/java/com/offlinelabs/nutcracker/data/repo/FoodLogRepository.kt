@@ -78,6 +78,7 @@ interface FoodLogRepository {
     suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn)
     suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn)
     fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>>
+    fun getPillCheckInsByPillId(pillId: Long): Flow<List<PillCheckIn>>
     fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?>
     suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String)
 
@@ -184,6 +185,7 @@ class OfflineFoodLogRepository(
     override suspend fun updatePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.updatePillCheckIn(pillCheckIn)
     override suspend fun deletePillCheckIn(pillCheckIn: PillCheckIn) = pillCheckInDao.deletePillCheckIn(pillCheckIn)
     override fun getPillCheckInsByDate(date: String): Flow<List<PillCheckIn>> = pillCheckInDao.getPillCheckInsByDate(date)
+    override fun getPillCheckInsByPillId(pillId: Long): Flow<List<PillCheckIn>> = pillCheckInDao.getPillCheckInsByPillId(pillId)
     override fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?> = pillCheckInDao.getPillCheckInByPillIdAndDate(pillId, date)
     override suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String) = pillCheckInDao.deletePillCheckInByPillIdAndDate(pillId, date)
 
