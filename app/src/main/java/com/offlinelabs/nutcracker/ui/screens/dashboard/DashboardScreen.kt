@@ -405,6 +405,7 @@ fun DashboardScreen(
     // Pill tracking state
     var pills by remember { mutableStateOf(emptyList<Pill>()) }
     var pillCheckInsMap by remember { mutableStateOf<Map<Long, PillCheckIn>>(emptyMap()) }
+    var refreshPillCheckIns by remember { mutableStateOf(0) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
@@ -567,7 +568,7 @@ fun DashboardScreen(
     }
 
     // Check for pill check-ins on selected date for all pills
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = pills) {
+    LaunchedEffect(foodLogRepository, selectedDateString, pills, refreshPillCheckIns) {
         if (pills.isNotEmpty()) {
             // Load check-ins for all pills using combine
             val flows = pills.map { pill ->
@@ -669,12 +670,22 @@ fun DashboardScreen(
                         timestamp = timestamp
                     )
                     foodLogRepository.insertPillCheckIn(newCheckIn)
+                    // Optimistically update the state immediately
+                    pillCheckInsMap = pillCheckInsMap + (pillId to newCheckIn)
+                    // Trigger refresh to ensure Flow updates
+                    refreshPillCheckIns++
                     snackbarHostState.showSnackbar(
                         message = dailySupplementTaken
                     )
                 } else {
                     // Delete existing pill check-in
                     foodLogRepository.deletePillCheckInByPillIdAndDate(pillId, selectedDateString)
+                    // Optimistically update the state immediately
+                    val updatedMap = pillCheckInsMap.toMutableMap()
+                    updatedMap.remove(pillId)
+                    pillCheckInsMap = updatedMap.toMap()
+                    // Trigger refresh to ensure Flow updates
+                    refreshPillCheckIns++
                     snackbarHostState.showSnackbar(
                         message = dailySupplementRemoved
                     )
