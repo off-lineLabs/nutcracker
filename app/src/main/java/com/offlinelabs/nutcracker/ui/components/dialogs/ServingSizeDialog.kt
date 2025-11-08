@@ -62,7 +62,7 @@ fun ServingSizeDialog(
                 
                 foodInfo.brand?.let { brand ->
                     Text(
-                        text = "Brand: $brand",
+                        text = stringResource(R.string.brand_label, brand),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -127,7 +127,7 @@ fun ServingSizeDialog(
                         nutrition.calories?.let { 
                             Row {
                                 Text(
-                                    text = "Calories: ",
+                                    text = stringResource(R.string.calories_label) + ": ",
                                     color = brandAccentShade(2)
                                 )
                                 Text(
@@ -139,7 +139,7 @@ fun ServingSizeDialog(
                         nutrition.proteins?.let { 
                             Row {
                                 Text(
-                                    text = "Protein: ",
+                                    text = stringResource(R.string.protein_label) + ": ",
                                     color = brandAccentShade(2)
                                 )
                                 Text(
@@ -151,7 +151,7 @@ fun ServingSizeDialog(
                         nutrition.carbohydrates?.let { 
                             Row {
                                 Text(
-                                    text = "Carbs: ",
+                                    text = stringResource(R.string.carbs_g) + ": ",
                                     color = brandAccentShade(2)
                                 )
                                 Text(
@@ -163,7 +163,7 @@ fun ServingSizeDialog(
                         nutrition.fat?.let { 
                             Row {
                                 Text(
-                                    text = "Fat: ",
+                                    text = stringResource(R.string.fat_g) + ": ",
                                     color = brandAccentShade(2)
                                 )
                                 Text(
@@ -372,23 +372,24 @@ private fun UnitItem(
     }
 }
 
+@Composable
 private fun getUnitDescription(unit: ServingSizeUnit): String {
     return when (unit) {
-        ServingSizeUnit.GRAMS -> "Grams"
-        ServingSizeUnit.KILOGRAMS -> "Kilograms"
-        ServingSizeUnit.POUNDS -> "Pounds"
-        ServingSizeUnit.OUNCES -> "Ounces"
-        ServingSizeUnit.MILLILITERS -> "Milliliters"
-        ServingSizeUnit.LITERS -> "Liters"
-        ServingSizeUnit.CUPS -> "Cups"
-        ServingSizeUnit.FLUID_OUNCES -> "Fluid Ounces"
-        ServingSizeUnit.TABLESPOONS -> "Tablespoons"
-        ServingSizeUnit.TEASPOONS -> "Teaspoons"
-        ServingSizeUnit.PIECES -> "Pieces"
-        ServingSizeUnit.SLICES -> "Slices"
-        ServingSizeUnit.UNITS -> "Units"
-        ServingSizeUnit.SERVINGS -> "Servings"
-        ServingSizeUnit.PORTIONS -> "Portions"
+        ServingSizeUnit.GRAMS -> stringResource(R.string.unit_grams)
+        ServingSizeUnit.KILOGRAMS -> stringResource(R.string.unit_kilograms)
+        ServingSizeUnit.POUNDS -> stringResource(R.string.unit_pounds)
+        ServingSizeUnit.OUNCES -> stringResource(R.string.unit_ounces)
+        ServingSizeUnit.MILLILITERS -> stringResource(R.string.unit_milliliters)
+        ServingSizeUnit.LITERS -> stringResource(R.string.unit_liters)
+        ServingSizeUnit.CUPS -> stringResource(R.string.unit_cups)
+        ServingSizeUnit.FLUID_OUNCES -> stringResource(R.string.unit_fluid_ounces)
+        ServingSizeUnit.TABLESPOONS -> stringResource(R.string.unit_tablespoons)
+        ServingSizeUnit.TEASPOONS -> stringResource(R.string.unit_teaspoons)
+        ServingSizeUnit.PIECES -> stringResource(R.string.unit_pieces)
+        ServingSizeUnit.SLICES -> stringResource(R.string.unit_slices)
+        ServingSizeUnit.UNITS -> stringResource(R.string.unit_units)
+        ServingSizeUnit.SERVINGS -> stringResource(R.string.unit_servings)
+        ServingSizeUnit.PORTIONS -> stringResource(R.string.unit_portions)
     }
 }
 

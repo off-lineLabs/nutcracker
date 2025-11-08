@@ -50,7 +50,7 @@ fun FoodInfoDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Column(
                     modifier = Modifier.weight(1f)
@@ -183,7 +183,7 @@ private fun HeroFoodImage(
         ) {
             AsyncImage(
                 model = imageUrl,
-                contentDescription = "Food product image",
+                contentDescription = stringResource(R.string.food_product_image),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
@@ -230,40 +230,40 @@ private fun NutritionInfoCard(nutrition: com.offlinelabs.nutcracker.data.model.N
             )
             
             nutrition.calories?.let { 
-                NutritionRow("Calories", "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.calories_label), "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fat?.let { 
-                NutritionRow("Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.fat_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.carbohydrates?.let { 
-                NutritionRow("Carbs", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.carbs_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.proteins?.let { 
-                NutritionRow("Proteins", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.protein_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow("Sodium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sodium_mg), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
-                NutritionRow("Fiber", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.fiber_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sugars?.let { 
-                NutritionRow("Sugars", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sugars_label), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.saturatedFat?.let { 
-                NutritionRow("Saturated Fat", "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.saturated_fat_label), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.cholesterol?.let { 
-                NutritionRow("Cholesterol", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.cholesterol_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.vitaminC?.let { 
-                NutritionRow("Vitamin C", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.vitamin_c_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.calcium?.let { 
-                NutritionRow("Calcium", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.calcium_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.iron?.let { 
-                NutritionRow("Iron", "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.iron_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }
@@ -345,7 +345,7 @@ private fun ClassificationCard(
             // Nova Classification - only show if group > 0 (not unknown)
             if (novaClassification.group > 0) {
                 ClassificationRow(
-                    label = "NOVA Classification",
+                    label = stringResource(R.string.nova_classification),
                     value = novaClassification.group.toString(),
                     description = novaClassification.description,
                     color = when (novaClassification.group) {
@@ -363,7 +363,7 @@ private fun ClassificationCard(
                 ClassificationRow(
                     label = score.displayName,
                     value = score.grade,
-                    description = "Environmental impact score",
+                    description = stringResource(R.string.environmental_impact_score),
                     color = when (score.grade.uppercase()) {
                         "A" -> Color(0xFF2E7D32) // Dark Green
                         "B" -> Color(0xFF4CAF50) // Green
@@ -380,7 +380,7 @@ private fun ClassificationCard(
                 ClassificationRow(
                     label = score.displayName,
                     value = score.grade,
-                    description = "Nutritional quality score",
+                    description = stringResource(R.string.nutritional_quality_score),
                     color = when (score.grade.uppercase()) {
                         "A" -> Color(0xFF2E7D32) // Dark Green
                         "B" -> Color(0xFF4CAF50) // Green

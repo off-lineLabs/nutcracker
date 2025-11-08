@@ -385,6 +385,26 @@
     <string name="food_classification_scores">Classification &amp; Scores</string>
     <string name="food_open_facts_contributors">© Open Food Facts contributors</string>
     
+    <!-- Additional Nutrition Labels -->
+    <string name="calories_label">Calories</string>
+    <string name="saturated_fat_label">Saturated Fat</string>
+    <string name="sugars_label">Sugars</string>
+    <string name="cholesterol_label">Cholesterol</string>
+    <string name="vitamin_c_label">Vitamin C</string>
+    <string name="calcium_label">Calcium</string>
+    <string name="iron_label">Iron</string>
+    
+    <!-- Classification Labels -->
+    <string name="nova_classification">NOVA Classification</string>
+    <string name="environmental_impact_score">Environmental impact score</string>
+    <string name="nutritional_quality_score">Nutritional quality score</string>
+    
+    <!-- Other Labels -->
+    <string name="brand_label">Brand: %1$s</string>
+    <string name="check_in_meal">Check-in Meal</string>
+    <string name="per_serving_size">per %1$d%2$s</string>
+    <string name="food_product_image">Food product image</string>
+    
     <!-- Barcode Scanner -->
 
     <!-- Food Search -->
