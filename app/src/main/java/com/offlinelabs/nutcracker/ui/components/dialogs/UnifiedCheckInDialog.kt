@@ -36,6 +36,10 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import kotlin.math.roundToInt
 import kotlin.math.abs
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import android.graphics.Paint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -653,13 +657,17 @@ private fun HorizontalThumbwheel(
     
     // Track current value during drag (since recomposition doesn't happen mid-gesture)
     var currentDragValue by remember { mutableStateOf(value) }
+    var isDragging by remember { mutableStateOf(false) }
     
     // Pixels per 0.1x increment
     val pixelsPerStep = 45f
     
     // Update currentDragValue when external value changes (e.g., from manual input)
+    // BUT only when we're not actively dragging
     LaunchedEffect(value) {
-        currentDragValue = value
+        if (!isDragging) {
+            currentDragValue = value
+        }
     }
     
     Box(
@@ -675,13 +683,17 @@ private fun HorizontalThumbwheel(
                 .height(60.dp)
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
+                        onDragStart = {
+                            // Mark that we're dragging - prevents external value from overwriting
+                            isDragging = true
+                        },
                         onDragEnd = {
-                            // Final sync when drag ends
-                            currentDragValue = value
+                            // Stop dragging - allow external updates again
+                            isDragging = false
                         },
                         onDragCancel = {
-                            // Reset to current value if cancelled
-                            currentDragValue = value
+                            // Stop dragging - allow external updates again
+                            isDragging = false
                         },
                         onHorizontalDrag = { _, dragAmount ->
                             // REVERSED: Negative dragAmount (swipe left) increases, positive (swipe right) decreases
@@ -738,6 +750,13 @@ private fun HorizontalThumbwheel(
             val visibleRange = 0.5
             val startValue = value - visibleRange
             
+            // Create paint for text labels
+            val textPaint = Paint().apply {
+                color = thumbwheelColor.copy(alpha = 0.7f).toArgb()
+                textSize = 10.dp.toPx()
+                textAlign = Paint.Align.CENTER
+            }
+            
             // Draw ticks for 0.1x increments
             for (i in 0..10) {
                 val tickValue = startValue + (i * 0.1)
@@ -751,12 +770,14 @@ private fun HorizontalThumbwheel(
                 
                 // Only draw if within bounds
                 if (tickX >= 0 && tickX <= size.width) {
+                    val isMediumTick = abs((tickValue * 10).roundToInt() % 5) == 0 && abs((tickValue * 10).roundToInt() % 10) != 0
+                    
                     // Determine tick height based on value
                     val tickHeight = when {
                         // Large tick: whole numbers (1.0x, 2.0x, etc)
                         abs((tickValue * 10).roundToInt() % 10) == 0 -> 16.dp.toPx()
                         // Medium tick: 0.5x increments (0.5x, 1.5x, etc)
-                        abs((tickValue * 10).roundToInt() % 5) == 0 -> 12.dp.toPx()
+                        isMediumTick -> 12.dp.toPx()
                         // Small tick: 0.1x increments
                         else -> 8.dp.toPx()
                     }
@@ -764,7 +785,7 @@ private fun HorizontalThumbwheel(
                     // Determine tick width (thicker for larger marks)
                     val tickWidth = when {
                         abs((tickValue * 10).roundToInt() % 10) == 0 -> 3.dp.toPx()
-                        abs((tickValue * 10).roundToInt() % 5) == 0 -> 2.dp.toPx()
+                        isMediumTick -> 2.dp.toPx()
                         else -> 1.5.dp.toPx()
                     }
                     
@@ -775,6 +796,19 @@ private fun HorizontalThumbwheel(
                         end = Offset(tickX, centerY + tickHeight / 2),
                         strokeWidth = tickWidth
                     )
+                    
+                    // Draw label for medium ticks (0.5x increments)
+                    if (isMediumTick) {
+                        drawIntoCanvas { canvas ->
+                            val label = String.format(java.util.Locale.US, "%.1f", tickValue)
+                            canvas.nativeCanvas.drawText(
+                                label,
+                                tickX,
+                                centerY - tickHeight / 2 - 4.dp.toPx(),
+                                textPaint
+                            )
+                        }
+                    }
                 }
             }
             
