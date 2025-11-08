@@ -171,8 +171,14 @@
     <!-- Additional hardcoded strings from DashboardScreen -->
     <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">default</string>
+    <string name="supplement_tracker">Supplement tracker</string>
     <string name="daily_supplement_taken">Daily supplement taken</string>
     <string name="daily_supplement_removed">Daily supplement removed</string>
+    <string name="edit_pill">Edit pill</string>
+    <string name="add_pill">Add pill</string>
+    <string name="pill_name">Pill name</string>
+    <string name="pill_name_placeholder">Enter pill name</string>
+    <string name="save">Save</string>
     <string name="exercise_bonus_calories_on">Exercise bonus calories ON</string>
     <string name="exercise_bonus_calories_off">Exercise bonus calories OFF</string>
     <string name="tef_bonus_calories_on">TEF bonus calories ON</string>

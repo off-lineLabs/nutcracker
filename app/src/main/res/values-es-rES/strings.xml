@@ -50,6 +50,12 @@
     <string name="database_export">Exportar Base de Datos</string>
     <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">por defecto</string>
+    <string name="supplement_tracker">Rastreador de suplementos</string>
+    <string name="edit_pill">Editar suplemento</string>
+    <string name="add_pill">Agregar suplemento</string>
+    <string name="pill_name">Nombre del suplemento</string>
+    <string name="pill_name_placeholder">Ingrese el nombre del suplemento</string>
+    <string name="save">Guardar</string>
     <string name="default_reps">Repeticiones por Defecto</string>
     <string name="default_sets">Series por Defecto</string>
     <string name="default_weight_kg">Peso por Defecto (kg)</string>

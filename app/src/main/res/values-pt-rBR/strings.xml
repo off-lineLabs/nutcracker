@@ -47,6 +47,12 @@
     <string name="database_export">Exportar Banco de Dados</string>
     <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">padrão</string>
+    <string name="supplement_tracker">Rastreador de suplementos</string>
+    <string name="edit_pill">Editar suplemento</string>
+    <string name="add_pill">Adicionar suplemento</string>
+    <string name="pill_name">Nome do suplemento</string>
+    <string name="pill_name_placeholder">Digite o nome do suplemento</string>
+    <string name="save">Salvar</string>
     <string name="default_reps">Repetições Padrão</string>
     <string name="default_sets">Séries Padrão</string>
     <string name="default_weight_kg">Peso Padrão (kg)</string>

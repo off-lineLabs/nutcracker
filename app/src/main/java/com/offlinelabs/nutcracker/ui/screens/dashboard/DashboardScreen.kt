@@ -41,7 +41,7 @@ import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
-import com.offlinelabs.nutcracker.ui.components.PillTracker
+import com.offlinelabs.nutcracker.ui.components.MultiPillTracker
 import com.offlinelabs.nutcracker.ui.components.ExerciseToggle
 import com.offlinelabs.nutcracker.ui.components.TEFToggle
 import com.offlinelabs.nutcracker.data.model.Pill
@@ -85,6 +85,7 @@ import com.offlinelabs.nutcracker.ui.components.FilterableHistoryView
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialState
 import com.offlinelabs.nutcracker.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -403,7 +404,7 @@ fun DashboardScreen(
     
     // Pill tracking state
     var pills by remember { mutableStateOf(emptyList<Pill>()) }
-    var currentPillCheckIn by remember { mutableStateOf<PillCheckIn?>(null) }
+    var pillCheckInsMap by remember { mutableStateOf<Map<Long, PillCheckIn>>(emptyMap()) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
@@ -470,6 +471,8 @@ fun DashboardScreen(
     // Edit dialog state variables
     var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
     var showEditExerciseDialog by remember { mutableStateOf<DailyExerciseEntry?>(null) }
+    var showEditPillDialog by remember { mutableStateOf<Pill?>(null) }
+    var showAddPillDialog by remember { mutableStateOf(false) }
     
     // Date navigation state - always start with today
     var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
@@ -563,13 +566,31 @@ fun DashboardScreen(
         }
     }
 
-    // Check for pill check-in on selected date
+    // Check for pill check-ins on selected date for all pills
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = pills) {
         if (pills.isNotEmpty()) {
-            val defaultPillId = pills.first().id
-            foodLogRepository.getPillCheckInByPillIdAndDate(defaultPillId, selectedDateString).collectLatest { checkIn ->
-                currentPillCheckIn = checkIn
+            // Load check-ins for all pills using combine
+            val flows = pills.map { pill ->
+                foodLogRepository.getPillCheckInByPillIdAndDate(pill.id, selectedDateString)
             }
+            if (flows.isNotEmpty()) {
+                combine(flows) { checkIns ->
+                    val checkInsMap = mutableMapOf<Long, PillCheckIn>()
+                    pills.forEachIndexed { index, pill ->
+                        val checkIn = checkIns[index] as? PillCheckIn?
+                        if (checkIn != null) {
+                            checkInsMap[pill.id] = checkIn
+                        }
+                    }
+                    checkInsMap.toMap()
+                }.collectLatest { checkIns ->
+                    pillCheckInsMap = checkIns
+                }
+            } else {
+                pillCheckInsMap = emptyMap()
+            }
+        } else {
+            pillCheckInsMap = emptyMap()
         }
     }
 
@@ -627,35 +648,33 @@ fun DashboardScreen(
         }
     }
 
-    // Pill toggle function
-    val onPillToggle: () -> Unit = {
+    // Pill toggle function for specific pill
+    val onPillToggle: (Long) -> Unit = { pillId ->
         coroutineScope.launch {
             try {
-                if (pills.isNotEmpty()) {
-                    val defaultPillId = pills.first().id
-                    
-                    if (currentPillCheckIn == null) {
-                        // Create new pill check-in
-                        val newCheckIn = PillCheckIn(
-                            pillId = defaultPillId,
-                            timestamp = java.time.LocalDateTime.now()
-                        )
-                        foodLogRepository.insertPillCheckIn(newCheckIn)
-                        snackbarHostState.showSnackbar(
-                            message = dailySupplementTaken
-                        )
-                    } else {
-                        // Delete existing pill check-in
-                        foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
-                        snackbarHostState.showSnackbar(
-                            message = dailySupplementRemoved
-                        )
-                    }
+                val checkIn = pillCheckInsMap[pillId]
+                
+                if (checkIn == null) {
+                    // Create new pill check-in
+                    val newCheckIn = PillCheckIn(
+                        pillId = pillId,
+                        timestamp = java.time.LocalDateTime.now()
+                    )
+                    foodLogRepository.insertPillCheckIn(newCheckIn)
+                    snackbarHostState.showSnackbar(
+                        message = dailySupplementTaken
+                    )
+                } else {
+                    // Delete existing pill check-in
+                    foodLogRepository.deletePillCheckInByPillIdAndDate(pillId, selectedDateString)
+                    snackbarHostState.showSnackbar(
+                        message = dailySupplementRemoved
+                    )
                 }
             } catch (e: Exception) {
                 AppLogger.exception("DashboardScreen", "Failed to update pill status", e, mapOf(
                     "selectedDate" to selectedDateString,
-                    "pillsCount" to pills.size
+                    "pillId" to pillId
                 ))
                 snackbarHostState.showSnackbar(
                     message = failedToUpdatePillStatus
@@ -1046,10 +1065,18 @@ fun DashboardScreen(
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            PillTracker(
-                                isPillTaken = currentPillCheckIn != null,
-                                pillCheckIn = currentPillCheckIn,
-                                onPillToggle = onPillToggle
+                            MultiPillTracker(
+                                pills = pills,
+                                pillCheckIns = pillCheckInsMap,
+                                onPillToggle = onPillToggle,
+                                onPillLongPress = { pill ->
+                                    showEditPillDialog = pill
+                                },
+                                onAddPill = {
+                                    if (pills.size < 5) {
+                                        showAddPillDialog = true
+                                    }
+                                }
                             )
                         }
 
@@ -1702,7 +1729,117 @@ fun DashboardScreen(
         }
     }
     
-    // Edit Meal Dialog
+    // Edit Pill Dialog
+    showEditPillDialog?.let { pill ->
+        var pillName by remember { mutableStateOf(pill.name) }
+        val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
+        
+        AlertDialog(
+            onDismissRequest = { showEditPillDialog = null },
+            title = {
+                Text(stringResource(R.string.edit_pill))
+            },
+            text = {
+                OutlinedTextField(
+                    value = pillName,
+                    onValueChange = { pillName = it },
+                    label = { Text(stringResource(R.string.pill_name)) },
+                    placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
+                    colors = dialogTextFieldColors,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pillName.isNotBlank()) {
+                            coroutineScope.launch {
+                                try {
+                                    val updatedPill = pill.copy(name = pillName.trim())
+                                    foodLogRepository.updatePill(updatedPill)
+                                    snackbarHostState.showSnackbar(
+                                        message = "Pill updated successfully"
+                                    )
+                                } catch (e: Exception) {
+                                    AppLogger.exception("DashboardScreen", "Failed to update pill", e, mapOf(
+                                        "pillId" to pill.id.toString()
+                                    ))
+                                    snackbarHostState.showSnackbar(
+                                        message = "Failed to update pill: ${e.message}"
+                                    )
+                                }
+                            }
+                            showEditPillDialog = null
+                        }
+                    },
+                    enabled = pillName.isNotBlank() && pillName.trim() != pill.name
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditPillDialog = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+    
+    // Add Pill Dialog
+    if (showAddPillDialog) {
+        var pillName by remember { mutableStateOf("") }
+        val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
+        
+        AlertDialog(
+            onDismissRequest = { showAddPillDialog = false },
+            title = {
+                Text(stringResource(R.string.add_pill))
+            },
+            text = {
+                OutlinedTextField(
+                    value = pillName,
+                    onValueChange = { pillName = it },
+                    label = { Text(stringResource(R.string.pill_name)) },
+                    placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
+                    colors = dialogTextFieldColors,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pillName.isNotBlank() && pills.size < 5) {
+                            coroutineScope.launch {
+                                try {
+                                    foodLogRepository.insertPill(Pill(name = pillName.trim()))
+                                    snackbarHostState.showSnackbar(
+                                        message = "Pill added successfully"
+                                    )
+                                } catch (e: Exception) {
+                                    AppLogger.exception("DashboardScreen", "Failed to add pill", e)
+                                    snackbarHostState.showSnackbar(
+                                        message = "Failed to add pill: ${e.message}"
+                                    )
+                                }
+                            }
+                            showAddPillDialog = false
+                        }
+                    },
+                    enabled = pillName.isNotBlank() && pills.size < 5
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddPillDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
     showEditMealDialog?.let { checkIn ->
         // Get the meal directly from database (including hidden meals)
         var meal by remember { mutableStateOf<Meal?>(null) }
