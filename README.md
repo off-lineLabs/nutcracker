@@ -267,4 +267,4 @@ The Terms of Use and Privacy Policy are available in the repository at [app/src/
 
 ---
 
-*No trackers. No data collection. No financial inmterests. Just privacy-first software that works.*
+*No trackers. No data collection. No financial interests. Just privacy-first software that works.*
