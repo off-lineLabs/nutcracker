@@ -392,7 +392,9 @@
     
     <string name="tutorial_supplement_pill_title">Rastrear Suplementos</string>
     <string name="tutorial_supplement_pill_description">Acompanhe sua ingestão diária de suplementos. Você pode clicar para marcar/desmarcar como tomado ou pressionar para renomear. É possível adicionar até 5 suplementos.</string>
-    
+
+    <string name="tutorial_check_in_history_title">Histórico de registros recentes</string>
+    <string name="tutorial_check_in_history_description">Aqui você pode ver as refeições e exercícios que registrou hoje. Role para ver todas as entradas e toque em qualquer item para editá-lo.</string>
     <string name="tutorial_completion_title">Tudo Pronto!</string>
     <string name="tutorial_completion_description">Pronto! Agora você sabe como usar o Nutcracker. Comece a rastrear suas refeições e exercícios para alcançar seus objetivos de saúde.</string>
     
