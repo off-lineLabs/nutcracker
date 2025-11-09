@@ -785,10 +785,8 @@ fun DashboardScreen(
             // Wait for layout to be ready
             kotlinx.coroutines.delay(100)
             
-            // Scroll to the history section - it's the last item in the LazyColumn
-            if (lazyListState.layoutInfo.totalItemsCount > 0) {
-                lazyListState.animateScrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
-            }
+            // Scroll to item 3 (history section - 4th item, 0-indexed)
+            lazyListState.animateScrollToItem(3)
             
             // Wait for scroll animation to complete and layout to settle
             kotlinx.coroutines.delay(500)
@@ -1028,156 +1026,186 @@ fun DashboardScreen(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    item {
-                        // Calories ring section with symmetrical toggles
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val center = coordinates.boundsInWindow().center
-                                    registerElementCoordinates("calorie_ring", center, 60.dp)
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            // Calories ring - centered as before
-                            CaloriesRing(
-                                foodCalories = foodCalories,
-                                goalCalories = userGoal.caloriesGoal.toDouble(),
-                                exerciseCalories = exerciseCaloriesBurned,
-                                tefCalories = tefCaloriesBurned,
-                                includeExercise = includeExerciseCalories,
-                                includeTEF = includeTEFBonus,
-                                labelColor = caloriesRemainingLabelColor,
-                                valueColor = caloriesRemainingValueColor,
-                                consumedColor = caloriesConsumedColor,
-                                goalColor = caloriesGoalColor
-                            )
-                            
-                            // Exercise toggle - positioned on the left
-                            ExerciseToggle(
-                                isEnabled = includeExerciseCalories,
-                                onToggle = onExerciseToggle,
-                                exerciseCalories = exerciseCaloriesBurned,
-                                modifier = Modifier.align(Alignment.CenterStart)
-                            )
-                            
-                            // TEF toggle - positioned on the right
-                            TEFToggle(
-                                isEnabled = includeTEFBonus,
-                                onToggle = onTEFToggle,
-                                tefCalories = tefCaloriesBurned,
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Nutrient Details Section with Edit button
-                        Box(
+                    // Item 1: Calorie Ring + Toggles
+                    item(key = "calorie_ring") {
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.nutrient_details_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = appTextPrimaryColor(),
-                                textAlign = TextAlign.Center
-                            )
-                            IconButton(
-                                onClick = { showSetGoalDialog = true },
+                            // Calories ring section with symmetrical toggles
+                            Box(
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .align(Alignment.CenterEnd)
+                                    .fillMaxWidth()
                                     .onGloballyPositioned { coordinates: LayoutCoordinates ->
                                         val center = coordinates.boundsInWindow().center
-                                        registerElementCoordinates("edit_goals_icon", center, 25.dp)
-                                    }
+                                        registerElementCoordinates("calorie_ring", center, 60.dp)
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = stringResource(R.string.set_goal),
-                                    tint = appTextSecondaryColor(),
-                                    modifier = Modifier.size(20.dp)
+                                // Calories ring - centered as before
+                                CaloriesRing(
+                                    foodCalories = foodCalories,
+                                    goalCalories = userGoal.caloriesGoal.toDouble(),
+                                    exerciseCalories = exerciseCaloriesBurned,
+                                    tefCalories = tefCaloriesBurned,
+                                    includeExercise = includeExerciseCalories,
+                                    includeTEF = includeTEFBonus,
+                                    labelColor = caloriesRemainingLabelColor,
+                                    valueColor = caloriesRemainingValueColor,
+                                    consumedColor = caloriesConsumedColor,
+                                    goalColor = caloriesGoalColor
+                                )
+                                
+                                // Exercise toggle - positioned on the left
+                                ExerciseToggle(
+                                    isEnabled = includeExerciseCalories,
+                                    onToggle = onExerciseToggle,
+                                    exerciseCalories = exerciseCaloriesBurned,
+                                    modifier = Modifier.align(Alignment.CenterStart)
+                                )
+                                
+                                // TEF toggle - positioned on the right
+                                TEFToggle(
+                                    isEnabled = includeTEFBonus,
+                                    onToggle = onTEFToggle,
+                                    tefCalories = tefCaloriesBurned,
+                                    modifier = Modifier.align(Alignment.CenterEnd)
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        NutrientBox(
-                            totals = dailyTotalsConsumed,
-                            goals = userGoal
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Pill tracker - positioned after nutrients box
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val bounds = coordinates.boundsInWindow()
-                                    val center = bounds.center
-                                    // Calculate radius from actual bounds to cover entire pill tracker section
-                                    val height = bounds.height
-                                    val width = bounds.width
-                                    val radius = with(density) { 
-                                        // Use the larger dimension to ensure full coverage, with padding
-                                        (maxOf(height, width) / 2f + 8.dp.toPx()).toDp()
-                                    }
-                                    registerElementCoordinates("supplement_pill", center, radius)
-                                },
-                            contentAlignment = Alignment.Center
+                    }
+                    
+                    // Item 2: Nutrient Details
+                    item(key = "nutrients") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            MultiPillTracker(
-                                pills = pills,
-                                pillCheckIns = pillCheckInsMap,
-                                onPillToggle = onPillToggle,
-                                onPillLongPress = { pill ->
-                                    showEditPillDialog = pill
-                                },
-                                onAddPill = {
-                                    if (pills.size < 5) {
-                                        showAddPillDialog = true
-                                    }
+                            // Nutrient Details Section with Edit button
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.nutrient_details_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = appTextPrimaryColor(),
+                                    textAlign = TextAlign.Center
+                                )
+                                IconButton(
+                                    onClick = { showSetGoalDialog = true },
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.CenterEnd)
+                                        .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                            val center = coordinates.boundsInWindow().center
+                                            registerElementCoordinates("edit_goals_icon", center, 25.dp)
+                                        }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = stringResource(R.string.set_goal),
+                                        tint = appTextSecondaryColor(),
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            NutrientBox(
+                                totals = dailyTotalsConsumed,
+                                goals = userGoal
                             )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            stringResource(R.string.recent_check_ins),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = appTextPrimaryColor()
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Use FilterableHistoryView for both meals and exercises
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val bounds = coordinates.boundsInWindow()
-                                    val center = bounds.center
-                                    // Calculate radius based on the height of the section
-                                    val height = bounds.height
-                                    val radius = with(density) { (height / 2f + 16.dp.toPx()).toDp() }
-                                    registerElementCoordinates("check_in_history", center, radius)
-                                }
+                    }
+                    
+                    // Item 3: Pill Tracker
+                    item(key = "supplements") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            FilterableHistoryView(
-                                mealEntries = dailyMealCheckIns,
-                                exerciseEntries = dailyExerciseLogs,
-                                onDeleteMeal = { }, // No longer used - delete only available in edit dialog
-                                onDeleteExercise = { }, // No longer used - delete only available in edit dialog
-                                onEditMeal = { checkIn ->
-                                    showEditMealDialog = checkIn
-                                },
-                                onEditExercise = { exerciseEntry ->
-                                    showEditExerciseDialog = exerciseEntry
-                                }
+                            // Pill tracker - positioned after nutrients box
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Calculate radius from actual bounds to cover entire pill tracker section
+                                        val height = bounds.height
+                                        val width = bounds.width
+                                        val radius = with(density) { 
+                                            // Use the larger dimension to ensure full coverage, with padding
+                                            (maxOf(height, width) / 2f + 8.dp.toPx()).toDp()
+                                        }
+                                        registerElementCoordinates("supplement_pill", center, radius)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MultiPillTracker(
+                                    pills = pills,
+                                    pillCheckIns = pillCheckInsMap,
+                                    onPillToggle = onPillToggle,
+                                    onPillLongPress = { pill ->
+                                        showEditPillDialog = pill
+                                    },
+                                    onAddPill = {
+                                        if (pills.size < 5) {
+                                            showAddPillDialog = true
+                                        }
+                                    }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                    
+                    // Item 4: Recent Check-Ins History
+                    item(key = "history") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                stringResource(R.string.recent_check_ins),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = appTextPrimaryColor()
                             )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Use FilterableHistoryView for both meals and exercises
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Calculate radius based on the height of the section
+                                        val height = bounds.height
+                                        val radius = with(density) { (height / 2f + 16.dp.toPx()).toDp() }
+                                        registerElementCoordinates("check_in_history", center, radius)
+                                    }
+                            ) {
+                                FilterableHistoryView(
+                                    mealEntries = dailyMealCheckIns,
+                                    exerciseEntries = dailyExerciseLogs,
+                                    onDeleteMeal = { }, // No longer used - delete only available in edit dialog
+                                    onDeleteExercise = { }, // No longer used - delete only available in edit dialog
+                                    onEditMeal = { checkIn ->
+                                        showEditMealDialog = checkIn
+                                    },
+                                    onEditExercise = { exerciseEntry ->
+                                        showEditExerciseDialog = exerciseEntry
+                                    }
+                                )
+                            }
                         }
                     }
                 }
