@@ -170,7 +170,7 @@
     
     <!-- Additional hardcoded strings from DashboardScreen -->
     <string name="date_format_pattern">yyyy-MM-dd</string>
-    <string name="default_pill_name">default</string>
+    <string name="default_pill_name">Supplement</string>
     <string name="supplement_tracker">Supplement tracker</string>
     <string name="daily_supplement_taken">Daily supplement taken</string>
     <string name="daily_supplement_removed">Daily supplement removed</string>
@@ -178,6 +178,7 @@
     <string name="add_pill">Add pill</string>
     <string name="pill_name">Pill name</string>
     <string name="pill_name_placeholder">Enter pill name</string>
+    <string name="confirm_delete_pill_message">Are you sure you want to delete this pill? All check-in records will be removed.</string>
     <string name="save">Save</string>
     <string name="exercise_bonus_calories_on">Exercise bonus calories ON</string>
     <string name="exercise_bonus_calories_off">Exercise bonus calories OFF</string>
@@ -457,7 +458,7 @@
     <string name="tutorial_edit_goals_description">You can (and should) edit your daily goals according to your needs. Tap this icon to customize your calorie and nutrient targets.</string>
     
     <string name="tutorial_supplement_pill_title">Track Supplements</string>
-    <string name="tutorial_supplement_pill_description">Keep track of whether you took your daily supplement by toggling this icon. It will glow when marked as taken.</string>
+    <string name="tutorial_supplement_pill_description">Keep track of your daily supplement intake. You can click to toggle as taken or long press to rename. Up to 5 supplements can be added.</string>
     
     <string name="tutorial_check_in_history_title">Recent Check-In History</string>
     <string name="tutorial_check_in_history_description">Here you can see the meals and exercises you checked in for the day. Scroll to view all entries and tap any item to edit it.</string>

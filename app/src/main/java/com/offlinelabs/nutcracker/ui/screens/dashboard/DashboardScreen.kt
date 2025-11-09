@@ -361,9 +361,9 @@ private fun NutrientBox(
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
-            consumed = totals?.totalSodium ?: 0.0,
-            goal = goals.sodiumGoal_mg.toDouble(),
-            unit = "mg",
+            consumed = (totals?.totalSodium ?: 0.0) / 1000.0,
+            goal = goals.sodiumGoal_mg.toDouble() / 1000.0,
+            unit = "g",
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
             goalColor = appTextSecondaryColor()
@@ -1899,7 +1899,7 @@ fun DashboardScreen(
                     Text(stringResource(R.string.delete))
                 },
                 text = {
-                    Text("Are you sure you want to delete this pill? All check-in records will be removed.")
+                    Text(stringResource(R.string.confirm_delete_pill_message))
                 },
                 confirmButton = {
                     Button(

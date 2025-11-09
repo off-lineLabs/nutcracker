@@ -46,12 +46,13 @@
     <string name="database">Banco de Dados</string>
     <string name="database_export">Exportar Banco de Dados</string>
     <string name="date_format_pattern">yyyy-MM-dd</string>
-    <string name="default_pill_name">padrão</string>
+    <string name="default_pill_name">Suplemento</string>
     <string name="supplement_tracker">Rastreador de suplementos</string>
     <string name="edit_pill">Editar suplemento</string>
     <string name="add_pill">Adicionar suplemento</string>
     <string name="pill_name">Nome do suplemento</string>
     <string name="pill_name_placeholder">Digite o nome do suplemento</string>
+    <string name="confirm_delete_pill_message">Tem certeza de que deseja excluir este suplemento? Todos os registros de registro serão removidos.</string>
     <string name="save">Salvar</string>
     <string name="default_reps">Repetições Padrão</string>
     <string name="default_sets">Séries Padrão</string>
@@ -390,7 +391,7 @@
     <string name="tutorial_edit_goals_description">Você pode (e deve) editar suas metas diárias de acordo com suas necessidades. Toque neste ícone para personalizar seus objetivos de calorias e nutrientes.</string>
     
     <string name="tutorial_supplement_pill_title">Rastrear Suplementos</string>
-    <string name="tutorial_supplement_pill_description">Mantenha o controle de se você tomou seu suplemento diário alternando este ícone. Ele brilhará quando marcado como tomado.</string>
+    <string name="tutorial_supplement_pill_description">Acompanhe sua ingestão diária de suplementos. Você pode clicar para marcar/desmarcar como tomado ou pressionar para renomear. É possível adicionar até 5 suplementos.</string>
     
     <string name="tutorial_completion_title">Tudo Pronto!</string>
     <string name="tutorial_completion_description">Pronto! Agora você sabe como usar o Nutcracker. Comece a rastrear suas refeições e exercícios para alcançar seus objetivos de saúde.</string>
