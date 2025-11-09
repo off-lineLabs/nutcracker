@@ -38,10 +38,11 @@ fun SelectMealForCheckInDialog(
     onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
     onScanBarcode: () -> Unit = {},
-    registerElementCoordinates: ((String, Offset, androidx.compose.ui.unit.Dp) -> Unit)? = null
+    registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null
 ) {
     var selectedMeal by remember { mutableStateOf<Meal?>(null) }
     var showUnifiedDialog by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
     
     // Show unified dialog when a meal is selected
     selectedMeal?.let { meal ->
@@ -116,11 +117,14 @@ fun SelectMealForCheckInDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                            registerElementCoordinates?.invoke(
-                                "barcode_button",
-                                coordinates.boundsInWindow().center,
-                                30.dp
+                            val bounds = coordinates.boundsInWindow()
+                            val center = bounds.center
+                            val padding = with(density) { 8.dp.toPx() }
+                            val size = androidx.compose.ui.geometry.Size(
+                                width = bounds.width + padding * 2,
+                                height = bounds.height + padding * 2
                             )
+                            registerElementCoordinates?.invoke("barcode_button", center, size)
                         },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = brandAccentShade(0)

@@ -731,12 +731,12 @@ fun DashboardScreen(
 
     // Tutorial state management
     val tutorialState = remember { TutorialState() }
-    var elementCoordinates by remember { mutableStateOf<Map<String, Pair<ComposeOffset, ComposeDp>>>(emptyMap()) }
+    var elementCoordinates by remember { mutableStateOf<Map<String, Pair<ComposeOffset, androidx.compose.ui.geometry.Size>>>(emptyMap()) }
     var showHistorySpotlight by remember { mutableStateOf(false) }
     
     // Function to register element coordinates
-    val registerElementCoordinates: (String, ComposeOffset, ComposeDp) -> Unit = { id, offset, radius ->
-        elementCoordinates = elementCoordinates + (id to (offset to radius))
+    val registerElementCoordinates: (String, ComposeOffset, androidx.compose.ui.geometry.Size) -> Unit = { id, offset, size ->
+        elementCoordinates = elementCoordinates + (id to (offset to size))
     }
     
     // Start tutorial if needed
@@ -768,7 +768,7 @@ fun DashboardScreen(
             if (shouldUpdate && coordinates != null) {
                 val updatedStep = currentStep.copy(
                     targetOffset = coordinates.first,
-                    targetRadius = coordinates.second
+                    targetSize = coordinates.second
                 )
                 tutorialState.steps[tutorialState.currentStepIndex] = updatedStep
             }
@@ -778,23 +778,32 @@ fun DashboardScreen(
     // Scroll to check-in history section when that tutorial step becomes active
     val lazyListState = rememberLazyListState()
     LaunchedEffect(tutorialState.currentStepIndex) {
-        if (tutorialState.currentStepIndex == 8) {
-            // Step 8 is the check-in history step
-            showHistorySpotlight = false // Hide spotlight during scroll
-            
-            // Wait for layout to be ready
-            kotlinx.coroutines.delay(100)
-            
-            // Scroll to item 3 (history section - 4th item, 0-indexed)
-            lazyListState.animateScrollToItem(3)
-            
-            // Wait for scroll animation to complete and layout to settle
-            kotlinx.coroutines.delay(500)
-            
-            // Now show the spotlight
-            showHistorySpotlight = true
-        } else {
-            showHistorySpotlight = true // For all other steps, show immediately
+        when (tutorialState.currentStepIndex) {
+            7 -> {
+                // Step 7 is the supplement pill step - scroll to center it better
+                showHistorySpotlight = true
+                kotlinx.coroutines.delay(100)
+                lazyListState.animateScrollToItem(2, scrollOffset = -100) // Item 2 with offset to center
+            }
+            8 -> {
+                // Step 8 is the check-in history step
+                showHistorySpotlight = false // Hide spotlight during scroll
+                
+                // Wait for layout to be ready
+                kotlinx.coroutines.delay(100)
+                
+                // Scroll to item 3 (history section - 4th item, 0-indexed)
+                lazyListState.animateScrollToItem(3)
+                
+                // Wait for scroll animation to complete and layout to settle
+                kotlinx.coroutines.delay(500)
+                
+                // Now show the spotlight
+                showHistorySpotlight = true
+            }
+            else -> {
+                showHistorySpotlight = true // For all other steps, show immediately
+            }
         }
     }
 
@@ -834,8 +843,14 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val center = coordinates.boundsInWindow().center
-                                    registerElementCoordinates("calendar_icon", center, 25.dp)
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("calendar_icon", center, size)
                                 }
                         ) {
                             Icon(
@@ -913,8 +928,14 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val center = coordinates.boundsInWindow().center
-                                    registerElementCoordinates("settings_icon", center, 25.dp)
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("settings_icon", center, size)
                                 }
                         ) {
                             Icon(
@@ -931,8 +952,14 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val center = coordinates.boundsInWindow().center
-                                    registerElementCoordinates("analytics_icon", center, 25.dp)
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("analytics_icon", center, size)
                                 }
                         ) {
                             Icon(
@@ -961,9 +988,14 @@ fun DashboardScreen(
                         pressedElevation = 12.dp
                     ),
                     modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
-                        val center = coordinates.boundsInWindow().center
-                        val radius = with(density) { 30.dp.toPx() }
-                        registerElementCoordinates("add_exercise_fab", center, 30.dp)
+                        val bounds = coordinates.boundsInWindow()
+                        val center = bounds.center
+                        val padding = with(density) { 12.dp.toPx() }
+                        val size = androidx.compose.ui.geometry.Size(
+                            width = bounds.width + padding * 2,
+                            height = bounds.height + padding * 2
+                        )
+                        registerElementCoordinates("add_exercise_fab", center, size)
                     }
                 ) {
                     Icon(
@@ -983,9 +1015,14 @@ fun DashboardScreen(
                         pressedElevation = 12.dp
                     ),
                     modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
-                        val center = coordinates.boundsInWindow().center
-                        val radius = with(density) { 30.dp.toPx() }
-                        registerElementCoordinates("add_meal_fab", center, 30.dp)
+                        val bounds = coordinates.boundsInWindow()
+                        val center = bounds.center
+                        val padding = with(density) { 12.dp.toPx() }
+                        val size = androidx.compose.ui.geometry.Size(
+                            width = bounds.width + padding * 2,
+                            height = bounds.height + padding * 2
+                        )
+                        registerElementCoordinates("add_meal_fab", center, size)
                     }
                 ) {
                     Icon(
@@ -1037,8 +1074,15 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                        val center = coordinates.boundsInWindow().center
-                                        registerElementCoordinates("calorie_ring", center, 60.dp)
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("calorie_ring", center, size)
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -1100,8 +1144,14 @@ fun DashboardScreen(
                                         .size(32.dp)
                                         .align(Alignment.CenterEnd)
                                         .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                            val center = coordinates.boundsInWindow().center
-                                            registerElementCoordinates("edit_goals_icon", center, 25.dp)
+                                            val bounds = coordinates.boundsInWindow()
+                                            val center = bounds.center
+                                            val padding = with(density) { 8.dp.toPx() }
+                                            val size = androidx.compose.ui.geometry.Size(
+                                                width = bounds.width + padding * 2,
+                                                height = bounds.height + padding * 2
+                                            )
+                                            registerElementCoordinates("edit_goals_icon", center, size)
                                         }
                                 ) {
                                     Icon(
@@ -1136,14 +1186,13 @@ fun DashboardScreen(
                                     .onGloballyPositioned { coordinates: LayoutCoordinates ->
                                         val bounds = coordinates.boundsInWindow()
                                         val center = bounds.center
-                                        // Calculate radius from actual bounds to cover entire pill tracker section
-                                        val height = bounds.height
-                                        val width = bounds.width
-                                        val radius = with(density) { 
-                                            // Use the larger dimension to ensure full coverage, with padding
-                                            (maxOf(height, width) / 2f + 8.dp.toPx()).toDp()
-                                        }
-                                        registerElementCoordinates("supplement_pill", center, radius)
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("supplement_pill", center, size)
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -1172,27 +1221,31 @@ fun DashboardScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                stringResource(R.string.recent_check_ins),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = appTextPrimaryColor()
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // Use FilterableHistoryView for both meals and exercises
-                            Box(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onGloballyPositioned { coordinates: LayoutCoordinates ->
                                         val bounds = coordinates.boundsInWindow()
                                         val center = bounds.center
-                                        // Calculate radius based on the height of the section
-                                        val height = bounds.height
-                                        val radius = with(density) { (height / 2f + 16.dp.toPx()).toDp() }
-                                        registerElementCoordinates("check_in_history", center, radius)
-                                    }
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("check_in_history", center, size)
+                                    },
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
+                                Text(
+                                    stringResource(R.string.recent_check_ins),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = appTextPrimaryColor()
+                                )
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                // Use FilterableHistoryView for both meals and exercises
                                 FilterableHistoryView(
                                     mealEntries = dailyMealCheckIns,
                                     exerciseEntries = dailyExerciseLogs,
@@ -2611,7 +2664,7 @@ fun DashboardScreen(
     }
 }
 
-private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffset, ComposeDp>>, context: Context): List<TutorialStep> {
+private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffset, androidx.compose.ui.geometry.Size>>, context: Context): List<TutorialStep> {
     return listOf(
         TutorialStep(
             id = "dashboard_overview",
@@ -2623,56 +2676,56 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             title = context.getString(R.string.tutorial_calorie_ring_title),
             description = context.getString(R.string.tutorial_calorie_ring_description),
             targetOffset = elementCoordinates["calorie_ring"]?.first,
-            targetRadius = elementCoordinates["calorie_ring"]?.second ?: 90.dp
+            targetSize = elementCoordinates["calorie_ring"]?.second
         ),
         TutorialStep(
             id = "add_meal_fab",
             title = context.getString(R.string.tutorial_add_meal_title),
             description = context.getString(R.string.tutorial_add_meal_description),
             targetOffset = elementCoordinates["add_meal_fab"]?.first,
-            targetRadius = elementCoordinates["add_meal_fab"]?.second ?: 30.dp
+            targetSize = elementCoordinates["add_meal_fab"]?.second
         ),
         TutorialStep(
             id = "add_exercise_fab",
             title = context.getString(R.string.tutorial_add_exercise_title),
             description = context.getString(R.string.tutorial_add_exercise_description),
             targetOffset = elementCoordinates["add_exercise_fab"]?.first,
-            targetRadius = elementCoordinates["add_exercise_fab"]?.second ?: 30.dp
+            targetSize = elementCoordinates["add_exercise_fab"]?.second
         ),
         TutorialStep(
             id = "analytics_icon",
             title = context.getString(R.string.tutorial_analytics_title),
             description = context.getString(R.string.tutorial_analytics_description),
             targetOffset = elementCoordinates["analytics_icon"]?.first,
-            targetRadius = elementCoordinates["analytics_icon"]?.second ?: 25.dp
+            targetSize = elementCoordinates["analytics_icon"]?.second
         ),
         TutorialStep(
             id = "settings_icon",
             title = context.getString(R.string.tutorial_settings_title),
             description = context.getString(R.string.tutorial_settings_description),
             targetOffset = elementCoordinates["settings_icon"]?.first,
-            targetRadius = elementCoordinates["settings_icon"]?.second ?: 25.dp
+            targetSize = elementCoordinates["settings_icon"]?.second
         ),
         TutorialStep(
             id = "edit_goals_icon",
             title = context.getString(R.string.tutorial_edit_goals_title),
             description = context.getString(R.string.tutorial_edit_goals_description),
             targetOffset = elementCoordinates["edit_goals_icon"]?.first,
-            targetRadius = elementCoordinates["edit_goals_icon"]?.second ?: 25.dp
+            targetSize = elementCoordinates["edit_goals_icon"]?.second
         ),
         TutorialStep(
             id = "supplement_pill",
             title = context.getString(R.string.tutorial_supplement_pill_title),
             description = context.getString(R.string.tutorial_supplement_pill_description),
             targetOffset = elementCoordinates["supplement_pill"]?.first,
-            targetRadius = elementCoordinates["supplement_pill"]?.second ?: 55.dp
+            targetSize = elementCoordinates["supplement_pill"]?.second
         ),
         TutorialStep(
             id = "check_in_history",
             title = context.getString(R.string.tutorial_check_in_history_title),
             description = context.getString(R.string.tutorial_check_in_history_description),
             targetOffset = elementCoordinates["check_in_history"]?.first,
-            targetRadius = elementCoordinates["check_in_history"]?.second ?: 100.dp
+            targetSize = elementCoordinates["check_in_history"]?.second
         ),
         TutorialStep(
             id = "completion",

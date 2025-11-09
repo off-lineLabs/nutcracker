@@ -49,17 +49,25 @@ fun SpotlightOverlay(
     val density = LocalDensity.current
     val isDarkTheme = true // Will be passed from parent
     
-    // Animate spotlight position and radius
+    // Animate spotlight position
     val animatedOffset by animateOffsetAsState(
         targetValue = step.targetOffset ?: Offset.Zero,
         animationSpec = tween(500),
         label = "spotlight_offset"
     )
     
-    val animatedRadius by animateDpAsState(
-        targetValue = step.targetRadius ?: 0.dp,
+    // Animate spotlight size (width and height separately for rectangles)
+    val targetSize = step.targetSize
+    val animatedWidth by animateDpAsState(
+        targetValue = if (targetSize != null) with(density) { targetSize.width.toDp() } else 0.dp,
         animationSpec = tween(500),
-        label = "spotlight_radius"
+        label = "spotlight_width"
+    )
+    
+    val animatedHeight by animateDpAsState(
+        targetValue = if (targetSize != null) with(density) { targetSize.height.toDp() } else 0.dp,
+        animationSpec = tween(500),
+        label = "spotlight_height"
     )
     
     Box(
@@ -78,7 +86,7 @@ fun SpotlightOverlay(
         )
         
         // Semi-transparent overlay with spotlight cutout (only if there's a target)
-        if (step.targetOffset != null) {
+        if (step.targetOffset != null && step.targetSize != null) {
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
@@ -87,7 +95,8 @@ fun SpotlightOverlay(
                         compositingStrategy = CompositingStrategy.Offscreen
                     }
             ) {
-                val radiusPx = with(density) { animatedRadius.toPx() }
+                val widthPx = with(density) { animatedWidth.toPx() }
+                val heightPx = with(density) { animatedHeight.toPx() }
                 val overlayColor = Color.Black.copy(alpha = 0.7f)
                 
                 // Draw the full overlay first
@@ -97,18 +106,18 @@ fun SpotlightOverlay(
                 )
                 
                 // Cut out the spotlight area with rounded corners using blend mode
-                if (radiusPx > 0) {
-                    val cornerRadius = radiusPx * 0.15f // 15% of radius for smooth corners
+                if (widthPx > 0 && heightPx > 0) {
+                    val cornerRadius = 16.dp.toPx() // Fixed corner radius for clean rounded rectangles
                     
                     drawRoundRect(
                         color = Color.Transparent,
                         topLeft = Offset(
-                            animatedOffset.x - radiusPx,
-                            animatedOffset.y - radiusPx
+                            animatedOffset.x - widthPx / 2,
+                            animatedOffset.y - heightPx / 2
                         ),
                         size = androidx.compose.ui.geometry.Size(
-                            radiusPx * 2,
-                            radiusPx * 2
+                            widthPx,
+                            heightPx
                         ),
                         cornerRadius = CornerRadius(cornerRadius, cornerRadius),
                         blendMode = BlendMode.Clear
@@ -136,7 +145,8 @@ fun SpotlightOverlay(
                 onSkip = onSkip,
                 onPrevious = onPrevious,
                 targetOffset = animatedOffset,
-                targetRadius = animatedRadius,
+                targetWidth = animatedWidth,
+                targetHeight = animatedHeight,
                 isDarkTheme = isDarkTheme,
                 modifier = Modifier.fillMaxSize()
             )
@@ -151,7 +161,8 @@ private fun TooltipContent(
     onSkip: () -> Unit,
     onPrevious: () -> Unit,
     targetOffset: Offset,
-    targetRadius: Dp,
+    targetWidth: Dp,
+    targetHeight: Dp,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -165,7 +176,8 @@ private fun TooltipContent(
     val tooltipOffset = if (step.targetOffset != null) {
         calculateTooltipPosition(
             targetOffset = targetOffset,
-            targetRadius = targetRadius,
+            targetWidth = targetWidth,
+            targetHeight = targetHeight,
             screenSize = androidx.compose.ui.unit.IntSize(screenWidth.toInt(), screenHeight.toInt()),
             density = density
         )
@@ -284,11 +296,12 @@ private fun TooltipContent(
 
 private fun calculateTooltipPosition(
     targetOffset: Offset,
-    targetRadius: Dp,
+    targetWidth: Dp,
+    targetHeight: Dp,
     screenSize: androidx.compose.ui.unit.IntSize,
     density: androidx.compose.ui.unit.Density
 ): Offset {
-    val targetRadiusPx = with(density) { targetRadius.toPx() }
+    val targetHeightPx = with(density) { targetHeight.toPx() }
     val screenWidth = screenSize.width.toFloat()
     val screenHeight = screenSize.height.toFloat()
     
@@ -313,9 +326,9 @@ private fun calculateTooltipPosition(
         return Offset(screenWidth / 2f, screenHeight / 2f)
     }
     
-    // Try to position above the target first
-    val tooltipYAbove = targetOffset.y - targetRadiusPx - tooltipSpacingPx - tooltipHeightPx
-    val tooltipYBelow = targetOffset.y + targetRadiusPx + tooltipSpacingPx
+    // Try to position above the target first (using height instead of radius)
+    val tooltipYAbove = targetOffset.y - targetHeightPx / 2 - tooltipSpacingPx - tooltipHeightPx
+    val tooltipYBelow = targetOffset.y + targetHeightPx / 2 + tooltipSpacingPx
     
     // Center horizontally on target
     val tooltipX = targetOffset.x - (tooltipWidthPx / 2f)

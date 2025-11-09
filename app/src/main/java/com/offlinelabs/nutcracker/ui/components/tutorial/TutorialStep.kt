@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.Dp
 
 /**
@@ -15,7 +16,7 @@ data class TutorialStep(
     val title: String,
     val description: String,
     val targetOffset: Offset? = null,
-    val targetRadius: Dp? = null,
+    val targetSize: Size? = null, // Changed from radius to size for proper rectangular highlights
     val showDialog: (() -> Unit)? = null,
     val hideDialog: (() -> Unit)? = null
 )
