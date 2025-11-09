@@ -25,7 +25,8 @@ interface OpenFoodFactsApi {
         @Query("page") page: Int = 1,
         @Query("tagtype_0") tagType: String? = null,
         @Query("tag_contains_0") tagContains: String? = null,
-        @Query("tag_0") tagValue: String? = null
+        @Query("tag_0") tagValue: String? = null,
+        @Query("fields") fields: String? = null
     ): Response<SearchResponse>
 }
 
@@ -64,43 +65,66 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
     
     /**
      * Searches for products by text query from Open Food Facts API.
-     * Supports multilingual search, popularity sorting, and whole foods filtering.
+     * Supports multilingual search, popularity sorting, whole foods filtering, and nutrition filtering.
      * Includes retry logic for network timeouts and connection issues.
+     * 
+     * @param requireCompleteNutrition If true, only returns products with at least kcal data.
+     *                                  If false, returns all products but still filters client-side for quality.
      */
     suspend fun searchProducts(
         searchTerms: String,
         pageSize: Int = 20,
         languageCode: String? = null,
-        wholeFoodsOnly: Boolean = false
+        wholeFoodsOnly: Boolean = false,
+        requireCompleteNutrition: Boolean = true
     ): Result<SearchResponse> {
         var lastException: Exception? = null
+        
+        // Optimized fields to request - reduces payload size significantly
+        val requestedFields = "product_name,product_name_en,product_name_es,product_name_pt,brands,image_url,image_front_url,image_nutrition_url,nutriments,nova_group,categories_tags,quantity,serving_size"
         
         // Retry up to 3 times for network issues
         for (attempt in 0 until 3) {
             try {
                 // Get more results when filtering to ensure we have enough after filtering
-                val searchPageSize = if (wholeFoodsOnly) pageSize * 3 else pageSize
+                val searchPageSize = if (wholeFoodsOnly || requireCompleteNutrition) pageSize * 3 else pageSize
                 
                 val response = api.searchProducts(
                     searchTerms = searchTerms,
                     pageSize = searchPageSize,
                     languageCode = languageCode,
-                    sortBy = "popularity"
+                    sortBy = "popularity",
+                    fields = requestedFields
                 )
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
                     
-                    // Apply client-side filtering for whole foods using NOVA classification
-                    val filteredProducts = if (wholeFoodsOnly) {
-                        body.products.filter { product ->
-                            isWholeFood(product)
-                        }.take(pageSize)
-                    } else {
-                        body.products.take(pageSize)
-                    }
+                    // Apply client-side filtering
+                    val filteredProducts = body.products
+                        .filter { product ->
+                            // Filter out products without names
+                            product.productName != null
+                        }
+                        .filter { product ->
+                            // Filter for complete nutrition if required
+                            if (requireCompleteNutrition) {
+                                hasCompleteNutrition(product, requireAllMacros = false)
+                            } else {
+                                true
+                            }
+                        }
+                        .filter { product ->
+                            // Filter for whole foods if requested
+                            if (wholeFoodsOnly) {
+                                isWholeFood(product)
+                            } else {
+                                true
+                            }
+                        }
+                        .take(pageSize)
                     
                     val filteredResponse = body.copy(products = filteredProducts)
-                    AppLogger.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly): ${filteredProducts.size} results found")
+                    AppLogger.d("OpenFoodFactsService", "Search successful for '$searchTerms' (wholeFoods: $wholeFoodsOnly, nutritionFilter: $requireCompleteNutrition): ${filteredProducts.size} results found")
                     return Result.success(filteredResponse)
                 } else {
                     lastException = Exception("Search request failed: ${response.code()} ${response.message()}")
@@ -241,5 +265,30 @@ class OpenFoodFactsService(private val api: OpenFoodFactsApi) {
         return wholeFoodKeywords.any { keyword ->
             categories.contains(keyword)
         }
+    }
+    
+    /**
+     * Checks if a product has complete nutritional information.
+     * 
+     * @param product The product to check
+     * @param requireAllMacros If true, requires kcal + carbs + fats + protein. If false, only requires kcal.
+     * @return True if the product has the required nutritional data
+     * 
+     * Note: OFF uses `_100g` suffix for both solids (per 100g) and liquids (per 100ml),
+     * so this check works for both food and beverages.
+     */
+    private fun hasCompleteNutrition(product: Product, requireAllMacros: Boolean = false): Boolean {
+        val nutriments = product.nutriments ?: return false
+        
+        // Minimum: must have kcal (works for both 100g and 100ml products)
+        val hasKcal = nutriments.energyKcal100g != null
+        
+        if (!requireAllMacros) return hasKcal
+        
+        // Ideal: must have kcal + carbs + fats + protein
+        return hasKcal && 
+               nutriments.carbohydrates100g != null &&
+               nutriments.fat100g != null &&
+               nutriments.proteins100g != null
     }
 }

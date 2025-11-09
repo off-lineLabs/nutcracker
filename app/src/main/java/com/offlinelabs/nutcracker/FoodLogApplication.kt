@@ -44,7 +44,7 @@ class FoodLogApplication : Application() {
             .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
-                    .addHeader("User-Agent", "OfflineCalorieCalculator/1.0 (Android; ${android.os.Build.MODEL})")
+                    .addHeader("User-Agent", "NutCracker/1.0 (online@offline-labs.com) Android; ${android.os.Build.MODEL}")
                     .build()
                 chain.proceed(request)
             }

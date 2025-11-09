@@ -36,6 +36,7 @@ import com.offlinelabs.nutcracker.ui.theme.appSurfaceColor
 import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
 import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.*
@@ -51,37 +52,101 @@ fun FoodSearchDialog(
     var searchQuery by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var isLoadingMore by remember { mutableStateOf(false) }
     var technicalErrorMessage by remember { mutableStateOf<String?>(null) }
     var hasSearched by remember { mutableStateOf(false) }
     var wholeFoodsOnly by remember { mutableStateOf(false) }
+    var currentPage by remember { mutableStateOf(1) }
+    var hasMorePages by remember { mutableStateOf(false) }
     
     val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     val uriHandler = LocalUriHandler.current
     
-    // Debounced search effect
+    // Debounced search effect - loads first page immediately
     LaunchedEffect(searchQuery, wholeFoodsOnly) {
         if (searchQuery.isNotBlank() && searchQuery.length >= 2) {
             delay(500) // 500ms debounce
             isLoading = true
+            isLoadingMore = false
             technicalErrorMessage = null
+            currentPage = 1
+            hasMorePages = false
+            searchResults = emptyList()
             
             try {
+                // Load first page with smaller size for faster initial results
                 val result = openFoodFactsService.searchProducts(
                     searchTerms = searchQuery,
-                    pageSize = 20,
+                    pageSize = 10, // Smaller initial page for faster response
                     languageCode = when (currentLanguage) {
                         AppLanguage.SPANISH -> "es"
                         AppLanguage.PORTUGUESE -> "pt"
                         AppLanguage.ENGLISH -> "en"
                     },
-                    wholeFoodsOnly = wholeFoodsOnly
+                    wholeFoodsOnly = wholeFoodsOnly,
+                    requireCompleteNutrition = true
                 )
                 
                 result.fold(
                     onSuccess = { response ->
-                        searchResults = response.products.filter { it.productName != null }
+                        val firstPageProducts = response.products.filter { it.productName != null }
+                        searchResults = firstPageProducts
                         hasSearched = true
+                        hasMorePages = firstPageProducts.size >= 10 // Assume more pages if we got full page
+                        
+                        // Load additional pages in background
+                        if (hasMorePages) {
+                            isLoadingMore = true
+                            coroutineScope.launch {
+                                try {
+                                    // Load additional pages with larger page size
+                                    for (page in 2..3) {
+                                        val additionalResult = openFoodFactsService.searchProducts(
+                                            searchTerms = searchQuery,
+                                            pageSize = 20,
+                                            languageCode = when (currentLanguage) {
+                                                AppLanguage.SPANISH -> "es"
+                                                AppLanguage.PORTUGUESE -> "pt"
+                                                AppLanguage.ENGLISH -> "en"
+                                            },
+                                            wholeFoodsOnly = wholeFoodsOnly,
+                                            requireCompleteNutrition = true
+                                        )
+                                        
+                                        additionalResult.fold(
+                                            onSuccess = { response ->
+                                                val newProducts = response.products.filter { it.productName != null }
+                                                if (newProducts.isNotEmpty()) {
+                                                    // Append new products, avoiding duplicates
+                                                    val currentResults = searchResults
+                                                    val existingIds = currentResults.mapNotNull { it.productName }.toSet()
+                                                    val uniqueNewProducts = newProducts.filter { 
+                                                        it.productName != null && !existingIds.contains(it.productName)
+                                                    }
+                                                    searchResults = currentResults + uniqueNewProducts
+                                                    hasMorePages = newProducts.size >= 20
+                                                } else {
+                                                    hasMorePages = false
+                                                }
+                                            },
+                                            onFailure = {
+                                                // Silently fail for additional pages - we already have results
+                                                hasMorePages = false
+                                            }
+                                        )
+                                        
+                                        // Small delay between pages to avoid overwhelming the API
+                                        delay(300)
+                                    }
+                                } catch (e: Exception) {
+                                    // Silently fail for additional pages
+                                    hasMorePages = false
+                                } finally {
+                                    isLoadingMore = false
+                                }
+                            }
+                        }
                     },
                     onFailure = { error ->
                         technicalErrorMessage = error.message ?: "Unknown error"
@@ -100,6 +165,8 @@ fun FoodSearchDialog(
             searchResults = emptyList()
             hasSearched = false
             technicalErrorMessage = null
+            currentPage = 1
+            hasMorePages = false
         }
     }
     
@@ -385,6 +452,35 @@ fun FoodSearchDialog(
                                         onDismiss()
                                     }
                                 )
+                            }
+                            
+                            // Loading indicator for additional pages
+                            if (isLoadingMore) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                color = Color(0xFF60A5FA),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = stringResource(R.string.loading_more_results),
+                                                color = appTextSecondaryColor(),
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

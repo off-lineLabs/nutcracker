@@ -419,6 +419,7 @@
     <string name="search_food_tip">Tip: Items that come in a package with a barcode are more likely to be found, but you can try some natural foods too!</string>
     <string name="search_food_placeholder">Search for food…</string>
     <string name="search_loading">Please wait while we collect the results</string>
+    <string name="loading_more_results">Loading more results…</string>
     <string name="search_error_title">There were some technical errors during your search. Please try again and check your internet connection</string>
     <string name="search_error_message">Error message: %1$s</string>
     <string name="search_no_results">We are sorry but there were no results for your search. If you want to contribute with a public food database, you can be the first to add it to Open Food Facts.</string>
