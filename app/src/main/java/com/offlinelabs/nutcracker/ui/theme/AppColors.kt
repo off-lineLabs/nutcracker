@@ -1,6 +1,8 @@
 package com.offlinelabs.nutcracker.ui.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -293,6 +295,35 @@ fun getSecondaryTextColor(): Color {
 }
 
 /**
+ * Blend a color with the background to reduce contrast (make it more discrete)
+ * 
+ * @param color The color to blend
+ * @param backgroundColor The background color to blend with
+ * @param blendFactor The amount to blend (0.0 = no blend, 1.0 = full blend to background). 
+ *                    Lower values (0.3-0.5) create subtle, discrete colors
+ * @return A color blended with the background for reduced contrast
+ */
+fun blendWithBackground(color: Color, backgroundColor: Color, blendFactor: Float = 0.4f): Color {
+    val clampedBlend = blendFactor.coerceIn(0f, 1f)
+    return Color(
+        red = color.red * (1f - clampedBlend) + backgroundColor.red * clampedBlend,
+        green = color.green * (1f - clampedBlend) + backgroundColor.green * clampedBlend,
+        blue = color.blue * (1f - clampedBlend) + backgroundColor.blue * clampedBlend,
+        alpha = color.alpha
+    )
+}
+
+/**
+ * Get a discrete text color that blends with the background for minimal contrast
+ * This is useful for buttons or text that should be visible but not prominent
+ */
+@Composable
+fun getDiscreteTextColor(backgroundColor: Color = appBackgroundColor()): Color {
+    val baseColor = appTextSecondaryColor()
+    return blendWithBackground(baseColor, backgroundColor, blendFactor = 0.65f)
+}
+
+/**
  * Generate different shades of a color with varying contrast levels
  * 
  * @param baseColor The base color to create shades from
@@ -376,6 +407,30 @@ fun brandAccentShade(level: Int): Color {
 @Composable
 fun brandHighlightShade(level: Int): Color {
     return generateThemedColorShade(brandHighlightColor(), level)
+}
+
+/**
+ * Get a maximum contrast primary color for dialogs
+ * Uses BrandNavy as the background for contrast calculation
+ */
+@Composable
+fun dialogPrimaryColorMaxContrast(): Color {
+    val basePrimary = MaterialTheme.colorScheme.primary
+    return generateColorShade(basePrimary, level = 4, backgroundColor = BrandNavy)
+}
+
+/**
+ * Get OutlinedTextField colors with maximum contrast for dialogs
+ * Uses BrandNavy as the background for contrast calculation
+ */
+@Composable
+fun dialogOutlinedTextFieldColorsMaxContrast(): TextFieldColors {
+    val dialogPrimary = dialogPrimaryColorMaxContrast()
+    return OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = dialogPrimary,
+        focusedLabelColor = dialogPrimary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface
+    )
 }
 
 /**

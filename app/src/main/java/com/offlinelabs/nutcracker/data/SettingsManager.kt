@@ -32,6 +32,7 @@ class SettingsManager(context: Context) {
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_TERMS_AGREED = "terms_agreed"
         private const val KEY_TERMS_AGREED_TIMESTAMP = "terms_agreed_timestamp"
+        private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
     }
     
     private fun getStoredThemeMode(): ThemeMode {
@@ -107,6 +108,16 @@ class SettingsManager(context: Context) {
         prefs.edit()
             .putBoolean(KEY_TERMS_AGREED, true)
             .putLong(KEY_TERMS_AGREED_TIMESTAMP, currentTime)
+            .apply()
+    }
+    
+    fun hasCompletedTutorial(): Boolean {
+        return prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
+    }
+    
+    fun setTutorialCompleted() {
+        prefs.edit()
+            .putBoolean(KEY_TUTORIAL_COMPLETED, true)
             .apply()
     }
 }

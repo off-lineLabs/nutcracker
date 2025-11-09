@@ -13,7 +13,7 @@ import androidx.core.view.WindowCompat
 
 // Dark theme color scheme using your brand colors
 private val DarkColorScheme = darkColorScheme(
-    primary = BrandNavyLight,           // Your lighter navy blue for main elements
+    primary = BrandNavyLightTheme,           // Your lighter navy blue for main elements
     onPrimary = Color.White,
     primaryContainer = BrandNavy,       // Your dark navy blue
     onPrimaryContainer = BrandGoldLight, // Your light gold for contrast

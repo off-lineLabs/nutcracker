@@ -12,6 +12,8 @@ import androidx.compose.ui.window.Dialog
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
+import com.offlinelabs.nutcracker.ui.theme.dialogOutlinedTextFieldColorsMaxContrast
+import com.offlinelabs.nutcracker.ui.theme.dialogPrimaryColorMaxContrast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,10 @@ fun AddMealDialog(
     var servingSizeValue by remember { mutableStateOf("100") }
     var selectedUnit by remember { mutableStateOf(ServingSizeUnit.GRAMS) }
     var expanded by remember { mutableStateOf(false) }
+
+    // Get maximum contrast primary color for dialogs
+    val dialogPrimary = dialogPrimaryColorMaxContrast()
+    val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -61,6 +67,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.meal_name)) },
                         placeholder = { Text(stringResource(R.string.meal_name_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.6f)
                     )
                     OutlinedTextField(
@@ -69,6 +76,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.calories)) },
                         placeholder = { Text(stringResource(R.string.calories_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.4f)
                     )
                 }
@@ -86,6 +94,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.carbs_g)) },
                         placeholder = { Text(stringResource(R.string.carbs_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.6f)
                     )
                     OutlinedTextField(
@@ -94,6 +103,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.fat_g)) },
                         placeholder = { Text(stringResource(R.string.fat_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.4f)
                     )
                 }
@@ -111,6 +121,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.fiber_g)) },
                         placeholder = { Text(stringResource(R.string.fiber_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.6f)
                     )
                     OutlinedTextField(
@@ -119,6 +130,7 @@ fun AddMealDialog(
                         label = { Text(stringResource(R.string.sodium_mg)) },
                         placeholder = { Text(stringResource(R.string.sodium_placeholder)) },
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.4f)
                     )
                 }
@@ -130,6 +142,7 @@ fun AddMealDialog(
                     label = { Text(stringResource(R.string.protein_g)) },
                     placeholder = { Text(stringResource(R.string.protein_placeholder)) },
                     textStyle = MaterialTheme.typography.bodyMedium,
+                    colors = dialogTextFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp)
@@ -154,6 +167,7 @@ fun AddMealDialog(
                         placeholder = { Text(stringResource(R.string.serving_size_placeholder)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = dialogTextFieldColors,
                         modifier = Modifier.weight(0.4f)
                     )
                     
@@ -171,10 +185,10 @@ fun AddMealDialog(
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             },
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                            colors = dialogTextFieldColors,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
                         )
                         
                         ExposedDropdownMenu(
@@ -198,7 +212,10 @@ fun AddMealDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(contentColor = dialogPrimary)
+                    ) {
                         Text(stringResource(R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))

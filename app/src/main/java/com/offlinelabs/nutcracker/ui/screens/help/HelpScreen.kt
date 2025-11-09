@@ -107,7 +107,8 @@ fun createClickableText(
 @Composable
 fun HelpScreen(
     onNavigateBack: () -> Unit,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    onReplayTutorial: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val faqItems = listOf(
@@ -237,6 +238,25 @@ fun HelpScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Replay Tutorial Button
+                Button(
+                    onClick = onReplayTutorial,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.tutorial_replay),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(24.dp))
             }

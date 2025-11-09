@@ -432,7 +432,7 @@ class DatabaseImportManager(
                             proteinGoal_g = row.getIntValue("proteinGoal_g") ?: 100,
                             fatGoal_g = row.getIntValue("fatGoal_g") ?: 65,
                             fiberGoal_g = row.getIntValue("fiberGoal_g") ?: 30,
-                            sodiumGoal_mg = row.getIntValue("sodiumGoal_mg") ?: 2300
+                            sodiumGoal_mg = row.getIntValue("sodiumGoal_mg") ?: 5750
                         )
                         
                         database.userGoalDao().upsertUserGoal(userGoal)

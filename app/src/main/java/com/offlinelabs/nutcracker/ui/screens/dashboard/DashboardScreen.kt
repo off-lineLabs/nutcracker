@@ -2,7 +2,6 @@ package com.offlinelabs.nutcracker.ui.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -29,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,11 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.offlinelabs.nutcracker.R
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
-import com.offlinelabs.nutcracker.ui.components.PillTracker
+import com.offlinelabs.nutcracker.ui.components.MultiPillTracker
 import com.offlinelabs.nutcracker.ui.components.ExerciseToggle
 import com.offlinelabs.nutcracker.ui.components.TEFToggle
 import com.offlinelabs.nutcracker.data.model.Pill
@@ -83,14 +82,28 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
 import com.offlinelabs.nutcracker.data.model.CheckInData
 import com.offlinelabs.nutcracker.ui.components.FilterableHistoryView
+import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialState
 import com.offlinelabs.nutcracker.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 import com.offlinelabs.nutcracker.util.logger.AppLogger
 import com.offlinelabs.nutcracker.util.logger.logUserAction
 import com.offlinelabs.nutcracker.util.logger.safeSuspendExecute
+import androidx.compose.ui.geometry.Offset as ComposeOffset
+import androidx.compose.ui.unit.Dp as ComposeDp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.foundation.lazy.rememberLazyListState
+import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
+import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
+import android.content.Context
 
 @Composable
 fun NutrientProgressDisplay(
@@ -154,8 +167,8 @@ private fun CaloriesRing(
     goalColor: Color,
     ringTrackColor: Color = Color(0xFF374151),
     ringProgressColor: Color = Color(0xFFFFA94D),
-    sizeDp: Dp = 160.dp,
-    strokeWidthDp: Dp = 12.dp
+    sizeDp: ComposeDp = 160.dp,
+    strokeWidthDp: ComposeDp = 12.dp
 ) {
     // Calculate booster bonuses
     val exerciseBonus = if (includeExercise) exerciseCalories else 0.0
@@ -172,7 +185,7 @@ private fun CaloriesRing(
             val stroke = Stroke(width = strokeWidthDp.toPx(), cap = StrokeCap.Round)
             val strokeWidthPx = strokeWidthDp.toPx()
             val diameter = size.minDimension - strokeWidthPx
-            val topLeft = Offset(
+            val topLeft = ComposeOffset(
                 (size.width - diameter) / 2f,
                 (size.height - diameter) / 2f
             )
@@ -348,9 +361,9 @@ private fun NutrientBox(
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
-            consumed = totals?.totalSodium ?: 0.0,
-            goal = goals.sodiumGoal_mg.toDouble(),
-            unit = "mg",
+            consumed = (totals?.totalSodium ?: 0.0) / 1000.0,
+            goal = goals.sodiumGoal_mg.toDouble() / 1000.0,
+            unit = "g",
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
             goalColor = appTextSecondaryColor()
@@ -364,7 +377,10 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToHelp: () -> Unit = {},
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    settingsManager: com.offlinelabs.nutcracker.data.SettingsManager? = null,
+    shouldShowTutorial: Boolean = false,
+    onTutorialCompleted: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
@@ -389,7 +405,8 @@ fun DashboardScreen(
     
     // Pill tracking state
     var pills by remember { mutableStateOf(emptyList<Pill>()) }
-    var currentPillCheckIn by remember { mutableStateOf<PillCheckIn?>(null) }
+    var pillCheckInsMap by remember { mutableStateOf<Map<Long, PillCheckIn>>(emptyMap()) }
+    var refreshPillCheckIns by remember { mutableStateOf(0) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
     var showAddMealDialog by remember { mutableStateOf(false) }
@@ -456,6 +473,8 @@ fun DashboardScreen(
     // Edit dialog state variables
     var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
     var showEditExerciseDialog by remember { mutableStateOf<DailyExerciseEntry?>(null) }
+    var showEditPillDialog by remember { mutableStateOf<Pill?>(null) }
+    var showAddPillDialog by remember { mutableStateOf(false) }
     
     // Date navigation state - always start with today
     var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
@@ -549,13 +568,31 @@ fun DashboardScreen(
         }
     }
 
-    // Check for pill check-in on selected date
-    LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = pills) {
+    // Check for pill check-ins on selected date for all pills
+    LaunchedEffect(foodLogRepository, selectedDateString, pills, refreshPillCheckIns) {
         if (pills.isNotEmpty()) {
-            val defaultPillId = pills.first().id
-            foodLogRepository.getPillCheckInByPillIdAndDate(defaultPillId, selectedDateString).collectLatest { checkIn ->
-                currentPillCheckIn = checkIn
+            // Load check-ins for all pills using combine
+            val flows = pills.map { pill ->
+                foodLogRepository.getPillCheckInByPillIdAndDate(pill.id, selectedDateString)
             }
+            if (flows.isNotEmpty()) {
+                combine(flows) { checkIns ->
+                    val checkInsMap = mutableMapOf<Long, PillCheckIn>()
+                    pills.forEachIndexed { index, pill ->
+                        val checkIn = checkIns[index] as? PillCheckIn?
+                        if (checkIn != null) {
+                            checkInsMap[pill.id] = checkIn
+                        }
+                    }
+                    checkInsMap.toMap()
+                }.collectLatest { checkIns ->
+                    pillCheckInsMap = checkIns
+                }
+            } else {
+                pillCheckInsMap = emptyMap()
+            }
+        } else {
+            pillCheckInsMap = emptyMap()
         }
     }
 
@@ -613,35 +650,51 @@ fun DashboardScreen(
         }
     }
 
-    // Pill toggle function
-    val onPillToggle: () -> Unit = {
+    // Pill toggle function for specific pill
+    val onPillToggle: (Long) -> Unit = { pillId ->
         coroutineScope.launch {
             try {
-                if (pills.isNotEmpty()) {
-                    val defaultPillId = pills.first().id
-                    
-                    if (currentPillCheckIn == null) {
-                        // Create new pill check-in
-                        val newCheckIn = PillCheckIn(
-                            pillId = defaultPillId,
-                            timestamp = java.time.LocalDateTime.now()
-                        )
-                        foodLogRepository.insertPillCheckIn(newCheckIn)
-                        snackbarHostState.showSnackbar(
-                            message = dailySupplementTaken
-                        )
+                val checkIn = pillCheckInsMap[pillId]
+                val today = java.time.LocalDate.now()
+                
+                if (checkIn == null) {
+                    // Create new pill check-in
+                    // If today: use current time, if another date: use 00:00
+                    val timestamp = if (selectedDate == today) {
+                        java.time.LocalDateTime.now()
                     } else {
-                        // Delete existing pill check-in
-                        foodLogRepository.deletePillCheckInByPillIdAndDate(defaultPillId, selectedDateString)
-                        snackbarHostState.showSnackbar(
-                            message = dailySupplementRemoved
-                        )
+                        java.time.LocalDateTime.of(selectedDate, java.time.LocalTime.of(0, 0))
                     }
+                    
+                    val newCheckIn = PillCheckIn(
+                        pillId = pillId,
+                        timestamp = timestamp
+                    )
+                    foodLogRepository.insertPillCheckIn(newCheckIn)
+                    // Optimistically update the state immediately
+                    pillCheckInsMap = pillCheckInsMap + (pillId to newCheckIn)
+                    // Trigger refresh to ensure Flow updates
+                    refreshPillCheckIns++
+                    snackbarHostState.showSnackbar(
+                        message = dailySupplementTaken
+                    )
+                } else {
+                    // Delete existing pill check-in
+                    foodLogRepository.deletePillCheckInByPillIdAndDate(pillId, selectedDateString)
+                    // Optimistically update the state immediately
+                    val updatedMap = pillCheckInsMap.toMutableMap()
+                    updatedMap.remove(pillId)
+                    pillCheckInsMap = updatedMap.toMap()
+                    // Trigger refresh to ensure Flow updates
+                    refreshPillCheckIns++
+                    snackbarHostState.showSnackbar(
+                        message = dailySupplementRemoved
+                    )
                 }
             } catch (e: Exception) {
                 AppLogger.exception("DashboardScreen", "Failed to update pill status", e, mapOf(
                     "selectedDate" to selectedDateString,
-                    "pillsCount" to pills.size
+                    "pillId" to pillId
                 ))
                 snackbarHostState.showSnackbar(
                     message = failedToUpdatePillStatus
@@ -673,6 +726,84 @@ fun DashboardScreen(
                 tefBonusCaloriesOff
             }
             snackbarHostState.showSnackbar(message = message)
+        }
+    }
+
+    // Tutorial state management
+    val tutorialState = remember { TutorialState() }
+    var elementCoordinates by remember { mutableStateOf<Map<String, Pair<ComposeOffset, androidx.compose.ui.geometry.Size>>>(emptyMap()) }
+    var showHistorySpotlight by remember { mutableStateOf(false) }
+    
+    // Function to register element coordinates
+    val registerElementCoordinates: (String, ComposeOffset, androidx.compose.ui.geometry.Size) -> Unit = { id, offset, size ->
+        elementCoordinates = elementCoordinates + (id to (offset to size))
+    }
+    
+    // Start tutorial if needed
+    LaunchedEffect(shouldShowTutorial, settingsManager?.hasCompletedTutorial()) {
+        if (settingsManager != null) {
+            val hasCompleted = settingsManager.hasCompletedTutorial()
+            val shouldStartTutorial = shouldShowTutorial || !hasCompleted
+            if (shouldStartTutorial) {
+                val steps = createTutorialSteps(elementCoordinates, context)
+                tutorialState.startTutorial(steps)
+            }
+        }
+    }
+    
+    // Update current step with coordinates
+    LaunchedEffect(elementCoordinates, tutorialState.currentStepIndex, showHistorySpotlight) {
+        val currentStep = tutorialState.getCurrentStep()
+        if (currentStep != null && elementCoordinates.isNotEmpty()) {
+            val stepId = getStepIdFromIndex(tutorialState.currentStepIndex)
+            val coordinates = elementCoordinates[stepId]
+            
+            // For history step, only update if showHistorySpotlight is true
+            val shouldUpdate = if (stepId == "check_in_history") {
+                showHistorySpotlight && coordinates != null
+            } else {
+                coordinates != null
+            }
+            
+            if (shouldUpdate && coordinates != null) {
+                val updatedStep = currentStep.copy(
+                    targetOffset = coordinates.first,
+                    targetSize = coordinates.second
+                )
+                tutorialState.steps[tutorialState.currentStepIndex] = updatedStep
+            }
+        }
+    }
+    
+    // Scroll to check-in history section when that tutorial step becomes active
+    val lazyListState = rememberLazyListState()
+    LaunchedEffect(tutorialState.currentStepIndex) {
+        when (tutorialState.currentStepIndex) {
+            7 -> {
+                // Step 7 is the supplement pill step - scroll to center it better
+                showHistorySpotlight = true
+                kotlinx.coroutines.delay(100)
+                lazyListState.animateScrollToItem(2, scrollOffset = -100) // Item 2 with offset to center
+            }
+            8 -> {
+                // Step 8 is the check-in history step
+                showHistorySpotlight = false // Hide spotlight during scroll
+                
+                // Wait for layout to be ready
+                kotlinx.coroutines.delay(100)
+                
+                // Scroll to item 3 (history section - 4th item, 0-indexed)
+                lazyListState.animateScrollToItem(3)
+                
+                // Wait for scroll animation to complete and layout to settle
+                kotlinx.coroutines.delay(500)
+                
+                // Now show the spotlight
+                showHistorySpotlight = true
+            }
+            else -> {
+                showHistorySpotlight = true // For all other steps, show immediately
+            }
         }
     }
 
@@ -709,7 +840,18 @@ fun DashboardScreen(
                         // Calendar icon
                         IconButton(
                             onClick = { showCalendarDialog = true },
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("calendar_icon", center, size)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.DateRange,
@@ -783,7 +925,18 @@ fun DashboardScreen(
                         // Settings button
                         IconButton(
                             onClick = onNavigateToSettings,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("settings_icon", center, size)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Settings,
@@ -796,7 +949,18 @@ fun DashboardScreen(
                         // Progress bar button
                         IconButton(
                             onClick = onNavigateToAnalytics,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier
+                                .size(44.dp)
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    val padding = with(density) { 8.dp.toPx() }
+                                    val size = androidx.compose.ui.geometry.Size(
+                                        width = bounds.width + padding * 2,
+                                        height = bounds.height + padding * 2
+                                    )
+                                    registerElementCoordinates("analytics_icon", center, size)
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.BarChart,
@@ -822,7 +986,17 @@ fun DashboardScreen(
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
-                    )
+                    ),
+                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
+                        val bounds = coordinates.boundsInWindow()
+                        val center = bounds.center
+                        val padding = with(density) { 12.dp.toPx() }
+                        val size = androidx.compose.ui.geometry.Size(
+                            width = bounds.width + padding * 2,
+                            height = bounds.height + padding * 2
+                        )
+                        registerElementCoordinates("add_exercise_fab", center, size)
+                    }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_sprint), 
@@ -839,7 +1013,17 @@ fun DashboardScreen(
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
-                    )
+                    ),
+                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
+                        val bounds = coordinates.boundsInWindow()
+                        val center = bounds.center
+                        val padding = with(density) { 12.dp.toPx() }
+                        val size = androidx.compose.ui.geometry.Size(
+                            width = bounds.width + padding * 2,
+                            height = bounds.height + padding * 2
+                        )
+                        registerElementCoordinates("add_meal_fab", center, size)
+                    }
                 ) {
                     Icon(
                         Icons.Filled.Restaurant, 
@@ -873,119 +1057,209 @@ fun DashboardScreen(
                     .clip(RoundedCornerShape(24.dp))
             ) {
                 LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    item {
-                        // Calories ring section with symmetrical toggles
-                        Box(
+                    // Item 1: Calorie Ring + Toggles
+                    item(key = "calorie_ring") {
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Calories ring - centered as before
-                            CaloriesRing(
-                                foodCalories = foodCalories,
-                                goalCalories = userGoal.caloriesGoal.toDouble(),
-                                exerciseCalories = exerciseCaloriesBurned,
-                                tefCalories = tefCaloriesBurned,
-                                includeExercise = includeExerciseCalories,
-                                includeTEF = includeTEFBonus,
-                                labelColor = caloriesRemainingLabelColor,
-                                valueColor = caloriesRemainingValueColor,
-                                consumedColor = caloriesConsumedColor,
-                                goalColor = caloriesGoalColor
-                            )
-                            
-                            // Exercise toggle - positioned on the left
-                            ExerciseToggle(
-                                isEnabled = includeExerciseCalories,
-                                onToggle = onExerciseToggle,
-                                exerciseCalories = exerciseCaloriesBurned,
-                                modifier = Modifier.align(Alignment.CenterStart)
-                            )
-                            
-                            // TEF toggle - positioned on the right
-                            TEFToggle(
-                                isEnabled = includeTEFBonus,
-                                onToggle = onTEFToggle,
-                                tefCalories = tefCaloriesBurned,
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Nutrient Details Section with Edit button
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(id = R.string.nutrient_details_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = appTextPrimaryColor(),
-                                textAlign = TextAlign.Center
-                            )
-                            IconButton(
-                                onClick = { showSetGoalDialog = true },
+                            // Calories ring section with symmetrical toggles
+                            Box(
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .align(Alignment.CenterEnd)
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("calorie_ring", center, size)
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = stringResource(R.string.set_goal),
-                                    tint = appTextSecondaryColor(),
-                                    modifier = Modifier.size(20.dp)
+                                // Calories ring - centered as before
+                                CaloriesRing(
+                                    foodCalories = foodCalories,
+                                    goalCalories = userGoal.caloriesGoal.toDouble(),
+                                    exerciseCalories = exerciseCaloriesBurned,
+                                    tefCalories = tefCaloriesBurned,
+                                    includeExercise = includeExerciseCalories,
+                                    includeTEF = includeTEFBonus,
+                                    labelColor = caloriesRemainingLabelColor,
+                                    valueColor = caloriesRemainingValueColor,
+                                    consumedColor = caloriesConsumedColor,
+                                    goalColor = caloriesGoalColor
+                                )
+                                
+                                // Exercise toggle - positioned on the left
+                                ExerciseToggle(
+                                    isEnabled = includeExerciseCalories,
+                                    onToggle = onExerciseToggle,
+                                    exerciseCalories = exerciseCaloriesBurned,
+                                    modifier = Modifier.align(Alignment.CenterStart)
+                                )
+                                
+                                // TEF toggle - positioned on the right
+                                TEFToggle(
+                                    isEnabled = includeTEFBonus,
+                                    onToggle = onTEFToggle,
+                                    tefCalories = tefCaloriesBurned,
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                    
+                    // Item 2: Nutrient Details
+                    item(key = "nutrients") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Nutrient Details Section with Edit button
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.nutrient_details_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = appTextPrimaryColor(),
+                                    textAlign = TextAlign.Center
+                                )
+                                IconButton(
+                                    onClick = { showSetGoalDialog = true },
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.CenterEnd)
+                                        .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                            val bounds = coordinates.boundsInWindow()
+                                            val center = bounds.center
+                                            val padding = with(density) { 8.dp.toPx() }
+                                            val size = androidx.compose.ui.geometry.Size(
+                                                width = bounds.width + padding * 2,
+                                                height = bounds.height + padding * 2
+                                            )
+                                            registerElementCoordinates("edit_goals_icon", center, size)
+                                        }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = stringResource(R.string.set_goal),
+                                        tint = appTextSecondaryColor(),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            NutrientBox(
+                                totals = dailyTotalsConsumed,
+                                goals = userGoal
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                    
+                    // Item 3: Pill Tracker
+                    item(key = "supplements") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Pill tracker - positioned after nutrients box
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("supplement_pill", center, size)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MultiPillTracker(
+                                    pills = pills,
+                                    pillCheckIns = pillCheckInsMap,
+                                    onPillToggle = onPillToggle,
+                                    onPillLongPress = { pill ->
+                                        showEditPillDialog = pill
+                                    },
+                                    onAddPill = {
+                                        if (pills.size < 5) {
+                                            showAddPillDialog = true
+                                        }
+                                    }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                    
+                    // Item 4: Recent Check-Ins History
+                    item(key = "history") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                        val bounds = coordinates.boundsInWindow()
+                                        val center = bounds.center
+                                        // Pass actual size with padding for rounded rectangle
+                                        val padding = with(density) { 16.dp.toPx() }
+                                        val size = androidx.compose.ui.geometry.Size(
+                                            width = bounds.width + padding * 2,
+                                            height = bounds.height + padding * 2
+                                        )
+                                        registerElementCoordinates("check_in_history", center, size)
+                                    },
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    stringResource(R.string.recent_check_ins),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = appTextPrimaryColor()
+                                )
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                // Use FilterableHistoryView for both meals and exercises
+                                FilterableHistoryView(
+                                    mealEntries = dailyMealCheckIns,
+                                    exerciseEntries = dailyExerciseLogs,
+                                    onDeleteMeal = { }, // No longer used - delete only available in edit dialog
+                                    onDeleteExercise = { }, // No longer used - delete only available in edit dialog
+                                    onEditMeal = { checkIn ->
+                                        showEditMealDialog = checkIn
+                                    },
+                                    onEditExercise = { exerciseEntry ->
+                                        showEditExerciseDialog = exerciseEntry
+                                    }
                                 )
                             }
                         }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        NutrientBox(
-                            totals = dailyTotalsConsumed,
-                            goals = userGoal
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Pill tracker - positioned after nutrients box
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            PillTracker(
-                                isPillTaken = currentPillCheckIn != null,
-                                pillCheckIn = currentPillCheckIn,
-                                onPillToggle = onPillToggle
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            stringResource(R.string.recent_check_ins),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = appTextPrimaryColor()
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Use FilterableHistoryView for both meals and exercises
-                        FilterableHistoryView(
-                            mealEntries = dailyMealCheckIns,
-                            exerciseEntries = dailyExerciseLogs,
-                            onDeleteMeal = { }, // No longer used - delete only available in edit dialog
-                            onDeleteExercise = { }, // No longer used - delete only available in edit dialog
-                            onEditMeal = { checkIn ->
-                                showEditMealDialog = checkIn
-                            },
-                            onEditExercise = { exerciseEntry ->
-                                showEditExerciseDialog = exerciseEntry
-                            }
-                        )
                     }
                 }
             }
@@ -1052,7 +1326,8 @@ fun DashboardScreen(
             onScanBarcode = {
                 showSelectMealDialog = false
                 showBarcodeScanDialog = true
-            }
+            },
+            registerElementCoordinates = registerElementCoordinates
         )
     }
 
@@ -1340,7 +1615,6 @@ fun DashboardScreen(
                                 ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
                                 ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
                                 ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
-                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
                             }
                             
                             // Calculate calories burned based on exercise type
@@ -1357,7 +1631,6 @@ fun DashboardScreen(
                                     val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
                                     reps * kcalPerRep
                                 }
-                                else -> 0.0
                             }
                             
                             val exerciseLog = ExerciseLog.create(
@@ -1480,7 +1753,6 @@ fun DashboardScreen(
                                 ExerciseType.STRENGTH -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets)
                                 ExerciseType.CARDIO -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=minutes, sets=1
                                 ExerciseType.BODYWEIGHT -> Triple(0.0, exercise.defaultReps, 1) // weight=0, reps=reps, sets=1
-                                else -> Triple(exercise.defaultWeight, exercise.defaultReps, exercise.defaultSets) // Default to strength
                             }
                             
                             // Calculate calories burned based on exercise type
@@ -1497,7 +1769,6 @@ fun DashboardScreen(
                                     val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
                                     reps * kcalPerRep
                                 }
-                                else -> 0.0
                             }
                             
                             val exerciseLog = ExerciseLog.create(
@@ -1615,7 +1886,194 @@ fun DashboardScreen(
         }
     }
     
-    // Edit Meal Dialog
+    // Edit Pill Dialog
+    showEditPillDialog?.let { pill ->
+        var pillName by remember { mutableStateOf(pill.name) }
+        var showDeleteConfirm by remember { mutableStateOf(false) }
+        val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
+        
+        if (showDeleteConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = false },
+                title = {
+                    Text(stringResource(R.string.delete))
+                },
+                text = {
+                    Text(stringResource(R.string.confirm_delete_pill_message))
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    // Delete all check-ins for this pill first
+                                    val checkIns = foodLogRepository.getPillCheckInsByPillId(pill.id).first()
+                                    checkIns.forEach { checkIn ->
+                                        foodLogRepository.deletePillCheckIn(checkIn)
+                                    }
+                                    // Then delete the pill
+                                    foodLogRepository.deletePill(pill)
+                                    snackbarHostState.showSnackbar(
+                                        message = "Pill deleted successfully"
+                                    )
+                                } catch (e: Exception) {
+                                    AppLogger.exception("DashboardScreen", "Failed to delete pill", e, mapOf(
+                                        "pillId" to pill.id.toString()
+                                    ))
+                                    snackbarHostState.showSnackbar(
+                                        message = "Failed to delete pill: ${e.message}"
+                                    )
+                                }
+                            }
+                            showDeleteConfirm = false
+                            showEditPillDialog = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.delete))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = false }) {
+                        Text(
+                            text = stringResource(R.string.cancel),
+                            color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                        )
+                    }
+                }
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { showEditPillDialog = null },
+                title = {
+                    Text(stringResource(R.string.edit_pill))
+                },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = pillName,
+                            onValueChange = { pillName = it },
+                            label = { Text(stringResource(R.string.pill_name)) },
+                            placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
+                            colors = dialogTextFieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (pillName.isNotBlank()) {
+                                coroutineScope.launch {
+                                    try {
+                                        val updatedPill = pill.copy(name = pillName.trim())
+                                        foodLogRepository.updatePill(updatedPill)
+                                        snackbarHostState.showSnackbar(
+                                            message = "Pill updated successfully"
+                                        )
+                                    } catch (e: Exception) {
+                                        AppLogger.exception("DashboardScreen", "Failed to update pill", e, mapOf(
+                                            "pillId" to pill.id.toString()
+                                        ))
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to update pill: ${e.message}"
+                                        )
+                                    }
+                                }
+                                showEditPillDialog = null
+                            }
+                        },
+                        enabled = pillName.isNotBlank() && pillName.trim() != pill.name
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                },
+                dismissButton = {
+                    Row {
+                        // Only show delete button if pill ID is not 1 (default pill)
+                        if (pill.id != 1L) {
+                            TextButton(
+                                onClick = { showDeleteConfirm = true },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text(stringResource(R.string.delete))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        TextButton(onClick = { showEditPillDialog = null }) {
+                            Text(
+                                text = stringResource(R.string.cancel),
+                                color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    }
+    
+    // Add Pill Dialog
+    if (showAddPillDialog) {
+        var pillName by remember { mutableStateOf("") }
+        val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
+        
+        AlertDialog(
+            onDismissRequest = { showAddPillDialog = false },
+            title = {
+                Text(stringResource(R.string.add_pill))
+            },
+            text = {
+                OutlinedTextField(
+                    value = pillName,
+                    onValueChange = { pillName = it },
+                    label = { Text(stringResource(R.string.pill_name)) },
+                    placeholder = { Text(stringResource(R.string.pill_name_placeholder)) },
+                    colors = dialogTextFieldColors,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pillName.isNotBlank() && pills.size < 5) {
+                            coroutineScope.launch {
+                                try {
+                                    foodLogRepository.insertPill(Pill(name = pillName.trim()))
+                                    snackbarHostState.showSnackbar(
+                                        message = "Pill added successfully"
+                                    )
+                                } catch (e: Exception) {
+                                    AppLogger.exception("DashboardScreen", "Failed to add pill", e)
+                                    snackbarHostState.showSnackbar(
+                                        message = "Failed to add pill: ${e.message}"
+                                    )
+                                }
+                            }
+                            showAddPillDialog = false
+                        }
+                    },
+                    enabled = pillName.isNotBlank() && pills.size < 5
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddPillDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+                    )
+                }
+            }
+        )
+    }
+
     showEditMealDialog?.let { checkIn ->
         // Get the meal directly from database (including hidden meals)
         var meal by remember { mutableStateOf<Meal?>(null) }
@@ -2175,5 +2633,120 @@ fun DashboardScreen(
                 showEditMealDefinitionDialog = null
             }
         )
+    }
+    
+    // Tutorial overlay
+    if (tutorialState.isActive) {
+        val currentStep = tutorialState.getCurrentStep()
+        SpotlightOverlay(
+            step = currentStep,
+            onNext = {
+                if (currentStep?.showDialog != null) {
+                    currentStep.showDialog()
+                } else {
+                    val wasLastStep = tutorialState.currentStepIndex == tutorialState.steps.size - 1
+                    tutorialState.nextStep()
+                    if (wasLastStep) {
+                        settingsManager?.setTutorialCompleted()
+                        onTutorialCompleted()
+                    }
+                }
+            },
+            onSkip = {
+                tutorialState.skipTutorial()
+                settingsManager?.setTutorialCompleted()
+                onTutorialCompleted()
+            },
+            onPrevious = {
+                tutorialState.previousStep()
+            }
+        )
+    }
+}
+
+private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffset, androidx.compose.ui.geometry.Size>>, context: Context): List<TutorialStep> {
+    return listOf(
+        TutorialStep(
+            id = "dashboard_overview",
+            title = context.getString(R.string.tutorial_welcome_title),
+            description = context.getString(R.string.tutorial_welcome_description)
+        ),
+        TutorialStep(
+            id = "calorie_ring",
+            title = context.getString(R.string.tutorial_calorie_ring_title),
+            description = context.getString(R.string.tutorial_calorie_ring_description),
+            targetOffset = elementCoordinates["calorie_ring"]?.first,
+            targetSize = elementCoordinates["calorie_ring"]?.second
+        ),
+        TutorialStep(
+            id = "add_meal_fab",
+            title = context.getString(R.string.tutorial_add_meal_title),
+            description = context.getString(R.string.tutorial_add_meal_description),
+            targetOffset = elementCoordinates["add_meal_fab"]?.first,
+            targetSize = elementCoordinates["add_meal_fab"]?.second
+        ),
+        TutorialStep(
+            id = "add_exercise_fab",
+            title = context.getString(R.string.tutorial_add_exercise_title),
+            description = context.getString(R.string.tutorial_add_exercise_description),
+            targetOffset = elementCoordinates["add_exercise_fab"]?.first,
+            targetSize = elementCoordinates["add_exercise_fab"]?.second
+        ),
+        TutorialStep(
+            id = "analytics_icon",
+            title = context.getString(R.string.tutorial_analytics_title),
+            description = context.getString(R.string.tutorial_analytics_description),
+            targetOffset = elementCoordinates["analytics_icon"]?.first,
+            targetSize = elementCoordinates["analytics_icon"]?.second
+        ),
+        TutorialStep(
+            id = "settings_icon",
+            title = context.getString(R.string.tutorial_settings_title),
+            description = context.getString(R.string.tutorial_settings_description),
+            targetOffset = elementCoordinates["settings_icon"]?.first,
+            targetSize = elementCoordinates["settings_icon"]?.second
+        ),
+        TutorialStep(
+            id = "edit_goals_icon",
+            title = context.getString(R.string.tutorial_edit_goals_title),
+            description = context.getString(R.string.tutorial_edit_goals_description),
+            targetOffset = elementCoordinates["edit_goals_icon"]?.first,
+            targetSize = elementCoordinates["edit_goals_icon"]?.second
+        ),
+        TutorialStep(
+            id = "supplement_pill",
+            title = context.getString(R.string.tutorial_supplement_pill_title),
+            description = context.getString(R.string.tutorial_supplement_pill_description),
+            targetOffset = elementCoordinates["supplement_pill"]?.first,
+            targetSize = elementCoordinates["supplement_pill"]?.second
+        ),
+        TutorialStep(
+            id = "check_in_history",
+            title = context.getString(R.string.tutorial_check_in_history_title),
+            description = context.getString(R.string.tutorial_check_in_history_description),
+            targetOffset = elementCoordinates["check_in_history"]?.first,
+            targetSize = elementCoordinates["check_in_history"]?.second
+        ),
+        TutorialStep(
+            id = "completion",
+            title = context.getString(R.string.tutorial_completion_title),
+            description = context.getString(R.string.tutorial_completion_description)
+        )
+    )
+}
+
+private fun getStepIdFromIndex(index: Int): String {
+    return when (index) {
+        0 -> "dashboard_overview"
+        1 -> "calorie_ring"
+        2 -> "add_meal_fab"
+        3 -> "add_exercise_fab"
+        4 -> "analytics_icon"
+        5 -> "settings_icon"
+        6 -> "edit_goals_icon"
+        7 -> "supplement_pill"
+        8 -> "check_in_history"
+        9 -> "completion"
+        else -> ""
     }
 }

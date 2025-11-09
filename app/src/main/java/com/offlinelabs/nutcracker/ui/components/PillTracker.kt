@@ -1,5 +1,6 @@
 package com.offlinelabs.nutcracker.ui.components
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -9,27 +10,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.offlinelabs.nutcracker.R
+import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
 import com.offlinelabs.nutcracker.ui.theme.*
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun PillTracker(
-    isPillTaken: Boolean,
+    pill: Pill,
     pillCheckIn: PillCheckIn?,
     onPillToggle: () -> Unit,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isPillTaken = pillCheckIn != null
+    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
+        // Pill name above icon (small font)
+        Text(
+            text = pill.name,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = appTextSecondaryColor(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .widthIn(max = 60.dp)
+                .padding(bottom = 4.dp)
+        )
+        
         // Pill icon button with glow effect when taken
-        IconButton(
-            onClick = onPillToggle,
+        Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
@@ -37,6 +57,11 @@ fun PillTracker(
                     isGlowing = isPillTaken,
                     glowColor = pillTakenColor()
                 )
+                .combinedClickable(
+                    onClick = onPillToggle,
+                    onLongClick = onLongPress
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_pill_24),

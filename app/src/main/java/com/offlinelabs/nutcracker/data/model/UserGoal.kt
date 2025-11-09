@@ -21,7 +21,7 @@ data class UserGoal(
             proteinGoal_g = 100,
             fatGoal_g = 65,
             fiberGoal_g = 30,
-            sodiumGoal_mg = 2300
+            sodiumGoal_mg = 5750
         )
     }
 }

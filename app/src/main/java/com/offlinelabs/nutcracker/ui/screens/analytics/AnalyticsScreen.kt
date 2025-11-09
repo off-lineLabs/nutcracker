@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.offlinelabs.nutcracker.R
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
@@ -48,7 +49,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -655,7 +658,9 @@ fun NutritionAnalyticsContent(
                     kotlinx.coroutines.flow.combine(
                         exerciseFlows + tefFlows
                     ) { values ->
+                        @Suppress("UNCHECKED_CAST")
                         val exerciseValues = values.take(7) as List<Double>
+                        @Suppress("UNCHECKED_CAST")
                         val tefTotals = values.drop(7) as List<DailyTotals?>
                         
                         val exerciseSum = exerciseValues.sum()
@@ -1076,7 +1081,7 @@ fun StatsCards(
             title = stringResource(R.string.analytics_your_final_balance),
             value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
             valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor,
-            icon = if (balance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            icon = if (balance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (balance >= 0) {
                 listOf(
                     ProteinFiberColor.copy(alpha = 0.15f),
@@ -1095,7 +1100,7 @@ fun StatsCards(
             title = stringResource(R.string.analytics_average_balance_per_day),
             value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
             valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor,
-            icon = if (averageBalance >= 0) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
+            icon = if (averageBalance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (averageBalance >= 0) {
                 listOf(
                     ProteinFiberColor.copy(alpha = 0.12f),
@@ -1213,10 +1218,6 @@ fun ExerciseAnalyticsContent() {
     var selectedMonth by remember { mutableStateOf(currentDate.month) }
     var selectedYear by remember { mutableStateOf(currentDate.year) }
     
-    // Calculate month boundaries for selected month
-    val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
-    val monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth())
-    
     // Calculate last 7 days (including today)
     val last7DaysEnd = currentDate
     val last7DaysStart = currentDate.minusDays(6)
@@ -1228,7 +1229,7 @@ fun ExerciseAnalyticsContent() {
     var exerciseDatesInMonth by remember { mutableStateOf<List<String>>(emptyList()) }
     var primaryMusclesLastExercise by remember { mutableStateOf<List<String>>(emptyList()) }
     
-    // Load analytics data
+    // Load analytics data that doesn't depend on selected month
     LaunchedEffect(currentDate) {
         coroutineScope.launch {
             // Get calories burned in last 7 days
@@ -1263,19 +1264,34 @@ fun ExerciseAnalyticsContent() {
         }
         
         coroutineScope.launch {
-            // Get exercise dates in current month
-            exerciseLogDao.getExerciseDatesInRange(
-                monthStart.toString(),
-                monthEnd.toString()
-            ).collectLatest { dates ->
-                exerciseDatesInMonth = dates
-            }
-        }
-        
-        coroutineScope.launch {
             // Get primary muscles from last exercise
             exerciseLogDao.getPrimaryMusclesFromLastExercise().collectLatest { muscles ->
                 primaryMusclesLastExercise = muscles
+            }
+        }
+    }
+    
+    // Load exercise dates for the selected month - this needs to update when month changes
+    // We need to include dates from previous/next month that are visible in the calendar
+    LaunchedEffect(selectedMonth, selectedYear) {
+        coroutineScope.launch {
+            val monthStart = LocalDate.of(selectedYear, selectedMonth, 1)
+            
+            // Calculate the same date range that the calendar uses
+            // Calendar starts from Monday of the week containing the first day of the month
+            val firstDayOfMonth = monthStart.dayOfWeek
+            val daysToSubtract = (firstDayOfMonth.value - 1) % 7
+            val calendarStart = monthStart.minusDays(daysToSubtract.toLong())
+            
+            // Calendar shows 6 weeks = 42 days
+            val calendarEnd = calendarStart.plusDays(41)
+            
+            // Get exercise dates in the visible calendar range (includes overflow from adjacent months)
+            exerciseLogDao.getExerciseDatesInRange(
+                calendarStart.toString(),
+                calendarEnd.toString()
+            ).collectLatest { dates ->
+                exerciseDatesInMonth = dates
             }
         }
     }
@@ -1325,6 +1341,24 @@ fun ExerciseAnalyticsContent() {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Track heights of the three cards (natural heights before constraint)
+                var card1Height by remember { mutableStateOf<Dp?>(null) }
+                var card2Height by remember { mutableStateOf<Dp?>(null) }
+                var card3Height by remember { mutableStateOf<Dp?>(null) }
+                
+                // Get density for pixel to dp conversion
+                val density = LocalDensity.current
+                
+                // Calculate maximum height only when all cards have been measured
+                val allCardsMeasured = card1Height != null && card2Height != null && card3Height != null
+                val maxCardHeight = remember(card1Height, card2Height, card3Height) {
+                    if (allCardsMeasured) {
+                        maxOf(card1Height!!, card2Height!!, card3Height!!)
+                    } else {
+                        null
+                    }
+                }
+                
                 // First row: Cards 1, 2, and 3
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1334,7 +1368,20 @@ fun ExerciseAnalyticsContent() {
                     ExerciseAnalyticsCard(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .then(
+                                if (maxCardHeight != null) {
+                                    // All cards measured, apply max height constraint
+                                    Modifier.height(maxCardHeight)
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .onSizeChanged { size ->
+                                // Only measure natural height before constraint is applied
+                                if (card1Height == null) {
+                                    card1Height = with(density) { size.height.toDp() }
+                                }
+                            },
                         title = stringResource(R.string.analytics_calories_burned),
                         value = "${caloriesBurnedLast7Days.toInt()}",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -1345,7 +1392,20 @@ fun ExerciseAnalyticsContent() {
                     ExerciseAnalyticsCard(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .then(
+                                if (maxCardHeight != null) {
+                                    // All cards measured, apply max height constraint
+                                    Modifier.height(maxCardHeight)
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .onSizeChanged { size ->
+                                // Only measure natural height before constraint is applied
+                                if (card2Height == null) {
+                                    card2Height = with(density) { size.height.toDp() }
+                                }
+                            },
                         title = stringResource(R.string.analytics_exercise_days),
                         value = "$exerciseDaysLastWeek",
                         icon = Icons.Filled.FitnessCenter,
@@ -1356,7 +1416,20 @@ fun ExerciseAnalyticsContent() {
                     ExerciseAnalyticsCard(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .then(
+                                if (maxCardHeight != null) {
+                                    // All cards measured, apply max height constraint
+                                    Modifier.height(maxCardHeight)
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .onSizeChanged { size ->
+                                // Only measure natural height before constraint is applied
+                                if (card3Height == null) {
+                                    card3Height = with(density) { size.height.toDp() }
+                                }
+                            },
                         title = stringResource(R.string.analytics_days_since_last_exercise),
                         value = if (daysSinceLastExercise == -1) stringResource(R.string.analytics_never) else "$daysSinceLastExercise",
                         icon = painterResource(R.drawable.ic_pause),
@@ -1373,9 +1446,16 @@ fun ExerciseAnalyticsContent() {
                     ExerciseAnalyticsCard(
                         modifier = Modifier.fillMaxWidth(),
                         title = stringResource(R.string.analytics_last_exercise_muscles),
-                        value = primaryMusclesLastExercise.joinToString(", ") { 
-                            it.replaceFirstChar { char -> char.uppercase() }
-                        }.takeIf { it.isNotEmpty() } ?: "None",
+                        value = primaryMusclesLastExercise
+                            .flatMap { musclesString -> 
+                                // Split the pipe-delimited string and filter out empty strings
+                                musclesString.split("|").filter { it.isNotBlank() }
+                            }
+                            .distinct() // Remove duplicates
+                            .joinToString(", ") { muscle -> 
+                                muscle.replaceFirstChar { char -> char.uppercase() }
+                            }
+                            .takeIf { it.isNotEmpty() } ?: "None",
                         icon = painterResource(R.drawable.ic_attribution),
                         color = BrandRed,
                         isSmallValue = true

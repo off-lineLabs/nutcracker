@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.ui.res.painterResource
@@ -18,6 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.LayoutCoordinates
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.ui.components.items.MealItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
@@ -32,10 +37,12 @@ fun SelectMealForCheckInDialog(
     onSelectMeal: (Meal) -> Unit,
     onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
-    onScanBarcode: () -> Unit = {}
+    onScanBarcode: () -> Unit = {},
+    registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null
 ) {
     var selectedMeal by remember { mutableStateOf<Meal?>(null) }
     var showUnifiedDialog by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
     
     // Show unified dialog when a meal is selected
     selectedMeal?.let { meal ->
@@ -87,7 +94,7 @@ fun SelectMealForCheckInDialog(
                         modifier = Modifier.align(Alignment.CenterStart)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.close),
                             tint = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                         )
@@ -107,7 +114,18 @@ fun SelectMealForCheckInDialog(
                 // Scan barcode button
                 Button(
                     onClick = onScanBarcode,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                            val bounds = coordinates.boundsInWindow()
+                            val center = bounds.center
+                            val padding = with(density) { 8.dp.toPx() }
+                            val size = androidx.compose.ui.geometry.Size(
+                                width = bounds.width + padding * 2,
+                                height = bounds.height + padding * 2
+                            )
+                            registerElementCoordinates?.invoke("barcode_button", center, size)
+                        },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = brandAccentShade(0)
                     )

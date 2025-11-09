@@ -1,26 +1,15 @@
 <resources>
     <string name="app_name">NutCracker</string>
     <!-- Screens / Sections -->
-    <string name="progress_title">Today\'s Progress</string>
-    <string name="todays_log_title">Today\'s Log</string>
 
     <!-- Ring / Calories -->
     <string name="calories_remaining_label">Remaining</string>
-    <string name="calories_remaining_value">1250</string> <!-- e.g., 1250 -->
-    <string name="calories_consumed">500</string>
-    <string name="calories_goal_value">500 / 2500 kcal</string> <!-- e.g., 1250 / 2500 kcal -->
+    <!-- e.g., 1250 -->
+    <!-- e.g., 1250 / 2500 kcal -->
 
     <!-- Toggle / Bonus -->
-    <string name="tef_bonus_label">TEF Bonus</string>
-    <string name="temf_bonus_on">On</string>
-    <string name="temf_bonus_off">Off</string>
 
     <!-- Macros & Nutrients (labels and dynamic values) -->
-    <string name="nutrient_carbs">Carbs</string>
-    <string name="nutrient_protein">Protein</string>
-    <string name="nutrient_fat">Fat</string>
-    <string name="nutrient_fiber">Fiber</string>
-    <string name="nutrient_sodium">Salt</string>
 
     <string name="nutrient_details_title">Nutrient Details</string>
     <string name="carbohydrates_label">Carbs</string>
@@ -31,72 +20,50 @@
 
     <!-- Common value pattern: current / goal with units -->
     <!-- Use these where appropriate to keep consistency -->
-    <string name="value_of_total">%1$s / %2$s</string>                 <!-- generic -->
-    <string name="grams_value_of_total">%1$d / %2$d g</string>         <!-- e.g., 150 / 300g -->
-    <string name="milligrams_value_of_total">%1$d / %2$d mg</string>   <!-- optional if needed -->
-    <string name="kcal_value_of_total">%1$d / %2$d kcal</string>       <!-- calories variant -->
-    <string name="decimal_value_of_total">%1$.1f / %2$.1f</string>     <!-- e.g., 1.2 / 2.3 -->
+    <!-- generic -->
+    <!-- e.g., 150 / 300g -->
+    <!-- optional if needed -->
+    <!-- calories variant -->
+    <!-- e.g., 1.2 / 2.3 -->
 
     <!-- Specific examples from mock-up (keep if you prefer explicit keys per item) -->
-    <string name="carbs_value">%1$d / %2$d g</string>       <!-- 150 / 300g -->
-    <string name="protein_value">%1$d / %2$d g</string>     <!-- 80 / 150g -->
-    <string name="fat_value">%1$d / %2$d g</string>         <!-- 40 / 70g -->
-    <string name="fiber_value">%1$d / %2$d g</string>       <!-- 15 / 30g -->
-    <string name="sodium_value">%1$.1f / %2$.1f g</string>  <!-- 1.2 / 2.3g -->
+    <!-- 150 / 300g -->
+    <!-- 80 / 150g -->
+    <!-- 40 / 70g -->
+    <!-- 15 / 30g -->
+    <!-- 1.2 / 2.3g -->
 
     <!-- Buttons / Actions -->
-    <string name="action_meal_check_in">MEAL CHECK IN</string>
-    <string name="action_exercise_bonus">EXERCISE BONUS</string>
-    <string name="action_my_meals">My Meals</string>
-    <string name="action_my_exercises">My Exercises</string>
-    <string name="action_meal_for_later">Meal for Later</string>
 
     <!-- Accessibility (content descriptions) -->
-    <string name="acc_progress_ring">Calorie progress ring</string>
-    <string name="acc_tef_bonus_toggle">Toggle TEF Bonus</string>
-    <string name="acc_macro_bar_carbs">Carbs progress bar</string>
-    <string name="acc_macro_bar_protein">Protein progress bar</string>
-    <string name="acc_macro_bar_fat">Fat progress bar</string>
-    <string name="acc_macro_bar_fiber">Fiber progress bar</string>
-    <string name="acc_macro_bar_sodium">Salt progress bar</string>
 
     <!-- Dashboard specific strings -->
     <string name="add_new_meal">Add New Meal</string>
     <string name="add_meal">Add Meal</string>
     <string name="set_goal">Set Goal</string>
-    <string name="your_meals">Your Meals</string>
     <string name="no_meals_added">No meals added yet</string>
-    <string name="check_in_meal">Check In Meal</string>
     <string name="registrar_comida">Registrar comida</string>
     <string name="scan_barcode">Scan barcode</string>
     <string name="search_meal_database">Search Meal Database</string>
     <string name="recent_check_ins">Recent Check-ins</string>
-    <string name="no_check_ins_yet">No check-ins yet</string>
-    
+
     <!-- Check-in dialog strings -->
     <string name="check_in_meal_title">Check in %1$s</string>
     <string name="meal_calories_info">%1$d kcal per %2$d %3$s</string>
     <string name="serving_size">Serving Size</string>
-    <string name="serving_size_value">%1$.1fx (%2$d kcal)</string>
     <string name="serving_size_display">%1$.1fx</string>
     <string name="notes_optional">Notes (optional)</string>
     <string name="check_in">Check In</string>
     <string name="update">Update</string>
     <string name="cancel">Cancel</string>
     <string name="calories_value">%1$d kcal</string>
-    <string name="delete_check_in">Delete check-in</string>
-    <string name="delete_check_in_success">Check-in deleted successfully</string>
-    <string name="delete_check_in_error">Failed to delete check-in. Please try again.</string>
     <string name="goal_saved_success">Goal saved successfully</string>
     <string name="goal_save_error">Failed to save goal. Please try again.</string>
     <string name="meal_added_success">Meal added successfully</string>
     <string name="meal_add_error">Failed to add meal. Please try again.</string>
-    <string name="check_in_success">Check-in completed successfully</string>
-    <string name="check_in_error">Failed to complete check-in. Please try again.</string>
-    
+
     <!-- Exercise specific strings -->
     <string name="add_exercise">Add Exercise</string>
-    <string name="add_new_exercise">Add New Exercise</string>
     <string name="exercise_name">Exercise Name</string>
     <string name="exercise_type">Exercise Type</string>
     <string name="strength">Strength</string>
@@ -116,15 +83,11 @@
     <string name="total_calories">Total Calories</string>
     <string name="max_weight_recorded">Max Weight: %1$.1f kg</string>
     <string name="check_in_exercise_title">Check in %1$s</string>
-    <string name="select_exercise">Select Exercise</string>
-    <string name="select_existing_exercise">Select Existing Exercise</string>
-    <string name="select_existing_meal">Select Existing Meal</string>
     <string name="no_exercises_yet">No exercises added yet</string>
     <string name="no_meals_today">No meals today</string>
     <string name="no_exercises_today">No exercises today</string>
     <string name="meals">Meals</string>
     <string name="exercises">Exercises</string>
-    <string name="include_exercise_calories">Include Exercise Calories</string>
     <string name="add">Add</string>
     <string name="delete">Delete</string>
     
@@ -141,11 +104,8 @@
     <string name="serving_size_label">Serving Size</string>
     <string name="serving_size_value_label">Amount</string>
     <string name="serving_size_unit_label">Unit</string>
-    <string name="serving_size_default_value">100</string>
     <string name="serving_size_placeholder">Enter amount</string>
-    <string name="serving_size_validation_error">Please enter a valid serving size</string>
-    <string name="enter_manual_serving_size">Enter amount manually (%1$s)</string>
-    
+
     <!-- Serving Size Units -->
     <string name="unit_grams">Grams (g)</string>
     <string name="unit_kilograms">Kilograms (kg)</string>
@@ -191,8 +151,6 @@
     <string name="all">All</string>
     <string name="no_activities_today">No activities today</string>
     <string name="ok">OK</string>
-    <string name="exercise_log_deleted_success">Exercise log deleted successfully</string>
-    <string name="exercise_log_delete_error">Failed to delete exercise log. Please try again.</string>
     <string name="check_in_completed_success">Check-in completed successfully</string>
     <string name="check_in_completed_error">Failed to complete check-in. Please try again.</string>
     <string name="exercise_added_success">Exercise added successfully</string>
@@ -211,13 +169,17 @@
     <string name="sets_unit">sets</string>
     
     <!-- Additional hardcoded strings from DashboardScreen -->
-    <string name="grams_unit">g</string>
-    <string name="milligrams_unit">mg</string>
-    <string name="kcal_unit">kcal</string>
     <string name="date_format_pattern">yyyy-MM-dd</string>
-    <string name="default_pill_name">default</string>
+    <string name="default_pill_name">Supplement</string>
+    <string name="supplement_tracker">Supplement tracker</string>
     <string name="daily_supplement_taken">Daily supplement taken</string>
     <string name="daily_supplement_removed">Daily supplement removed</string>
+    <string name="edit_pill">Edit pill</string>
+    <string name="add_pill">Add pill</string>
+    <string name="pill_name">Pill name</string>
+    <string name="pill_name_placeholder">Enter pill name</string>
+    <string name="confirm_delete_pill_message">Are you sure you want to delete this pill? All check-in records will be removed.</string>
+    <string name="save">Save</string>
     <string name="exercise_bonus_calories_on">Exercise bonus calories ON</string>
     <string name="exercise_bonus_calories_off">Exercise bonus calories OFF</string>
     <string name="tef_bonus_calories_on">TEF bonus calories ON</string>
@@ -261,7 +223,6 @@
     <string name="scan_again">Scan Again</string>
     <string name="use_this_barcode">Use This Barcode</string>
     <string name="add_to_my_meals">Add to My Meals</string>
-    <string name="save">Save</string>
     <string name="select">Select</string>
     <string name="save_and_check_in">Save and Check-in</string>
     <string name="just_save">Just Save</string>
@@ -286,44 +247,20 @@
     <string name="equipment">Equipment</string>
     <string name="primary_muscle">Primary Muscle</string>
     <string name="category">Category</string>
-    <string name="add_to_my_exercises">Add to My Exercises</string>
     <string name="update_meal">Update Meal</string>
     
     <!-- Error messages -->
-    <string name="unable_to_process_food_info">Unable to process food information</string>
-    <string name="food_info_not_found">Food information not found for this barcode</string>
-    <string name="error_fetching_food_info">An error occurred while fetching food information</string>
-    <string name="failed_to_load_exercise_data">Failed to load exercise data</string>
-    
+
     <!-- Unit names -->
-    <string name="grams">Grams</string>
-    <string name="kilograms">Kilograms</string>
-    <string name="pounds">Pounds</string>
-    <string name="ounces">Ounces</string>
-    <string name="milliliters">Milliliters</string>
-    <string name="liters">Liters</string>
-    <string name="cups">Cups</string>
-    <string name="fluid_ounces">Fluid Ounces</string>
-    <string name="tablespoons">Tablespoons</string>
-    <string name="teaspoons">Teaspoons</string>
-    <string name="pieces">Pieces</string>
-    <string name="slices">Slices</string>
-    <string name="units">Units</string>
-    <string name="servings">Servings</string>
-    <string name="portions">Portions</string>
-    
+
     <string name="app_version">App Version</string>
     <string name="version_info">Version %1$s (%2$d)</string>
     <string name="legal_information">Legal Information</string>
     <string name="publisher_brand">OFFLINE LABS</string>
     <string name="license_info">GNU GPL v3</string>
     <string name="terms_of_use">Terms of Use</string>
-    <string name="terms_of_use_text">By using this app you agree with the terms of use</string>
     <string name="github_repo">GitHub Repository</string>
-    <string name="donate">Donate</string>
-    <string name="donate_message">Support the development of this app</string>
     <string name="terms_of_use_dialog_title">Terms of Use</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Terms of Use\n\nNutcracker is a free and open-source application released by Offline Labs under the GNU General Public License v3 (GPLv3). By downloading, installing, or using this app, you agree to the following terms:\n\n\n&lt;b&gt;LICENSE AND FREEDOM&lt;/b&gt;\n• Nutcracker is licensed under the GNU GPL v3.\n• You are free to use, study, share, and modify the app according to the license.\n• Any distributed version of Nutcracker must remain free of charge and free of advertising, in line with this license.\n\n\n&lt;b&gt;NO GUARANTEES&lt;/b&gt;\n• Nutcracker is a beta project. It may stop working, lose data, or contain errors at any time.\n• There is no guarantee the app will be maintained, updated, or supported in the future.\n• You should not rely on Nutcracker for anything critical. Use it entirely at your own risk.\n\n\n&lt;b&gt;DISCLAIMER OF LIABILITY&lt;/b&gt;\n• Offline Labs and the developers take no responsibility for any problems, losses, damages, or costs caused by the use of this app.\n• This includes (but is not limited to) data loss, device failure, corruption of files, or any indirect or direct damage.\n• By using Nutcracker, you accept full responsibility for any consequences.\n\n\n&lt;b&gt;DATA COLLECTION AND PRIVACY&lt;/b&gt;\n• Offline Labs does not collect any personal data from users of this application.\n• We do not use analytics tools (such as Google Analytics) or any other data collection mechanisms.\n• However, we cannot guarantee that third-party functionalities used by the app (such as the barcode scanner by Google) or requests to external databases will behave in the same manner.\n\n\n&lt;b&gt;SUPPORT AND ISSUES&lt;/b&gt;\n• This is a community-driven project. There is no official support.\n• For bugs, requests, or technical issues, please open an issue on the GitHub repository.\n• For anything else, you can contact us at online@offline-labs.com.\n\n\n&lt;b&gt;GENERAL&lt;/b&gt;\n• By using Nutcracker, you agree that these terms apply regardless of where or how you access the app.\n• These terms may change at any point without notice.</string>
     <string name="close">Close</string>
     <string name="settings_icon_description">Settings</string>
     
@@ -345,7 +282,6 @@
     <string name="terms_of_use_required">You must agree to the terms of use to continue</string>
     
     <!-- Date and Time Picker -->
-    <string name="date_and_time">Date &amp; Time</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
     
@@ -381,6 +317,7 @@
     
     <!-- Additional hardcoded strings found in UI components -->
     <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="slide_to_change">&lt; slide to change &gt;</string>
     <string name="time_separator">:</string>
     <string name="language_change_message">Language changed. The app will restart to apply the new language.</string>
     <string name="processing_format">Processing: %1$s</string>
@@ -455,34 +392,83 @@
     <string name="food_classification_scores">Classification &amp; Scores</string>
     <string name="food_open_facts_contributors">© Open Food Facts contributors</string>
     
+    <!-- Additional Nutrition Labels -->
+    <string name="calories_label">Calories</string>
+    <string name="saturated_fat_label">Saturated Fat</string>
+    <string name="sugars_label">Sugars</string>
+    <string name="cholesterol_label">Cholesterol</string>
+    <string name="vitamin_c_label">Vitamin C</string>
+    <string name="calcium_label">Calcium</string>
+    <string name="iron_label">Iron</string>
+    
+    <!-- Classification Labels -->
+    <string name="nova_classification">NOVA Classification</string>
+    <string name="environmental_impact_score">Environmental impact score</string>
+    <string name="nutritional_quality_score">Nutritional quality score</string>
+    
+    <!-- Other Labels -->
+    <string name="brand_label">Brand: %1$s</string>
+    <string name="check_in_meal">Check-in Meal</string>
+    <string name="per_serving_size">per %1$d%2$s</string>
+    <string name="food_product_image">Food product image</string>
+    
     <!-- Barcode Scanner -->
-    <string name="barcode_scanned_successfully">Barcode Scanned Successfully!</string>
-    <string name="barcode_error_format">Error: %1$s</string>
-    <string name="barcode_opening_camera">Opening camera scanner...</string>
-    <string name="barcode_scanning">Scanning for barcodes...</string>
-    <string name="barcode_point_camera">Point camera at a barcode\n\nTap to scan again</string>
-    <string name="barcode_camera_error_format">Camera error: %1$s</string>
-    
+
     <!-- Food Search -->
-    <string name="food_searching">Searching...</string>
-    <string name="food_calories_format">%1$d kcal/100g</string>
-    <string name="food_protein_format"> • %1$dg protein</string>
-    
+    <string name="search_food_by_name">Search for food by name</string>
+    <string name="search_food_tip">Tip: Items that come in a package with a barcode are more likely to be found, but you can try some natural foods too!</string>
+    <string name="search_food_placeholder">Search for food…</string>
+    <string name="search_loading">Please wait while we collect the results</string>
+    <string name="search_error_title">There were some technical errors during your search. Please try again and check your internet connection</string>
+    <string name="search_error_message">Error message: %1$s</string>
+    <string name="search_no_results">We are sorry but there were no results for your search. If you want to contribute with a public food database, you can be the first to add it to Open Food Facts.</string>
+    <string name="open_food_facts">Open Food Facts</string>
+    <string name="whole_foods_only">Whole foods only</string>
+    <string name="showing_whole_foods_only">Showing whole foods only</string>
+    <string name="clear">Clear</string>
+    <string name="protein_format">%1$d g protein</string>
+
     <!-- Meal Details -->
-    <string name="meal_nutrition_facts">Nutrition Facts</string>
-    <string name="meal_per_serving_format">per %1$d%2$s</string>
-    <string name="meal_brand_format">Brand: %1$s</string>
-    <string name="meal_calories_label">Calories: </string>
-    <string name="meal_protein_label">Protein: </string>
-    <string name="meal_carbs_label">Carbs: </string>
-    <string name="meal_fat_label">Fat: </string>
-    <string name="meal_notes_label">Notes:</string>
-    <string name="meal_scanned">Scanned</string>
-    <string name="meal_searched">Searched</string>
-    <string name="meal_manual">Manual</string>
-    
+
     <!-- Exercise Details -->
-    <string name="exercise_notes_label">Notes:</string>
-    <string name="exercise_set_number_format">%1$d.</string>
-    <string name="exercise_label_format">%1$s:</string>
+
+    <!-- Tutorial Strings -->
+    <string name="tutorial_welcome_title">Welcome to Nutcracker!</string>
+    <string name="tutorial_welcome_description">Let\'s take a quick tour of your calorie tracking app. I\'ll show you the key features to get you started.</string>
+    
+    <string name="tutorial_calorie_ring_title">Daily Calorie Tracking</string>
+    <string name="tutorial_calorie_ring_description">This ring shows your daily calorie progress. You can see how many calories you still have available, how many you’ve consumed, and your daily goal.</string>
+    
+    <string name="tutorial_add_meal_title">Add Meals</string>
+    <string name="tutorial_add_meal_description">Tap here to manage your meals. Scan a barcode to automatically get a product’s nutritional data or enter the information manually.</string>
+    
+    <string name="tutorial_add_exercise_title">Add Exercise</string>
+    <string name="tutorial_add_exercise_description">Manage your exercises here. You can search among hundreds of preloaded exercises or enter the data manually.</string>
+    
+    <string name="tutorial_calendar_title">Change Date</string>
+    <string name="tutorial_calendar_description">View or edit entries from different days. Perfect for logging meals you forgot to track.</string>
+    
+    <string name="tutorial_analytics_title">View Progress</string>
+    <string name="tutorial_analytics_description">See detailed analytics and charts of your nutrition and exercise progress over time.</string>
+    
+    <string name="tutorial_settings_title">App Settings</string>
+    <string name="tutorial_settings_description">Customize your experience, set goals, change themes, and manage your data.</string>
+    
+    <string name="tutorial_edit_goals_title">Edit Daily Goals</string>
+    <string name="tutorial_edit_goals_description">You can (and should) edit your daily goals according to your needs. Tap this icon to customize your calorie and nutrient targets.</string>
+    
+    <string name="tutorial_supplement_pill_title">Track Supplements</string>
+    <string name="tutorial_supplement_pill_description">Keep track of your daily supplement intake. You can click to toggle as taken or long press to rename. Up to 5 supplements can be added.</string>
+    
+    <string name="tutorial_check_in_history_title">Recent Check-In History</string>
+    <string name="tutorial_check_in_history_description">Here you can see the meals and exercises you checked in for the day. Scroll to view all entries and tap any item to edit it.</string>
+    
+    <string name="tutorial_completion_title">You\'re All Set!</string>
+    <string name="tutorial_completion_description">That\'s it! You now know how to use Nutcracker. Start tracking your meals and exercises to reach your health goals.</string>
+    
+    <string name="tutorial_next">Next</string>
+    <string name="tutorial_previous">Previous</string>
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_done">Done</string>
+    <string name="tutorial_replay">Replay Tutorial</string>
 </resources>

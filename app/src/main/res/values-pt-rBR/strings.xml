@@ -1,38 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="acc_macro_bar_carbs">Barra de progresso de carboidratos</string>
-    <string name="acc_macro_bar_fat">Barra de progresso de gordura</string>
-    <string name="acc_macro_bar_fiber">Barra de progresso de fibra</string>
-    <string name="acc_macro_bar_protein">Barra de progresso de proteína</string>
-    <string name="acc_macro_bar_sodium">Barra de progresso de sal</string>
-    <string name="acc_progress_ring">Anel de progresso de calorias</string>
-    <string name="acc_tef_bonus_toggle">Alternar Bônus TEF</string>
-    <string name="action_exercise_bonus">BÔNUS DE EXERCÍCIO</string>
-    <string name="action_meal_check_in">REGISTRAR REFEIÇÃO</string>
-    <string name="action_meal_for_later">Refeição para Depois</string>
-    <string name="action_my_exercises">Meus Exercícios</string>
-    <string name="action_my_meals">Minhas Refeições</string>
     <string name="add">Adicionar</string>
     <string name="add_exercise">Adicionar Exercício</string>
     <string name="add_meal">Adicionar Refeição</string>
-    <string name="add_new_exercise">Adicionar Novo Exercício</string>
     <string name="add_new_meal">Adicionar Nova Refeição</string>
-    <string name="add_to_my_exercises">Adicionar aos Meus Exercícios</string>
     <string name="add_to_my_meals">Adicionar às Minhas Refeições</string>
     <string name="additional_nutrition">Nutrição Adicional</string>
     <string name="all">Todos</string>
+    <string name="just_check_in">Apenas registrar</string>
     <string name="amount">Quantidade</string>
     <string name="app_name">NutCracker</string>
     <string name="app_version">Versão do App</string>
     <string name="bodyweight">Peso Corporal</string>
     <string name="calories">Kcal</string>
     <string name="calories_burned">Calorias Queimadas</string>
-    <string name="calories_consumed">500</string>
-    <string name="calories_goal_value">500 / 2500 kcal</string>
     <string name="calories_kcal">Calorias (kcal)</string>
     <string name="calories_placeholder">Digite as calorias</string>
     <string name="calories_remaining_label">Restante</string>
-    <string name="calories_remaining_value">1250</string>
     <string name="calories_value">%1$d kcal</string>
     <string name="camera_permission_required">Permissão de câmera é necessária para escanear códigos de barras</string>
     <string name="cancel">Cancelar</string>
@@ -40,49 +24,44 @@
     <string name="carbohydrates_label">Carboidratos</string>
     <string name="carbs_g">Carboidratos</string>
     <string name="carbs_placeholder">Digite os carboidratos</string>
-    <string name="carbs_value">%1$d / %2$d g</string>
     <string name="cardio">Cardio</string>
     <string name="category">Categoria</string>
     <string name="check_in">Registrar</string>
     <string name="check_in_completed_error">Erro ao completar registro. Tente novamente.</string>
     <string name="check_in_completed_success">Registro completado com sucesso</string>
-    <string name="check_in_error">Erro ao completar registro. Tente novamente.</string>
     <string name="check_in_exercise_title">Registrar %1$s</string>
-    <string name="check_in_meal">Registrar Refeição</string>
     <string name="check_in_meal_title">Registrar %1$s</string>
-    <string name="check_in_success">Registro realizado com sucesso</string>
     <string name="close">Fechar</string>
     
     <!-- Legal Document Screen -->
     <string name="privacy_policy">Política de Privacidade</string>
+    <string name="analytics_title">Análise</string>
     <string name="back">Voltar</string>
     <string name="error_loading_document">Erro ao carregar documento</string>
     <string name="retry">Tentar novamente</string>
     <string name="common_units">Unidades Comuns</string>
-    <string name="cups">Xícaras</string>
     <string name="daily_supplement_removed">Suplemento diário removido</string>
     <string name="daily_supplement_taken">Suplemento diário tomado</string>
     <string name="dark_theme">Tema Escuro</string>
     <string name="database">Banco de Dados</string>
     <string name="database_export">Exportar Banco de Dados</string>
     <string name="date_format_pattern">yyyy-MM-dd</string>
-    <string name="decimal_value_of_total">%1$.1f / %2$.1f</string>
-    <string name="default_pill_name">padrão</string>
+    <string name="default_pill_name">Suplemento</string>
+    <string name="supplement_tracker">Rastreador de suplementos</string>
+    <string name="edit_pill">Editar suplemento</string>
+    <string name="add_pill">Adicionar suplemento</string>
+    <string name="pill_name">Nome do suplemento</string>
+    <string name="pill_name_placeholder">Digite o nome do suplemento</string>
+    <string name="confirm_delete_pill_message">Tem certeza de que deseja excluir este suplemento? Todos os registros de registro serão removidos.</string>
+    <string name="save">Salvar</string>
     <string name="default_reps">Repetições Padrão</string>
     <string name="default_sets">Séries Padrão</string>
     <string name="default_weight_kg">Peso Padrão (kg)</string>
     <string name="delete">Excluir</string>
-    <string name="delete_check_in">Excluir registro</string>
-    <string name="delete_check_in_error">Erro ao excluir registro. Tente novamente.</string>
-    <string name="delete_check_in_success">Registro excluído com sucesso</string>
-    <string name="donate">Doar</string>
-    <string name="donate_message">Apoie o desenvolvimento deste app</string>
     <string name="edit_exercise">Editar exercício</string>
     <string name="edit_meal">Editar Refeição</string>
     <string name="english">Inglês</string>
-    <string name="enter_manual_serving_size">Digite a quantidade manualmente (%1$s)</string>
     <string name="equipment">Equipamento</string>
-    <string name="error_fetching_food_info">Ocorreu um erro ao buscar informações de comida</string>
     <string name="exercise_add_error">Erro ao adicionar exercício. Tente novamente.</string>
     <string name="exercise_added_success">Exercício adicionado com sucesso</string>
     <string name="exercise_bonus_calories_off">Calorias de exercício desativadas</string>
@@ -90,8 +69,6 @@
     <string name="exercise_check_in_completed_success">Registro de exercício completado com sucesso</string>
     <string name="exercise_deleted_success">Exercício excluído com sucesso</string>
     <string name="exercise_details">Detalhes do Exercício</string>
-    <string name="exercise_log_delete_error">Erro ao excluir registro de exercício. Tente novamente.</string>
-    <string name="exercise_log_deleted_success">Registro de exercício excluído com sucesso</string>
     <string name="exercise_name">Nome do Exercício</string>
     <string name="exercise_type">Tipo de Exercício</string>
     <string name="exercise_updated_success">Exercício atualizado com sucesso</string>
@@ -101,7 +78,6 @@
     <string name="failed_to_create_default_pill">Erro ao criar suplemento padrão. Tente novamente.</string>
     <string name="failed_to_delete_exercise">Erro ao excluir exercício. Tente novamente.</string>
     <string name="failed_to_delete_meal">Erro ao excluir refeição. Tente novamente.</string>
-    <string name="failed_to_load_exercise_data">Falha ao carregar dados do exercício</string>
     <string name="failed_to_save_goal">Erro ao salvar objetivo. Tente novamente.</string>
     <string name="failed_to_update_exercise">Erro ao atualizar exercício. Tente novamente.</string>
     <string name="failed_to_update_meal">Erro ao atualizar refeição. Tente novamente.</string>
@@ -110,40 +86,28 @@
     <string name="fat_g_goal">Gordura (g)</string>
     <string name="fat_label">Gordura</string>
     <string name="fat_placeholder">Digite a gordura</string>
-    <string name="fat_value">%1$d / %2$d g</string>
     <string name="fiber_g">Fibra</string>
     <string name="fiber_g_goal">Fibra (g)</string>
     <string name="fiber_label">Fibra</string>
     <string name="fiber_placeholder">Digite a fibra</string>
-    <string name="fiber_value">%1$d / %2$d g</string>
-    <string name="fluid_ounces">Onças Fluidas</string>
-    <string name="food_info_not_found">Informações de comida não encontradas para este código de barras</string>
     <string name="github_repo">Repositório do GitHub</string>
     <string name="goal_save_error">Erro ao salvar meta. Tente novamente.</string>
     <string name="goal_saved_success">Meta salva com sucesso</string>
-    <string name="grams">Gramas</string>
-    <string name="grams_unit">g</string>
-    <string name="grams_value_of_total">%1$d / %2$d g</string>
     <string name="import_completed">Importação Concluída</string>
     <string name="import_database">Importar Banco de Dados</string>
     <string name="import_failed">Importação Falhou</string>
     <string name="import_summary">Resumo da Importação</string>
     <string name="importing_database">Importando Banco de Dados</string>
-    <string name="include_exercise_calories">Incluir Calorias de Exercício</string>
     <string name="ingredients">Ingredientes</string>
     <string name="instructions">Instruções</string>
     <string name="kcal_per_minute">Kcal por Minuto</string>
     <string name="kcal_per_rep">Kcal por Repetição</string>
     <string name="kcal_per_set">Kcal por Série</string>
-    <string name="kcal_unit">kcal</string>
-    <string name="kcal_value_of_total">%1$d / %2$d kcal</string>
     <string name="kg_unit">kg</string>
-    <string name="kilograms">Quilogramas</string>
     <string name="language">Idioma</string>
     <string name="legal_information">Informações Legais</string>
     <string name="license_info">GNU GPL v3</string>
     <string name="light_theme">Tema Claro</string>
-    <string name="liters">Litros</string>
     <string name="max_weight_recorded">Peso Máximo: %1$.1f kg</string>
     <string name="meal_add_error">Erro ao adicionar refeição. Tente novamente.</string>
     <string name="meal_added_success">Refeição adicionada com sucesso</string>
@@ -153,15 +117,11 @@
     <string name="meal_name_placeholder">Digite o nome da refeição</string>
     <string name="meal_updated_success">Refeição atualizada com sucesso</string>
     <string name="meals">Refeições</string>
-    <string name="milligrams_unit">mg</string>
-    <string name="milligrams_value_of_total">%1$d / %2$d mg</string>
-    <string name="milliliters">Mililitros</string>
     <string name="min_unit">min</string>
     <string name="minutes">Minutos</string>
     <string name="my_exercises">Meus exercícios</string>
     <string name="next_day">Próximo Dia</string>
     <string name="no_activities_today">Nenhuma atividade hoje</string>
-    <string name="no_check_ins_yet">Ainda não há registros</string>
     <string name="no_exercises_found">Nenhum exercício encontrado</string>
     <string name="no_exercises_today">Nenhum exercício hoje</string>
     <string name="no_exercises_yet">Ainda não há exercícios adicionados</string>
@@ -169,29 +129,18 @@
     <string name="no_meals_added">Ainda não há refeições adicionadas</string>
     <string name="no_meals_today">Nenhuma refeição hoje</string>
     <string name="notes_optional">Notas (opcional)</string>
-    <string name="nutrient_carbs">Carboidratos</string>
     <string name="nutrient_details_title">Detalhes dos Nutrientes</string>
-    <string name="nutrient_fat">Gordura</string>
-    <string name="nutrient_fiber">Fibra</string>
-    <string name="nutrient_protein">Proteína</string>
-    <string name="nutrient_sodium">Sal</string>
     <string name="nutrition_preview">Visualização de Nutrição</string>
     <string name="ok">OK</string>
-    <string name="ounces">Onças</string>
     <string name="personal_data">Dados Pessoais</string>
-    <string name="pieces">Peças</string>
-    <string name="portions">Porções</string>
     <string name="portuguese">Português (Brasil)</string>
-    <string name="pounds">Libras</string>
     <string name="previous_day">Dia Anterior</string>
     <string name="primary_muscle">Músculo Principal</string>
     <string name="progress_details">Detalhes do Progresso</string>
-    <string name="progress_title">Progresso de Hoje</string>
     <string name="protein_g">Proteínas</string>
     <string name="protein_g_goal">Proteína (g)</string>
     <string name="protein_label">Proteína</string>
     <string name="protein_placeholder">Digite a proteína</string>
-    <string name="protein_value">%1$d / %2$d g</string>
     <string name="provided_by">Fornecido por</string>
     <string name="publisher_brand">OFFLINE LABS</string>
     <string name="recent_check_ins">Registros Recentes</string>
@@ -205,20 +154,13 @@
     <string name="search_food">Buscar Comida</string>
     <string name="search_meal_database">Buscar na Base de Dados de Refeições</string>
     <string name="select_date">Selecionar Data</string>
-    <string name="select_exercise">Selecionar Exercício</string>
-    <string name="select_existing_exercise">Selecionar Exercício Existente</string>
-    <string name="select_existing_meal">Selecionar Refeição Existente</string>
     <string name="select_unit">Selecionar Unidade</string>
     <string name="serving_size">Tamanho da Porção</string>
-    <string name="serving_size_default_value">100</string>
     <string name="serving_size_display">%1$.1fx</string>
     <string name="serving_size_label">Tamanho da Porção</string>
     <string name="serving_size_placeholder">Digite a quantidade</string>
     <string name="serving_size_unit_label">Unidade</string>
-    <string name="serving_size_validation_error">Por favor, digite um tamanho de porção válido</string>
-    <string name="serving_size_value">%1$.1fx (%2$d kcal)</string>
     <string name="serving_size_value_label">Quantidade</string>
-    <string name="servings">Porções</string>
     <string name="set_goal">Definir Meta</string>
     <string name="set_goals">Definir Objetivos</string>
     <string name="set_your_daily_goals">Defina Seus Objetivos Diários</string>
@@ -226,32 +168,21 @@
     <string name="sets_unit">séries</string>
     <string name="settings">Configurações</string>
     <string name="settings_icon_description">Configurações</string>
-    <string name="slices">Fatias</string>
     <string name="sodium_label">Sal</string>
     <string name="sodium_mg">Sal</string>
     <string name="sodium_mg_goal">Sal (mg)</string>
     <string name="sodium_placeholder">Digite o sal</string>
-    <string name="sodium_value">%1$.1f / %2$.1f g</string>
     <string name="spanish">Espanhol</string>
     <string name="strength">Força</string>
     <string name="system_theme">Tema do Sistema</string>
-    <string name="tablespoons">Colheres de Sopa</string>
-    <string name="teaspoons">Colheres de Chá</string>
     <string name="tef_bonus_calories_off">Calorias TEF desativadas</string>
     <string name="tef_bonus_calories_on">Calorias TEF ativadas</string>
-    <string name="tef_bonus_label">Bônus TEF</string>
-    <string name="temf_bonus_off">Desativado</string>
-    <string name="temf_bonus_on">Ativado</string>
     <string name="terms_of_use">Termos de Uso</string>
-    <string name="terms_of_use_dialog_content">Nutcracker – Termos de Uso\n\nNutcracker é um aplicativo gratuito e de código aberto lançado pela Offline Labs sob a Licença Pública Geral GNU v3 (GPLv3). Ao baixar, instalar ou usar este aplicativo, você concorda com os seguintes termos:\n\n\n&lt;b&gt;LICENÇA E LIBERDADE&lt;/b&gt;\n• Nutcracker está licenciado sob GNU GPL v3.\n• Você é livre para usar, estudar, compartilhar e modificar o aplicativo de acordo com a licença.\n• Qualquer versão distribuída do Nutcracker deve permanecer gratuita e sem publicidade, de acordo com esta licença.\n\n\n&lt;b&gt;SEM GARANTIAS&lt;/b&gt;\n• Nutcracker é um projeto beta. Pode parar de funcionar, perder dados ou conter erros a qualquer momento.\n• Não há garantia de que o aplicativo será mantido, atualizado ou suportado no futuro.\n• Você não deve confiar no Nutcracker para nada crítico. Use-o inteiramente por sua conta e risco.\n\n\n&lt;b&gt;ISENÇÃO DE RESPONSABILIDADE&lt;/b&gt;\n• Offline Labs e os desenvolvedores não se responsabilizam por quaisquer problemas, perdas, danos ou custos causados pelo uso deste aplicativo.\n• Isso inclui (mas não se limita a) perda de dados, falha do dispositivo, corrupção de arquivos ou qualquer dano indireto ou direto.\n• Ao usar o Nutcracker, você aceita total responsabilidade por quaisquer consequências.\n\n\n&lt;b&gt;COLETA DE DADOS E PRIVACIDADE&lt;/b&gt;\n• Offline Labs não coleta dados pessoais dos usuários deste aplicativo.\n• Não utilizamos ferramentas de análise (como Google Analytics) ou outros mecanismos de coleta de dados.\n• No entanto, não podemos garantir que funcionalidades de terceiros utilizadas pelo aplicativo (como o scanner de código de barras do Google) ou solicitações a bancos de dados externos se comportem da mesma forma.\n\n\n&lt;b&gt;SUPORTE E PROBLEMAS&lt;/b&gt;\n• Este é um projeto comunitário. Não há suporte oficial.\n• Para bugs, solicitações ou problemas técnicos, por favor abra uma issue no repositório do GitHub.\n• Para qualquer outra coisa, você pode nos contatar em online@offline-labs.com.\n\n\n&lt;b&gt;GERAL&lt;/b&gt;\n• Ao usar o Nutcracker, você concorda que estes termos se aplicam independentemente de onde ou como você acessa o aplicativo.\n• Estes termos podem mudar a qualquer momento sem aviso prévio.</string>
     <string name="terms_of_use_dialog_title">Termos de Uso</string>
-    <string name="terms_of_use_text">Ao usar este app você concorda com os termos de uso</string>
     <string name="theme">Tema</string>
     <string name="today">Hoje</string>
-    <string name="todays_log_title">Registro de Hoje</string>
     <string name="total_calories">Total de Calorias</string>
     <string name="type_information">Digitar informações</string>
-    <string name="unable_to_process_food_info">Não é possível processar informações de comida</string>
     <string name="unit_cups">Xícaras (cup)</string>
     <string name="unit_fluid_ounces">Onças Fluidas (fl oz)</string>
     <string name="unit_grams">Gramas (g)</string>
@@ -267,7 +198,6 @@
     <string name="unit_tablespoons">Colheres de Sopa (tbsp)</string>
     <string name="unit_teaspoons">Colheres de Chá (tsp)</string>
     <string name="unit_units">Unidades (unit)</string>
-    <string name="units">Unidades</string>
     <string name="update">Atualizar</string>
     <string name="update_meal">Atualizar Refeição</string>
     <string name="use_this_barcode">Usar Este Código de Barras</string>
@@ -277,16 +207,14 @@
     <string name="validation_fiber_non_negative">A fibra deve ser um número não negativo.</string>
     <string name="validation_protein_non_negative">A proteína deve ser um número não negativo.</string>
     <string name="validation_sodium_non_negative">O sal deve ser um número não negativo.</string>
-    <string name="value_of_total">%1$s / %2$s</string>
     <string name="version_info">Versão %1$s (%2$d)</string>
     <string name="volume_units">Unidades de Volume</string>
     <string name="weight_kg">Peso (kg)</string>
     <string name="weight_units">Unidades de Peso</string>
-    <string name="your_meals">Suas Refeições</string>
     <string name="yuhonas">Yuhonas</string>
     
     <!-- Date and Time Picker -->
-    <string name="date_and_time">Data e Hora</string>
+    <string name="terms_of_use_required">Você precisa concordar com os termos para continuar</string>
     <string name="hour">HH</string>
     <string name="minute">MM</string>
     
@@ -322,6 +250,7 @@
     
     <!-- Additional hardcoded strings found in UI components -->
     <string name="serving_multiplier_format">%1$.1fx</string>
+    <string name="slide_to_change">&lt; deslize para mudar &gt;</string>
     <string name="time_separator">:</string>
     <string name="language_change_message">Idioma alterado. O app será reiniciado para aplicar o novo idioma.</string>
     <string name="processing_format">Processando: %1$s</string>
@@ -395,4 +324,83 @@
     <!-- Food Info Dialog -->
     <string name="food_classification_scores">Classificação e Pontuações</string>
     <string name="food_open_facts_contributors">© Colaboradores do Open Food Facts</string>
+    
+    <!-- Additional Nutrition Labels -->
+    <string name="calories_label">Calorias</string>
+    <string name="saturated_fat_label">Gordura Saturada</string>
+    <string name="sugars_label">Açúcares</string>
+    <string name="cholesterol_label">Colesterol</string>
+    <string name="vitamin_c_label">Vitamina C</string>
+    <string name="calcium_label">Cálcio</string>
+    <string name="iron_label">Ferro</string>
+    
+    <!-- Classification Labels -->
+    <string name="nova_classification">Classificação NOVA</string>
+    <string name="environmental_impact_score">Pontuação de impacto ambiental</string>
+    <string name="nutritional_quality_score">Pontuação de qualidade nutricional</string>
+    
+    <!-- Other Labels -->
+    <string name="brand_label">Marca: %1$s</string>
+    <string name="check_in_meal">Registrar Refeição</string>
+    <string name="per_serving_size">por %1$d%2$s</string>
+    <string name="food_product_image">Imagem do produto alimentício</string>
+    
+    <!-- Food Search -->
+    <string name="search_food_by_name">Busque alimentos por nome</string>
+    <string name="search_food_tip">Dica: itens que vêm em uma embalagem com código de barras têm mais chances de serem encontrados, mas você também pode tentar alguns alimentos naturais!</string>
+    <string name="search_food_placeholder">Buscar alimentos…</string>
+    <string name="search_loading">Por favor aguarde enquanto coletamos os resultados</string>
+    <string name="search_error_title">Houve alguns erros técnicos durante sua busca. Por favor, tente novamente e verifique sua conexão com a internet</string>
+    <string name="search_error_message">Mensagem de erro: %1$s</string>
+    <string name="search_no_results">Sentimos muito, mas não houve resultados para sua busca. Se você quiser contribuir com um banco de dados de alimentos pública, você pode ser o primeiro a adicioná-lo ao Open Food Facts.</string>
+    <string name="open_food_facts">Open Food Facts</string>
+    <string name="whole_foods_only">Apenas alimentos naturais</string>
+    <string name="showing_whole_foods_only">Mostrando apenas alimentos naturais</string>
+    <string name="clear">Limpar</string>
+    <string name="protein_format">%1$d g proteína</string>
+    <string name="select">Selecionar</string>
+    <string name="save_and_check_in">Salvar e registrar</string>
+    <string name="just_save">Apenas salvar</string>
+    <string name="terms_of_use_title">Termos de uso</string>
+    <string name="terms_of_use_agree">Eu concordo</string>
+    <string name="terms_of_use_scroll_to_continue">Por favor leia até o final</string>
+
+    <!-- Tutorial Strings -->
+    <string name="tutorial_welcome_title">Bem-vindo ao Nutcracker!</string>
+    <string name="tutorial_welcome_description">Vamos fazer um tour rápido do seu app de rastreamento de calorias. Vou mostrar as principais funcionalidades para você começar.</string>
+    
+    <string name="tutorial_calorie_ring_title">Rastreamento Diário de Calorias</string>
+    <string name="tutorial_calorie_ring_description">Este anel mostra seu progresso diário de calorias. Você pode ver quantas calorias disponíveis ainda tem, quantas consumiu e seu objetivo diário.</string>
+    
+    <string name="tutorial_add_meal_title">Adicionar Refeições</string>
+    <string name="tutorial_add_meal_description">Toque aqui para gerenciar suas refeições. Escaneie um código de barra para obter automaticamente os dados nutricionais de um produto ou insira as informações manualmente.</string>
+    
+    <string name="tutorial_add_exercise_title">Adicionar Exercício</string>
+    <string name="tutorial_add_exercise_description">Registre seus treinos aqui. Escolha entre centenas de exercícios ou adicione suas próprias atividades personalizadas.</string>
+    
+    <string name="tutorial_calendar_title">Alterar Data</string>
+    <string name="tutorial_calendar_description">Visualize ou edite entradas de diferentes dias. Perfeito para registrar refeições que você esqueceu de rastrear.</string>
+    
+    <string name="tutorial_analytics_title">Ver Progresso</string>
+    <string name="tutorial_analytics_description">Veja análises detalhadas e gráficos do seu progresso nutricional e de exercícios ao longo do tempo.</string>
+    
+    <string name="tutorial_settings_title">Configurações do App</string>
+    <string name="tutorial_settings_description">Personalize sua experiência, defina metas, altere temas e gerencie seus dados.</string>
+    
+    <string name="tutorial_edit_goals_title">Editar Metas Diárias</string>
+    <string name="tutorial_edit_goals_description">Você pode (e deve) editar suas metas diárias de acordo com suas necessidades. Toque neste ícone para personalizar seus objetivos de calorias e nutrientes.</string>
+    
+    <string name="tutorial_supplement_pill_title">Rastrear Suplementos</string>
+    <string name="tutorial_supplement_pill_description">Acompanhe sua ingestão diária de suplementos. Você pode clicar para marcar/desmarcar como tomado ou pressionar para renomear. É possível adicionar até 5 suplementos.</string>
+
+    <string name="tutorial_check_in_history_title">Histórico de registros recentes</string>
+    <string name="tutorial_check_in_history_description">Aqui você pode ver as refeições e exercícios que registrou hoje. Role para ver todas as entradas e toque em qualquer item para editá-lo.</string>
+    <string name="tutorial_completion_title">Tudo Pronto!</string>
+    <string name="tutorial_completion_description">Pronto! Agora você sabe como usar o Nutcracker. Comece a rastrear suas refeições e exercícios para alcançar seus objetivos de saúde.</string>
+    
+    <string name="tutorial_next">Próximo</string>
+    <string name="tutorial_previous">Anterior</string>
+    <string name="tutorial_skip">Pular</string>
+    <string name="tutorial_done">Ok</string>
+    <string name="tutorial_replay">Repetir Tutorial</string>
 </resources>
