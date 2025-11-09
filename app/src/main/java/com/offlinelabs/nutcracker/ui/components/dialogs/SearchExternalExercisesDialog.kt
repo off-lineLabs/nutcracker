@@ -138,7 +138,10 @@ fun SearchExternalExercisesDialog(
                         DropdownMenu(
                             expanded = showEquipmentFilter,
                             onDismissRequest = { showEquipmentFilter = false },
-                            modifier = Modifier.offset(y = with(density) { (equipmentChipHeight / density.density).dp + 4.dp })
+                            modifier = Modifier
+                                .offset(y = with(density) { (equipmentChipHeight / density.density).dp + 4.dp })
+                                .heightIn(max = 400.dp)
+                                .widthIn(min = 200.dp)
                         ) {
                             val equipmentOptions = listOf(
                                 "body only", "dumbbell", "barbell", "kettlebells", "machine", 
@@ -190,7 +193,10 @@ fun SearchExternalExercisesDialog(
                         DropdownMenu(
                             expanded = showMuscleFilter,
                             onDismissRequest = { showMuscleFilter = false },
-                            modifier = Modifier.offset(y = with(density) { (muscleChipHeight / density.density).dp + 4.dp })
+                            modifier = Modifier
+                                .offset(y = with(density) { (muscleChipHeight / density.density).dp + 4.dp })
+                                .heightIn(max = 400.dp)
+                                .widthIn(min = 200.dp)
                         ) {
                             val muscleOptions = listOf(
                                 "abdominals", "abductors", "adductors", "biceps", "calves", 
