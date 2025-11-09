@@ -24,6 +24,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
 import android.content.Intent
 import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
@@ -103,6 +109,14 @@ fun SearchExternalExercisesDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // Get navigation bar padding (shared by both filters)
+                val density = LocalDensity.current
+                val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                
+                // Use a conservative max height that accounts for navigation bar
+                // This is more reliable than dynamic calculation in dialog context
+                val maxDropdownHeight = 300.dp - navigationBarPadding
+                
                 // Filter chips - side by side to save vertical space
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -110,6 +124,7 @@ fun SearchExternalExercisesDialog(
                 ) {
                     // Equipment filter
                     var equipmentChipHeight by remember { mutableStateOf(0) }
+                    
                     Box {
                         FilterChip(
                             selected = selectedEquipment != null,
@@ -134,37 +149,40 @@ fun SearchExternalExercisesDialog(
                                 equipmentChipHeight = coordinates.size.height
                             }
                         )
-                        val density = LocalDensity.current
+                        
                         DropdownMenu(
                             expanded = showEquipmentFilter,
                             onDismissRequest = { showEquipmentFilter = false },
                             modifier = Modifier
                                 .offset(y = with(density) { (equipmentChipHeight / density.density).dp + 4.dp })
-                                .heightIn(max = 400.dp)
+                                .heightIn(max = maxDropdownHeight)
                                 .widthIn(min = 200.dp)
                         ) {
-                            val equipmentOptions = listOf(
-                                "body only", "dumbbell", "barbell", "kettlebells", "machine", 
-                                "cable", "bands", "medicine ball", "exercise ball", "foam roll", 
-                                "e-z curl bar", "other"
-                            )
-                            equipmentOptions.forEach { equipment ->
-                                DropdownMenuItem(
-                                    text = { Text(equipment.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        onEquipmentChange(if (equipment == selectedEquipment) null else equipment)
-                                        showEquipmentFilter = false
-                                    },
-                                    leadingIcon = if (equipment == selectedEquipment) {
-                                        { Icon(Icons.Filled.Check, contentDescription = null) }
-                                    } else null
+                            Column(modifier = Modifier.padding(bottom = 48.dp)) {
+                                val equipmentOptions = listOf(
+                                    "body only", "dumbbell", "barbell", "kettlebells", "machine", 
+                                    "cable", "bands", "medicine ball", "exercise ball", "foam roll", 
+                                    "e-z curl bar", "other"
                                 )
+                                equipmentOptions.forEach { equipment ->
+                                    DropdownMenuItem(
+                                        text = { Text(equipment.replaceFirstChar { it.uppercase() }) },
+                                        onClick = {
+                                            onEquipmentChange(if (equipment == selectedEquipment) null else equipment)
+                                            showEquipmentFilter = false
+                                        },
+                                        leadingIcon = if (equipment == selectedEquipment) {
+                                            { Icon(Icons.Filled.Check, contentDescription = null) }
+                                        } else null
+                                    )
+                                }
                             }
                         }
                     }
                     
                     // Muscle filter
                     var muscleChipHeight by remember { mutableStateOf(0) }
+                    
                     Box {
                         FilterChip(
                             selected = selectedMuscle != null,
@@ -189,32 +207,34 @@ fun SearchExternalExercisesDialog(
                                 muscleChipHeight = coordinates.size.height
                             }
                         )
-                        val density = LocalDensity.current
+                        
                         DropdownMenu(
                             expanded = showMuscleFilter,
                             onDismissRequest = { showMuscleFilter = false },
                             modifier = Modifier
                                 .offset(y = with(density) { (muscleChipHeight / density.density).dp + 4.dp })
-                                .heightIn(max = 400.dp)
+                                .heightIn(max = maxDropdownHeight)
                                 .widthIn(min = 200.dp)
                         ) {
-                            val muscleOptions = listOf(
-                                "abdominals", "abductors", "adductors", "biceps", "calves", 
-                                "chest", "forearms", "glutes", "hamstrings", "lats", 
-                                "lower back", "middle back", "neck", "quadriceps", 
-                                "shoulders", "traps", "triceps"
-                            )
-                            muscleOptions.forEach { muscle ->
-                                DropdownMenuItem(
-                                    text = { Text(muscle.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        onMuscleChange(if (muscle == selectedMuscle) null else muscle)
-                                        showMuscleFilter = false
-                                    },
-                                    leadingIcon = if (muscle == selectedMuscle) {
-                                        { Icon(Icons.Filled.Check, contentDescription = null) }
-                                    } else null
+                            Column(modifier = Modifier.padding(bottom = 48.dp)) {
+                                val muscleOptions = listOf(
+                                    "abdominals", "abductors", "adductors", "biceps", "calves", 
+                                    "chest", "forearms", "glutes", "hamstrings", "lats", 
+                                    "lower back", "middle back", "neck", "quadriceps", 
+                                    "shoulders", "traps", "triceps"
                                 )
+                                muscleOptions.forEach { muscle ->
+                                    DropdownMenuItem(
+                                        text = { Text(muscle.replaceFirstChar { it.uppercase() }) },
+                                        onClick = {
+                                            onMuscleChange(if (muscle == selectedMuscle) null else muscle)
+                                            showMuscleFilter = false
+                                        },
+                                        leadingIcon = if (muscle == selectedMuscle) {
+                                            { Icon(Icons.Filled.Check, contentDescription = null) }
+                                        } else null
+                                    )
+                                }
                             }
                         }
                     }
