@@ -67,7 +67,7 @@ fun MultiPillTracker(
                             tint = appTextSecondaryColor(),
                             modifier = Modifier.size(20.dp)
                         )
-                        // Overlay a "+" text with shadow for visibility
+                        // Overlay a "+" text with shadow for visibility, offset to separate from icon
                         Text(
                             text = "+",
                             fontSize = 14.sp,
@@ -79,7 +79,8 @@ fun MultiPillTracker(
                                     offset = Offset(1f, 1f),
                                     blurRadius = 2f
                                 )
-                            )
+                            ),
+                            modifier = Modifier.offset(x = 6.dp, y = (-2).dp)
                         )
                     }
                 }
