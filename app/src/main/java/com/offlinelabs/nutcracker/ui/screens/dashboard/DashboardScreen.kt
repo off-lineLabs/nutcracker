@@ -100,6 +100,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
 import android.content.Context
@@ -731,6 +732,7 @@ fun DashboardScreen(
     // Tutorial state management
     val tutorialState = remember { TutorialState() }
     var elementCoordinates by remember { mutableStateOf<Map<String, Pair<ComposeOffset, ComposeDp>>>(emptyMap()) }
+    var showHistorySpotlight by remember { mutableStateOf(false) }
     
     // Function to register element coordinates
     val registerElementCoordinates: (String, ComposeOffset, ComposeDp) -> Unit = { id, offset, radius ->
@@ -750,18 +752,51 @@ fun DashboardScreen(
     }
     
     // Update current step with coordinates
-    LaunchedEffect(elementCoordinates, tutorialState.currentStepIndex) {
+    LaunchedEffect(elementCoordinates, tutorialState.currentStepIndex, showHistorySpotlight) {
         val currentStep = tutorialState.getCurrentStep()
         if (currentStep != null && elementCoordinates.isNotEmpty()) {
             val stepId = getStepIdFromIndex(tutorialState.currentStepIndex)
             val coordinates = elementCoordinates[stepId]
-            if (coordinates != null) {
+            
+            // For history step, only update if showHistorySpotlight is true
+            val shouldUpdate = if (stepId == "check_in_history") {
+                showHistorySpotlight && coordinates != null
+            } else {
+                coordinates != null
+            }
+            
+            if (shouldUpdate && coordinates != null) {
                 val updatedStep = currentStep.copy(
                     targetOffset = coordinates.first,
                     targetRadius = coordinates.second
                 )
                 tutorialState.steps[tutorialState.currentStepIndex] = updatedStep
             }
+        }
+    }
+    
+    // Scroll to check-in history section when that tutorial step becomes active
+    val lazyListState = rememberLazyListState()
+    LaunchedEffect(tutorialState.currentStepIndex) {
+        if (tutorialState.currentStepIndex == 8) {
+            // Step 8 is the check-in history step
+            showHistorySpotlight = false // Hide spotlight during scroll
+            
+            // Wait for layout to be ready
+            kotlinx.coroutines.delay(100)
+            
+            // Scroll to the history section - it's the last item in the LazyColumn
+            if (lazyListState.layoutInfo.totalItemsCount > 0) {
+                lazyListState.animateScrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
+            }
+            
+            // Wait for scroll animation to complete and layout to settle
+            kotlinx.coroutines.delay(500)
+            
+            // Now show the spotlight
+            showHistorySpotlight = true
+        } else {
+            showHistorySpotlight = true // For all other steps, show immediately
         }
     }
 
@@ -987,6 +1022,7 @@ fun DashboardScreen(
                     .clip(RoundedCornerShape(24.dp))
             ) {
                 LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp, vertical = 16.dp),
@@ -1079,8 +1115,16 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .onGloballyPositioned { coordinates: LayoutCoordinates ->
-                                    val center = coordinates.boundsInWindow().center
-                                    registerElementCoordinates("supplement_pill", center, 30.dp)
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    // Calculate radius from actual bounds to cover entire pill tracker section
+                                    val height = bounds.height
+                                    val width = bounds.width
+                                    val radius = with(density) { 
+                                        // Use the larger dimension to ensure full coverage, with padding
+                                        (maxOf(height, width) / 2f + 8.dp.toPx()).toDp()
+                                    }
+                                    registerElementCoordinates("supplement_pill", center, radius)
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -1110,18 +1154,31 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         // Use FilterableHistoryView for both meals and exercises
-                        FilterableHistoryView(
-                            mealEntries = dailyMealCheckIns,
-                            exerciseEntries = dailyExerciseLogs,
-                            onDeleteMeal = { }, // No longer used - delete only available in edit dialog
-                            onDeleteExercise = { }, // No longer used - delete only available in edit dialog
-                            onEditMeal = { checkIn ->
-                                showEditMealDialog = checkIn
-                            },
-                            onEditExercise = { exerciseEntry ->
-                                showEditExerciseDialog = exerciseEntry
-                            }
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onGloballyPositioned { coordinates: LayoutCoordinates ->
+                                    val bounds = coordinates.boundsInWindow()
+                                    val center = bounds.center
+                                    // Calculate radius based on the height of the section
+                                    val height = bounds.height
+                                    val radius = with(density) { (height / 2f + 16.dp.toPx()).toDp() }
+                                    registerElementCoordinates("check_in_history", center, radius)
+                                }
+                        ) {
+                            FilterableHistoryView(
+                                mealEntries = dailyMealCheckIns,
+                                exerciseEntries = dailyExerciseLogs,
+                                onDeleteMeal = { }, // No longer used - delete only available in edit dialog
+                                onDeleteExercise = { }, // No longer used - delete only available in edit dialog
+                                onEditMeal = { checkIn ->
+                                    showEditMealDialog = checkIn
+                                },
+                                onEditExercise = { exerciseEntry ->
+                                    showEditExerciseDialog = exerciseEntry
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -2580,7 +2637,14 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             title = context.getString(R.string.tutorial_supplement_pill_title),
             description = context.getString(R.string.tutorial_supplement_pill_description),
             targetOffset = elementCoordinates["supplement_pill"]?.first,
-            targetRadius = elementCoordinates["supplement_pill"]?.second ?: 30.dp
+            targetRadius = elementCoordinates["supplement_pill"]?.second ?: 55.dp
+        ),
+        TutorialStep(
+            id = "check_in_history",
+            title = context.getString(R.string.tutorial_check_in_history_title),
+            description = context.getString(R.string.tutorial_check_in_history_description),
+            targetOffset = elementCoordinates["check_in_history"]?.first,
+            targetRadius = elementCoordinates["check_in_history"]?.second ?: 100.dp
         ),
         TutorialStep(
             id = "completion",
@@ -2600,7 +2664,8 @@ private fun getStepIdFromIndex(index: Int): String {
         5 -> "settings_icon"
         6 -> "edit_goals_icon"
         7 -> "supplement_pill"
-        8 -> "completion"
+        8 -> "check_in_history"
+        9 -> "completion"
         else -> ""
     }
 }

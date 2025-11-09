@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.appBackgroundColor
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
@@ -65,6 +67,16 @@ fun SpotlightOverlay(
             .fillMaxSize()
             .zIndex(1000f) // Ensure it's above all content
     ) {
+        // Full-screen pointer blocking layer (blocks ALL interactions except tooltip)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    // Consume all pointer events to block interactions
+                    detectTapGestures { /* consume and do nothing */ }
+                }
+        )
+        
         // Semi-transparent overlay with spotlight cutout (only if there's a target)
         if (step.targetOffset != null) {
             Canvas(
@@ -104,25 +116,31 @@ fun SpotlightOverlay(
                 }
             }
         } else {
-            // For steps without target, show a lighter overlay
+            // For steps without target, show darker overlay to match other steps
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
+                    .background(Color.Black.copy(alpha = 0.7f))
             )
         }
         
-        // Tooltip content - show for all steps
-        TooltipContent(
-            step = step,
-            onNext = onNext,
-            onSkip = onSkip,
-            onPrevious = onPrevious,
-            targetOffset = animatedOffset,
-            targetRadius = animatedRadius,
-            isDarkTheme = isDarkTheme,
-            modifier = Modifier.fillMaxSize()
-        )
+        // Tooltip content - show for all steps (on top of everything with higher zIndex)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f) // Higher than the blocking layer
+        ) {
+            TooltipContent(
+                step = step,
+                onNext = onNext,
+                onSkip = onSkip,
+                onPrevious = onPrevious,
+                targetOffset = animatedOffset,
+                targetRadius = animatedRadius,
+                isDarkTheme = isDarkTheme,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 

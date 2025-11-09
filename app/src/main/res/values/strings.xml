@@ -459,6 +459,9 @@
     <string name="tutorial_supplement_pill_title">Track Supplements</string>
     <string name="tutorial_supplement_pill_description">Keep track of whether you took your daily supplement by toggling this icon. It will glow when marked as taken.</string>
     
+    <string name="tutorial_check_in_history_title">Recent Check-In History</string>
+    <string name="tutorial_check_in_history_description">Here you can see the meals and exercises you checked in for the day. Scroll to view all entries and tap any item to edit it.</string>
+    
     <string name="tutorial_completion_title">You\'re All Set!</string>
     <string name="tutorial_completion_description">That\'s it! You now know how to use Nutcracker. Start tracking your meals and exercises to reach your health goals.</string>
     
