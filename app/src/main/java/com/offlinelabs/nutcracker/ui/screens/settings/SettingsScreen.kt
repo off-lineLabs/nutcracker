@@ -197,8 +197,7 @@ fun SettingsScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     Button(onClick = { LocaleUtils.launchSystemLocaleSettings(context) }) {
-                                        // TODO: Add string resource open_system_language_settings
-                                        Text(text = "Open System Language Settings")
+                                        Text(text = stringResource(R.string.open_system_language_settings))
                                     }
                                 } else {
                                     com.offlinelabs.nutcracker.ui.components.LanguagePicker(
@@ -211,8 +210,7 @@ fun SettingsScreen(
                                     )
                                 }
                                 Text(
-                                    // TODO: Add string resource current_language_format
-                                    text = "Current language: ${Locale.getDefault().displayName}",
+                                    text = stringResource(R.string.current_language_format, Locale.getDefault().displayName),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = appTextSecondaryColor()
                                 )

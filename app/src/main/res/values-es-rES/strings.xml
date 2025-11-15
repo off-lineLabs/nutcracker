@@ -135,6 +135,7 @@
     <string name="nutrient_details_title">Detalles de Nutrientes</string>
     <string name="nutrition_preview">Vista Previa de Nutrición</string>
     <string name="ok">OK</string>
+    <string name="open_system_language_settings">Abrir configuración de idioma del sistema</string>
     <string name="personal_data">Datos Personales</string>
     <string name="portuguese">Português (Brasil)</string>
     <string name="previous_day">Día Anterior</string>
@@ -373,7 +374,7 @@
     <string name="tutorial_calorie_ring_description">Puedes ver cuántas calorías disponibles te quedan, cuántas has consumido y tu objetivo diario.</string>
     
     <string name="tutorial_add_meal_title">Agregar Comidas</string>
-    <string name="tutorial_add_meal_description">Toca aquí para gestionar tus comidas. Escanea un código de barras para obtener automáticamente los datos nutricionales de un producto o introduce la información manualmente.﻿</string>
+    <string name="tutorial_add_meal_description">Toca aquí para gestionar tus comidas. Escanea un código de barras para obtener automáticamente los datos nutricionales de un producto o introduce la información manualmente.</string>
     
     <string name="tutorial_add_exercise_title">Agregar Ejercicio</string>
     <string name="tutorial_add_exercise_description">Gestiona tus ejercicios aquí. Puedes buscar entre cientos de ejercicios preprogramados o introducir los datos manualmente.</string>
@@ -403,4 +404,6 @@
     <string name="tutorial_skip">Omitir</string>
     <string name="tutorial_done">Listo</string>
     <string name="tutorial_replay">Repetir Tutorial</string>
+    <string name="current_language_format">Idioma actual: %1$s</string>
+    <string name="loading_more_results">Cargando más resultados...</string>
 </resources>
