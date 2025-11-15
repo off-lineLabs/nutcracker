@@ -54,7 +54,6 @@ import com.offlinelabs.nutcracker.R
 import kotlinx.coroutines.launch
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.offlinelabs.nutcracker.data.AppLanguage
 import com.offlinelabs.nutcracker.data.SettingsManager
 import com.offlinelabs.nutcracker.data.ThemeMode
 import com.offlinelabs.nutcracker.data.AppDatabase
@@ -78,7 +77,6 @@ fun SettingsScreen(
     
     // Get current settings from the manager
     val currentTheme = settingsManager.currentThemeMode
-    val currentLanguage = settingsManager.currentAppLanguage
     val isDarkTheme = settingsManager.isDarkTheme(context)
     
     // Use specific colors for the exact look you want
@@ -197,11 +195,12 @@ fun SettingsScreen(
                             val context = LocalContext.current
                             val supported = remember { LocaleUtils.getSupportedLocales(context) }
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Button(onClick = { LocaleUtils.launchSystemLocaleSettings(context) }) {
-                                    // TODO: Add string resource open_system_language_settings
-                                    Text(text = "Open System Language Settings")
-                                }
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    Button(onClick = { LocaleUtils.launchSystemLocaleSettings(context) }) {
+                                        // TODO: Add string resource open_system_language_settings
+                                        Text(text = "Open System Language Settings")
+                                    }
+                                } else {
                                     com.offlinelabs.nutcracker.ui.components.LanguagePicker(
                                         context = context,
                                         currentLocale = Locale.getDefault(),
@@ -512,87 +511,6 @@ private fun ThemeOption(
             color = appTextPrimaryColor(),
             fontSize = 14.sp
         )
-    }
-}
-
-@Composable
-private fun LanguageSelector(
-    selectedLanguage: AppLanguage,
-    onLanguageSelected: (AppLanguage) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    val languages = listOf(
-        AppLanguage.ENGLISH to stringResource(R.string.english),
-        AppLanguage.PORTUGUESE to stringResource(R.string.portuguese),
-        AppLanguage.SPANISH to stringResource(R.string.spanish)
-    )
-    
-    val selectedLanguageName = languages.find { it.first == selectedLanguage }?.second ?: stringResource(R.string.english)
-    
-    Box {
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = appSurfaceColor()
-            ),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp, 
-                if (expanded) Color(0xFF60A5FA) else appTextSecondaryColor().copy(alpha = 0.3f)
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = selectedLanguageName,
-                    color = appTextPrimaryColor(),
-                    fontSize = 14.sp
-                )
-                Icon(
-                    imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = null,
-                    tint = appTextSecondaryColor(),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = appSurfaceColor(),
-                    shape = RoundedCornerShape(8.dp)
-                )
-        ) {
-            languages.forEach { (language, name) ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = name,
-                            color = appTextPrimaryColor(),
-                            fontSize = 14.sp
-                        )
-                    },
-                    onClick = {
-                        onLanguageSelected(language)
-                        expanded = false
-                    },
-                    colors = MenuDefaults.itemColors(
-                        textColor = appTextPrimaryColor()
-                    )
-                )
-            }
-        }
     }
 }
 
