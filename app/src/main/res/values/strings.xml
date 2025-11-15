@@ -472,4 +472,8 @@
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_done">Done</string>
     <string name="tutorial_replay">Replay Tutorial</string>
+    
+    <!-- Missing strings -->
+    <string name="open_system_language_settings">Open System Language Settings</string>
+    <string name="current_language_format">Current language: %1$s</string>
 </resources>

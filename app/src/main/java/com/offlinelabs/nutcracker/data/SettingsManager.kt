@@ -23,13 +23,8 @@ class SettingsManager(context: Context) {
     var currentThemeMode by mutableStateOf(getStoredThemeMode())
         private set
     
-    // Language state
-    var currentAppLanguage by mutableStateOf(getStoredLanguage())
-        private set
-    
     companion object {
         private const val KEY_THEME_MODE = "theme_mode"
-        private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_TERMS_AGREED = "terms_agreed"
         private const val KEY_TERMS_AGREED_TIMESTAMP = "terms_agreed_timestamp"
         private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
@@ -45,25 +40,6 @@ class SettingsManager(context: Context) {
         }
     }
     
-    private fun getStoredLanguage(): AppLanguage {
-        val stored = prefs.getString(KEY_APP_LANGUAGE, null)
-        return when (stored) {
-            "ENGLISH" -> AppLanguage.ENGLISH
-            "PORTUGUESE" -> AppLanguage.PORTUGUESE
-            "SPANISH" -> AppLanguage.SPANISH
-            else -> detectSystemLanguage() // Default to system language
-        }
-    }
-    
-    private fun detectSystemLanguage(): AppLanguage {
-        val systemLocale = Locale.getDefault()
-        return when (systemLocale.language) {
-            "es" -> AppLanguage.SPANISH
-            "pt" -> AppLanguage.PORTUGUESE
-            else -> AppLanguage.ENGLISH
-        }
-    }
-    
     fun setThemeMode(themeMode: ThemeMode) {
         this.currentThemeMode = themeMode
         prefs.edit().putString(KEY_THEME_MODE, themeMode.name).apply()
@@ -71,18 +47,21 @@ class SettingsManager(context: Context) {
         com.offlinelabs.nutcracker.util.logger.AppLogger.d("SettingsManager", "Theme changed to: $themeMode")
     }
     
-    fun setAppLanguage(language: AppLanguage) {
-        this.currentAppLanguage = language
-        prefs.edit().putString(KEY_APP_LANGUAGE, language.name).apply()
-    }
-    
-    fun getLocale(): Locale {
-        return when (currentAppLanguage) {
-            AppLanguage.ENGLISH -> Locale.ENGLISH
-            AppLanguage.PORTUGUESE -> Locale.forLanguageTag("pt-BR")
-            AppLanguage.SPANISH -> Locale.forLanguageTag("es-ES")
+    /**
+     * Returns the current app language based on the system's current locale.
+     * This is now derived from Locale.getDefault() which reflects the per-app language
+     * set via LocaleManager (API 33+) or AppCompatDelegate (API <33).
+     * No longer stored in SharedPreferences.
+     */
+    val currentAppLanguage: AppLanguage
+        get() {
+            val systemLocale = Locale.getDefault()
+            return when (systemLocale.language) {
+                "es" -> AppLanguage.SPANISH
+                "pt" -> AppLanguage.PORTUGUESE
+                else -> AppLanguage.ENGLISH
+            }
         }
-    }
     
     fun isDarkTheme(context: Context): Boolean {
         return when (currentThemeMode) {

@@ -64,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        // generateLocaleConfig is not a valid buildFeatures property. Locale config is handled automatically by AGP 8.2+.
     }
 }
 

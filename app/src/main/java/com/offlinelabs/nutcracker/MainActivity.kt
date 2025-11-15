@@ -1,11 +1,9 @@
 package com.offlinelabs.nutcracker
 
-import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
@@ -17,28 +15,16 @@ import com.offlinelabs.nutcracker.ui.screens.analytics.AnalyticsScreen
 import com.offlinelabs.nutcracker.ui.screens.help.HelpScreen
 import com.offlinelabs.nutcracker.ui.screens.terms.TermsOfUseDialog
 import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
-import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Hide the action bar for Compose UI
+        supportActionBar?.hide()
+        enableEdgeToEdge()
         setContent {
             AppContent()
         }
-    }
-    
-    override fun attachBaseContext(newBase: Context?) {
-        val settingsManager = SettingsManager(newBase!!)
-        val locale = settingsManager.getLocale()
-        val context = updateLocale(newBase, locale)
-        super.attachBaseContext(context)
-    }
-    
-    private fun updateLocale(context: Context, locale: Locale): Context {
-        Locale.setDefault(locale)
-        val configuration = Configuration(context.resources.configuration)
-        configuration.setLocale(locale)
-        return context.createConfigurationContext(configuration)
     }
 }
 
@@ -49,13 +35,6 @@ fun AppContent() {
     
     // Directly observe the mutable state from SettingsManager
     val currentThemeMode = settingsManager.currentThemeMode
-    val currentAppLanguage = settingsManager.currentAppLanguage
-    
-    // Update language when it changes
-    LaunchedEffect(currentAppLanguage) {
-        // Language changes require activity recreation
-        // This will be handled by the settings screen
-    }
     
     // Use the theme mode as a key to force recomposition when theme changes
     key(currentThemeMode) {
