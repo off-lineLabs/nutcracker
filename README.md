@@ -52,7 +52,10 @@ NutCracker is a privacy-first, offline-first calorie tracking app for Android. B
 
 Download NutCracker directly from the Google Play Store:
 
-<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" href="https://play.google.com/store/apps/details?id=com.offlinelabs.nutcracker" height="100" />
+<a href="https://play.google.com/store/apps/details?id=com.offlinelabs.nutcracker" target="_blank">
+  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="100" />
+</a>
+
 
 ### Requirements
 
