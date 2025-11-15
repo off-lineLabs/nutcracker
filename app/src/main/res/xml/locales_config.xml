@@ -2,8 +2,8 @@
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Supported locales actually shipped with string resources -->
     <locale android:name="en" />
-    <locale android:name="pt" />
-    <locale android:name="es" />
+    <locale android:name="pt-BR" />
+    <locale android:name="es-ES" />
     <locale android:name="fr" />
     <locale android:name="ca" />
     <locale android:name="nl" />

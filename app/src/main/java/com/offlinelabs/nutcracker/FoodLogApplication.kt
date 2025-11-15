@@ -1,6 +1,8 @@
 package com.offlinelabs.nutcracker
 
 import android.app.Application
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.SettingsManager
 import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
@@ -67,6 +69,11 @@ class FoodLogApplication : Application() {
         // Initialize logging framework
         AppLogger.initialize(this)
         AppLogger.i("FoodLogApplication", "Application started")
+        
+        // Log the current locale state for debugging
+        val storedLocales = AppCompatDelegate.getApplicationLocales()
+        AppLogger.d("FoodLogApplication", "AppCompatDelegate stored locales: ${storedLocales.toLanguageTags()}")
+        AppLogger.d("FoodLogApplication", "System Locale.getDefault(): ${java.util.Locale.getDefault().toLanguageTag()}")
     }
 
     override fun onTerminate() {

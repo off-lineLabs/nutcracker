@@ -1,9 +1,9 @@
 package com.offlinelabs.nutcracker
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
@@ -16,9 +16,11 @@ import com.offlinelabs.nutcracker.ui.screens.help.HelpScreen
 import com.offlinelabs.nutcracker.ui.screens.terms.TermsOfUseDialog
 import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Hide the action bar for Compose UI
+        supportActionBar?.hide()
         enableEdgeToEdge()
         setContent {
             AppContent()

@@ -14,13 +14,19 @@ import android.net.Uri
 import android.provider.Settings
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import com.offlinelabs.nutcracker.util.logger.AppLogger
 
 object LocaleUtils {
+    private const val TAG = "LocaleUtils"
     /**
      * Returns the list of supported locales for the app.
      * On Android 13+ uses PackageManager, otherwise parses locales_config.xml.
      */
-    fun getSupportedLocales(context: Context): List<Locale> = parseLocalesConfig(context, com.offlinelabs.nutcracker.R.xml.locales_config)
+    fun getSupportedLocales(context: Context): List<Locale> {
+        val locales = parseLocalesConfig(context, com.offlinelabs.nutcracker.R.xml.locales_config)
+        AppLogger.d(TAG, "getSupportedLocales: Found ${locales.size} locales: ${locales.joinToString { "${it.toLanguageTag()} (${it.displayName})" }}")
+        return locales
+    }
 
     private fun parseLocalesConfig(context: Context, @XmlRes xmlRes: Int): List<Locale> {
         val locales = mutableListOf<Locale>()
@@ -31,12 +37,15 @@ object LocaleUtils {
                 if (eventType == XmlPullParser.START_TAG && parser.name == "locale") {
                     val tag = parser.getAttributeValue("http://schemas.android.com/apk/res/android", "name")
                     if (!tag.isNullOrBlank()) {
-                        locales += Locale.forLanguageTag(tag)
+                        val locale = Locale.forLanguageTag(tag)
+                        locales += locale
+                        AppLogger.d(TAG, "parseLocalesConfig: Parsed locale tag='$tag' -> Locale=${locale.toLanguageTag()} (${locale.displayName})")
                     }
                 }
                 eventType = parser.next()
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "parseLocalesConfig: Error parsing locales_config.xml", e)
             // Fallback (should not happen): English only
             if (locales.isEmpty()) locales += Locale.ENGLISH
         } finally {
@@ -49,11 +58,19 @@ object LocaleUtils {
      * Sets the app locale using LocaleManager (API 33+) or AppCompatDelegate for older versions.
      */
     fun setAppLocale(context: Context, locale: Locale) {
+        AppLogger.d(TAG, "setAppLocale: Attempting to set locale to ${locale.toLanguageTag()} (${locale.displayName}) on API ${Build.VERSION.SDK_INT}")
+        AppLogger.d(TAG, "setAppLocale: Current Locale.getDefault() = ${Locale.getDefault().toLanguageTag()}")
+        AppLogger.d(TAG, "setAppLocale: Current AppCompatDelegate locales = ${AppCompatDelegate.getApplicationLocales().toLanguageTags()}")
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val localeManager = context.getSystemService(LocaleManager::class.java)
             localeManager?.setApplicationLocales(LocaleList(locale))
+            AppLogger.d(TAG, "setAppLocale: Used LocaleManager API (33+)")
         } else {
-            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(locale.toLanguageTag()))
+            val languageTag = locale.toLanguageTag()
+            AppLogger.d(TAG, "setAppLocale: Using AppCompatDelegate with language tag: $languageTag")
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag))
+            AppLogger.d(TAG, "setAppLocale: After setting, AppCompatDelegate locales = ${AppCompatDelegate.getApplicationLocales().toLanguageTags()}")
         }
     }
 

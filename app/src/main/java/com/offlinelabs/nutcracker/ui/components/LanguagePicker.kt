@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.foundation.layout.Box
 import java.util.Locale
 import com.offlinelabs.nutcracker.util.LocaleUtils
+import com.offlinelabs.nutcracker.util.logger.AppLogger
 
 @Composable
 fun LanguagePicker(
@@ -26,6 +27,7 @@ fun LanguagePicker(
                 DropdownMenuItem(
                     text = { Text(locale.displayName) },
                     onClick = {
+                        AppLogger.d("LanguagePicker", "User selected locale: ${locale.toLanguageTag()} (${locale.displayName})")
                         selectedLocale = locale
                         expanded = false
                         onLocaleChanged(locale)
