@@ -158,8 +158,8 @@ NutCracker is built with modern Android development tools and best practices:
 - **Open Food Facts**: Food product database and nutritional information
   - API: `https://world.openfoodfacts.org/`
   - Open source, collaborative database
-- **Free Exercise DB**: Exercise database maintained by Yuhonas
-  - Repository: `yuhonas/free-exercise-db` on GitHub
+- **Free Exercise DB**: Exercise database maintained by Wrkout
+  - Repository: [https://github.com/wrkout/exercises.json](wrkout/exercises.json) on GitHub
   - Comprehensive exercise library with instructions
 
 ### Project Structure
@@ -264,12 +264,12 @@ The Terms of Use and Privacy Policy are available in the repository at [app/src/
 
 ### Data Sources
 - **Open Food Facts**: [world.openfoodfacts.org](https://world.openfoodfacts.org/)
-- **Free Exercise DB**: [github.com/yuhonas/free-exercise-db](https://github.com/yuhonas/free-exercise-db)
+- **Free Exercise DB**: [https://github.com/wrkout/exercises.json](https://github.com/wrkout/exercises.json)
 
 ## Acknowledgments
 
 - **Open Food Facts** for providing the food product database
-- **@Yuhonas** for maintaining the free exercise database
+- **@Wrkout** for maintaining the free exercise database
 - All open source libraries and tools that make this project possible
 
 ---
