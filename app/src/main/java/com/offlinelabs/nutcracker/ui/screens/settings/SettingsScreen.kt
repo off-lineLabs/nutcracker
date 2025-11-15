@@ -60,6 +60,7 @@ import com.offlinelabs.nutcracker.data.ThemeMode
 import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.ui.theme.*
 import java.util.Locale
+import com.offlinelabs.nutcracker.util.LocaleUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,13 +194,30 @@ fun SettingsScreen(
                             title = stringResource(R.string.language),
                             icon = Icons.Filled.Language
                         ) {
-                            LanguageSelector(
-                                selectedLanguage = currentLanguage,
-                                onLanguageSelected = { 
-                                    settingsManager.setAppLanguage(it)
-                                    showLanguageChangeDialog = true
+                            val context = LocalContext.current
+                            val supported = remember { LocaleUtils.getSupportedLocales(context) }
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Button(onClick = { LocaleUtils.launchSystemLocaleSettings(context) }) {
+                                    // TODO: Add string resource open_system_language_settings
+                                    Text(text = "Open System Language Settings")
                                 }
-                            )
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                    com.offlinelabs.nutcracker.ui.components.LanguagePicker(
+                                        context = context,
+                                        currentLocale = Locale.getDefault(),
+                                        onLocaleChanged = { selectedLocale ->
+                                            LocaleUtils.setAppLocale(context, selectedLocale)
+                                            showLanguageChangeDialog = true
+                                        }
+                                    )
+                                }
+                                Text(
+                                    // TODO: Add string resource current_language_format
+                                    text = "Current language: ${Locale.getDefault().displayName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = appTextSecondaryColor()
+                                )
+                            }
                         }
                     }
                     
