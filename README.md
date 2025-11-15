@@ -13,8 +13,9 @@ NutCracker is a privacy-first, offline-first calorie tracking app for Android. B
 - **Offline First**: Your app should work when you need it most, even without internet connection
 - **Privacy by Design**: Your data belongs to you. No tracking, no surveillance, no data collection
 - **Open Source**: Transparency builds trust. All our code is open source and auditable
-- **Performance**: No bloat, no unnecessary features. Just fast, efficient software that works
+- **Focused Utility**: No bloat, no unnecessary features. Just fast, efficient software that works
 - **Community**: Built by the community, for the community. No corporate interests or profit motives
+- **User Empowerment**: Full control, no unnecessary limits. Our apps let you customize and optimize your experience as you see fit.
 
 ## Features
 
@@ -23,32 +24,35 @@ NutCracker is a privacy-first, offline-first calorie tracking app for Android. B
 ### Nutrition Tracking
 - **Calorie Tracking**: Monitor your daily calorie intake with an intuitive circular progress indicator
 - **Macro Tracking**: Track carbohydrates, protein, fat, fiber, and sodium
-- **Customizable Goals**: Set personalized daily targets for all nutrients
 - **TEF Bonus**: See the thermic effect of food bonus for protein-rich meals
+- **Supplement Tracking**: Keep track of the daily consumption of up to 5 supplements. No more worries about forgetting them.
 
 ### Meal and exercise logging
-- **Barcode Scanning**: Scan product barcodes to instantly get nutritional information thousands of products
+- **Barcode Scanning**: Scan products barcodes to instantly get nutritional information, including NOVA and NUTRI score.
 - **Exercise Database**: Access hundreds of preloaded exercises from an open-source database
 - **Progress Tracking**: Monitor your exercise history and progress over time
 
 ### Privacy & Performance
 - **100% Offline**: All core functionality works without internet connection
-- **No Data Collection**: We don't even have a server—your data stays on your device
+- **No Data Collection**: We don't even have a server, your data stays on your device
 - **No Ads**: Clean, distraction-free experience
 - **No Trackers**: Zero tracking or analytics services
 - **Fast & Lightweight**: Optimized for performance with minimal resource usage
 
 ## Screenshots
 
-_Screenshots coming soon!_
+<p float="left">
+  <img src="https://github.com/off-lineLabs/off-lineLabs.github.io/blob/main/public/nutcracker-screenshot-1.png?raw=true" alt="Image 1" height="400" />
+  <img src="https://github.com/off-lineLabs/off-lineLabs.github.io/blob/main/public/nutcracker-screenshot-2.png?raw=true" alt="Image 2" height="400" />
+  <img src="https://github.com/off-lineLabs/off-lineLabs.github.io/blob/main/public/nutcracker-screenshot-3.png?raw=true" alt="Image 3" height="400" />
+  <img src="https://github.com/off-lineLabs/off-lineLabs.github.io/blob/main/public/nutcracker-screenshot-4.png?raw=true" alt="Image 4" height="400" />
+</p>
 
 ## Download & Installation
 
-### Google Play Store
-
 Download NutCracker directly from the Google Play Store:
 
-[![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.offlinelabs.nutcracker)
+<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" href="https://play.google.com/store/apps/details?id=com.offlinelabs.nutcracker" height="100" />
 
 ### Requirements
 
@@ -56,7 +60,7 @@ Download NutCracker directly from the Google Play Store:
 
 ## About Offline Labs
 
-NutCracker is part of the [Offline Labs](http://offline-labs.com/) project a community-driven initiative creating free, open source, ad-free alternatives for everyday apps. We believe your smartphone is a powerful computer, yet most apps fail to deliver a smooth experience while requiring all your data.
+NutCracker is part of the [Offline Labs](http://offline-labs.com/) project, a community-driven initiative creating free, open source, ad-free alternatives for everyday apps.
 
 ## Get Involved
 
@@ -262,7 +266,7 @@ The Terms of Use and Privacy Policy are available in the repository at [app/src/
 ## Acknowledgments
 
 - **Open Food Facts** for providing the food product database
-- **Yuhonas** for maintaining the free exercise database
+- **@Yuhonas** for maintaining the free exercise database
 - All open source libraries and tools that make this project possible
 
 ---
