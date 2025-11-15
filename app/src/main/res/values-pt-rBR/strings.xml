@@ -132,6 +132,7 @@
     <string name="nutrient_details_title">Detalhes dos Nutrientes</string>
     <string name="nutrition_preview">Visualização de Nutrição</string>
     <string name="ok">OK</string>
+    <string name="open_system_language_settings">Abrir configurações de idioma do sistema</string>
     <string name="personal_data">Dados Pessoais</string>
     <string name="portuguese">Português (Brasil)</string>
     <string name="previous_day">Dia Anterior</string>
@@ -403,4 +404,6 @@
     <string name="tutorial_skip">Pular</string>
     <string name="tutorial_done">Ok</string>
     <string name="tutorial_replay">Repetir Tutorial</string>
+    <string name="current_language_format">Idioma atual: %1$s</string>
+    <string name="loading_more_results">Carregando mais resultados...</string>
 </resources>
