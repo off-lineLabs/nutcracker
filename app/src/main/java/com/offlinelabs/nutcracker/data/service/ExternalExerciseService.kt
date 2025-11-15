@@ -10,8 +10,8 @@ interface ExternalExerciseApi {
 }
 
 class ExternalExerciseService {
-    private val baseUrl = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/refs/heads/main/"
-    private val imageBaseUrl = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/"
+    private val baseUrl = "https://raw.githubusercontent.com/off-lineLabs/exercises.json/refs/heads/master/"
+    private val imageBaseUrl = "https://raw.githubusercontent.com/off-lineLabs/exercises.json/master/exercises/"
     
     private val retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)

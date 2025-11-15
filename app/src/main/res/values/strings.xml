@@ -241,7 +241,7 @@
     <string name="instructions">Instructions</string>
     <string name="no_instructions_available">No instructions available</string>
     <string name="no_exercises_found">No exercises found</string>
-    <string name="yuhonas">Yuhonas</string>
+    <string name="wrkout">Wrkout</string>
     <string name="edit_meal">Edit Meal</string>
     <string name="search_food">Search Food</string>
     <string name="equipment">Equipment</string>
@@ -371,7 +371,7 @@
     <string name="faq_answer_change_language">Go to Settings and select your preferred language from the Language option.</string>
     <string name="faq_answer_tef_bonus" formatted="false">The TEF Bonus reflects the extra calories your body burns when digesting and processing food, especially proteins. Different macronutrients raise metabolism by varying amounts: fats about 0-5%, carbohydrates 5-15%, and protein 20-30%. Although you shouldn\'t rely heavily on this bonus for precise calorie budgeting, it\'s a helpful nudge towards eating more protein-rich meals, which can slightly boost your daily calorie burn and help with satiety. For a detailed scientific overview, you can check out this comprehensive review on the thermic effect of food.</string>
     <string name="faq_answer_food_source">We use Open Food Facts, a collaborative database of food products from around the world. It\'s a free, open-source project that relies on contributions from users worldwide. The database includes nutritional information, ingredients, and even environmental impact scores. If you want to contribute to this open database, you can download their mobile app.</string>
-    <string name="faq_answer_exercise_source">The exercise database comes from an open-source repository maintained by Yuhonas. While NutCracker might incorporate its own translations in the future, this is not a priority at the moment. The exercises are currently only available in English, but the database is comprehensive and includes detailed instructions for various types of workouts.</string>
+    <string name="faq_answer_exercise_source">The exercise database comes from an open-source repository maintained by Wrkout. While NutCracker might incorporate its own translations in the future, this is not a priority at the moment. The exercises are currently only available in English, but the database is comprehensive and includes detailed instructions for various types of workouts.</string>
     <string name="faq_answer_data_collected">NutCracker doesn\'t even have a server, so no individual data is collected. We don\'t know how many users we have nor what they are doing with this app. If your information is ever lost, we have no one to recover it. Refer to our Terms of Use on the settings screen for more info.</string>
     <string name="faq_answer_make_money">We don\'t. Since the information comes from publicly available databases we have no servers so the only cost involved in this app is the hours of the developers, which is given for free as a hobby. There are also no trackers, no data brokerage, and no ads so even if 3 million people download it tomorrow, not a single penny will be made from this and we want to keep it like that.</string>
     <string name="faq_answer_logo_means">It is a close-up of a NutCracker belly and also a person doing a stretch. Did you notice it before?</string>
