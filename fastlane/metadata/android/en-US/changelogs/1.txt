@@ -1,0 +1,12 @@
+Initial release of NutCracker
+
+• Complete nutrition tracking with calorie and macro monitoring
+• Barcode scanning for instant product information
+• Search millions of food products via Open Food Facts
+• Hundreds of preloaded exercises from open-source database
+• Supplement tracking for up to 5 daily supplements
+• TEF (Thermic Effect of Food) bonus calculator
+• Fully offline functionality
+• No ads, no tracking, no data collection
+• Available in English, Spanish, and Portuguese
+• Material Design 3 UI with dark/light themes

@@ -8,6 +8,8 @@
 
 NutCracker is a privacy-first, offline-first calorie tracking app for Android. Built with modern Android technologies and designed to work seamlessly without an internet connection, NutCracker puts you in complete control of your nutrition and fitness data.
 
+**NutCracker is Free/Libre and Open Source Software (FLOSS)**, meaning it respects your freedom to use, study, share, and improve the software. The entire source code is available for inspection, modification, and redistribution under the AGPL-3.0 license, ensuring complete transparency and community ownership.
+
 ## Our Core Values
 
 - **Offline First**: Your app should work when you need it most, even without internet connection
@@ -50,12 +52,17 @@ NutCracker is a privacy-first, offline-first calorie tracking app for Android. B
 
 ## Download & Installation
 
+### Google Play
+
 Download NutCracker directly from the Google Play Store:
 
 <a href="https://play.google.com/store/apps/details?id=com.offlinelabs.nutcracker" target="_blank">
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="100" />
 </a>
 
+### F-Droid (Coming Soon)
+
+NutCracker will soon be available on F-Droid, the trusted catalog of FLOSS applications for Android. Stay tuned!
 
 ### Requirements
 
