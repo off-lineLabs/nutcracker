@@ -212,7 +212,7 @@
     <string name="volume_units">Unidades de Volume</string>
     <string name="weight_kg">Peso (kg)</string>
     <string name="weight_units">Unidades de Peso</string>
-    <string name="yuhonas">Yuhonas</string>
+    <string name="wrkout">Wrkout</string>
     
     <!-- Date and Time Picker -->
     <string name="terms_of_use_required">Você precisa concordar com os termos para continuar</string>
@@ -305,7 +305,7 @@
     <string name="faq_answer_change_language">Vá para Configurações e selecione seu idioma preferido na opção Idioma.</string>
     <string name="faq_answer_tef_bonus" formatted="false">O Bônus TEF reflete as calorias extras que seu corpo queima ao digerir e processar alimentos, especialmente proteínas. Diferentes macronutrientes aumentam o metabolismo em quantidades variáveis: gorduras cerca de 0-5%, carboidratos 5-15%, e proteína 20-30%. Embora você não deva depender muito deste bônus para um orçamento calórico preciso, é uma ajuda útil para comer mais refeições ricas em proteínas, o que pode aumentar ligeiramente sua queima calórica diária e ajudar com a saciedade. Para uma visão científica detalhada, você pode verificar esta revisão abrangente sobre o efeito térmico dos alimentos.</string>
     <string name="faq_answer_food_source">Utilizamos o Open Food Facts, um banco de dados colaborativo de produtos alimentícios de todo o mundo. É um projeto gratuito e de código aberto que depende de contribuições de usuários de todo o mundo. O banco de dados inclui informações nutricionais, ingredientes e até mesmo pontuações de impacto ambiental. Se você quiser contribuir para este banco de dados aberto, pode baixar o aplicativo móvel deles.</string>
-    <string name="faq_answer_exercise_source">O banco de dados de exercícios vem de um repositório de código aberto mantido por Yuhonas. Embora o NutCracker possa incorporar suas próprias traduções no futuro, isso não é uma prioridade no momento. Os exercícios estão atualmente disponíveis apenas em inglês, mas o banco de dados é abrangente e inclui instruções detalhadas para vários tipos de treinos.</string>
+    <string name="faq_answer_exercise_source">O banco de dados de exercícios vem de um repositório de código aberto mantido por Wrkout. Embora o NutCracker possa incorporar suas próprias traduções no futuro, isso não é uma prioridade no momento. Os exercícios estão atualmente disponíveis apenas em inglês, mas o banco de dados é abrangente e inclui instruções detalhadas para vários tipos de treinos.</string>
     <string name="faq_answer_data_collected">O NutCracker nem mesmo tem um servidor, então nenhum dado individual é coletado. Não sabemos quantos usuários temos nem o que estão fazendo com este aplicativo. Se suas informações forem perdidas, não temos ninguém para recuperá-las. Consulte nossos Termos de Uso na tela de configurações para mais informações.</string>
     <string name="faq_answer_make_money">Não ganhamos. Como as informações vêm de bancos de dados publicamente disponíveis, não temos servidores, então o único custo envolvido neste aplicativo são as horas dos desenvolvedores, que são dadas gratuitamente como hobby. Também não há rastreadores, corretagem de dados ou anúncios, então mesmo que 3 milhões de pessoas baixem amanhã, não será ganho nem um centavo com isso e queremos manter assim.</string>
     <string name="faq_answer_logo_means">É um close-up da barriga de um Quebra-Nozes e também uma pessoa fazendo um alongamento. Você notou isso antes?</string>

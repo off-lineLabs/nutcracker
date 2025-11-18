@@ -7,13 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-11-09
+
+### Changed
+- Proper source for exercises
+
+## [1.1.0] - 2025-11-09
+
+### Added
+- Support to new languages via Google Play
+
+### Changed
+- Edge-to-edge theming improvements
+
 ## [1.0.0] - 2025-11-09
 
 ### Added
-- Whole app
-- Possibility of adding and renaming supplements
+- Complete nutrition tracking with calorie and macro monitoring
+- Barcode scanning for instant product information
+- Search millions of food products via Open Food Facts
+- Hundreds of preloaded exercises from open-source database
+- Supplement tracking for up to 5 daily supplements
+- TEF (Thermic Effect of Food) bonus calculator
 - Thumbwheel control for adjusting portion sizes
-- Tutorial screen
+- Interactive tutorial screen for new users
+- Material Design 3 UI with dark/light themes
+- Multi-language support (English, Spanish, Portuguese)
+- Fully offline functionality
+- No ads, no tracking, no data collection
 
 ### Changed
 - Faster and more efficient meal search
@@ -23,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - R8 bug that would crash the app when opening the exercise dialog
-- Hard-coded / unstranslated strings on the nutrient details dialog
+- Hard-coded / untranslated strings on the nutrient details dialog
 - List of muscle groups showing incomplete when searching for exercises
 
 

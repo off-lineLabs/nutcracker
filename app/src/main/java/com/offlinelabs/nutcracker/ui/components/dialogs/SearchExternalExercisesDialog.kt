@@ -427,13 +427,13 @@ fun SearchExternalExercisesDialog(
                     )
                     TextButton(
                         onClick = { 
-                            val intent = Intent(Intent.ACTION_VIEW, "https://github.com/yuhonas/free-exercise-db".toUri())
+                            val intent = Intent(Intent.ACTION_VIEW, "https://github.com/wrkout/exercises.json".toUri())
                             context.startActivity(intent)
                         },
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.yuhonas),
+                            text = stringResource(R.string.wrkout),
                             style = MaterialTheme.typography.bodySmall,
                             color = generateThemedColorShade(MaterialTheme.colorScheme.primary, 3)
                         )

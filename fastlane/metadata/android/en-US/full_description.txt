@@ -1,0 +1,45 @@
+Track your meals and exercises with complete privacy. No cloud sync, no data collection, just pure functionality.
+
+NutCracker is a privacy-first, offline-first calorie tracking app for Android. Built with modern Android technologies and designed to work seamlessly without an internet connection, NutCracker puts you in complete control of your nutrition and fitness data.
+
+FEATURES
+
+Nutrition Tracking
+• Calorie Tracking: Monitor your daily calorie intake with an intuitive circular progress indicator
+• Macro Tracking: Track carbohydrates, protein, fat, fiber, and sodium
+• TEF Bonus: See the thermic effect of food bonus for protein-rich meals
+• Supplement Tracking: Keep track of daily consumption of up to 5 supplements
+
+Meal and Exercise Logging
+• Barcode Scanning: Scan product barcodes to instantly get nutritional information, including NOVA and NUTRI scores
+• Food Database: Search from millions of products via Open Food Facts
+• Exercise Database: Access hundreds of preloaded exercises from an open-source database
+• Progress Tracking: Monitor your exercise history and progress over time
+
+Privacy & Performance
+• 100% Offline: All core functionality works without internet connection
+• No Data Collection: We don't even have a server, your data stays on your device
+• No Ads: Clean, distraction-free experience
+• No Trackers: Zero tracking or analytics services
+• Fast & Lightweight: Optimized for performance with minimal resource usage
+
+LANGUAGES
+
+Available in English, Spanish (Spain), and Portuguese (Brazil)
+
+OPEN SOURCE
+
+NutCracker is fully open source under AGPL-3.0 license. All code is available for review and contributions are welcome.
+
+Source code: https://github.com/off-lineLabs/nutcracker
+
+ABOUT OFFLINE LABS
+
+NutCracker is part of the Offline Labs project, a community-driven initiative creating free, open source, ad-free alternatives for everyday apps.
+
+DATA SOURCES
+
+• Open Food Facts: Food product database (https://world.openfoodfacts.org/)
+• Free Exercise DB: Exercise database maintained by Wrkout (https://github.com/wrkout/exercises.json)
+
+No trackers. No data collection. No financial interests. Just privacy-first software that works.
