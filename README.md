@@ -276,7 +276,7 @@ The Terms of Use and Privacy Policy are available in the repository at [app/src/
 ## Acknowledgments
 
 - **Open Food Facts** for providing the food product database
-- **@Wrkout** for maintaining the free exercise database
+- **[Wrkout](https://github.com/wrkout)** for maintaining the free exercise database
 - All open source libraries and tools that make this project possible
 
 ---
