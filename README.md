@@ -166,7 +166,7 @@ NutCracker is built with modern Android development tools and best practices:
   - API: `https://world.openfoodfacts.org/`
   - Open source, collaborative database
 - **Free Exercise DB**: Exercise database maintained by Wrkout
-  - Repository: [https://github.com/wrkout/exercises.json](wrkout/exercises.json) on GitHub
+  - Repository: [https://github.com/wrkout/exercises.json](https://github.com/wrkout/exercises.json) on GitHub
   - Comprehensive exercise library with instructions
 
 ### Project Structure
