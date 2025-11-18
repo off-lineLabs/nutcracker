@@ -4,9 +4,15 @@ import com.offlinelabs.nutcracker.data.model.ExternalExercise
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+
+// Wrapper class to match the new JSON structure
+data class ExercisesResponse(
+    val exercises: List<ExternalExercise>
+)
+
 interface ExternalExerciseApi {
-    @GET("dist/exercises.json")
-    suspend fun getAllExercises(): List<ExternalExercise>
+    @GET("en/exercises.json")
+    suspend fun getAllExercises(): ExercisesResponse
 }
 
 class ExternalExerciseService {
@@ -25,7 +31,8 @@ class ExternalExerciseService {
     suspend fun getAllExercises(): List<ExternalExercise> {
         if (cachedExercises == null) {
             try {
-                cachedExercises = api.getAllExercises()
+                val response = api.getAllExercises()
+                cachedExercises = response.exercises
             } catch (e: Exception) {
                 // Log the error for debugging
                 com.offlinelabs.nutcracker.util.logger.AppLogger.e("ExternalExerciseService", "Failed to fetch exercises", e)
