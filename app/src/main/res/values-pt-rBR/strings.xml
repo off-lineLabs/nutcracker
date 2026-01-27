@@ -406,4 +406,18 @@
     <string name="tutorial_replay">Repetir Tutorial</string>
     <string name="current_language_format">Idioma atual: %1$s</string>
     <string name="loading_more_results">Carregando mais resultados...</string>
+    <string name="my_recipes">Minhas Receitas</string>
+    <string name="create_recipe">Criar Receita</string>
+    <string name="edit_recipe">Editar Receita</string>
+    <string name="recipe_name">Nome da Receita</string>
+    <string name="description_optional">Descrição (opcional)</string>
+    <string name="add_ingredient">Adicionar Ingrediente</string>
+    <string name="no_ingredients_added">Nenhum ingrediente adicionado</string>
+    <string name="total_nutrition">Nutrição Total</string>
+    <string name="edit_ingredient">Editar Ingrediente</string>
+    <string name="quantity">Quantidade</string>
+    <string name="create_new_recipe">Criar Nova Receita</string>
+    <string name="no_recipes_created">Nenhuma receita criada ainda</string>
+    <string name="log_recipe">Registrar Receita</string>
+    <string name="select_ingredient">Selecionar Ingrediente</string>
 </resources>

@@ -476,4 +476,20 @@
     <!-- Missing strings -->
     <string name="open_system_language_settings">Open System Language Settings</string>
     <string name="current_language_format">Current language: %1$s</string>
+    
+    <!-- Recipe strings -->
+    <string name="my_recipes">My Recipes</string>
+    <string name="create_recipe">Create Recipe</string>
+    <string name="edit_recipe">Edit Recipe</string>
+    <string name="recipe_name">Recipe Name</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="add_ingredient">Add Ingredient</string>
+    <string name="no_ingredients_added">No ingredients added</string>
+    <string name="total_nutrition">Total Nutrition</string>
+    <string name="edit_ingredient">Edit Ingredient</string>
+    <string name="quantity">Quantity</string>
+    <string name="create_new_recipe">Create New Recipe</string>
+    <string name="no_recipes_created">No recipes created yet</string>
+    <string name="log_recipe">Log Recipe</string>
+    <string name="select_ingredient">Select Ingredient</string>
 </resources>

@@ -48,6 +48,41 @@ object DatabaseMigrations {
         }
     }
     
+    // Migration from version 18 to 19 - Add recipes system
+    val MIGRATION_18_19 = object : Migration(18, 19) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Create recipes table
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS recipes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    imageUrl TEXT,
+                    localImagePath TEXT,
+                    isVisible INTEGER NOT NULL,
+                    createdDate TEXT NOT NULL
+                )
+            """)
+            
+            // Create recipe_ingredients junction table
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS recipe_ingredients (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    recipeId INTEGER NOT NULL,
+                    mealId INTEGER NOT NULL,
+                    quantity REAL NOT NULL,
+                    unit TEXT NOT NULL,
+                    `order` INTEGER NOT NULL,
+                    FOREIGN KEY(recipeId) REFERENCES recipes(id) ON DELETE CASCADE,
+                    FOREIGN KEY(mealId) REFERENCES meals(id) ON DELETE RESTRICT
+                )
+            """)
+            
+            // Create indices for better performance
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_recipe_ingredients_recipeId ON recipe_ingredients(recipeId)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_recipe_ingredients_mealId ON recipe_ingredients(mealId)")
+        }
+    }
+    
     // Add more migrations here as needed
-    // Example: MIGRATION_18_19 = object : Migration(18, 19) { ... }
 }

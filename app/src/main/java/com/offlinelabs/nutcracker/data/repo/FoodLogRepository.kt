@@ -7,6 +7,8 @@ import com.offlinelabs.nutcracker.data.dao.ExerciseDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseLogDao
 import com.offlinelabs.nutcracker.data.dao.PillDao
 import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
+import com.offlinelabs.nutcracker.data.dao.RecipeDao
+import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
 import com.offlinelabs.nutcracker.data.dao.DailyNutritionEntry
 import com.offlinelabs.nutcracker.data.dao.DailyExerciseEntry
@@ -17,11 +19,14 @@ import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
 import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
+import com.offlinelabs.nutcracker.data.model.Recipe
+import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.service.ExerciseImageService
 import com.offlinelabs.nutcracker.data.service.ImageDownloadService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 
 /**
  * Interface for data operations.
@@ -82,6 +87,26 @@ interface FoodLogRepository {
     fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?>
     suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String)
 
+    // Recipe operations
+    fun getAllRecipes(): Flow<List<Recipe>>
+    fun getRecipeById(recipeId: Long): Flow<Recipe?>
+    suspend fun insertRecipe(recipe: Recipe): Long
+    suspend fun updateRecipe(recipe: Recipe)
+    suspend fun deleteRecipe(recipe: Recipe)
+    suspend fun deleteAllRecipes()
+
+    // RecipeIngredient operations
+    fun getIngredientsByRecipeId(recipeId: Long): Flow<List<RecipeIngredient>>
+    suspend fun getIngredientsByRecipeIdSync(recipeId: Long): List<RecipeIngredient>
+    suspend fun insertRecipeIngredient(ingredient: RecipeIngredient): Long
+    suspend fun insertRecipeIngredients(ingredients: List<RecipeIngredient>)
+    suspend fun updateRecipeIngredient(ingredient: RecipeIngredient)
+    suspend fun deleteRecipeIngredient(ingredient: RecipeIngredient)
+    suspend fun deleteIngredientsByRecipeId(recipeId: Long)
+
+    // Recipe nutrition calculation
+    suspend fun calculateRecipeNutrition(recipeId: Long, servingMultiplier: Double = 1.0): Meal?
+
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
     fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true, includeTEFBonus: Boolean = false): Flow<DailyTotals?>
@@ -98,6 +123,8 @@ class OfflineFoodLogRepository(
     private val exerciseLogDao: ExerciseLogDao,
     private val pillDao: PillDao,
     private val pillCheckInDao: PillCheckInDao,
+    private val recipeDao: RecipeDao,
+    private val recipeIngredientDao: RecipeIngredientDao,
     private val exerciseImageService: ExerciseImageService? = null,
     private val imageDownloadService: ImageDownloadService? = null
 ) : FoodLogRepository {
@@ -188,6 +215,119 @@ class OfflineFoodLogRepository(
     override fun getPillCheckInsByPillId(pillId: Long): Flow<List<PillCheckIn>> = pillCheckInDao.getPillCheckInsByPillId(pillId)
     override fun getPillCheckInByPillIdAndDate(pillId: Long, date: String): Flow<PillCheckIn?> = pillCheckInDao.getPillCheckInByPillIdAndDate(pillId, date)
     override suspend fun deletePillCheckInByPillIdAndDate(pillId: Long, date: String) = pillCheckInDao.deletePillCheckInByPillIdAndDate(pillId, date)
+
+    // Recipe operations
+    override fun getAllRecipes(): Flow<List<Recipe>> = recipeDao.getAllRecipes()
+    override fun getRecipeById(recipeId: Long): Flow<Recipe?> = recipeDao.getRecipeById(recipeId)
+    override suspend fun insertRecipe(recipe: Recipe): Long = recipeDao.insertRecipe(recipe)
+    override suspend fun updateRecipe(recipe: Recipe) = recipeDao.updateRecipe(recipe)
+    override suspend fun deleteRecipe(recipe: Recipe) {
+        // Delete the associated image if it exists
+        recipe.localImagePath?.let { imagePath ->
+            imageDownloadService?.deleteLocalImage(imagePath)
+        }
+        recipeDao.hideRecipe(recipe.id)
+    }
+    override suspend fun deleteAllRecipes() = recipeDao.deleteAllRecipes()
+
+    // RecipeIngredient operations
+    override fun getIngredientsByRecipeId(recipeId: Long): Flow<List<RecipeIngredient>> = recipeIngredientDao.getIngredientsByRecipeId(recipeId)
+    override suspend fun getIngredientsByRecipeIdSync(recipeId: Long): List<RecipeIngredient> = recipeIngredientDao.getIngredientsByRecipeIdSync(recipeId)
+    override suspend fun insertRecipeIngredient(ingredient: RecipeIngredient): Long = recipeIngredientDao.insertRecipeIngredient(ingredient)
+    override suspend fun insertRecipeIngredients(ingredients: List<RecipeIngredient>) = recipeIngredientDao.insertRecipeIngredients(ingredients)
+    override suspend fun updateRecipeIngredient(ingredient: RecipeIngredient) = recipeIngredientDao.updateRecipeIngredient(ingredient)
+    override suspend fun deleteRecipeIngredient(ingredient: RecipeIngredient) = recipeIngredientDao.deleteRecipeIngredient(ingredient)
+    override suspend fun deleteIngredientsByRecipeId(recipeId: Long) = recipeIngredientDao.deleteIngredientsByRecipeId(recipeId)
+
+    // Recipe nutrition calculation
+    override suspend fun calculateRecipeNutrition(recipeId: Long, servingMultiplier: Double): Meal? {
+        val ingredients = getIngredientsByRecipeIdSync(recipeId)
+        if (ingredients.isEmpty()) return null
+
+        var totalCalories = 0.0
+        var totalCarbohydrates = 0.0
+        var totalProtein = 0.0
+        var totalFat = 0.0
+        var totalFiber = 0.0
+        var totalSodium = 0.0
+        var totalSaturatedFat = 0.0
+        var totalSugars = 0.0
+        var totalCholesterol = 0.0
+        var totalVitaminC = 0.0
+        var totalCalcium = 0.0
+        var totalIron = 0.0
+
+        // Get all meal IDs
+        val mealIds = ingredients.map { it.mealId }.distinct()
+        
+        // Fetch all meals
+        val meals = mealIds.mapNotNull { mealId ->
+            mealDao.getMealById(mealId).first()
+        }
+
+        // Calculate nutrition for each ingredient
+        ingredients.forEach { ingredient ->
+            val meal = meals.find { it?.id == ingredient.mealId } ?: return@forEach
+            
+            // Convert ingredient quantity to the meal's serving size unit
+            // For simplicity, we'll assume quantities are in the same unit as the meal's serving size
+            // In a more sophisticated implementation, we'd convert between units
+            val quantityMultiplier = ingredient.quantity / meal.servingSize_value
+            
+            totalCalories += meal.calories * quantityMultiplier
+            totalCarbohydrates += meal.carbohydrates_g * quantityMultiplier
+            totalProtein += meal.protein_g * quantityMultiplier
+            totalFat += meal.fat_g * quantityMultiplier
+            totalFiber += meal.fiber_g * quantityMultiplier
+            totalSodium += meal.sodium_mg * quantityMultiplier
+            meal.saturatedFat_g?.let { totalSaturatedFat += it * quantityMultiplier }
+            meal.sugars_g?.let { totalSugars += it * quantityMultiplier }
+            meal.cholesterol_mg?.let { totalCholesterol += it * quantityMultiplier }
+            meal.vitaminC_mg?.let { totalVitaminC += it * quantityMultiplier }
+            meal.calcium_mg?.let { totalCalcium += it * quantityMultiplier }
+            meal.iron_mg?.let { totalIron += it * quantityMultiplier }
+        }
+
+        // Apply serving multiplier
+        totalCalories *= servingMultiplier
+        totalCarbohydrates *= servingMultiplier
+        totalProtein *= servingMultiplier
+        totalFat *= servingMultiplier
+        totalFiber *= servingMultiplier
+        totalSodium *= servingMultiplier
+        totalSaturatedFat *= servingMultiplier
+        totalSugars *= servingMultiplier
+        totalCholesterol *= servingMultiplier
+        totalVitaminC *= servingMultiplier
+        totalCalcium *= servingMultiplier
+        totalIron *= servingMultiplier
+
+        // Get recipe name
+        val recipe = recipeDao.getRecipeById(recipeId).first() ?: return null
+
+        // Create a temporary Meal object representing the recipe
+        return Meal(
+            id = 0, // Not a real meal, just for nutrition calculation
+            name = recipe.name,
+            brand = null,
+            calories = totalCalories.toInt(),
+            carbohydrates_g = totalCarbohydrates,
+            protein_g = totalProtein,
+            fat_g = totalFat,
+            fiber_g = totalFiber,
+            sodium_mg = totalSodium,
+            servingSize_value = servingMultiplier,
+            servingSize_unit = com.offlinelabs.nutcracker.data.model.ServingSizeUnit.SERVINGS,
+            notes = "recipe:${recipeId}", // Store recipe ID in notes for reference
+            isVisible = true,
+            saturatedFat_g = if (totalSaturatedFat > 0) totalSaturatedFat else null,
+            sugars_g = if (totalSugars > 0) totalSugars else null,
+            cholesterol_mg = if (totalCholesterol > 0) totalCholesterol else null,
+            vitaminC_mg = if (totalVitaminC > 0) totalVitaminC else null,
+            calcium_mg = if (totalCalcium > 0) totalCalcium else null,
+            iron_mg = if (totalIron > 0) totalIron else null
+        )
+    }
 
     // Combined operations for dashboard
     override fun getDailyCombinedSummary(date: String): Flow<List<Any>> {

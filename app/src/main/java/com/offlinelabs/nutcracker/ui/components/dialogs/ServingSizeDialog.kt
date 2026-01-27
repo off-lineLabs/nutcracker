@@ -1,4 +1,4 @@
-﻿package com.offlinelabs.nutcracker.ui.components.dialogs
+package com.offlinelabs.nutcracker.ui.components.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -264,7 +264,7 @@ fun ServingSizeDialog(
 }
 
 @Composable
-private fun UnitSelectorDialog(
+fun UnitSelectorDialog(
     onDismiss: () -> Unit,
     onUnitSelected: (ServingSizeUnit) -> Unit
 ) {
