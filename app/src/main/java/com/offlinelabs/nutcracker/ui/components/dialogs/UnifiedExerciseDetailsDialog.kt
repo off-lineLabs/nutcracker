@@ -24,6 +24,7 @@ import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
+import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
 import com.offlinelabs.nutcracker.data.service.ExternalExerciseService
 import com.offlinelabs.nutcracker.data.service.ExerciseImageService
 import kotlinx.coroutines.delay
@@ -36,6 +37,7 @@ fun UnifiedExerciseDetailsDialog(
     exercise: Exercise,
     externalExerciseService: ExternalExerciseService? = null,
     exerciseImageService: ExerciseImageService? = null,
+    foodLogRepository: com.offlinelabs.nutcracker.data.repo.FoodLogRepository? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onCheckIn: () -> Unit
@@ -90,7 +92,7 @@ fun UnifiedExerciseDetailsDialog(
                 
                 // Personal Data card (moved from swipable content)
                 item {
-                    PersonalDataCard(exercise = exercise, onEdit = onEdit)
+                    PersonalDataCard(exercise = exercise, foodLogRepository = foodLogRepository, onEdit = onEdit)
                 }
                 
                 // Exercise details
@@ -251,9 +253,18 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
 }
 
 @Composable
-private fun PersonalDataCard(exercise: Exercise, onEdit: () -> Unit) {
+private fun PersonalDataCard(exercise: Exercise, foodLogRepository: com.offlinelabs.nutcracker.data.repo.FoodLogRepository? = null, onEdit: () -> Unit) {
     val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
+    
+    // Fetch maximum weight recorded
+    var maxWeight by remember { mutableStateOf(0.0) }
+    
+    LaunchedEffect(exercise.id, foodLogRepository) {
+        foodLogRepository?.getMaxWeightForExercise(exercise.id)?.collect { weight ->
+            maxWeight = weight ?: 0.0
+        }
+    }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -296,6 +307,7 @@ private fun PersonalDataCard(exercise: Exercise, onEdit: () -> Unit) {
             }
             
             PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg", contrastingTextColor)
+            PersonalDataRow("Maximum Weight", "${maxWeight} kg", contrastingTextColor)
             PersonalDataRow("Default Reps", exercise.defaultReps.toString(), contrastingTextColor)
             PersonalDataRow("Default Sets", exercise.defaultSets.toString(), contrastingTextColor)
             

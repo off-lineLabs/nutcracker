@@ -2669,6 +2669,7 @@ fun DashboardScreen(
             exercise = exercise,
             externalExerciseService = externalExerciseService,
             exerciseImageService = exerciseImageService,
+            foodLogRepository = foodLogRepository,
             onBack = {
                 showUnifiedExerciseDetailDialog = null
             },
