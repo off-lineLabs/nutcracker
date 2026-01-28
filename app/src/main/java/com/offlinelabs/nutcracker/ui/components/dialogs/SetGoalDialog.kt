@@ -103,13 +103,26 @@ fun SetGoalDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // Always show actual calculated kcal to prevent layout shift
-                    val actualKcal = MacroCalculator.calculateKcalFromMacros(
+                    // Always show actual NET kcal to prevent layout shift
+                    // With TEF: show NET calories (what body absorbs) = GROSS - TEF bonus
+                    // Without TEF: show GROSS calories directly
+                    val grossKcal = MacroCalculator.calculateKcalFromMacros(
                         currentCarbsGrams, 
                         currentProteinGrams, 
                         currentFatGrams, 
-                        useTEFAdjustment
+                        useTEF = false // Always calculate gross first
                     )
+                    val actualKcal = if (useTEFAdjustment) {
+                        // NET = GROSS - TEF bonus
+                        val tefBonus = TEFCalculator.calculateTEFBonus(
+                            currentProteinGrams,
+                            currentCarbsGrams,
+                            currentFatGrams
+                        ).toInt()
+                        grossKcal - tefBonus
+                    } else {
+                        grossKcal
+                    }
                     val targetKcal = caloriesInput.toIntOrNull() ?: 0
                     val difference = actualKcal - targetKcal
                     val differenceText = if (difference > 0) "+$difference" else "$difference"
