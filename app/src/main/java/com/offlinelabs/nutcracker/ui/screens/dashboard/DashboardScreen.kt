@@ -1521,6 +1521,7 @@ fun DashboardScreen(
         EnhancedSelectExerciseDialog(
             exercises = exercises,
             externalExerciseService = externalExerciseService,
+            foodLogRepository = foodLogRepository,
             onDismiss = { showSelectExerciseDialog = false },
             onAddExercise = {
                 showSelectExerciseDialog = false
