@@ -308,7 +308,7 @@ class OfflineFoodLogRepository(
 
         // Create a temporary Meal object representing the recipe
         return Meal(
-            id = 0, // Not a real meal, just for nutrition calculation
+            id = -1, // Not a real meal, just for nutrition calculation
             name = recipe.name,
             brand = null,
             calories = totalCalories.toInt(),
