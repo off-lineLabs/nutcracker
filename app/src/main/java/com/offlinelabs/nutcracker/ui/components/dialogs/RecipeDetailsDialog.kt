@@ -67,7 +67,7 @@ fun RecipeDetailsDialog(
                         IconButton(onClick = onEdit) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
-                                contentDescription = "Edit"
+                                contentDescription = stringResource(R.string.edit)
                             )
                         }
                         IconButton(onClick = onDelete) {
