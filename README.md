@@ -21,7 +21,7 @@ NutCracker is a privacy-first, offline-first calorie tracking app for Android. B
 
 ## Features
 
-**Available in 🇬🇧 English, 🇪🇸 Spanish (Spain), and 🇧🇷 Portuguese (Brazil)**
+**Embedded translations in 🇬🇧 English, 🇪🇸 Spanish (Spain), and 🇧🇷 Portuguese (Brazil) with additional languages available on Google Play Store with automatic translation.**
 
 ### Nutrition Tracking
 - **Calorie Tracking**: Monitor your daily calorie intake with an intuitive circular progress indicator

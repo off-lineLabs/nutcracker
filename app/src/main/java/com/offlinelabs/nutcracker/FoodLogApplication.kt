@@ -32,6 +32,8 @@ class FoodLogApplication : Application() {
             database.exerciseLogDao(),
             database.pillDao(),
             database.pillCheckInDao(),
+            database.recipeDao(),
+            database.recipeIngredientDao(),
             exerciseImageService,
             imageDownloadService
         )
@@ -70,10 +72,42 @@ class FoodLogApplication : Application() {
         AppLogger.initialize(this)
         AppLogger.i("FoodLogApplication", "Application started")
         
+        // Create .nomedia files to hide app images from gallery
+        createNoMediaFiles()
+        
         // Log the current locale state for debugging
         val storedLocales = AppCompatDelegate.getApplicationLocales()
         AppLogger.d("FoodLogApplication", "AppCompatDelegate stored locales: ${storedLocales.toLanguageTags()}")
         AppLogger.d("FoodLogApplication", "System Locale.getDefault(): ${java.util.Locale.getDefault().toLanguageTag()}")
+    }
+    
+    /**
+     * Creates .nomedia files in image directories to prevent them from appearing in the gallery.
+     * This works for both new installs and existing users who already have images.
+     */
+    private fun createNoMediaFiles() {
+        try {
+            val imageDirectories = listOf(
+                java.io.File(filesDir, "exercise_images"),
+                java.io.File(filesDir, "food_images")
+            )
+            
+            imageDirectories.forEach { dir ->
+                // Create directory if it doesn't exist
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                
+                // Create .nomedia file
+                val noMediaFile = java.io.File(dir, ".nomedia")
+                if (!noMediaFile.exists()) {
+                    noMediaFile.createNewFile()
+                    AppLogger.i("FoodLogApplication", "Created .nomedia file: ${noMediaFile.absolutePath}")
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e("FoodLogApplication", "Failed to create .nomedia files", e)
+        }
     }
 
     override fun onTerminate() {

@@ -80,7 +80,12 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedCheckInDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedExerciseDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.CreateRecipeDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.SelectRecipeDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.RecipeDetailsDialog
 import com.offlinelabs.nutcracker.data.model.CheckInData
+import com.offlinelabs.nutcracker.data.model.Recipe
+import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.ui.components.FilterableHistoryView
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialState
 import com.offlinelabs.nutcracker.ui.theme.*
@@ -463,6 +468,10 @@ fun DashboardScreen(
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedMealDetailDialog by remember { mutableStateOf<Meal?>(null) }
     var showEditMealDefinitionDialog by remember { mutableStateOf<Meal?>(null) }
+    var showSelectRecipeDialog by remember { mutableStateOf(false) }
+    var showCreateRecipeDialog by remember { mutableStateOf(false) }
+    var editingRecipe by remember { mutableStateOf<Recipe?>(null) }
+    var recipes by remember { mutableStateOf(emptyList<Recipe>()) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
     var selectedExerciseForCheckIn by remember { mutableStateOf<Exercise?>(null) }
@@ -485,6 +494,12 @@ fun DashboardScreen(
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
             meals = mealList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository) {
+        foodLogRepository.getAllRecipes().collectLatest { recipeList ->
+            recipes = recipeList
         }
     }
 
@@ -1327,7 +1342,130 @@ fun DashboardScreen(
                 showSelectMealDialog = false
                 showBarcodeScanDialog = true
             },
+            onSelectRecipe = {
+                showSelectMealDialog = false
+                showSelectRecipeDialog = true
+            },
             registerElementCoordinates = registerElementCoordinates
+        )
+    }
+
+    // Recipe dialogs
+    if (showSelectRecipeDialog) {
+        SelectRecipeDialog(
+            recipes = recipes,
+            onDismiss = { showSelectRecipeDialog = false },
+            onCreateNew = {
+                showSelectRecipeDialog = false
+                editingRecipe = null
+                showCreateRecipeDialog = true
+            },
+            onSelectRecipe = { recipe ->
+                showSelectRecipeDialog = false
+                // Calculate nutrition and log recipe
+                coroutineScope.launch {
+                    try {
+                        val recipeMeal = foodLogRepository.calculateRecipeNutrition(recipe.id, 1.0)
+                        if (recipeMeal != null) {
+                            // Create a temporary meal entry for the check-in
+                            val tempMealId = foodLogRepository.insertMeal(recipeMeal)
+                            val mealCheckIn = MealCheckIn.create(
+                                mealId = tempMealId,
+                                servingSize = 1.0,
+                                notes = "recipe:${recipe.id}"
+                            )
+                            foodLogRepository.insertMealCheckIn(mealCheckIn)
+                            snackbarHostState.showSnackbar(
+                                message = checkInCompletedSuccess
+                            )
+                        } else {
+                            // Recipe nutrition could not be calculated (e.g., no ingredients)
+                            snackbarHostState.showSnackbar(
+                                message = checkInCompletedError
+                            )
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to log recipe", e)
+                        snackbarHostState.showSnackbar(
+                            message = checkInCompletedError
+                        )
+                    }
+                }
+            },
+            onEditRecipe = { recipe ->
+                showSelectRecipeDialog = false
+                editingRecipe = recipe
+                showCreateRecipeDialog = true
+            },
+            onDeleteRecipe = { recipe ->
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.deleteRecipe(recipe)
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.recipe_deleted)
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to delete recipe", e)
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.failed_delete_recipe)
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    if (showCreateRecipeDialog) {
+        var loadedIngredients by remember { mutableStateOf<List<Pair<RecipeIngredient, Meal?>>>(emptyList()) }
+        
+        // Load existing ingredients if editing
+        LaunchedEffect(editingRecipe) {
+            editingRecipe?.let { recipe ->
+                val ingredients = foodLogRepository.getIngredientsByRecipeIdSync(recipe.id)
+                loadedIngredients = ingredients.map { ingredient ->
+                    val meal = meals.find { it.id == ingredient.mealId }
+                    Pair(ingredient, meal)
+                }
+            } ?: run {
+                loadedIngredients = emptyList()
+            }
+        }
+        
+        CreateRecipeDialog(
+            recipe = editingRecipe,
+            meals = meals,
+            initialIngredients = loadedIngredients,
+            onDismiss = {
+                showCreateRecipeDialog = false
+                editingRecipe = null
+            },
+            onSave = { recipe, ingredients ->
+                coroutineScope.launch {
+                    try {
+                        val recipeId = if (recipe.id > 0) {
+                            foodLogRepository.updateRecipe(recipe)
+                            // Delete old ingredients
+                            foodLogRepository.deleteIngredientsByRecipeId(recipe.id)
+                            recipe.id
+                        } else {
+                            foodLogRepository.insertRecipe(recipe)
+                        }
+                        // Insert new ingredients
+                        val ingredientsWithRecipeId = ingredients.map { it.copy(recipeId = recipeId) }
+                        foodLogRepository.insertRecipeIngredients(ingredientsWithRecipeId)
+                        snackbarHostState.showSnackbar(
+                            message = if (recipe.id > 0) context.getString(R.string.recipe_updated) else context.getString(R.string.recipe_created)
+                        )
+                        showCreateRecipeDialog = false
+                        editingRecipe = null
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to save recipe", e)
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.failed_save_recipe)
+                        )
+                    }
+                }
+            }
         )
     }
 
@@ -1385,6 +1523,7 @@ fun DashboardScreen(
         EnhancedSelectExerciseDialog(
             exercises = exercises,
             externalExerciseService = externalExerciseService,
+            foodLogRepository = foodLogRepository,
             onDismiss = { showSelectExerciseDialog = false },
             onAddExercise = {
                 showSelectExerciseDialog = false
@@ -2533,6 +2672,7 @@ fun DashboardScreen(
             exercise = exercise,
             externalExerciseService = externalExerciseService,
             exerciseImageService = exerciseImageService,
+            foodLogRepository = foodLogRepository,
             onBack = {
                 showUnifiedExerciseDetailDialog = null
             },

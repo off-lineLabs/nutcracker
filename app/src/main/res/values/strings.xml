@@ -476,4 +476,44 @@
     <!-- Missing strings -->
     <string name="open_system_language_settings">Open System Language Settings</string>
     <string name="current_language_format">Current language: %1$s</string>
+    
+    <!-- Recipe strings -->
+    <string name="my_recipes">My Recipes</string>
+    <string name="create_recipe">Create Recipe</string>
+    <string name="edit_recipe">Edit Recipe</string>
+    <string name="recipe_name">Recipe Name</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="add_ingredient">Add Ingredient</string>
+    <string name="no_ingredients_added">No ingredients added</string>
+    <string name="total_nutrition">Total Nutrition</string>
+    <string name="edit_ingredient">Edit Ingredient</string>
+    <string name="quantity">Quantity</string>
+    <string name="create_new_recipe">Create New Recipe</string>
+    <string name="no_recipes_created">No recipes created yet</string>
+    <string name="log_recipe">Log Recipe</string>
+    <string name="select_ingredient">Select Ingredient</string>
+    
+    <!-- Recipe operation messages -->
+    <string name="recipe_deleted">Recipe deleted</string>
+    <string name="recipe_updated">Recipe updated</string>
+    <string name="recipe_created">Recipe created</string>
+    <string name="failed_save_recipe">Failed to save recipe</string>
+    <string name="failed_delete_recipe">Failed to delete recipe</string>
+    
+    <!-- Exercise strings -->
+    <string name="max_weight_display">Max.: %1$s kg</string>
+    
+    <!-- Macro labels -->
+    <string name="macro_carbs">Carbs</string>
+    <string name="macro_protein">Protein</string>
+    <string name="macro_fat">Fat</string>
+    
+    <!-- TEF (Thermic Effect of Food) strings -->
+    <string name="thermic_effect_tef">Thermic Effect (TEF)</string>
+    <string name="higher_macros_same_kcal">Higher macros, same kcal</string>
+    <string name="actual_calories">Actual: %1$d kcal (%2$s)</string>
+    
+    <!-- Accessibility strings -->
+    <string name="locked">Locked</string>
+    <string name="unlocked">Unlocked</string>
 </resources>

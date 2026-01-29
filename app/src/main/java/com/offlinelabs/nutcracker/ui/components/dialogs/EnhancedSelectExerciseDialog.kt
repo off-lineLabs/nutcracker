@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
+import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
 import com.offlinelabs.nutcracker.data.service.ExternalExerciseService
 import com.offlinelabs.nutcracker.ui.components.ExerciseImageIcon
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
@@ -33,6 +34,7 @@ import kotlinx.coroutines.delay
 fun EnhancedSelectExerciseDialog(
     exercises: List<Exercise>,
     externalExerciseService: ExternalExerciseService,
+    foodLogRepository: FoodLogRepository? = null,
     onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
@@ -94,6 +96,7 @@ fun EnhancedSelectExerciseDialog(
         DialogState.MAIN -> {
             MainExerciseSelectionDialog(
                 exercises = exercises,
+                foodLogRepository = foodLogRepository,
                 onDismiss = onDismiss,
                 onAddExercise = onAddExercise,
                 onSelectExercise = onSelectExercise,
@@ -153,6 +156,7 @@ enum class DialogState {
 @Composable
 private fun MainExerciseSelectionDialog(
     exercises: List<Exercise>,
+    foodLogRepository: FoodLogRepository? = null,
     onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
@@ -287,10 +291,10 @@ private fun MainExerciseSelectionDialog(
                                             fontWeight = FontWeight.Medium,
                                             color = contrastingTextColor
                                         )
-                                        Text(
-                                            text = exercise.category,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = contrastingTextColor.copy(alpha = 0.7f)
+                                        MaxWeightDisplay(
+                                            exerciseId = exercise.id,
+                                            foodLogRepository = foodLogRepository,
+                                            textColor = contrastingTextColor
                                         )
                                     }
                                     
@@ -314,4 +318,25 @@ private fun MainExerciseSelectionDialog(
             }
         }
     }
+}
+
+@Composable
+private fun MaxWeightDisplay(
+    exerciseId: Long,
+    foodLogRepository: FoodLogRepository? = null,
+    textColor: androidx.compose.ui.graphics.Color
+) {
+    var maxWeight by remember { mutableStateOf(0.0) }
+    
+    LaunchedEffect(exerciseId, foodLogRepository) {
+        foodLogRepository?.getMaxWeightForExercise(exerciseId)?.collect { weight ->
+            maxWeight = weight ?: 0.0
+        }
+    }
+    
+    Text(
+        text = stringResource(R.string.max_weight_display, maxWeight.toString()),
+        style = MaterialTheme.typography.bodySmall,
+        color = textColor.copy(alpha = 0.7f)
+    )
 }
