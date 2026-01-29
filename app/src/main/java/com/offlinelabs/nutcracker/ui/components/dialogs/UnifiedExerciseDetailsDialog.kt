@@ -37,7 +37,7 @@ fun UnifiedExerciseDetailsDialog(
     exercise: Exercise,
     externalExerciseService: ExternalExerciseService? = null,
     exerciseImageService: ExerciseImageService? = null,
-    foodLogRepository: com.offlinelabs.nutcracker.data.repo.FoodLogRepository? = null,
+    foodLogRepository: FoodLogRepository? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onCheckIn: () -> Unit
@@ -253,7 +253,7 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
 }
 
 @Composable
-private fun PersonalDataCard(exercise: Exercise, foodLogRepository: com.offlinelabs.nutcracker.data.repo.FoodLogRepository? = null, onEdit: () -> Unit) {
+private fun PersonalDataCard(exercise: Exercise, foodLogRepository: FoodLogRepository? = null, onEdit: () -> Unit) {
     val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
     

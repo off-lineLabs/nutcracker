@@ -179,13 +179,13 @@ fun SetGoalDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Thermic Effect (TEF)",
+                            text = stringResource(R.string.thermic_effect_tef),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = appTextPrimaryColor()
                         )
                         Text(
-                            text = "Higher macros, same kcal",
+                            text = stringResource(R.string.higher_macros_same_kcal),
                             fontSize = 12.sp,
                             color = appTextSecondaryColor()
                         )

@@ -58,13 +58,15 @@ fun RecipeIngredientItem(
                     color = contrastingTextColor.copy(alpha = 0.7f)
                 )
                 meal?.let { m ->
-                    val multiplier = ingredient.quantity / m.servingSize_value
-                    val calories = (m.calories * multiplier).toInt()
-                    Text(
-                        text = "$calories kcal",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contrastingTextColor.copy(alpha = 0.6f)
-                    )
+                    if (m.servingSize_value > 0.0) {
+                        val multiplier = ingredient.quantity / m.servingSize_value
+                        val calories = (m.calories * multiplier).toInt()
+                        Text(
+                            text = "$calories kcal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contrastingTextColor.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
             

@@ -37,6 +37,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
 import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
 import com.offlinelabs.nutcracker.ui.theme.nutrientCarbsColor
@@ -109,35 +111,53 @@ fun CombinedMacroBar(
         lockedMacros.contains("CARBS") -> {
             // Only Carbs locked, redistribute remaining calories between protein and fat
             val remainingKcal = totalKcal - (carbsGrams * 4.0)
-            val proteinRatio = suggestedProteinGrams / (suggestedProteinGrams + suggestedFatGrams)
-            val fatRatio = suggestedFatGrams / (suggestedProteinGrams + suggestedFatGrams)
-            Triple(
-                carbsGrams,
-                (remainingKcal * proteinRatio) / 4.0,
-                (remainingKcal * fatRatio) / 9.0
-            )
+            val denominator = suggestedProteinGrams + suggestedFatGrams
+            if (denominator > 0.0) {
+                val proteinRatio = suggestedProteinGrams / denominator
+                val fatRatio = suggestedFatGrams / denominator
+                Triple(
+                    carbsGrams,
+                    (remainingKcal * proteinRatio) / 4.0,
+                    (remainingKcal * fatRatio) / 9.0
+                )
+            } else {
+                // Default split if no valid suggestions
+                Triple(carbsGrams, remainingKcal / 8.0, remainingKcal / 18.0)
+            }
         }
         lockedMacros.contains("PROTEIN") -> {
             // Only Protein locked, redistribute remaining calories between carbs and fat
             val remainingKcal = totalKcal - (proteinGrams * 4.0)
-            val carbsRatio = suggestedCarbsGrams / (suggestedCarbsGrams + suggestedFatGrams)
-            val fatRatio = suggestedFatGrams / (suggestedCarbsGrams + suggestedFatGrams)
-            Triple(
-                (remainingKcal * carbsRatio) / 4.0,
-                proteinGrams,
-                (remainingKcal * fatRatio) / 9.0
-            )
+            val denominator = suggestedCarbsGrams + suggestedFatGrams
+            if (denominator > 0.0) {
+                val carbsRatio = suggestedCarbsGrams / denominator
+                val fatRatio = suggestedFatGrams / denominator
+                Triple(
+                    (remainingKcal * carbsRatio) / 4.0,
+                    proteinGrams,
+                    (remainingKcal * fatRatio) / 9.0
+                )
+            } else {
+                // Default split if no valid suggestions
+                Triple(remainingKcal / 8.0, proteinGrams, remainingKcal / 18.0)
+            }
         }
         lockedMacros.contains("FAT") -> {
             // Only Fat locked, redistribute remaining calories between carbs and protein
             val remainingKcal = totalKcal - (fatGrams * 9.0)
-            val carbsRatio = suggestedCarbsGrams / (suggestedCarbsGrams + suggestedProteinGrams)
-            val proteinRatio = suggestedProteinGrams / (suggestedCarbsGrams + suggestedProteinGrams)
-            Triple(
-                (remainingKcal * carbsRatio) / 4.0,
-                (remainingKcal * proteinRatio) / 4.0,
-                fatGrams
-            )
+            val denominator = suggestedCarbsGrams + suggestedProteinGrams
+            if (denominator > 0.0) {
+                val carbsRatio = suggestedCarbsGrams / denominator
+                val proteinRatio = suggestedProteinGrams / denominator
+                Triple(
+                    (remainingKcal * carbsRatio) / 4.0,
+                    (remainingKcal * proteinRatio) / 4.0,
+                    fatGrams
+                )
+            } else {
+                // Default split if no valid suggestions
+                Triple(remainingKcal / 8.0, remainingKcal / 8.0, fatGrams)
+            }
         }
         else -> Triple(suggestedCarbsGrams, suggestedProteinGrams, suggestedFatGrams)
     }
@@ -156,7 +176,7 @@ fun CombinedMacroBar(
     ) {
         // Carbs bar - draggable, only updates carbs value
         MacroStatBar(
-            label = "Carbs",
+            label = stringResource(R.string.macro_carbs),
             grams = carbsGrams,
             maxGrams = maxCarbsGrams,
             suggestedGrams = finalSuggestedCarbs,
@@ -180,7 +200,7 @@ fun CombinedMacroBar(
         
         // Protein bar - draggable, only updates protein value
         MacroStatBar(
-            label = "Protein",
+            label = stringResource(R.string.macro_protein),
             grams = proteinGrams,
             maxGrams = maxProteinGrams,
             suggestedGrams = finalSuggestedProtein,
@@ -204,7 +224,7 @@ fun CombinedMacroBar(
         
         // Fat bar - draggable, only updates fat value
         MacroStatBar(
-            label = "Fat",
+            label = stringResource(R.string.macro_fat),
             grams = fatGrams,
             maxGrams = maxFatGrams,
             suggestedGrams = finalSuggestedFat,
@@ -267,7 +287,7 @@ private fun MacroStatBar(
                 // Lock icon - clickable
                 Icon(
                     imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                    contentDescription = if (isLocked) "Locked" else "Unlocked",
+                    contentDescription = stringResource(if (isLocked) R.string.locked else R.string.unlocked),
                     modifier = Modifier
                         .size(16.dp)
                         .clickable { onLockToggle() },

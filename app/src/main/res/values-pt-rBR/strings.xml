@@ -420,4 +420,28 @@
     <string name="no_recipes_created">Nenhuma receita criada ainda</string>
     <string name="log_recipe">Registrar Receita</string>
     <string name="select_ingredient">Selecionar Ingrediente</string>
+    
+    <!-- Recipe operation messages -->
+    <string name="recipe_deleted">Receita excluída</string>
+    <string name="recipe_updated">Receita atualizada</string>
+    <string name="recipe_created">Receita criada</string>
+    <string name="failed_save_recipe">Falha ao salvar receita</string>
+    <string name="failed_delete_recipe">Falha ao excluir receita</string>
+    
+    <!-- Exercise strings -->
+    <string name="max_weight_display">Máx.: %1$s kg</string>
+    
+    <!-- Macro labels -->
+    <string name="macro_carbs">Carboidratos</string>
+    <string name="macro_protein">Proteína</string>
+    <string name="macro_fat">Gordura</string>
+    
+    <!-- TEF (Thermic Effect of Food) strings -->
+    <string name="thermic_effect_tef">Efeito Térmico (TEF)</string>
+    <string name="higher_macros_same_kcal">Mais macros, mesmas kcal</string>
+    <string name="actual_calories">Real: %1$d kcal (%2$s)</string>
+    
+    <!-- Accessibility strings -->
+    <string name="locked">Bloqueado</string>
+    <string name="unlocked">Desbloqueado</string>
 </resources>

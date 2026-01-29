@@ -28,7 +28,6 @@ import com.offlinelabs.nutcracker.ui.components.items.RecipeIngredientItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
 import java.util.Locale
-import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,8 +36,7 @@ fun CreateRecipeDialog(
     meals: List<Meal>,
     initialIngredients: List<Pair<RecipeIngredient, Meal?>> = emptyList(),
     onDismiss: () -> Unit,
-    onSave: (Recipe, List<RecipeIngredient>) -> Unit,
-    onSelectMeal: () -> Unit
+    onSave: (Recipe, List<RecipeIngredient>) -> Unit
 ) {
     var recipeName by remember { mutableStateOf(recipe?.name ?: "") }
     var recipeDescription by remember { mutableStateOf(recipe?.description ?: "") }
@@ -198,7 +196,7 @@ fun CreateRecipeDialog(
                                 meal = meal,
                                 onEdit = { editingIngredient = it },
                                 onDelete = {
-                                    ingredients = ingredients.filter { it.first.id != ingredient.id }
+                                    ingredients = ingredients.filterIndexed { i, _ -> i != index }
                                 }
                             )
                         }
@@ -285,13 +283,14 @@ fun CreateRecipeDialog(
     
     // Ingredient quantity edit dialog
     editingIngredient?.let { ingredient ->
+        val ingredientIndex = ingredients.indexOfFirst { it.first == ingredient }
         EditIngredientQuantityDialog(
             ingredient = ingredient,
-            meal = ingredients.find { it.first.id == ingredient.id }?.second,
+            meal = if (ingredientIndex >= 0) ingredients[ingredientIndex].second else null,
             onDismiss = { editingIngredient = null },
             onSave = { updatedIngredient ->
-                ingredients = ingredients.map { (ing, meal) ->
-                    if (ing.id == updatedIngredient.id) {
+                ingredients = ingredients.mapIndexed { index, (ing, meal) ->
+                    if (index == ingredientIndex) {
                         Pair(updatedIngredient, meal)
                     } else {
                         Pair(ing, meal)

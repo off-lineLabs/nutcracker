@@ -272,6 +272,7 @@ class OfflineFoodLogRepository(
             // Convert ingredient quantity to the meal's serving size unit
             // For simplicity, we'll assume quantities are in the same unit as the meal's serving size
             // In a more sophisticated implementation, we'd convert between units
+            if (meal.servingSize_value <= 0.0) return@forEach // Skip invalid serving size
             val quantityMultiplier = ingredient.quantity / meal.servingSize_value
             
             totalCalories += meal.calories * quantityMultiplier

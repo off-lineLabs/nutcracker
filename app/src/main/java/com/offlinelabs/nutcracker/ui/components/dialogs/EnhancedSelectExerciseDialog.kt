@@ -335,7 +335,7 @@ private fun MaxWeightDisplay(
     }
     
     Text(
-        text = "Max.: $maxWeight kg",
+        text = stringResource(R.string.max_weight_display, maxWeight.toString()),
         style = MaterialTheme.typography.bodySmall,
         color = textColor.copy(alpha = 0.7f)
     )

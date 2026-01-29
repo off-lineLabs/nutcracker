@@ -470,8 +470,8 @@ fun DashboardScreen(
     var showEditMealDefinitionDialog by remember { mutableStateOf<Meal?>(null) }
     var showSelectRecipeDialog by remember { mutableStateOf(false) }
     var showCreateRecipeDialog by remember { mutableStateOf(false) }
-    var editingRecipe by remember { mutableStateOf<com.offlinelabs.nutcracker.data.model.Recipe?>(null) }
-    var recipes by remember { mutableStateOf(emptyList<com.offlinelabs.nutcracker.data.model.Recipe>()) }
+    var editingRecipe by remember { mutableStateOf<Recipe?>(null) }
+    var recipes by remember { mutableStateOf(emptyList<Recipe>()) }
     var selectedExternalExercise by remember { mutableStateOf<ExternalExercise?>(null) }
     var selectedExerciseForEdit by remember { mutableStateOf<Exercise?>(null) }
     var selectedExerciseForCheckIn by remember { mutableStateOf<Exercise?>(null) }
@@ -1397,12 +1397,12 @@ fun DashboardScreen(
                     try {
                         foodLogRepository.deleteRecipe(recipe)
                         snackbarHostState.showSnackbar(
-                            message = "Recipe deleted"
+                            message = context.getString(R.string.recipe_deleted)
                         )
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to delete recipe", e)
                         snackbarHostState.showSnackbar(
-                            message = "Failed to delete recipe"
+                            message = context.getString(R.string.failed_delete_recipe)
                         )
                     }
                 }
@@ -1411,25 +1411,25 @@ fun DashboardScreen(
     }
 
     if (showCreateRecipeDialog) {
-        var recipeIngredients by remember { mutableStateOf<List<Pair<RecipeIngredient, Meal?>>>(emptyList()) }
+        var loadedIngredients by remember { mutableStateOf<List<Pair<RecipeIngredient, Meal?>>>(emptyList()) }
         
         // Load existing ingredients if editing
         LaunchedEffect(editingRecipe) {
             editingRecipe?.let { recipe ->
                 val ingredients = foodLogRepository.getIngredientsByRecipeIdSync(recipe.id)
-                recipeIngredients = ingredients.map { ingredient ->
+                loadedIngredients = ingredients.map { ingredient ->
                     val meal = meals.find { it.id == ingredient.mealId }
                     Pair(ingredient, meal)
                 }
             } ?: run {
-                recipeIngredients = emptyList()
+                loadedIngredients = emptyList()
             }
         }
         
         CreateRecipeDialog(
             recipe = editingRecipe,
             meals = meals,
-            initialIngredients = recipeIngredients,
+            initialIngredients = loadedIngredients,
             onDismiss = {
                 showCreateRecipeDialog = false
                 editingRecipe = null
@@ -1449,20 +1449,17 @@ fun DashboardScreen(
                         val ingredientsWithRecipeId = ingredients.map { it.copy(recipeId = recipeId) }
                         foodLogRepository.insertRecipeIngredients(ingredientsWithRecipeId)
                         snackbarHostState.showSnackbar(
-                            message = if (recipe.id > 0) "Recipe updated" else "Recipe created"
+                            message = if (recipe.id > 0) context.getString(R.string.recipe_updated) else context.getString(R.string.recipe_created)
                         )
                         showCreateRecipeDialog = false
                         editingRecipe = null
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to save recipe", e)
                         snackbarHostState.showSnackbar(
-                            message = "Failed to save recipe"
+                            message = context.getString(R.string.failed_save_recipe)
                         )
                     }
                 }
-            },
-            onSelectMeal = {
-                // This will be handled by the dialog's internal meal selector
             }
         )
     }

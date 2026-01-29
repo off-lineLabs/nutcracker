@@ -73,10 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 try {
-                    // #region agent log
-                    try { java.io.File("c:\\Users\\jonas\\StudioProjects\\offline-calorie-calculator\\.cursor\\debug.log").appendText("{\"timestamp\":${System.currentTimeMillis()},\"location\":\"AppDatabase.kt:76\",\"message\":\"Database builder start\",\"data\":{\"version\":19,\"dbName\":\"food_log_database_v2\"},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\"}\n") } catch (e: Exception) {}
-                    // #endregion
-                    val builder = Room.databaseBuilder(
+                    val instance = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         "food_log_database_v2"
@@ -88,19 +85,10 @@ abstract class AppDatabase : RoomDatabase() {
                         // IMPORTANT: When incrementing database version, you MUST create a proper migration
                         // in DatabaseMigrations.kt. Never use fallbackToDestructiveMigration() in production.
                     )
-                    // #region agent log
-                    try { java.io.File("c:\\Users\\jonas\\StudioProjects\\offline-calorie-calculator\\.cursor\\debug.log").appendText("{\"timestamp\":${System.currentTimeMillis()},\"location\":\"AppDatabase.kt:88\",\"message\":\"Migrations registered\",\"data\":{\"migrations\":[\"17_18\",\"18_19\"]},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\"}\n") } catch (e: Exception) {}
-                    // #endregion
-                    val instance = builder.build()
-                    // #region agent log
-                    try { java.io.File("c:\\Users\\jonas\\StudioProjects\\offline-calorie-calculator\\.cursor\\debug.log").appendText("{\"timestamp\":${System.currentTimeMillis()},\"location\":\"AppDatabase.kt:92\",\"message\":\"Database built successfully\",\"data\":{},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\"}\n") } catch (e: Exception) {}
-                    // #endregion
+                    .build()
                     INSTANCE = instance
                     instance
                 } catch (e: Exception) {
-                    // #region agent log
-                    try { java.io.File("c:\\Users\\jonas\\StudioProjects\\offline-calorie-calculator\\.cursor\\debug.log").appendText("{\"timestamp\":${System.currentTimeMillis()},\"location\":\"AppDatabase.kt:98\",\"message\":\"Database initialization failed\",\"data\":{\"error\":\"${e.message}\"},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\"}\n") } catch (ex: Exception) {}
-                    // #endregion
                     com.offlinelabs.nutcracker.util.logger.AppLogger.e("AppDatabase", "Database initialization failed", e)
                     throw e
                 }
