@@ -167,7 +167,7 @@ private fun RecipeItem(
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = stringResource(R.string.edit),
                         tint = contrastingTextColor.copy(alpha = 0.7f)
                     )
                 }
