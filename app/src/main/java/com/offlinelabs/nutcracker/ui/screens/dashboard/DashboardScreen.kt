@@ -1378,6 +1378,11 @@ fun DashboardScreen(
                             snackbarHostState.showSnackbar(
                                 message = checkInCompletedSuccess
                             )
+                        } else {
+                            // Recipe nutrition could not be calculated (e.g., no ingredients)
+                            snackbarHostState.showSnackbar(
+                                message = checkInCompletedError
+                            )
                         }
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to log recipe", e)
