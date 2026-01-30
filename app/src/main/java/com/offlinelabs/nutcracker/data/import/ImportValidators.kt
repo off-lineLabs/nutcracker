@@ -478,4 +478,79 @@ object ImportValidators {
             warnings = warnings
         )
     }
+    
+    /**
+     * Validate recipe data from TSV row
+     */
+    fun validateRecipeData(row: CsvRow): ValidationResult {
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        
+        // Required fields
+        if (row.getValueOrEmpty("name").isBlank()) {
+            errors.add(ImportError(
+                tableName = "recipes",
+                rowNumber = row.rowNumber,
+                fieldName = "name",
+                errorMessage = "Recipe name is required",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        
+        return ValidationResult(
+            isValid = errors.isEmpty(),
+            errors = errors,
+            warnings = warnings
+        )
+    }
+    
+    /**
+     * Validate recipe ingredient data from TSV row
+     */
+    fun validateRecipeIngredientData(row: CsvRow): ValidationResult {
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        
+        // Recipe ID validation
+        val recipeId = row.getLongValue("recipeId")
+        if (recipeId == null || recipeId <= 0) {
+            errors.add(ImportError(
+                tableName = "recipe_ingredients",
+                rowNumber = row.rowNumber,
+                fieldName = "recipeId",
+                errorMessage = "Recipe ID must be a positive integer",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        
+        // Meal ID validation
+        val mealId = row.getLongValue("mealId")
+        if (mealId == null || mealId <= 0) {
+            errors.add(ImportError(
+                tableName = "recipe_ingredients",
+                rowNumber = row.rowNumber,
+                fieldName = "mealId",
+                errorMessage = "Meal ID must be a positive integer",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        
+        // Quantity validation
+        val quantity = row.getDoubleValue("quantity")
+        if (quantity == null || quantity <= 0) {
+            errors.add(ImportError(
+                tableName = "recipe_ingredients",
+                rowNumber = row.rowNumber,
+                fieldName = "quantity",
+                errorMessage = "Quantity must be a positive number",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        
+        return ValidationResult(
+            isValid = errors.isEmpty(),
+            errors = errors,
+            warnings = warnings
+        )
+    }
 }

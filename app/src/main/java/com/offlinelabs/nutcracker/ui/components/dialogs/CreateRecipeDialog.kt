@@ -25,8 +25,10 @@ import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import com.offlinelabs.nutcracker.ui.components.items.RecipeIngredientItem
+import com.offlinelabs.nutcracker.ui.components.items.MealItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
+import com.offlinelabs.nutcracker.ui.theme.dialogOutlinedTextFieldColorsMaxContrast
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,7 +142,8 @@ fun CreateRecipeDialog(
                     onValueChange = { recipeName = it },
                     label = { Text(stringResource(R.string.recipe_name)) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = dialogOutlinedTextFieldColorsMaxContrast()
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -151,7 +154,8 @@ fun CreateRecipeDialog(
                     onValueChange = { recipeDescription = it },
                     label = { Text(stringResource(R.string.description_optional)) },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
+                    maxLines = 3,
+                    colors = dialogOutlinedTextFieldColorsMaxContrast()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -407,6 +411,9 @@ private fun SelectMealForIngredientDialog(
     onDismiss: () -> Unit,
     onMealSelected: (Meal) -> Unit
 ) {
+    // Filter to only show visible meals
+    val visibleMeals = meals.filter { it.isVisible }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.select_ingredient)) },
@@ -414,36 +421,11 @@ private fun SelectMealForIngredientDialog(
             LazyColumn(
                 modifier = Modifier.heightIn(max = 400.dp)
             ) {
-                items(meals) { meal ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable { onMealSelected(meal) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = meal.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "${meal.calories} kcal",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
+                items(visibleMeals) { meal ->
+                    MealItem(
+                        meal = meal,
+                        onMealClick = { onMealSelected(meal) }
+                    )
                 }
             }
         },
