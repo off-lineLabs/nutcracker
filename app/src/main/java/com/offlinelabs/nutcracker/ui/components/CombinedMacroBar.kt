@@ -1,6 +1,5 @@
 package com.offlinelabs.nutcracker.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -27,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -267,6 +267,11 @@ private fun MacroStatBar(
     // Track value at drag start - we'll add accumulated pixel deltas to this
     var dragStartGrams by remember { mutableDoubleStateOf(0.0) }
     var totalPixelDrag by remember { mutableDoubleStateOf(0.0) }
+    // The pointerInput block below is only restarted when maxGrams/isLocked change, so reading
+    // `grams`/`onValueChange` directly inside it would use values captured when it started.
+    // rememberUpdatedState always exposes the latest values without restarting the gesture.
+    val currentGrams by rememberUpdatedState(grams)
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
     
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -317,7 +322,7 @@ private fun MacroStatBar(
                             detectHorizontalDragGestures(
                                 onDragStart = {
                                     // Capture starting point
-                                    dragStartGrams = grams
+                                    dragStartGrams = currentGrams
                                     totalPixelDrag = 0.0
                                 },
                                 onHorizontalDrag = { change, dragAmount ->
@@ -328,7 +333,7 @@ private fun MacroStatBar(
                                     // Convert total pixels to grams once
                                     val gramsDelta = (totalPixelDrag / barWidth) * maxGrams
                                     val newGrams = (dragStartGrams + gramsDelta).coerceIn(0.0, maxGrams)
-                                    onValueChange(newGrams)
+                                    currentOnValueChange(newGrams)
                                 }
                             )
                         }
