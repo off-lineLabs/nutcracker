@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import android.os.Build
-import android.util.Log
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
@@ -109,6 +108,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
 import android.content.Context
+
+/** Sodium is stored in milligrams but displayed in grams. */
+private const val MILLIGRAMS_PER_GRAM = 1000.0
 
 @Composable
 fun NutrientProgressDisplay(
@@ -366,8 +368,8 @@ private fun NutrientBox(
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
-            consumed = (totals?.totalSodium ?: 0.0) / 1000.0,
-            goal = goals.sodiumGoal_mg.toDouble() / 1000.0,
+            consumed = (totals?.totalSodium ?: 0.0) / MILLIGRAMS_PER_GRAM,
+            goal = goals.sodiumGoal_mg.toDouble() / MILLIGRAMS_PER_GRAM,
             unit = "g",
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
