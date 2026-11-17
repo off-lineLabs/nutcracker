@@ -77,7 +77,7 @@ fun PillTracker(
             contentAlignment = Alignment.Center
         ) {
             // Show timestamp when pill is taken
-            if (isPillTaken && pillCheckIn != null) {
+            if (pillCheckIn != null) {
                 Text(
                     text = pillCheckIn.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
                     fontSize = 12.sp,
