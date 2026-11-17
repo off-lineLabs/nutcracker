@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -38,7 +37,6 @@ import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextDecoration
 
@@ -61,7 +59,6 @@ fun FoodSearchDialog(
     
     val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
-    val uriHandler = LocalUriHandler.current
     
     // Debounced search effect - loads first page immediately
     LaunchedEffect(searchQuery, wholeFoodsOnly) {
@@ -365,16 +362,19 @@ fun FoodSearchDialog(
                                         append(noResultsText.substring(0, openFoodFactsIndex))
                                         
                                         // Add clickable link
-                                        pushStringAnnotation("URL", openFoodFactsUrl)
-                                        withStyle(
-                                            style = SpanStyle(
-                                                color = Color(0xFF60A5FA),
-                                                textDecoration = TextDecoration.Underline
+                                        withLink(
+                                            LinkAnnotation.Url(
+                                                url = openFoodFactsUrl,
+                                                styles = TextLinkStyles(
+                                                    style = SpanStyle(
+                                                        color = Color(0xFF60A5FA),
+                                                        textDecoration = TextDecoration.Underline
+                                                    )
+                                                )
                                             )
                                         ) {
                                             append(openFoodFactsText)
                                         }
-                                        pop()
                                         
                                         // Add text after the link
                                         append(noResultsText.substring(openFoodFactsIndex + openFoodFactsText.length))
@@ -383,17 +383,9 @@ fun FoodSearchDialog(
                                     }
                                 }
                                 
-                                ClickableText(
+                                // LinkAnnotation.Url opens the link via LocalUriHandler automatically
+                                Text(
                                     text = clickableText,
-                                    onClick = { offset ->
-                                        clickableText.getStringAnnotations(
-                                            tag = "URL",
-                                            start = offset,
-                                            end = offset
-                                        ).firstOrNull()?.let { annotation ->
-                                            uriHandler.openUri(annotation.item)
-                                        }
-                                    },
                                     style = TextStyle(
                                         color = appTextSecondaryColor(),
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,

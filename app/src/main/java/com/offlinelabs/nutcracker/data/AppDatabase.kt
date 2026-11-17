@@ -14,6 +14,8 @@ import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
 import com.offlinelabs.nutcracker.data.dao.TagDao
 import com.offlinelabs.nutcracker.data.dao.MealTagDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseTagDao
+import com.offlinelabs.nutcracker.data.dao.RecipeDao
+import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
@@ -26,6 +28,8 @@ import com.offlinelabs.nutcracker.data.model.DateTimeTypeConverters
 import com.offlinelabs.nutcracker.data.model.Tag
 import com.offlinelabs.nutcracker.data.model.MealTag
 import com.offlinelabs.nutcracker.data.model.ExerciseTag
+import com.offlinelabs.nutcracker.data.model.Recipe
+import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
 
 @Database(
@@ -39,9 +43,11 @@ import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
         PillCheckIn::class,
         Tag::class,
         MealTag::class,
-        ExerciseTag::class
+        ExerciseTag::class,
+        Recipe::class,
+        RecipeIngredient::class
     ], 
-    version = 18, 
+    version = 19, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -57,6 +63,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun mealTagDao(): MealTagDao
     abstract fun exerciseTagDao(): ExerciseTagDao
+    abstract fun recipeDao(): RecipeDao
+    abstract fun recipeIngredientDao(): RecipeIngredientDao
 
     companion object {
         @Volatile
@@ -71,8 +79,11 @@ abstract class AppDatabase : RoomDatabase() {
                         "food_log_database_v2"
                     )
                     .addMigrations(
-                        DatabaseMigrations.MIGRATION_17_18
+                        DatabaseMigrations.MIGRATION_17_18,
+                        DatabaseMigrations.MIGRATION_18_19
                         // Add more migrations here as needed
+                        // IMPORTANT: When incrementing database version, you MUST create a proper migration
+                        // in DatabaseMigrations.kt. Never use fallbackToDestructiveMigration() in production.
                     )
                     .build()
                     INSTANCE = instance

@@ -38,6 +38,8 @@ class DatabaseExportManager(
         private const val TAGS_TSV = "tags.tsv"
         private const val MEAL_TAGS_TSV = "meal_tags.tsv"
         private const val EXERCISE_TAGS_TSV = "exercise_tags.tsv"
+        private const val RECIPES_TSV = "recipes.tsv"
+        private const val RECIPE_INGREDIENTS_TSV = "recipe_ingredients.tsv"
         private const val EXPORT_INFO_TSV = "export_info.tsv"
     }
     
@@ -59,6 +61,8 @@ class DatabaseExportManager(
                 // Export each table to TSV
                 exportTableToTsv(zipOut, MEALS_TSV) { exportMeals() }
                 exportTableToTsv(zipOut, USER_GOALS_TSV) { exportUserGoals() }
+                exportTableToTsv(zipOut, RECIPES_TSV) { exportRecipes() }
+                exportTableToTsv(zipOut, RECIPE_INGREDIENTS_TSV) { exportRecipeIngredients() }
                 exportTableToTsv(zipOut, MEAL_CHECK_INS_TSV) { exportMealCheckIns() }
                 exportTableToTsv(zipOut, EXERCISES_TSV) { exportExercises() }
                 exportTableToTsv(zipOut, EXERCISE_LOGS_TSV) { exportExerciseLogs() }
@@ -118,6 +122,46 @@ class DatabaseExportManager(
         
         mealsList.forEach { meal: Meal ->
             tsv.appendLine("${meal.id}\t${escapeTsv(meal.name)}\t${escapeTsv(meal.brand ?: "")}\t${meal.calories}\t${meal.carbohydrates_g}\t${meal.protein_g}\t${meal.fat_g}\t${meal.fiber_g}\t${meal.sodium_mg}\t${meal.servingSize_value}\t${meal.servingSize_unit.abbreviation}\t${escapeTsv(meal.notes ?: "")}\t${meal.isVisible}\t${meal.saturatedFat_g ?: ""}\t${meal.sugars_g ?: ""}\t${meal.cholesterol_mg ?: ""}\t${meal.vitaminC_mg ?: ""}\t${meal.calcium_mg ?: ""}\t${meal.iron_mg ?: ""}\t${escapeTsv(meal.imageUrl ?: "")}\t${escapeTsv(meal.localImagePath ?: "")}\t${meal.novaClassification?.group ?: ""}\t${meal.greenScore?.grade ?: ""}\t${meal.nutriscore?.grade ?: ""}\t${escapeTsv(meal.ingredients ?: "")}\t${escapeTsv(meal.quantity ?: "")}\t${escapeTsv(meal.servingSize ?: "")}\t${escapeTsv(meal.barcode ?: "")}\t${meal.source}")
+        }
+        
+        tsv.toString()
+    }
+    
+    /**
+     * Export recipes table to TSV
+     */
+    private suspend fun exportRecipes(): String = withContext(Dispatchers.IO) {
+        val recipes = database.recipeDao().getAllRecipes()
+        val recipesList = recipes.first() // Get the current value from Flow
+        
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tname\tdescription\timageUrl\tlocalImagePath\tisVisible\tcreatedDate")
+        
+        recipesList.forEach { recipe: Recipe ->
+            tsv.appendLine("${recipe.id}\t${escapeTsv(recipe.name)}\t${escapeTsv(recipe.description ?: "")}\t${escapeTsv(recipe.imageUrl ?: "")}\t${escapeTsv(recipe.localImagePath ?: "")}\t${recipe.isVisible}\t${recipe.createdDate}")
+        }
+        
+        tsv.toString()
+    }
+    
+    /**
+     * Export recipe ingredients junction table to TSV
+     */
+    private suspend fun exportRecipeIngredients(): String = withContext(Dispatchers.IO) {
+        // Get all recipes and their ingredients
+        val recipes = database.recipeDao().getAllRecipes().first()
+        val allIngredients = mutableListOf<RecipeIngredient>()
+        
+        recipes.forEach { recipe ->
+            val ingredients = database.recipeIngredientDao().getIngredientsByRecipeIdSync(recipe.id)
+            allIngredients.addAll(ingredients)
+        }
+        
+        val tsv = StringBuilder()
+        tsv.appendLine("id\trecipeId\tmealId\tquantity\tunit\torder")
+        
+        allIngredients.forEach { ingredient: RecipeIngredient ->
+            tsv.appendLine("${ingredient.id}\t${ingredient.recipeId}\t${ingredient.mealId}\t${ingredient.quantity}\t${ingredient.unit.abbreviation}\t${ingredient.order}")
         }
         
         tsv.toString()
@@ -284,6 +328,7 @@ class DatabaseExportManager(
             // Get all meals with images
             val meals = database.mealDao().getAllMeals().first()
             val exercises = database.exerciseDao().getAllExercises().first()
+            val recipes = database.recipeDao().getAllRecipes().first()
             
             // Export meal images
             meals.forEach { meal ->
@@ -291,6 +336,21 @@ class DatabaseExportManager(
                     val file = java.io.File(imagePath)
                     if (file.exists()) {
                         val entry = ZipEntry("images/meals/${file.name}")
+                        zipOut.putNextEntry(entry)
+                        file.inputStream().use { inputStream ->
+                            inputStream.copyTo(zipOut)
+                        }
+                        zipOut.closeEntry()
+                    }
+                }
+            }
+            
+            // Export recipe images
+            recipes.forEach { recipe ->
+                recipe.localImagePath?.let { imagePath ->
+                    val file = java.io.File(imagePath)
+                    if (file.exists()) {
+                        val entry = ZipEntry("images/recipes/${file.name}")
                         zipOut.putNextEntry(entry)
                         file.inputStream().use { inputStream ->
                             inputStream.copyTo(zipOut)
@@ -326,11 +386,13 @@ class DatabaseExportManager(
     private suspend fun exportMetadata(): String {
         val tsv = StringBuilder()
         tsv.appendLine("export_type\texport_date\tapp_version\tdatabase_version\ttable_count")
-        tsv.appendLine("full_export\t${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(Date())}\t1.0\t18\t10")
+        tsv.appendLine("full_export\t${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(Date())}\t1.0\t18\t12")
         tsv.appendLine("")
         tsv.appendLine("table_name\tdescription")
         tsv.appendLine("meals\tFood items with nutritional information")
         tsv.appendLine("user_goals\tDaily nutritional goals")
+        tsv.appendLine("recipes\tRecipe definitions")
+        tsv.appendLine("recipe_ingredients\tRecipe-meal ingredient relationships")
         tsv.appendLine("meal_check_ins\tMeal consumption records")
         tsv.appendLine("exercises\tExercise definitions")
         tsv.appendLine("exercise_logs\tExercise performance records")

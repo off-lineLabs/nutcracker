@@ -38,6 +38,8 @@ class DatabaseImportManager(
         private const val TAGS_TSV = "tags.tsv"
         private const val MEAL_TAGS_TSV = "meal_tags.tsv"
         private const val EXERCISE_TAGS_TSV = "exercise_tags.tsv"
+        private const val RECIPES_TSV = "recipes.tsv"
+        private const val RECIPE_INGREDIENTS_TSV = "recipe_ingredients.tsv"
         private const val EXPORT_INFO_TSV = "export_info.tsv"
         
         // Import order to maintain referential integrity
@@ -47,6 +49,8 @@ class DatabaseImportManager(
             PILLS_TSV,
             TAGS_TSV,
             USER_GOALS_TSV,
+            RECIPES_TSV,
+            RECIPE_INGREDIENTS_TSV,
             MEAL_CHECK_INS_TSV,
             EXERCISE_LOGS_TSV,
             PILL_CHECK_INS_TSV,
@@ -248,6 +252,8 @@ class DatabaseImportManager(
         return when (tableName) {
             MEALS_TSV -> importMeals(tsvData)
             USER_GOALS_TSV -> importUserGoals(tsvData)
+            RECIPES_TSV -> importRecipes(tsvData)
+            RECIPE_INGREDIENTS_TSV -> importRecipeIngredients(tsvData)
             MEAL_CHECK_INS_TSV -> importMealCheckIns(tsvData)
             EXERCISES_TSV -> importExercises(tsvData)
             EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
@@ -460,6 +466,150 @@ class DatabaseImportManager(
                 recordsFailed = failed,
                 errors = errors,
                 warnings = warnings
+            )
+        }
+    }
+    
+    private suspend fun importRecipes(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        
+        return database.withTransaction {
+            rows.forEach { row ->
+                val validation = ImportValidators.validateRecipeData(row)
+                errors.addAll(validation.errors)
+                warnings.addAll(validation.warnings)
+                
+                if (validation.isValid) {
+                    try {
+                        // Map old local image path to new extracted path
+                        val oldLocalImagePath = row.getValue("localImagePath")
+                        val newLocalImagePath = mapImagePath(oldLocalImagePath, "recipes")
+                        
+                        val recipe = Recipe(
+                            id = 0, // Let Room auto-generate
+                            name = row.getValueOrEmpty("name"),
+                            description = row.getValue("description").takeIf { !it.isNullOrBlank() },
+                            imageUrl = row.getValue("imageUrl").takeIf { !it.isNullOrBlank() },
+                            localImagePath = newLocalImagePath,
+                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
+                            createdDate = row.getValueOrEmpty("createdDate")
+                        )
+                        
+                        val newId = database.recipeDao().insertRecipe(recipe)
+                        val oldId = row.getValue("id")?.toLongOrNull()
+                        if (oldId != null) {
+                            idMappings[oldId.toString()] = newId
+                            idMappingManager.addMapping("recipes", oldId.toString(), newId)
+                        }
+                        imported++
+                    } catch (e: Exception) {
+                        errors.add(ImportError(
+                            tableName = "recipes",
+                            rowNumber = row.rowNumber,
+                            fieldName = null,
+                            errorMessage = "Failed to insert recipe: ${e.message}",
+                            severity = ErrorSeverity.ERROR
+                        ))
+                        failed++
+                    }
+                } else {
+                    skipped++
+                }
+            }
+            
+            TableImportResult(
+                tableName = "recipes",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = warnings,
+                idMappings = idMappings
+            )
+        }
+    }
+    
+    private suspend fun importRecipeIngredients(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val warnings = mutableListOf<ImportWarning>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        
+        return database.withTransaction {
+            rows.forEach { row ->
+                val validation = ImportValidators.validateRecipeIngredientData(row)
+                errors.addAll(validation.errors)
+                warnings.addAll(validation.warnings)
+                
+                if (validation.isValid) {
+                    try {
+                        val oldRecipeId = row.getLongValue("recipeId")
+                        val newRecipeId = if (oldRecipeId != null) {
+                            // Try to find the new recipe ID from our mappings
+                            idMappingManager.getNewId("recipes", oldRecipeId.toString())
+                                ?: return@forEach // Skip if parent recipe doesn't exist
+                        } else {
+                            return@forEach
+                        }
+                        
+                        val oldMealId = row.getLongValue("mealId")
+                        val newMealId = if (oldMealId != null) {
+                            // Try to find the new meal ID from our mappings
+                            idMappingManager.getNewId("meals", oldMealId.toString())
+                                ?: return@forEach // Skip if meal doesn't exist
+                        } else {
+                            return@forEach
+                        }
+                        
+                        val recipeIngredient = RecipeIngredient(
+                            id = 0, // Let Room auto-generate
+                            recipeId = newRecipeId,
+                            mealId = newMealId,
+                            quantity = row.getDoubleValue("quantity") ?: 100.0,
+                            unit = ServingSizeUnit.fromAbbreviation(row.getValue("unit") ?: "") ?: ServingSizeUnit.getDefault(),
+                            order = row.getIntValue("order") ?: 0
+                        )
+                        
+                        val newId = database.recipeIngredientDao().insertRecipeIngredient(recipeIngredient)
+                        val oldId = row.getValue("id")?.toLongOrNull()
+                        if (oldId != null) {
+                            idMappings[oldId.toString()] = newId
+                        }
+                        imported++
+                    } catch (e: Exception) {
+                        errors.add(ImportError(
+                            tableName = "recipe_ingredients",
+                            rowNumber = row.rowNumber,
+                            fieldName = null,
+                            errorMessage = "Failed to insert recipe ingredient: ${e.message}",
+                            severity = ErrorSeverity.ERROR
+                        ))
+                        failed++
+                    }
+                } else {
+                    skipped++
+                }
+            }
+            
+            TableImportResult(
+                tableName = "recipe_ingredients",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = warnings,
+                idMappings = idMappings
             )
         }
     }

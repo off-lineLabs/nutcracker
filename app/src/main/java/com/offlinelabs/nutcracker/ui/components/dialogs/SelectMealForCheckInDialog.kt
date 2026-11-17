@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.*
 import androidx.compose.ui.window.Dialog
@@ -38,6 +39,7 @@ fun SelectMealForCheckInDialog(
     onEditMeal: (Meal) -> Unit = {},
     onSearchMeal: () -> Unit = {},
     onScanBarcode: () -> Unit = {},
+    onSelectRecipe: () -> Unit = {},
     registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null
 ) {
     var selectedMeal by remember { mutableStateOf<Meal?>(null) }
@@ -175,6 +177,28 @@ fun SelectMealForCheckInDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.type_information))
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Create/Select Recipe button
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onSelectRecipe()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = brandAccentShade(3)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Restaurant,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.my_recipes))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
