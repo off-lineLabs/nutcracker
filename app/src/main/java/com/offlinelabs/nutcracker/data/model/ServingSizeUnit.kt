@@ -73,5 +73,53 @@ enum class ServingSizeUnit(
          * Get default unit (grams)
          */
         fun getDefault(): ServingSizeUnit = GRAMS
+
+        /**
+         * How many of a meal's servings an ingredient amount represents.
+         *
+         * Example: meal serving = 100 g, ingredient = 0.5 kg -> 5.0.
+         *
+         * - Same unit: plain ratio.
+         * - Ingredient in [SERVINGS]/[PORTIONS]: the quantity is the number of the meal's servings.
+         * - Both weight units, or both volume units: converted with standard (US customary) factors.
+         * - Anything else (e.g. g <-> ml needs a density, pieces/slices have no size): the quantity is
+         *   assumed to already be in the meal's serving unit, which was the previous behaviour.
+         *
+         * Returns 0.0 for a non-positive serving size instead of dividing by zero.
+         */
+        fun servingMultiplier(
+            quantity: Double,
+            unit: ServingSizeUnit,
+            servingValue: Double,
+            servingUnit: ServingSizeUnit
+        ): Double {
+            if (servingValue <= 0.0) return 0.0
+            if (unit == servingUnit) return quantity / servingValue
+            if (unit == SERVINGS || unit == PORTIONS) return quantity
+
+            val from = unit.baseAmount()
+            val to = servingUnit.baseAmount()
+            if (from != null && to != null && from.first == to.first) {
+                return (quantity * from.second) / (servingValue * to.second)
+            }
+            return quantity / servingValue
+        }
+
+        private enum class Dimension { MASS, VOLUME }
+
+        /** Size of one unit in its dimension's base unit (grams or millilitres), or null if not convertible. */
+        private fun ServingSizeUnit.baseAmount(): Pair<Dimension, Double>? = when (this) {
+            GRAMS -> Dimension.MASS to 1.0
+            KILOGRAMS -> Dimension.MASS to 1000.0
+            POUNDS -> Dimension.MASS to 453.59237
+            OUNCES -> Dimension.MASS to 28.349523125
+            MILLILITERS -> Dimension.VOLUME to 1.0
+            LITERS -> Dimension.VOLUME to 1000.0
+            CUPS -> Dimension.VOLUME to 236.5882365
+            FLUID_OUNCES -> Dimension.VOLUME to 29.5735295625
+            TABLESPOONS -> Dimension.VOLUME to 14.78676478125
+            TEASPOONS -> Dimension.VOLUME to 4.92892159375
+            PIECES, SLICES, UNITS, SERVINGS, PORTIONS -> null
+        }
     }
 }

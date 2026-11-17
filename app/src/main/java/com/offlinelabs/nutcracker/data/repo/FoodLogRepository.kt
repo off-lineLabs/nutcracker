@@ -21,6 +21,7 @@ import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
 import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
+import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import com.offlinelabs.nutcracker.data.service.ExerciseImageService
 import com.offlinelabs.nutcracker.data.service.ImageDownloadService
 import kotlinx.coroutines.flow.Flow
@@ -269,11 +270,14 @@ class OfflineFoodLogRepository(
         ingredients.forEach { ingredient ->
             val meal = meals.find { it?.id == ingredient.mealId } ?: return@forEach
             
-            // Convert ingredient quantity to the meal's serving size unit
-            // For simplicity, we'll assume quantities are in the same unit as the meal's serving size
-            // In a more sophisticated implementation, we'd convert between units
+            // Convert the ingredient amount into a number of the meal's servings (see servingMultiplier for the rules)
             if (meal.servingSize_value <= 0.0) return@forEach // Skip invalid serving size
-            val quantityMultiplier = ingredient.quantity / meal.servingSize_value
+            val quantityMultiplier = ServingSizeUnit.servingMultiplier(
+                quantity = ingredient.quantity,
+                unit = ingredient.unit,
+                servingValue = meal.servingSize_value,
+                servingUnit = meal.servingSize_unit
+            )
             
             totalCalories += meal.calories * quantityMultiplier
             totalCarbohydrates += meal.carbohydrates_g * quantityMultiplier
@@ -318,7 +322,7 @@ class OfflineFoodLogRepository(
             fiber_g = totalFiber,
             sodium_mg = totalSodium,
             servingSize_value = servingMultiplier,
-            servingSize_unit = com.offlinelabs.nutcracker.data.model.ServingSizeUnit.SERVINGS,
+            servingSize_unit = ServingSizeUnit.SERVINGS,
             notes = "recipe:${recipeId}", // Store recipe ID in notes for reference
             isVisible = true,
             saturatedFat_g = if (totalSaturatedFat > 0) totalSaturatedFat else null,

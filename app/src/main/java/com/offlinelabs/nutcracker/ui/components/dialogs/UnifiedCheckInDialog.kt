@@ -654,6 +654,9 @@ private fun CaloriesSummaryCard(
     }
 }
 
+/** Thumbwheel sensitivity: pixels of horizontal drag per 0.1x change. Higher = less sensitive. */
+private const val THUMBWHEEL_PIXELS_PER_STEP = 45f
+
 @Composable
 private fun HorizontalThumbwheel(
     value: Double,
@@ -669,8 +672,7 @@ private fun HorizontalThumbwheel(
     var currentDragValue by remember { mutableStateOf(value) }
     var isDragging by remember { mutableStateOf(false) }
     
-    // Pixels per 0.1x increment
-    val pixelsPerStep = 45f
+    val pixelsPerStep = THUMBWHEEL_PIXELS_PER_STEP
     
     // Update currentDragValue when external value changes (e.g., from manual input)
     // BUT only when we're not actively dragging

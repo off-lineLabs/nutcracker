@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-18
+
+### Added
+- Recipes: combine foods into a recipe, see its total nutrition and log it like any other meal
+- Redesigned goal dialog with draggable macro bars and the TEF bonus
+- Max weight shown on the exercise screen and in exercise details
+- Recipes are included in database export/import backups
+
+### Changed
+- Upgraded the build toolchain (Android Gradle Plugin 9.5, Gradle 9.6) and Room 2.8.5
+- Removed an unused dependency and debug logging
+
+### Fixed
+- Recipe nutrition now respects the unit chosen for each ingredient (e.g. kg vs g, L vs ml, servings)
+- Dragging a macro bar a second time could jump back to an old value
+- Missing Portuguese and Spanish translation for "Edit"
+
 ## [1.1.1] - 2025-11-09
 
 ### Changed

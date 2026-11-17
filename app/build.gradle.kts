@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.ksp) // Apply KSP plugin
 }
@@ -8,7 +7,7 @@ plugins {
 // Git-based versioning functions
 fun getGitCommitCount(): Int {
     return try {
-        val process = Runtime.getRuntime().exec("git rev-list --count HEAD")
+        val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
         process.inputStream.bufferedReader().readText().trim().toInt()
     } catch (e: Exception) {
         println("Warning: Could not get git commit count, using fallback: ${e.message}")
@@ -18,7 +17,7 @@ fun getGitCommitCount(): Int {
 
 fun getGitVersionName(): String {
     return try {
-        val process = Runtime.getRuntime().exec("git describe --tags --abbrev=0")
+        val process = Runtime.getRuntime().exec(arrayOf("git", "describe", "--tags", "--abbrev=0"))
         val version = process.inputStream.bufferedReader().readText().trim()
         if (version.isNotEmpty()) {
             version.removePrefix("v")
@@ -58,10 +57,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        @Suppress("DEPRECATION")
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         // generateLocaleConfig is not a valid buildFeatures property. Locale config is handled automatically by AGP 8.2+.
@@ -85,7 +80,6 @@ dependencies {
 
     // Room
     implementation(libs.androidx.room.runtime)
-    implementation(libs.hilt.android)
     ksp(libs.androidx.room.compiler) // Use ksp for the annotation processor
     implementation(libs.androidx.room.ktx) // For Kotlin Coroutines support
     
