@@ -7,7 +7,7 @@ plugins {
 // Git-based versioning functions
 fun getGitCommitCount(): Int {
     return try {
-        val process = Runtime.getRuntime().exec("git rev-list --count HEAD")
+        val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
         process.inputStream.bufferedReader().readText().trim().toInt()
     } catch (e: Exception) {
         println("Warning: Could not get git commit count, using fallback: ${e.message}")
@@ -17,7 +17,7 @@ fun getGitCommitCount(): Int {
 
 fun getGitVersionName(): String {
     return try {
-        val process = Runtime.getRuntime().exec("git describe --tags --abbrev=0")
+        val process = Runtime.getRuntime().exec(arrayOf("git", "describe", "--tags", "--abbrev=0"))
         val version = process.inputStream.bufferedReader().readText().trim()
         if (version.isNotEmpty()) {
             version.removePrefix("v")
