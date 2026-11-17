@@ -61,6 +61,7 @@
     <string name="default_sets">Series por Defecto</string>
     <string name="default_weight_kg">Peso por Defecto (kg)</string>
     <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
     <string name="edit_exercise">Editar ejercicio</string>
     <string name="edit_meal">Editar Comida</string>
     <string name="english">Inglés</string>
