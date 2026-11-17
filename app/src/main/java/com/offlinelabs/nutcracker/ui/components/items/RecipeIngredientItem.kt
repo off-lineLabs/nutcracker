@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
+import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 
 @Composable
@@ -59,7 +60,12 @@ fun RecipeIngredientItem(
                 )
                 meal?.let { m ->
                     if (m.servingSize_value > 0.0) {
-                        val multiplier = ingredient.quantity / m.servingSize_value
+                        val multiplier = ServingSizeUnit.servingMultiplier(
+                            quantity = ingredient.quantity,
+                            unit = ingredient.unit,
+                            servingValue = m.servingSize_value,
+                            servingUnit = m.servingSize_unit
+                        )
                         val calories = (m.calories * multiplier).toInt()
                         Text(
                             text = "$calories kcal",

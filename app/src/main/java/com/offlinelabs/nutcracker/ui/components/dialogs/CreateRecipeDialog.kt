@@ -76,7 +76,12 @@ fun CreateRecipeDialog(
         
         ingredients.forEach { (ingredient, meal) ->
             meal?.let { m ->
-                val multiplier = ingredient.quantity / m.servingSize_value
+                val multiplier = ServingSizeUnit.servingMultiplier(
+                    quantity = ingredient.quantity,
+                    unit = ingredient.unit,
+                    servingValue = m.servingSize_value,
+                    servingUnit = m.servingSize_unit
+                )
                 totalCalories += m.calories * multiplier
                 totalCarbs += m.carbohydrates_g * multiplier
                 totalProtein += m.protein_g * multiplier
