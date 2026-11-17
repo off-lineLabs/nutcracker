@@ -1,7 +1,5 @@
 package com.offlinelabs.nutcracker.utils
 
-import android.util.Log
-
 /**
  * MacroCalculator - Bidirectional macro and calorie calculations
  * 
@@ -10,8 +8,6 @@ import android.util.Log
  * TEF-adjusted densities account for thermic effect of food.
  */
 object MacroCalculator {
-    private const val TAG = "MacroCalculator"
-    
     // Standard caloric densities (kcal per gram)
     private const val CARBS_KCAL_PER_GRAM = 4.0
     private const val PROTEIN_KCAL_PER_GRAM = 4.0
@@ -200,11 +196,6 @@ object MacroCalculator {
         currentProteinG: Double,
         currentFatG: Double
     ): MacroValues {
-        Log.d(TAG, "===== REDISTRIBUTION START =====")
-        Log.d(TAG, "Target: $targetCalories kcal")
-        Log.d(TAG, "Dragged: $draggedType = $draggedValue g")
-        Log.d(TAG, "Current: C=$currentCarbsG P=$currentProteinG F=$currentFatG")
-        
         // Step 1: Calculate the cost of the dragged macro
         val draggedCost = when (draggedType) {
             "CARBS" -> draggedValue * CARBS_KCAL_PER_GRAM
@@ -212,11 +203,9 @@ object MacroCalculator {
             "FAT" -> draggedValue * FAT_KCAL_PER_GRAM
             else -> 0.0
         }
-        Log.d(TAG, "Dragged cost: $draggedCost kcal")
         
         // Step 2: Calculate remaining budget for other macros
         val remainingBudget = targetCalories - draggedCost
-        Log.d(TAG, "Remaining budget: $remainingBudget kcal")
         
         // Step 3: Calculate current cost of the non-dragged macros
         val (nonDraggedMacro1Cost, nonDraggedMacro1Value, nonDraggedMacro2Cost, nonDraggedMacro2Value) = when (draggedType) {
@@ -239,33 +228,26 @@ object MacroCalculator {
         }
         
         val totalOtherCost = nonDraggedMacro1Cost + nonDraggedMacro2Cost
-        Log.d(TAG, "Total other cost: $totalOtherCost kcal (M1=$nonDraggedMacro1Cost, M2=$nonDraggedMacro2Cost)")
         
         // Step 4: Handle edge cases
         if (remainingBudget <= 0 || totalOtherCost == 0.0) {
-            Log.d(TAG, "Edge case: remainingBudget=$remainingBudget, totalOtherCost=$totalOtherCost")
-            val result = when (draggedType) {
+            return when (draggedType) {
                 "CARBS" -> MacroValues(draggedValue, 0.0, 0.0)
                 "PROTEIN" -> MacroValues(0.0, draggedValue, 0.0)
                 "FAT" -> MacroValues(0.0, 0.0, draggedValue)
                 else -> MacroValues(0.0, 0.0, 0.0)
             }
-            Log.d(TAG, "Result: C=${result.carbsGrams} P=${result.proteinGrams} F=${result.fatGrams}")
-            Log.d(TAG, "===== REDISTRIBUTION END =====")
-            return result
         }
         
         // Step 5: Calculate proportional distribution ratios
         val macro1Ratio = nonDraggedMacro1Cost / totalOtherCost
         val macro2Ratio = nonDraggedMacro2Cost / totalOtherCost
-        Log.d(TAG, "Ratios: M1=$macro1Ratio, M2=$macro2Ratio")
         
         val macro1NewCost = remainingBudget * macro1Ratio
         val macro2NewCost = remainingBudget * macro2Ratio
-        Log.d(TAG, "New costs: M1=$macro1NewCost, M2=$macro2NewCost")
         
         // Step 6: Convert costs back to grams
-        val result = when (draggedType) {
+        return when (draggedType) {
             "CARBS" -> MacroValues(
                 carbsGrams = draggedValue,
                 proteinGrams = macro1NewCost / PROTEIN_KCAL_PER_GRAM,
@@ -283,13 +265,6 @@ object MacroCalculator {
             )
             else -> MacroValues(0.0, 0.0, 0.0)
         }
-        
-        val resultKcal = (result.carbsGrams * 4) + (result.proteinGrams * 4) + (result.fatGrams * 9)
-        Log.d(TAG, "Result: C=${result.carbsGrams} P=${result.proteinGrams} F=${result.fatGrams}")
-        Log.d(TAG, "Result kcal: $resultKcal (target was $targetCalories)")
-        Log.d(TAG, "===== REDISTRIBUTION END =====")
-        
-        return result
     }
     
     // Helper data class for quad tuple
