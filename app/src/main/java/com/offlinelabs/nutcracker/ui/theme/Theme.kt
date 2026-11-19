@@ -101,9 +101,7 @@ fun FoodLogTheme(
             val activity = view.context as? Activity
             if (activity != null) {
                 val window = activity.window
-                // Make the status bar transparent and draw behind it
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-                
+                // Edge-to-edge is enabled by MainActivity via enableEdgeToEdge().
                 // Configure status bar icons based on theme
                 val insetsController = WindowCompat.getInsetsController(window, view)
                 insetsController.isAppearanceLightStatusBars = !darkTheme

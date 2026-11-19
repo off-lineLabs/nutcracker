@@ -144,7 +144,7 @@ fun ExerciseItem(
                 
                 // Calories burned
                 Text(
-                    text = "-${exerciseEntry.caloriesBurned.toInt()} kcal",
+                    text = stringResource(R.string.kcal_value_format, "-${exerciseEntry.caloriesBurned.toInt()}"),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF10B981)

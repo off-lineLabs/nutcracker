@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-20
+
+### Added
+- Redesigned value entry in every dialog (meals, serving size, recipe ingredients, check-ins, exercises and goals): unit labels, coloured nutrient rows, inline error messages, and Save is disabled until the input is valid
+- Numbers can be typed with a comma or a dot (e.g. "12,5")
+- Remaining English-only texts are now translated into Spanish and Portuguese, including unit names such as cup, slice and serving
+
+### Changed
+- Release builds are optimized and shrunk with R8, making the app about 35% smaller
+- Salt is entered in grams in the meal form and the daily goal
+- Calories with decimals are rounded to the nearest whole number instead of being rejected
+- Dialogs keep what you typed when the screen rotates and scroll properly with the keyboard open on small phones and in landscape
+
+### Fixed
+- Weekly and monthly calorie targets in Analytics were wrong in Spanish and Portuguese
+- Check-ins logged for another day could be saved one day early in time zones behind UTC
+- Cardio check-ins could not be confirmed
+- Editing a cardio or bodyweight exercise reset its default minutes or reps to 0
+- Typing a decimal comma saved the value as 0
+- The export confirmation message never appeared
+- The import result dialog cut off its close button and numbers in Spanish and Portuguese
+
 ## [1.2.0] - 2026-11-18
 
 ### Added

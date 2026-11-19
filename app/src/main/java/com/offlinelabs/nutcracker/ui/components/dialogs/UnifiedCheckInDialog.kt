@@ -1,47 +1,67 @@
 package com.offlinelabs.nutcracker.ui.components.dialogs
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.offlinelabs.nutcracker.R
-import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
-import java.util.Locale
-import com.offlinelabs.nutcracker.ui.theme.getContrastingSliderColor
-import com.offlinelabs.nutcracker.ui.theme.BrandGoldLight
-import com.offlinelabs.nutcracker.ui.theme.BrandRedLight
-import com.offlinelabs.nutcracker.ui.theme.NeutralLight100
-import androidx.compose.ui.graphics.Color
+import com.offlinelabs.nutcracker.data.model.CheckInData
 import com.offlinelabs.nutcracker.data.model.Exercise
+import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
 import com.offlinelabs.nutcracker.data.model.ExerciseType
-import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
-import com.offlinelabs.nutcracker.data.model.CheckInData
+import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import com.offlinelabs.nutcracker.ui.components.DateTimePicker
+import com.offlinelabs.nutcracker.ui.components.form.FormColors
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
+import com.offlinelabs.nutcracker.ui.components.form.FormDialog
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogActions
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogSurface
+import com.offlinelabs.nutcracker.ui.components.form.FormRowIcon
+import com.offlinelabs.nutcracker.ui.components.form.FormSection
+import com.offlinelabs.nutcracker.ui.components.form.FormSectionDivider
+import com.offlinelabs.nutcracker.ui.components.form.FormTextField
+import com.offlinelabs.nutcracker.ui.components.form.NumericInputRow
+import com.offlinelabs.nutcracker.ui.components.form.formatDecimal
+import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
+import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
 import java.text.SimpleDateFormat
 import java.util.Date
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import kotlin.math.roundToInt
-import kotlin.math.abs
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import android.graphics.Paint
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : CheckInData> UnifiedCheckInDialog(
     // Common parameters
@@ -95,7 +115,14 @@ fun <T : CheckInData> UnifiedCheckInDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun parseStoredDateTime(value: String?): Date = try {
+    value?.let { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).parse(it) } ?: Date()
+} catch (e: Exception) {
+    Date()
+}
+
+// ----- Exercise -----
+
 @Composable
 private fun ExerciseCheckInContent(
     exercise: Exercise,
@@ -107,258 +134,207 @@ private fun ExerciseCheckInContent(
     onCheckIn: (ExerciseLog) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var weight by remember { 
-        mutableStateOf(
-            if (isEditMode && existingExerciseLog != null) {
-                existingExerciseLog.weight.toString()
-            } else {
-                lastLog?.weight?.toString() ?: exercise.defaultWeight.toString()
-            }
-        )
+    val editing = if (isEditMode) existingExerciseLog else null
+    var weight by remember {
+        mutableStateOf(formatDecimal(editing?.weight ?: lastLog?.weight ?: exercise.defaultWeight))
     }
-    var reps by remember { 
-        mutableStateOf(
-            if (isEditMode && existingExerciseLog != null) {
-                existingExerciseLog.reps.toString()
-            } else {
-                lastLog?.reps?.toString() ?: exercise.defaultReps.toString()
-            }
-        )
-    }
-    var sets by remember { 
-        mutableStateOf(
-            if (isEditMode && existingExerciseLog != null) {
-                existingExerciseLog.sets.toString()
-            } else {
-                lastLog?.sets?.toString() ?: exercise.defaultSets.toString()
-            }
-        )
-    }
-    var notes by remember { 
-        mutableStateOf(
-            if (isEditMode && existingExerciseLog != null) {
-                existingExerciseLog.notes ?: ""
-            } else {
-                ""
-            }
-        )
-    }
-    
-    // Date and time state
-    var selectedDateTime by remember {
-        mutableStateOf(
-            if (isEditMode && existingExerciseLog != null) {
-                // Parse existing timestamp
-                try {
-                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
-                        .parse(existingExerciseLog.logDateTime) ?: Date()
-                } catch (e: Exception) {
-                    Date()
-                }
-            } else {
-                Date()
-            }
-        )
-    }
+    var reps by remember { mutableStateOf((editing?.reps ?: lastLog?.reps ?: exercise.defaultReps).toString()) }
+    var sets by remember { mutableStateOf((editing?.sets ?: lastLog?.sets ?: exercise.defaultSets).toString()) }
+    var notes by remember { mutableStateOf(editing?.notes ?: "") }
+    var selectedDateTime by remember { mutableStateOf(parseStoredDateTime(editing?.logDateTime)) }
+    var dateTimeValid by remember { mutableStateOf(true) }
+
+    val exerciseType = remember(exercise) { ExerciseCategoryMapper.getExerciseType(exercise.category) }
 
     // Calculate calories burned
-    val caloriesBurned = remember(weight, reps, sets, exercise) {
-        val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
+    val caloriesBurned = remember(reps, sets, exercise) {
+        val kcalPerUnit = exercise.kcalBurnedPerUnit ?: 0.0
         when (exerciseType) {
-            ExerciseType.STRENGTH -> {
-                val setsVal = sets.toIntOrNull() ?: 0
-                val kcalPerSet = exercise.kcalBurnedPerUnit ?: 0.0
-                setsVal * kcalPerSet
-            }
-            ExerciseType.CARDIO -> {
-                val repsVal = reps.toIntOrNull() ?: 0
-                val kcalPerMinute = exercise.kcalBurnedPerUnit ?: 0.0
-                // Assuming reps represent minutes for cardio
-                repsVal * kcalPerMinute
-            }
-            ExerciseType.BODYWEIGHT -> {
-                val repsVal = reps.toIntOrNull() ?: 0
-                val kcalPerRep = exercise.kcalBurnedPerUnit ?: 0.0
-                repsVal * kcalPerRep
-            }
+            ExerciseType.STRENGTH -> (sets.trim().toIntOrNull() ?: 0) * kcalPerUnit
+            // Reps represent minutes for cardio
+            ExerciseType.CARDIO -> (reps.trim().toIntOrNull() ?: 0) * kcalPerUnit
+            ExerciseType.BODYWEIGHT -> (reps.trim().toIntOrNull() ?: 0) * kcalPerUnit
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text(
-                    text = stringResource(R.string.check_in_exercise_title, exercise.name),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                // Show max weight if available
-                maxWeight?.let { max ->
-                    Text(
-                        text = stringResource(R.string.max_weight_recorded, max),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = getContrastingSliderColor(MaterialTheme.colorScheme.surface),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Date and Time Picker
-                DateTimePicker(
-                    selectedDateTime = selectedDateTime,
-                    onDateTimeChanged = { selectedDateTime = it }
-                )
-                
-                // Weight field (for strength exercises)
-                val exerciseType = ExerciseCategoryMapper.getExerciseType(exercise.category)
-                if (exerciseType == ExerciseType.STRENGTH) {
-                    OutlinedTextField(
-                        value = weight,
-                        onValueChange = { weight = it },
-                        label = { Text(stringResource(R.string.weight_kg)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                        )
-                    )
-                }
+    val isValid = dateTimeValid && isExerciseInputValid(exerciseType, weight, reps, sets)
 
-                // Reps and Sets fields side by side
-                if (exerciseType != ExerciseType.CARDIO) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Reps field
-                        OutlinedTextField(
-                            value = reps,
-                            onValueChange = { reps = it },
-                            label = { Text(stringResource(R.string.reps)) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                            )
+    FormDialog(
+        title = stringResource(R.string.check_in_exercise_title, exercise.name),
+        onDismissRequest = onDismiss,
+        actions = {
+            FormDialogActions(
+                confirmText = stringResource(if (isEditMode) R.string.update else R.string.check_in),
+                onConfirm = {
+                    val exerciseLog = if (editing != null) {
+                        // Update existing log with new values including timestamp
+                        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                        val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+                        editing.copy(
+                            logDate = dateFormatter.format(selectedDateTime),
+                            logDateTime = dateTimeFormatter.format(selectedDateTime),
+                            weight = parseWeight(weight),
+                            reps = reps.trim().toIntOrNull() ?: 0,
+                            sets = sets.trim().toIntOrNull() ?: 0,
+                            caloriesBurned = caloriesBurned,
+                            notes = notes.takeIf { it.isNotBlank() }
                         )
-                        
-                        // Sets field
-                        OutlinedTextField(
-                            value = sets,
-                            onValueChange = { sets = it },
-                            label = { Text(stringResource(R.string.sets)) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                            )
+                    } else {
+                        // Create new log with custom timestamp
+                        ExerciseLog.create(
+                            exerciseId = exercise.id,
+                            weight = parseWeight(weight),
+                            reps = reps.trim().toIntOrNull() ?: 0,
+                            sets = sets.trim().toIntOrNull() ?: 0,
+                            caloriesBurned = caloriesBurned,
+                            notes = notes.takeIf { it.isNotBlank() },
+                            customDateTime = selectedDateTime
                         )
                     }
-                } else {
-                    // For cardio, only show minutes field (full width)
-                    OutlinedTextField(
-                        value = reps,
-                        onValueChange = { reps = it },
-                        label = { Text(stringResource(R.string.minutes)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                        )
-                    )
-                }
-
-                CaloriesSummaryCard(
-                    label = stringResource(R.string.calories_burned),
-                    labelColor = BrandRedLight,
-                    valueText = "${caloriesBurned.toInt()} kcal"
-                )
-
-                // Notes field
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text(stringResource(R.string.notes_optional)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2,
-                    maxLines = 3
-                )
-            }
-        },
-        confirmButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                    )
-                }
-                Button(
-                    onClick = {
-                        val exerciseLog = if (isEditMode && existingExerciseLog != null) {
-                            // Update existing log with new values including timestamp
-                            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-                            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
-                            existingExerciseLog.copy(
-                                logDate = dateFormatter.format(selectedDateTime),
-                                logDateTime = dateTimeFormatter.format(selectedDateTime),
-                                weight = weight.toDoubleOrNull() ?: 0.0,
-                                reps = reps.toIntOrNull() ?: 0,
-                                sets = sets.toIntOrNull() ?: 0,
-                                caloriesBurned = caloriesBurned,
-                                notes = notes.takeIf { it.isNotBlank() }
-                            )
-                        } else {
-                            // Create new log with custom timestamp
-                            ExerciseLog.create(
-                                exerciseId = exercise.id,
-                                weight = weight.toDoubleOrNull() ?: 0.0,
-                                reps = reps.toIntOrNull() ?: 0,
-                                sets = sets.toIntOrNull() ?: 0,
-                                caloriesBurned = caloriesBurned,
-                                notes = notes.takeIf { it.isNotBlank() },
-                                customDateTime = selectedDateTime
-                            )
-                        }
-                        onCheckIn(exerciseLog)
-                    },
-                    enabled = weight.isNotBlank() && reps.isNotBlank() && sets.isNotBlank()
-                ) {
-                    Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
-                }
-            }
-        },
-        dismissButton = {
-            // Delete button (only in edit mode) - positioned at left
-            if (isEditMode && onDelete != null) {
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            } else {
-                // Empty space to maintain layout when no delete button
-                Spacer(modifier = Modifier.size(48.dp))
-            }
+                    onCheckIn(exerciseLog)
+                },
+                onDismiss = onDismiss,
+                confirmEnabled = isValid,
+                onDelete = if (isEditMode) onDelete else null
+            )
         }
-    )
+    ) {
+        ExerciseCheckInBody(
+            exerciseType = exerciseType,
+            maxWeight = maxWeight,
+            selectedDateTime = selectedDateTime,
+            onDateTimeChanged = { selectedDateTime = it },
+            onDateTimeValidityChanged = { dateTimeValid = it },
+            weight = weight,
+            onWeightChange = { weight = it },
+            reps = reps,
+            onRepsChange = { reps = it },
+            sets = sets,
+            onSetsChange = { sets = it },
+            caloriesBurned = caloriesBurned.toInt(),
+            notes = notes,
+            onNotesChange = { notes = it }
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExerciseCheckInBody(
+    exerciseType: ExerciseType,
+    maxWeight: Double?,
+    selectedDateTime: Date,
+    onDateTimeChanged: (Date) -> Unit,
+    onDateTimeValidityChanged: (Boolean) -> Unit,
+    weight: String,
+    onWeightChange: (String) -> Unit,
+    reps: String,
+    onRepsChange: (String) -> Unit,
+    sets: String,
+    onSetsChange: (String) -> Unit,
+    caloriesBurned: Int,
+    notes: String,
+    onNotesChange: (String) -> Unit
+) {
+    val colors = FormDefaults.colors()
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Show max weight if available
+        maxWeight?.let { max ->
+            Text(
+                text = stringResource(R.string.max_weight_recorded, max),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.accent,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        FormSection(colors = colors) {
+            DateTimePicker(
+                selectedDateTime = selectedDateTime,
+                onDateTimeChanged = onDateTimeChanged,
+                onValidityChanged = onDateTimeValidityChanged
+            )
+        }
+
+        FormSection(colors = colors) {
+            val fields = requiredExerciseFields(exerciseType)
+            if (ExerciseField.WEIGHT in fields) {
+                NumericInputRow(
+                    label = stringResource(R.string.exercise_weight_label),
+                    value = weight,
+                    onValueChange = onWeightChange,
+                    unit = stringResource(R.string.kg_unit),
+                    leading = { FormRowIcon(Icons.Filled.FitnessCenter, colors.accent) },
+                    errorText = validateExerciseField(ExerciseField.WEIGHT, weight)
+                        ?.let { stringResource(it.messageRes) },
+                    colors = colors
+                )
+                FormSectionDivider(colors = colors)
+            }
+            if (exerciseType == ExerciseType.CARDIO) {
+                // For cardio only the minutes field is shown (stored in reps)
+                NumericInputRow(
+                    label = stringResource(R.string.minutes),
+                    value = reps,
+                    onValueChange = onRepsChange,
+                    unit = stringResource(R.string.min_unit),
+                    leading = { FormRowIcon(Icons.Filled.Timer, colors.accent) },
+                    errorText = validateExerciseField(ExerciseField.REPS, reps)
+                        ?.let { stringResource(it.messageRes) },
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
+                    colors = colors
+                )
+            } else {
+                NumericInputRow(
+                    label = stringResource(R.string.reps),
+                    value = reps,
+                    onValueChange = onRepsChange,
+                    unit = stringResource(R.string.reps_unit),
+                    leading = { FormRowIcon(Icons.Filled.Repeat, colors.accent) },
+                    errorText = validateExerciseField(ExerciseField.REPS, reps)
+                        ?.let { stringResource(it.messageRes) },
+                    keyboardType = KeyboardType.Number,
+                    colors = colors
+                )
+                FormSectionDivider(colors = colors)
+                NumericInputRow(
+                    label = stringResource(R.string.sets),
+                    value = sets,
+                    onValueChange = onSetsChange,
+                    unit = stringResource(R.string.sets_unit),
+                    leading = { FormRowIcon(Icons.Filled.Layers, colors.accent) },
+                    errorText = validateExerciseField(ExerciseField.SETS, sets)
+                        ?.let { stringResource(it.messageRes) },
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
+                    colors = colors
+                )
+            }
+        }
+
+        FormSection(colors = colors) {
+            SummaryValueRow(
+                label = stringResource(R.string.calories_burned),
+                value = stringResource(R.string.calories_value, caloriesBurned),
+                colors = colors
+            )
+        }
+
+        FormTextField(
+            value = notes,
+            onValueChange = onNotesChange,
+            label = stringResource(R.string.notes_optional),
+            singleLine = false,
+            minLines = 2,
+            maxLines = 3,
+            imeAction = ImeAction.Default,
+            colors = colors
+        )
+    }
+}
+
+// ----- Meal -----
+
 @Composable
 private fun MealCheckInContent(
     meal: Meal,
@@ -368,471 +344,331 @@ private fun MealCheckInContent(
     onCheckIn: (MealCheckIn) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var servingSize by remember { 
-        mutableDoubleStateOf(
-            if (isEditMode && existingMealCheckIn != null) {
-                existingMealCheckIn.servingSize
-            } else {
-                1.0
-            }
-        )
+    val editing = if (isEditMode) existingMealCheckIn else null
+    var servingSize by remember { mutableDoubleStateOf(editing?.servingSize ?: 1.0) }
+    var notes by remember { mutableStateOf(editing?.notes ?: "") }
+    var selectedDateTime by remember { mutableStateOf(parseStoredDateTime(editing?.checkInDateTime)) }
+    var dateTimeValid by remember { mutableStateOf(true) }
+
+    val baseServing = meal.servingSize_value
+
+    // Manual amount (in the meal's serving unit), kept in sync with the thumbwheel
+    var manualInput by remember {
+        mutableStateOf(formatDecimal(multiplierToAmount(servingSize, baseServing), maxFractionDigits = 2))
     }
-    var notes by remember { 
-        mutableStateOf(
-            if (isEditMode && existingMealCheckIn != null) {
-                existingMealCheckIn.notes ?: ""
-            } else {
-                ""
-            }
-        )
+    var isUserTyping by remember { mutableStateOf(false) }
+    val amountError = validateServingAmount(manualInput)
+
+    // Update manual input when the wheel changes (only if the user is not typing)
+    LaunchedEffect(servingSize) {
+        if (!isUserTyping) {
+            manualInput = formatDecimal(multiplierToAmount(servingSize, baseServing), maxFractionDigits = 2)
+        }
     }
-    
-    // Date and time state
-    var selectedDateTime by remember {
-        mutableStateOf(
-            if (isEditMode && existingMealCheckIn != null) {
-                // Parse existing timestamp
-                try {
-                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
-                        .parse(existingMealCheckIn.checkInDateTime) ?: Date()
-                } catch (e: Exception) {
-                    Date()
-                }
-            } else {
-                Date()
+
+    // After the user stops typing, reformat a valid value with the locale's decimal separator
+    LaunchedEffect(manualInput) {
+        if (isUserTyping) {
+            kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
+            isUserTyping = false
+            if (amountToMultiplier(manualInput, baseServing) != null) {
+                manualInput = formatDecimal(multiplierToAmount(servingSize, baseServing), maxFractionDigits = 2)
             }
-        )
+        }
     }
 
     // Calculate total calories based on serving size
-    val totalCalories = remember(servingSize, meal) {
-        (meal.calories * servingSize).toInt()
-    }
+    val totalCalories = remember(servingSize, meal) { (meal.calories * servingSize).toInt() }
+    val isValid = dateTimeValid && amountError == null
 
-    AlertDialog(
+    FormDialog(
+        title = stringResource(R.string.check_in_meal_title, meal.name),
         onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text(
-                    text = stringResource(R.string.check_in_meal_title, meal.name),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                // Show meal info
-                Text(
-                    text = stringResource(
-                        R.string.meal_calories_info,
-                        meal.calories,
-                        meal.servingSize_value.toInt(),
-                        meal.servingSize_unit.abbreviation
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Date and Time Picker
-                DateTimePicker(
-                    selectedDateTime = selectedDateTime,
-                    onDateTimeChanged = { selectedDateTime = it }
-                )
-                
-                // Serving size thumbwheel
-                Column {
-                    Text(
-                        text = stringResource(R.string.serving_size),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Slide instruction text
-                    Text(
-                        text = stringResource(R.string.slide_to_change),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // Horizontal thumbwheel
-                    HorizontalThumbwheel(
-                        value = servingSize,
-                        onValueChange = { servingSize = it }
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Current value display
-                    Text(
-                        text = stringResource(R.string.serving_multiplier_format, servingSize),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface),
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Manual serving size input
-                var manualInput by remember { mutableStateOf("") }
-                var isUserTyping by remember { mutableStateOf(false) }
-                
-                // Update manual input when slider changes (only if user is not typing)
-                LaunchedEffect(servingSize) {
-                    if (!isUserTyping) {
-                        val currentAmount = servingSize * meal.servingSize_value
-                        // Format to 1 decimal place to avoid float precision issues
-                        manualInput = String.format(Locale.US, "%.1f", currentAmount)
-                    }
-                }
-                
-                OutlinedTextField(
-                    value = manualInput,
-                    onValueChange = { newValue ->
-                        isUserTyping = true
-                        manualInput = newValue
-                        // Convert manual input to serving size multiplier
-                        val inputValue = newValue.toDoubleOrNull()
-                        if (inputValue != null && inputValue > 0) {
-                            // Calculate multiplier based on meal's base serving size
-                            val baseServing = meal.servingSize_value
-                            val multiplier = inputValue / baseServing
-                            // No artificial cap - let users input any reasonable value
-                            servingSize = maxOf(0.1, multiplier) // Only prevent negative values
-                        }
-                    },
-                    label = { 
-                        Text(
-                            stringResource(R.string.serving_size_placeholder)
+        actions = {
+            FormDialogActions(
+                confirmText = stringResource(if (isEditMode) R.string.update else R.string.check_in),
+                onConfirm = {
+                    val checkIn = if (editing != null) {
+                        // Update existing check-in with new values including timestamp
+                        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                        val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+                        editing.copy(
+                            checkInDate = dateFormatter.format(selectedDateTime),
+                            checkInDateTime = dateTimeFormatter.format(selectedDateTime),
+                            servingSize = servingSize,
+                            notes = notes.takeIf { it.isNotBlank() }
                         )
-                    },
-                    placeholder = { 
-                        Text(
-                            stringResource(R.string.serving_size_placeholder)
+                    } else {
+                        // Create new check-in with custom timestamp
+                        MealCheckIn.create(
+                            mealId = meal.id,
+                            servingSize = servingSize,
+                            notes = notes.takeIf { it.isNotBlank() },
+                            customDateTime = selectedDateTime
                         )
-                    },
-                    suffix = {
-                        Text(
-                            text = meal.servingSize_unit.abbreviation,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                    )
-                )
-                
-                // Reset typing flag after a delay to allow formatting
-                LaunchedEffect(manualInput) {
-                    if (isUserTyping) {
-                        kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
-                        isUserTyping = false
-                        val inputValue = manualInput.toDoubleOrNull()
-                        if (inputValue != null && inputValue > 0) {
-                            manualInput = String.format(Locale.US, "%.1f", inputValue)
-                        }
                     }
-                }
-
-                CaloriesSummaryCard(
-                    label = stringResource(R.string.total_calories),
-                    labelColor = BrandGoldLight,
-                    valueText = "$totalCalories kcal"
-                )
-
-                // Notes field
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text(stringResource(R.string.notes_optional)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2,
-                    maxLines = 3
-                )
-            }
-        },
-        confirmButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                    )
-                }
-                Button(
-                    onClick = {
-                        val checkIn = if (isEditMode && existingMealCheckIn != null) {
-                            // Update existing check-in with new values including timestamp
-                            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-                            val dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
-                            existingMealCheckIn.copy(
-                                checkInDate = dateFormatter.format(selectedDateTime),
-                                checkInDateTime = dateTimeFormatter.format(selectedDateTime),
-                                servingSize = servingSize,
-                                notes = notes.takeIf { it.isNotBlank() }
-                            )
-                        } else {
-                            // Create new check-in with custom timestamp
-                            MealCheckIn.create(
-                                mealId = meal.id,
-                                servingSize = servingSize,
-                                notes = notes.takeIf { it.isNotBlank() },
-                                customDateTime = selectedDateTime
-                            )
-                        }
-                        onCheckIn(checkIn)
-                    }
-                ) {
-                    Text(if (isEditMode) stringResource(R.string.update) else stringResource(R.string.check_in))
-                }
-            }
-        },
-        dismissButton = {
-            // Delete button (only in edit mode) - positioned at left
-            if (isEditMode && onDelete != null) {
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            } else {
-                // Empty space to maintain layout when no delete button
-                Spacer(modifier = Modifier.size(48.dp))
-            }
-        }
-    )
-}
-
-@Composable
-private fun CaloriesSummaryCard(
-    label: String,
-    labelColor: Color,
-    valueText: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = labelColor
-            )
-            Text(
-                text = valueText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = NeutralLight100
-            )
-        }
-    }
-}
-
-/** Thumbwheel sensitivity: pixels of horizontal drag per 0.1x change. Higher = less sensitive. */
-private const val THUMBWHEEL_PIXELS_PER_STEP = 45f
-
-@Composable
-private fun HorizontalThumbwheel(
-    value: Double,
-    onValueChange: (Double) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val thumbwheelColor = getContrastingSliderColor(MaterialTheme.colorScheme.surface)
-    val centerIndicatorColor = MaterialTheme.colorScheme.primary
-    val containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-    
-    // Track current value during drag (since recomposition doesn't happen mid-gesture)
-    var currentDragValue by remember { mutableStateOf(value) }
-    var isDragging by remember { mutableStateOf(false) }
-    
-    val pixelsPerStep = THUMBWHEEL_PIXELS_PER_STEP
-    
-    // Update currentDragValue when external value changes (e.g., from manual input)
-    // BUT only when we're not actively dragging
-    LaunchedEffect(value) {
-        if (!isDragging) {
-            currentDragValue = value
-        }
-    }
-    
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // Thumbwheel container with visual encapsulation
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onDragStart = {
-                            // Mark that we're dragging - prevents external value from overwriting
-                            isDragging = true
-                        },
-                        onDragEnd = {
-                            // Stop dragging - allow external updates again
-                            isDragging = false
-                        },
-                        onDragCancel = {
-                            // Stop dragging - allow external updates again
-                            isDragging = false
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            // REVERSED: Negative dragAmount (swipe left) increases, positive (swipe right) decreases
-                            val deltaValue = -(dragAmount / pixelsPerStep) * 0.1
-                            
-                            // Update current drag value
-                            currentDragValue += deltaValue
-                            
-                            // Ensure we don't go below 0.1x
-                            currentDragValue = maxOf(0.1, currentDragValue)
-                            
-                            // Round to nearest 0.1
-                            val roundedValue = (currentDragValue * 10).roundToInt() / 10.0
-                            
-                            // Update external state continuously
-                            onValueChange(roundedValue)
-                        }
-                    )
+                    onCheckIn(checkIn)
                 },
-            contentAlignment = Alignment.Center
-        ) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-        ) {
-            val centerX = size.width / 2
-            val centerY = size.height / 2
-            
-            // Draw container background (rounded rectangle)
-            drawRoundRect(
-                color = containerColor,
-                topLeft = Offset(8.dp.toPx(), 0f),
-                size = androidx.compose.ui.geometry.Size(
-                    size.width - 16.dp.toPx(),
-                    size.height
-                ),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx())
-            )
-            
-            // Draw border
-            drawRoundRect(
-                color = borderColor,
-                topLeft = Offset(8.dp.toPx(), 0f),
-                size = androidx.compose.ui.geometry.Size(
-                    size.width - 16.dp.toPx(),
-                    size.height
-                ),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
-            )
-            
-            // Visible range: ±0.5x from current value (show 11 ticks total)
-            val visibleRange = 0.5
-            val startValue = value - visibleRange
-            
-            // Create paint for text labels
-            val textPaint = Paint().apply {
-                color = thumbwheelColor.copy(alpha = 0.7f).toArgb()
-                textSize = 10.dp.toPx()
-                textAlign = Paint.Align.CENTER
-            }
-            
-            // Draw ticks for 0.1x increments
-            for (i in 0..10) {
-                val tickValue = startValue + (i * 0.1)
-                
-                // Skip negative values
-                if (tickValue < 0.1) continue
-                
-                // Calculate position relative to center
-                val offset = (tickValue - value) * 10 // 10 ticks per 1.0x
-                val tickX = (centerX + (offset * pixelsPerStep)).toFloat()
-                
-                // Only draw if within bounds
-                if (tickX >= 0 && tickX <= size.width) {
-                    val isMediumTick = abs((tickValue * 10).roundToInt() % 5) == 0 && abs((tickValue * 10).roundToInt() % 10) != 0
-                    
-                    // Determine tick height based on value
-                    val tickHeight = when {
-                        // Large tick: whole numbers (1.0x, 2.0x, etc)
-                        abs((tickValue * 10).roundToInt() % 10) == 0 -> 16.dp.toPx()
-                        // Medium tick: 0.5x increments (0.5x, 1.5x, etc)
-                        isMediumTick -> 12.dp.toPx()
-                        // Small tick: 0.1x increments
-                        else -> 8.dp.toPx()
-                    }
-                    
-                    // Determine tick width (thicker for larger marks)
-                    val tickWidth = when {
-                        abs((tickValue * 10).roundToInt() % 10) == 0 -> 3.dp.toPx()
-                        isMediumTick -> 2.dp.toPx()
-                        else -> 1.5.dp.toPx()
-                    }
-                    
-                    // Draw tick
-                    drawLine(
-                        color = thumbwheelColor.copy(alpha = 0.7f),
-                        start = Offset(tickX, centerY - tickHeight / 2),
-                        end = Offset(tickX, centerY + tickHeight / 2),
-                        strokeWidth = tickWidth
-                    )
-                    
-                    // Draw label for medium ticks (0.5x increments)
-                    if (isMediumTick) {
-                        drawIntoCanvas { canvas ->
-                            val label = String.format(java.util.Locale.US, "%.1f", tickValue)
-                            canvas.nativeCanvas.drawText(
-                                label,
-                                tickX,
-                                centerY - tickHeight / 2 - 4.dp.toPx(),
-                                textPaint
-                            )
-                        }
-                    }
-                }
-            }
-            
-            // Draw center indicator (pointer/selector)
-            val indicatorHeight = 24.dp.toPx()
-            drawLine(
-                color = centerIndicatorColor,
-                start = Offset(centerX, centerY - indicatorHeight / 2),
-                end = Offset(centerX, centerY + indicatorHeight / 2),
-                strokeWidth = 4.dp.toPx()
+                onDismiss = onDismiss,
+                confirmEnabled = isValid,
+                onDelete = if (isEditMode) onDelete else null
             )
         }
+    ) {
+        MealCheckInBody(
+            meal = meal,
+            selectedDateTime = selectedDateTime,
+            onDateTimeChanged = { selectedDateTime = it },
+            onDateTimeValidityChanged = { dateTimeValid = it },
+            servingSize = servingSize,
+            onServingSizeChange = { servingSize = it },
+            manualInput = manualInput,
+            onManualInputChange = { newValue ->
+                isUserTyping = true
+                manualInput = newValue
+                // Convert manual input to serving size multiplier; invalid input is ignored
+                amountToMultiplier(newValue, baseServing)?.let { servingSize = it }
+            },
+            amountError = amountError?.let { stringResource(it.messageRes) },
+            totalCalories = totalCalories,
+            notes = notes,
+            onNotesChange = { notes = it }
+        )
+    }
+}
+
+@Composable
+private fun MealCheckInBody(
+    meal: Meal,
+    selectedDateTime: Date,
+    onDateTimeChanged: (Date) -> Unit,
+    onDateTimeValidityChanged: (Boolean) -> Unit,
+    servingSize: Double,
+    onServingSizeChange: (Double) -> Unit,
+    manualInput: String,
+    onManualInputChange: (String) -> Unit,
+    amountError: String?,
+    totalCalories: Int,
+    notes: String,
+    onNotesChange: (String) -> Unit
+) {
+    val colors = FormDefaults.colors()
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Show meal info
+        Text(
+            text = stringResource(
+                R.string.meal_calories_info,
+                meal.calories,
+                meal.servingSize_value.toInt(),
+                stringResource(meal.servingSize_unit.abbreviationResId)
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.contentSecondary
+        )
+
+        FormSection(colors = colors) {
+            DateTimePicker(
+                selectedDateTime = selectedDateTime,
+                onDateTimeChanged = onDateTimeChanged,
+                onValidityChanged = onDateTimeValidityChanged
+            )
+        }
+
+        FormSection(header = stringResource(R.string.serving_size), colors = colors) {
+            // Slide instruction text
+            Text(
+                text = stringResource(R.string.slide_to_change),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.contentSecondary,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Horizontal thumbwheel
+            HorizontalThumbwheel(
+                value = servingSize,
+                onValueChange = onServingSizeChange,
+                colors = colors
+            )
+
+            // Current value display
+            Text(
+                text = stringResource(R.string.serving_multiplier_format, servingSize),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.content,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
+            )
+
+            FormSectionDivider(colors = colors)
+
+            // Manual serving size input
+            NumericInputRow(
+                label = stringResource(R.string.amount),
+                value = manualInput,
+                onValueChange = onManualInputChange,
+                unit = stringResource(meal.servingSize_unit.abbreviationResId),
+                errorText = amountError,
+                imeAction = ImeAction.Next,
+                colors = colors
+            )
+        }
+
+        FormSection(colors = colors) {
+            SummaryValueRow(
+                label = stringResource(R.string.total_calories),
+                value = stringResource(R.string.calories_value, totalCalories),
+                colors = colors
+            )
+        }
+
+        FormTextField(
+            value = notes,
+            onValueChange = onNotesChange,
+            label = stringResource(R.string.notes_optional),
+            singleLine = false,
+            minLines = 2,
+            maxLines = 3,
+            imeAction = ImeAction.Default,
+            colors = colors
+        )
+    }
+}
+
+/** Read-only headline row of a section: `[flame] Label ........ value`, readable in both themes. */
+@Composable
+private fun SummaryValueRow(label: String, value: String, colors: FormColors) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.width(FormDefaults.LeadingSize), contentAlignment = Alignment.Center) {
+            FormRowIcon(Icons.Filled.LocalFireDepartment, brandAccentShade(2))
+        }
+        Spacer(Modifier.width(if (FormDefaults.isCompactWidth) 8.dp else 10.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = colors.content,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.content,
+            maxLines = 1
+        )
+    }
+}
+
+// ----- Previews -----
+
+private val previewMeal = Meal(
+    id = 1,
+    name = "Oatmeal with banana",
+    calories = 320,
+    carbohydrates_g = 54.0,
+    protein_g = 10.0,
+    fat_g = 6.0,
+    fiber_g = 4.0,
+    sodium_mg = 120.0,
+    servingSize_value = 100.0,
+    servingSize_unit = ServingSizeUnit.GRAMS
+)
+
+@Composable
+private fun MealPreview(manualInput: String, error: String?) {
+    Box(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
+        FormDialogSurface(
+            title = stringResource(R.string.check_in_meal_title, previewMeal.name),
+            actions = {
+                FormDialogActions(
+                    confirmText = stringResource(R.string.check_in),
+                    onConfirm = {},
+                    onDismiss = {},
+                    confirmEnabled = error == null
+                )
+            }
+        ) {
+            MealCheckInBody(
+                meal = previewMeal,
+                selectedDateTime = Date(),
+                onDateTimeChanged = {},
+                onDateTimeValidityChanged = {},
+                servingSize = 1.5,
+                onServingSizeChange = {},
+                manualInput = manualInput,
+                onManualInputChange = {},
+                amountError = error,
+                totalCalories = 480,
+                notes = "",
+                onNotesChange = {}
+            )
         }
     }
+}
+
+@Composable
+private fun ExercisePreview(type: ExerciseType, weight: String, error: Boolean) {
+    Box(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
+        FormDialogSurface(
+            title = stringResource(R.string.check_in_exercise_title, "Bench press"),
+            actions = {
+                FormDialogActions(
+                    confirmText = stringResource(R.string.check_in),
+                    onConfirm = {},
+                    onDismiss = {},
+                    confirmEnabled = !error,
+                    onDelete = {}
+                )
+            }
+        ) {
+            ExerciseCheckInBody(
+                exerciseType = type,
+                maxWeight = 82.5,
+                selectedDateTime = Date(),
+                onDateTimeChanged = {},
+                onDateTimeValidityChanged = {},
+                weight = weight,
+                onWeightChange = {},
+                reps = "10",
+                onRepsChange = {},
+                sets = "3",
+                onSetsChange = {},
+                caloriesBurned = 150,
+                notes = "",
+                onNotesChange = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Meal check-in - light", widthDp = 360, heightDp = 820, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Composable
+private fun MealCheckInLightPreview() {
+    FoodLogTheme(darkTheme = false) { MealPreview("150", null) }
+}
+
+@Preview(name = "Meal check-in - dark, error", widthDp = 360, heightDp = 820, showBackground = true, backgroundColor = 0xFF0B1426)
+@Composable
+private fun MealCheckInDarkErrorPreview() {
+    FoodLogTheme(darkTheme = true) { MealPreview("0", stringResource(R.string.form_error_must_be_positive)) }
+}
+
+@Preview(name = "Exercise check-in - light", widthDp = 360, heightDp = 720, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Composable
+private fun ExerciseCheckInLightPreview() {
+    FoodLogTheme(darkTheme = false) { ExercisePreview(ExerciseType.STRENGTH, "12,5", false) }
+}
+
+@Preview(name = "Exercise check-in - dark, error", widthDp = 360, heightDp = 720, showBackground = true, backgroundColor = 0xFF0B1426)
+@Composable
+private fun ExerciseCheckInDarkPreview() {
+    FoodLogTheme(darkTheme = true) { ExercisePreview(ExerciseType.STRENGTH, "abc", true) }
 }

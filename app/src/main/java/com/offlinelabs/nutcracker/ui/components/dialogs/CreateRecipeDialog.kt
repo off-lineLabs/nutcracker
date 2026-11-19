@@ -29,6 +29,20 @@ import com.offlinelabs.nutcracker.ui.components.items.MealItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
 import com.offlinelabs.nutcracker.ui.theme.dialogOutlinedTextFieldColorsMaxContrast
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
+import com.offlinelabs.nutcracker.ui.components.form.FormDialog
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogActions
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogSurface
+import com.offlinelabs.nutcracker.ui.components.form.QuantityUnitInput
+import com.offlinelabs.nutcracker.ui.components.form.formatDecimal
+import com.offlinelabs.nutcracker.ui.components.form.parseDecimal
+import com.offlinelabs.nutcracker.ui.components.form.validateDecimal
+import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -235,11 +249,11 @@ fun CreateRecipeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${stringResource(R.string.calories_label)}: ${nutritionTotals["calories"]?.toInt() ?: 0} kcal",
+                                text = "${stringResource(R.string.calories_label)}: ${stringResource(R.string.calories_value, nutritionTotals["calories"]?.toInt() ?: 0)}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.protein_label)}: ${String.format(Locale.US, "%.1f", nutritionTotals["protein"] ?: 0.0)}g",
+                                text = "${stringResource(R.string.protein_label)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["protein"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -248,11 +262,11 @@ fun CreateRecipeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${stringResource(R.string.carbs_g)}: ${String.format(Locale.US, "%.1f", nutritionTotals["carbs"] ?: 0.0)}g",
+                                text = "${stringResource(R.string.carbs_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["carbs"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.fat_g)}: ${String.format(Locale.US, "%.1f", nutritionTotals["fat"] ?: 0.0)}g",
+                                text = "${stringResource(R.string.fat_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["fat"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -338,75 +352,109 @@ private fun EditIngredientQuantityDialog(
     onDismiss: () -> Unit,
     onSave: (RecipeIngredient) -> Unit
 ) {
-    var quantity by remember { mutableStateOf(ingredient.quantity.toString()) }
-    var selectedUnit by remember { mutableStateOf(ingredient.unit) }
-    var showUnitSelector by remember { mutableStateOf(false) }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.edit_ingredient)) },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                meal?.let {
-                    Text(
-                        text = it.name,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = quantity,
-                        onValueChange = { quantity = it },
-                        label = { Text(stringResource(R.string.quantity)) },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                        )
-                    )
-                    
-                    OutlinedButton(
-                        onClick = { showUnitSelector = true },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(selectedUnit.abbreviation)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val qty = quantity.toDoubleOrNull() ?: 0.0
-                    if (qty > 0) {
-                        onSave(ingredient.copy(quantity = qty, unit = selectedUnit))
-                    }
-                },
-                enabled = quantity.toDoubleOrNull()?.let { it > 0 } ?: false
-            ) {
-                Text(stringResource(R.string.save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
+    var quantity by rememberSaveable { mutableStateOf(formatDecimal(ingredient.quantity)) }
+    var selectedUnit by rememberSaveable { mutableStateOf(ingredient.unit) }
+
+    val error = validateDecimal(quantity, required = true, allowZero = false)
+    val parsed = parseDecimal(quantity)
+    val isValid = error == null && parsed != null && parsed > 0
+    val save = {
+        if (isValid && parsed != null) {
+            onSave(ingredient.copy(quantity = parsed, unit = selectedUnit))
         }
-    )
-    
-    if (showUnitSelector) {
-        UnitSelectorDialog(
-            onDismiss = { showUnitSelector = false },
-            onUnitSelected = {
-                selectedUnit = it
-                showUnitSelector = false
-            }
+    }
+
+    FormDialog(
+        title = stringResource(R.string.edit_ingredient),
+        onDismissRequest = onDismiss,
+        actions = {
+            FormDialogActions(
+                confirmText = stringResource(R.string.save),
+                onConfirm = save,
+                onDismiss = onDismiss,
+                confirmEnabled = isValid
+            )
+        }
+    ) {
+        EditIngredientContent(
+            mealName = meal?.name,
+            quantity = quantity,
+            onQuantityChange = { quantity = it },
+            unit = selectedUnit,
+            onUnitChange = { selectedUnit = it },
+            errorText = error?.let { stringResource(it.messageRes) },
+            onDone = save
         )
+    }
+}
+
+@Composable
+private fun EditIngredientContent(
+    mealName: String?,
+    quantity: String,
+    onQuantityChange: (String) -> Unit,
+    unit: ServingSizeUnit,
+    onUnitChange: (ServingSizeUnit) -> Unit,
+    errorText: String?,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = FormDefaults.colors()
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (mealName != null) {
+            Text(
+                text = mealName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.content,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        QuantityUnitInput(
+            label = stringResource(R.string.quantity),
+            amount = quantity,
+            onAmountChange = onQuantityChange,
+            unit = unit,
+            onUnitChange = onUnitChange,
+            errorText = errorText,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            colors = colors
+        )
+    }
+}
+
+@Composable
+private fun EditIngredientPreviewContent(quantity: String, error: String?) {
+    Box(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
+        FormDialogSurface(
+            title = stringResource(R.string.edit_ingredient),
+            actions = {
+                FormDialogActions(
+                    confirmText = stringResource(R.string.save),
+                    onConfirm = {},
+                    onDismiss = {},
+                    confirmEnabled = error == null
+                )
+            }
+        ) {
+            EditIngredientContent("Rolled oats", quantity, {}, ServingSizeUnit.GRAMS, {}, error, {})
+        }
+    }
+}
+
+@Preview(name = "Edit ingredient - light", widthDp = 360, heightDp = 400, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Composable
+private fun EditIngredientLightPreview() {
+    FoodLogTheme(darkTheme = false) { EditIngredientPreviewContent("50", null) }
+}
+
+@Preview(name = "Edit ingredient - dark, error", widthDp = 360, heightDp = 400, showBackground = true, backgroundColor = 0xFF0B1426)
+@Composable
+private fun EditIngredientDarkErrorPreview() {
+    FoodLogTheme(darkTheme = true) {
+        EditIngredientPreviewContent("abc", stringResource(R.string.form_error_invalid_number))
     }
 }
 

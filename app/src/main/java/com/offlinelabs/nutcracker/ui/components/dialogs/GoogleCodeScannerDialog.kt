@@ -115,7 +115,7 @@ fun GoogleCodeScannerDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Barcode Scanned Successfully!",
+                                text = stringResource(R.string.barcode_scanned_success),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -131,7 +131,7 @@ fun GoogleCodeScannerDialog(
                     }
                 } else if (errorMessage != null) {
                     Text(
-                        text = "Error: $errorMessage",
+                        text = stringResource(R.string.error_with_reason, errorMessage.orEmpty()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
@@ -150,7 +150,7 @@ fun GoogleCodeScannerDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = "Opening camera scanner...",
+                            text = stringResource(R.string.opening_camera_scanner),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center
                         )
@@ -204,7 +204,7 @@ private fun startScanning(
         }
         .addOnFailureListener { e ->
             AppLogger.e("GoogleCodeScanner", "Module installation failed", e)
-            onResult(null, "Failed to install required modules: ${e.message}")
+            onResult(null, context.getString(R.string.failed_to_install_scanner_modules_with_reason, e.message.orEmpty()))
         }
 }
 
@@ -222,15 +222,15 @@ private fun performScan(
             barcode.rawValue?.let { value ->
                 onResult(value, null)
             } ?: run {
-                onResult(null, "No barcode value found")
+                onResult(null, context.getString(R.string.no_barcode_value_found))
             }
         }
         .addOnFailureListener { e ->
             AppLogger.e("GoogleCodeScanner", "Barcode scan failed", e)
-            onResult(null, "Scan failed: ${e.message}")
+            onResult(null, context.getString(R.string.scan_failed_with_reason, e.message.orEmpty()))
         }
         .addOnCanceledListener {
             AppLogger.d("GoogleCodeScanner", "Barcode scan canceled by user")
-            onResult(null, "Scan canceled")
+            onResult(null, context.getString(R.string.scan_canceled))
         }
 }

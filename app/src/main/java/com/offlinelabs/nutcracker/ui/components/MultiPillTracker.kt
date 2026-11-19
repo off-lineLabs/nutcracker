@@ -63,7 +63,7 @@ fun MultiPillTracker(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_pill_24),
-                            contentDescription = "Add pill",
+                            contentDescription = stringResource(R.string.add_pill),
                             tint = appTextSecondaryColor(),
                             modifier = Modifier.size(20.dp)
                         )

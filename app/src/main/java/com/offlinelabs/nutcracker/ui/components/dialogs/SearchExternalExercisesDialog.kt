@@ -70,7 +70,7 @@ fun SearchExternalExercisesDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Text(
                     text = stringResource(R.string.search_exercise_database),
@@ -89,14 +89,14 @@ fun SearchExternalExercisesDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
-                    label = { Text("Search exercises...") },
+                    label = { Text(stringResource(R.string.search_exercises_placeholder)) },
                     leadingIcon = {
                         Icon(Icons.Filled.Search, contentDescription = null)
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { onSearchQueryChange("") }) {
-                                Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                                Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.clear))
                             }
                         }
                     },
@@ -363,7 +363,7 @@ fun SearchExternalExercisesDialog(
                                     if (exercise.images.isNotEmpty()) {
                                         AsyncImage(
                                             model = externalExerciseService.getImageUrl(exercise.images.first()),
-                                            contentDescription = "Exercise image",
+                                            contentDescription = stringResource(R.string.exercise_image),
                                             modifier = Modifier
                                                 .size(48.dp)
                                                 .clip(RoundedCornerShape(8.dp)),
