@@ -1,6 +1,7 @@
 package com.offlinelabs.nutcracker.util.logger
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.util.Log
 import kotlinx.coroutines.*
 import timber.log.Timber
@@ -42,20 +43,11 @@ object AppLogger {
         }
         
         // Plant Timber tree for console logging
-        // Note: BuildConfig will be available after first build
-        try {
-            val buildConfigClass = Class.forName("com.offlinelabs.nutcracker.BuildConfig")
-            val debugField = buildConfigClass.getField("DEBUG")
-            val isDebug = debugField.getBoolean(null)
-            
-            if (isDebug) {
-                Timber.plant(Timber.DebugTree())
-            } else {
-                Timber.plant(ReleaseTree())
-            }
-        } catch (e: Exception) {
-            // Fallback to debug tree if BuildConfig is not available
+        val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (isDebuggable) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            Timber.plant(ReleaseTree())
         }
         
         // Start background log writer
@@ -332,9 +324,10 @@ private data class LogEntry(
  * Release tree for production builds - only logs errors and warnings
  */
 private class ReleaseTree : Timber.Tree() {
+    override fun isLoggable(tag: String?, priority: Int): Boolean = priority >= Log.WARN
+
+    // Timber has already appended the throwable's stack trace to message, so print it as is.
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        if (priority == Log.ERROR || priority == Log.WARN) {
-            super.log(priority, tag, message, t)
-        }
+        Log.println(priority, tag ?: "Nutcracker", message)
     }
 }

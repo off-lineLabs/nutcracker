@@ -1,21 +1,32 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Project-specific R8 rules for release builds.
+# Library rules (Retrofit, OkHttp, Gson, Room, Coil, ML Kit, AndroidX) come
+# from the consumer rules bundled in each dependency.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep line numbers so stack traces can be retraced with mapping.txt, and keep
+# generic signatures / annotations / inner-class metadata, which Gson and
+# Retrofit read reflectively.
+-keepattributes SourceFile,LineNumberTable,Signature,*Annotation*,InnerClasses,EnclosingMethod
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Open Food Facts models (data/model/OpenFoodFactsResponse.kt) ---
+# Deserialized by Gson through Retrofit's GsonConverterFactory. Gson reads and
+# writes fields by reflection and needs the constructors, so keep the classes,
+# their fields and constructors intact.
+-keep class com.offlinelabs.nutcracker.data.model.OpenFoodFactsResponse { *; }
+-keep class com.offlinelabs.nutcracker.data.model.Product { *; }
+-keep class com.offlinelabs.nutcracker.data.model.Nutriments { *; }
+-keep class com.offlinelabs.nutcracker.data.model.SearchResponse { *; }
+# Other classes declared in the same file (built manually, not by Gson). Kept
+# so the whole file behaves the same in debug and release.
+-keep class com.offlinelabs.nutcracker.data.model.FoodInfo { *; }
+-keep class com.offlinelabs.nutcracker.data.model.NutritionInfo { *; }
+-keep class com.offlinelabs.nutcracker.data.model.NovaClassification { *; }
+-keep class com.offlinelabs.nutcracker.data.model.GreenScore { *; }
+-keep class com.offlinelabs.nutcracker.data.model.Nutriscore { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- External exercise search (data/service/ExternalExerciseService.kt) ---
+# exercises.json is deserialized by Gson. These classes have no @SerializedName,
+# so the JSON keys map to the Kotlin property names directly: field names must
+# not be obfuscated.
+-keep class com.offlinelabs.nutcracker.data.service.ExercisesResponse { *; }
+-keep class com.offlinelabs.nutcracker.data.model.ExternalExercise { *; }
