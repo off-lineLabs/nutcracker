@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -419,7 +420,9 @@ fun DashboardScreen(
     var refreshPillCheckIns by remember { mutableStateOf(0) }
 
     var showSetGoalDialog by remember { mutableStateOf(false) }
-    var showAddMealDialog by remember { mutableStateOf(false) }
+    // Saveable so the Add Meal form survives rotation and its saved draft is consumed by the same
+    // dialog instead of leaking into the next one that opens.
+    var showAddMealDialog by rememberSaveable { mutableStateOf(false) }
     var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
     var showFoodSearchDialog by remember { mutableStateOf(false) }
@@ -472,7 +475,17 @@ fun DashboardScreen(
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedMealDetailDialog by remember { mutableStateOf<Meal?>(null) }
-    var showEditMealDefinitionDialog by remember { mutableStateOf<Meal?>(null) }
+    // Meal whose definition is being edited. Only the id is saved across rotation; the Meal is
+    // re-resolved from [meals] (the in-session copy is preferred, as it may be newer than [meals]).
+    var editMealDefinitionId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var editMealDefinitionCopy by remember { mutableStateOf<Meal?>(null) }
+    val showEditMealDefinitionDialog: Meal? = editMealDefinitionId?.let { id ->
+        editMealDefinitionCopy?.takeIf { it.id == id } ?: meals.find { it.id == id }
+    }
+    fun openEditMealDefinition(meal: Meal?) {
+        editMealDefinitionCopy = meal
+        editMealDefinitionId = meal?.id
+    }
     var showSelectRecipeDialog by remember { mutableStateOf(false) }
     var showCreateRecipeDialog by remember { mutableStateOf(false) }
     var editingRecipe by remember { mutableStateOf<Recipe?>(null) }
@@ -1337,7 +1350,7 @@ fun DashboardScreen(
             },
             onEditMeal = { meal ->
                 showSelectMealDialog = false
-                showEditMealDefinitionDialog = meal
+                openEditMealDefinition(meal)
             },
             onSearchMeal = {
                 showSelectMealDialog = false
@@ -2719,7 +2732,7 @@ fun DashboardScreen(
             },
             onEdit = { mealToEdit ->
                 showUnifiedMealDetailDialog = null
-                showEditMealDefinitionDialog = mealToEdit
+                openEditMealDefinition(mealToEdit)
             },
             onCheckIn = {
                 showUnifiedMealDetailDialog = null
@@ -2733,11 +2746,11 @@ fun DashboardScreen(
         EditMealDialog(
             meal = meal,
             onDismiss = {
-                showEditMealDefinitionDialog = null
+                openEditMealDefinition(null)
             },
             onUpdateMeal = { updatedMeal ->
                 // Close the edit dialog immediately
-                showEditMealDefinitionDialog = null
+                openEditMealDefinition(null)
                 showUnifiedMealDetailDialog = updatedMeal
                 
                 // Perform database update in background
@@ -2775,7 +2788,7 @@ fun DashboardScreen(
                         )
                     }
                 }
-                showEditMealDefinitionDialog = null
+                openEditMealDefinition(null)
             }
         )
     }

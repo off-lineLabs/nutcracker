@@ -162,7 +162,18 @@
     <string name="validation_fat_non_negative">Fat must be a non-negative number.</string>
     <string name="validation_fiber_non_negative">Fiber must be a non-negative number.</string>
     <string name="validation_sodium_non_negative">Salt must be a non-negative number.</string>
-    
+
+    <!-- Value-entry form kit (shared by meal and other entry dialogs) -->
+    <string name="form_error_required">Required</string>
+    <string name="form_error_invalid_number">Enter a valid number</string>
+    <string name="form_error_must_be_positive">Must be greater than 0</string>
+    <string name="form_error_negative">Can\'t be negative</string>
+    <string name="form_unit_button_description">Change unit, currently %1$s</string>
+
+    <!-- Meal form -->
+    <string name="meal_form_nutrition_per">Nutrition per</string>
+    <string name="meal_form_rescale_hint">Nutrients scale with the amount</string>
+
     <!-- Exercise display units -->
     <string name="kg_unit">kg</string>
     <string name="min_unit">min</string>

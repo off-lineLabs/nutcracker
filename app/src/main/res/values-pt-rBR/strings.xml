@@ -460,6 +460,17 @@
     <!-- Generic units and value formats -->
     <string name="unit_kcal">kcal</string>
     <string name="unit_g">g</string>
+
+    <!-- Value-entry form kit -->
+    <string name="form_error_required">Obrigatório</string>
+    <string name="form_error_invalid_number">Digite um número válido</string>
+    <string name="form_error_must_be_positive">Deve ser maior que 0</string>
+    <string name="form_error_negative">Não pode ser negativo</string>
+    <string name="form_unit_button_description">Alterar unidade, atual: %1$s</string>
+
+    <!-- Meal form -->
+    <string name="meal_form_nutrition_per">Nutrientes por</string>
+    <string name="meal_form_rescale_hint">Os nutrientes acompanham a quantidade</string>
     <string name="kcal_value_format">%1$s kcal</string>
     <string name="kcal_per_100g_format">%1$d kcal/100g</string>
     <string name="grams_value_format">%1$sg</string>
