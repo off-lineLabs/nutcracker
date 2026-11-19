@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typing a decimal comma saved the value as 0
 - The export confirmation message never appeared
 - The import result dialog cut off its close button and numbers in Spanish and Portuguese
+- The app could not be installed on devices without portrait support, such as some Chromebooks and XR headsets
 
 ## [1.2.0] - 2026-11-18
 

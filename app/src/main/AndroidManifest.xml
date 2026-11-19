@@ -9,6 +9,11 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- play-services-code-scanner locks its scanner activity to portrait, which makes Google Play
+         infer a required android.hardware.screen.portrait and hide the app from devices without it
+         (some Chromebooks, XR headsets). The app works in any orientation, so mark it optional. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+
     <application
     android:name=".FoodLogApplication"
     android:allowBackup="true"
