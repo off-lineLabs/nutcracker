@@ -1,6 +1,9 @@
 package com.offlinelabs.nutcracker.ui.components.form
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -279,6 +282,76 @@ fun FormDialogActions(
         ) {
             // Wraps to two lines on narrow screens / large font scales; never cut the main action.
             Text(confirmText, maxLines = 2, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+/** A secondary action of [FormDialogStackedActions]. */
+data class FormStackedAction(val text: String, val onClick: () -> Unit)
+
+/**
+ * Dialog actions for several confirm-type choices: a full-width primary button, full-width outlined
+ * secondary buttons, then a Cancel text button. Use instead of [FormDialogActions] when one
+ * confirm isn't enough.
+ *
+ * @param confirmEnabled applies to the primary and all [secondary] actions (not to Cancel).
+ */
+@Composable
+fun FormDialogStackedActions(
+    primaryText: String,
+    onPrimary: () -> Unit,
+    secondary: List<FormStackedAction>,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    confirmEnabled: Boolean = true,
+    dismissText: String = stringResource(R.string.cancel),
+    colors: FormColors = FormDefaults.colors()
+) {
+    val buttonPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    val buttonHeight = 44.dp
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Button(
+            onClick = onPrimary,
+            enabled = confirmEnabled,
+            modifier = Modifier.fillMaxWidth().heightIn(min = buttonHeight),
+            contentPadding = buttonPadding,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colors.accent,
+                contentColor = colors.onAccent,
+                disabledContainerColor = colors.content.copy(alpha = 0.12f),
+                disabledContentColor = colors.content.copy(alpha = 0.38f)
+            )
+        ) {
+            Text(primaryText, maxLines = 2, textAlign = TextAlign.Center)
+        }
+        secondary.forEach { action ->
+            OutlinedButton(
+                onClick = action.onClick,
+                enabled = confirmEnabled,
+                modifier = Modifier.fillMaxWidth().heightIn(min = buttonHeight),
+                contentPadding = buttonPadding,
+                border = BorderStroke(
+                    1.dp,
+                    if (confirmEnabled) colors.accent else colors.content.copy(alpha = 0.12f)
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = colors.accent,
+                    disabledContentColor = colors.content.copy(alpha = 0.38f)
+                )
+            ) {
+                Text(action.text, maxLines = 2, textAlign = TextAlign.Center)
+            }
+        }
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().heightIn(min = buttonHeight),
+            contentPadding = buttonPadding,
+            colors = ButtonDefaults.textButtonColors(contentColor = colors.accent)
+        ) {
+            Text(dismissText, maxLines = 2, textAlign = TextAlign.Center)
         }
     }
 }
