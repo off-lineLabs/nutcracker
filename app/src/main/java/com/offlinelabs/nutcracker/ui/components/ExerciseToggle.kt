@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +41,7 @@ fun ExerciseToggle(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_shape_up_stack_24),
-                contentDescription = "Exercise Toggle",
+                contentDescription = stringResource(R.string.exercise_bonus_toggle),
                 tint = if (isEnabled) exerciseEnabledColor() else exerciseDisabledColor(),
                 modifier = Modifier.size(24.dp)
             )
@@ -69,7 +70,10 @@ fun ExerciseToggle(
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = "${if (exerciseCalories >= 0) "+" else ""}${exerciseCalories.toInt()} kcal",
+                        text = stringResource(
+                            R.string.kcal_value_format,
+                            "${if (exerciseCalories >= 0) "+" else ""}${exerciseCalories.toInt()}"
+                        ),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor

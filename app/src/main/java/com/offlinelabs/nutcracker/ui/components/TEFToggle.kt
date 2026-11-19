@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.theme.*
 
 @Composable
@@ -40,7 +42,7 @@ fun TEFToggle(
         ) {
             Icon(
                 imageVector = Icons.Filled.LocalFireDepartment,
-                contentDescription = "TEF Toggle",
+                contentDescription = stringResource(R.string.tef_bonus_toggle),
                 tint = if (isEnabled) tefEnabledColor() else tefDisabledColor(),
                 modifier = Modifier.size(24.dp)
             )
@@ -69,7 +71,10 @@ fun TEFToggle(
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = "${if (tefCalories >= 0) "+" else ""}${tefCalories.toInt()} kcal",
+                        text = stringResource(
+                            R.string.kcal_value_format,
+                            "${if (tefCalories >= 0) "+" else ""}${tefCalories.toInt()}"
+                        ),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor

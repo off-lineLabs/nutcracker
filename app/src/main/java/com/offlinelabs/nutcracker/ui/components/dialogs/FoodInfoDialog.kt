@@ -230,40 +230,40 @@ private fun NutritionInfoCard(nutrition: com.offlinelabs.nutcracker.data.model.N
             )
             
             nutrition.calories?.let { 
-                NutritionRow(stringResource(R.string.calories_label), "${it.toInt()} kcal", Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.calories_label), stringResource(R.string.calories_value, it.toInt()), Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fat?.let { 
-                NutritionRow(stringResource(R.string.fat_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.fat_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.carbohydrates?.let { 
-                NutritionRow(stringResource(R.string.carbs_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.carbs_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.proteins?.let { 
-                NutritionRow(stringResource(R.string.protein_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.protein_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow(stringResource(R.string.sodium_mg), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
-                NutritionRow(stringResource(R.string.fiber_g), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.fiber_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sugars?.let { 
-                NutritionRow(stringResource(R.string.sugars_label), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sugars_label), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.saturatedFat?.let { 
-                NutritionRow(stringResource(R.string.saturated_fat_label), "${String.format(Locale.US, "%.1f", it)}g", Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.saturated_fat_label), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.cholesterol?.let { 
-                NutritionRow(stringResource(R.string.cholesterol_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.cholesterol_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.vitaminC?.let { 
-                NutritionRow(stringResource(R.string.vitamin_c_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.vitamin_c_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.calcium?.let { 
-                NutritionRow(stringResource(R.string.calcium_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.calcium_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.iron?.let { 
-                NutritionRow(stringResource(R.string.iron_label), "${String.format(Locale.US, "%.1f", it)}mg", Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.iron_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }

@@ -299,7 +299,7 @@ fun HelpScreen(
                             ) {
                                 Icon(
                                     imageVector = if (isExpanded) Icons.Filled.Remove else Icons.Filled.Add,
-                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                    contentDescription = stringResource(if (isExpanded) R.string.collapse else R.string.expand),
                                     tint = appTextSecondaryColor()
                                 )
                             }

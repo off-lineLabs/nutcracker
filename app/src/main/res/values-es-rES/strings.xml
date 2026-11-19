@@ -188,21 +188,21 @@
     <string name="today">Hoy</string>
     <string name="total_calories">Calorías Totales</string>
     <string name="type_information">Escribir información</string>
-    <string name="unit_cups">Tazas (cup)</string>
+    <string name="unit_cups">Tazas (taza)</string>
     <string name="unit_fluid_ounces">Onzas Fluidas (fl oz)</string>
     <string name="unit_grams">Gramos (g)</string>
     <string name="unit_kilograms">Kilogramos (kg)</string>
     <string name="unit_liters">Litros (L)</string>
     <string name="unit_milliliters">Mililitros (ml)</string>
     <string name="unit_ounces">Onzas (oz)</string>
-    <string name="unit_pieces">Piezas (pcs)</string>
-    <string name="unit_portions">Porciones (portion)</string>
+    <string name="unit_pieces">Piezas (pzs)</string>
+    <string name="unit_portions">Porciones (porción)</string>
     <string name="unit_pounds">Libras (lb)</string>
-    <string name="unit_servings">Porciones (serving)</string>
-    <string name="unit_slices">Rebanadas (slice)</string>
-    <string name="unit_tablespoons">Cucharadas (tbsp)</string>
-    <string name="unit_teaspoons">Cucharaditas (tsp)</string>
-    <string name="unit_units">Unidades (unit)</string>
+    <string name="unit_servings">Raciones (ración)</string>
+    <string name="unit_slices">Rebanadas (rebanada)</string>
+    <string name="unit_tablespoons">Cucharadas (cda)</string>
+    <string name="unit_teaspoons">Cucharaditas (cdta)</string>
+    <string name="unit_units">Unidades (ud.)</string>
     <string name="update">Actualizar</string>
     <string name="update_meal">Actualizar Comida</string>
     <string name="use_this_barcode">Usar Este Código de Barras</string>
@@ -347,7 +347,7 @@
     <!-- Other Labels -->
     <string name="brand_label">Marca: %1$s</string>
     <string name="check_in_meal">Registrar Comida</string>
-    <string name="per_serving_size">por %1$d%2$s</string>
+    <string name="per_serving_size">por %1$d %2$s</string>
     <string name="food_product_image">Imagen del producto alimenticio</string>
     
     <!-- Food Search -->
@@ -445,4 +445,108 @@
     <!-- Accessibility strings -->
     <string name="locked">Bloqueado</string>
     <string name="unlocked">Desbloqueado</string>
+    <string name="help">Ayuda</string>
+    <string name="collapse">Contraer</string>
+    <string name="expand">Expandir</string>
+    <string name="link">Vincular</string>
+    <string name="unlink">Desvincular</string>
+    <string name="none">Ninguno</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="error_with_reason">Error: %1$s</string>
+    <string name="exercise_bonus_toggle">Activar/desactivar calorías de ejercicio</string>
+    <string name="tef_bonus_toggle">Activar/desactivar calorías TEF</string>
+    <string name="pill_content_description">Suplemento</string>
+
+    <!-- Generic units and value formats -->
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_g">g</string>
+    <string name="kcal_value_format">%1$s kcal</string>
+    <string name="kcal_per_100g_format">%1$d kcal/100g</string>
+    <string name="grams_value_format">%1$sg</string>
+    <string name="milligrams_value_format">%1$smg</string>
+    <string name="kg_value_format">%1$s kg</string>
+    <string name="percentage_value_format">%1$s%%</string>
+    <string name="duration_ms_format">%1$d ms</string>
+
+    <!-- Serving size unit abbreviations (display only) -->
+    <string name="unit_abbr_g">g</string>
+    <string name="unit_abbr_kg">kg</string>
+    <string name="unit_abbr_lb">lb</string>
+    <string name="unit_abbr_oz">oz</string>
+    <string name="unit_abbr_ml">ml</string>
+    <string name="unit_abbr_l">L</string>
+    <string name="unit_abbr_cup">taza</string>
+    <string name="unit_abbr_fl_oz">fl oz</string>
+    <string name="unit_abbr_tbsp">cda</string>
+    <string name="unit_abbr_tsp">cdta</string>
+    <string name="unit_abbr_pcs">pzs</string>
+    <string name="unit_abbr_slice">rebanada</string>
+    <string name="unit_abbr_unit">ud.</string>
+    <string name="unit_abbr_serving">ración</string>
+    <string name="unit_abbr_portion">porción</string>
+
+    <!-- Dashboard feedback messages -->
+    <string name="exercise_saved_success">Ejercicio guardado exitosamente</string>
+    <string name="exercise_saved_and_checked_in">Ejercicio guardado y registro completado</string>
+    <string name="failed_to_save_exercise_with_reason">Error al guardar el ejercicio: %1$s</string>
+    <string name="failed_to_delete_exercise_with_reason">Error al eliminar el ejercicio: %1$s</string>
+    <string name="failed_to_complete_action_with_reason">No se pudo completar la acción: %1$s</string>
+    <string name="failed_to_check_in_with_reason">Error al registrar: %1$s</string>
+    <string name="failed_to_load_exercise_data">Error al cargar los datos del ejercicio</string>
+    <string name="pill_added_success">Suplemento agregado exitosamente</string>
+    <string name="pill_updated_success">Suplemento actualizado exitosamente</string>
+    <string name="pill_deleted_success">Suplemento eliminado exitosamente</string>
+    <string name="failed_to_add_pill_with_reason">Error al agregar el suplemento: %1$s</string>
+    <string name="failed_to_update_pill_with_reason">Error al actualizar el suplemento: %1$s</string>
+    <string name="failed_to_delete_pill_with_reason">Error al eliminar el suplemento: %1$s</string>
+    <string name="unable_to_process_food_info">No se pudo procesar la información del alimento</string>
+    <string name="food_info_not_found_for_barcode">No se encontró información del alimento para este código de barras</string>
+    <string name="failed_to_fetch_food_info_with_reason">Error al obtener la información del alimento: %1$s</string>
+    <string name="error_fetching_food_info">Se produjo un error al obtener la información del alimento</string>
+    <string name="meal_saved_success">Comida guardada exitosamente</string>
+    <string name="meal_saved_and_checked_in">Comida guardada y registro completado exitosamente</string>
+    <string name="failed_to_update_meal_with_reason">Error al actualizar la comida: %1$s</string>
+    <string name="failed_to_delete_meal_with_reason">Error al eliminar la comida: %1$s</string>
+
+    <!-- Import / export results -->
+    <string name="import_total_processed_label">Total procesado:</string>
+    <string name="import_successfully_imported_label">Importados correctamente:</string>
+    <string name="import_skipped_label">Omitidos:</string>
+    <string name="import_failed_label">Fallidos:</string>
+    <string name="import_success_rate_label">Tasa de éxito:</string>
+    <string name="import_duration_label">Duración:</string>
+    <string name="import_failed_with_reason">Error en la importación: %1$s</string>
+    <string name="export_failed_with_reason">Error en la exportación: %1$s</string>
+
+    <!-- Exercise details -->
+    <string name="check_in_exercise">Registrar Ejercicio</string>
+    <string name="exercise_image">Imagen del ejercicio</string>
+    <string name="exercise_image_numbered">Imagen del ejercicio %1$d</string>
+    <string name="exercise_image_for">Imagen del ejercicio %1$s</string>
+    <string name="exercise_force">Fuerza</string>
+    <string name="exercise_level">Nivel</string>
+    <string name="exercise_mechanic">Mecánica</string>
+    <string name="primary_muscles">Músculos Principales</string>
+    <string name="secondary_muscles">Músculos Secundarios</string>
+    <string name="default_weight">Peso por Defecto</string>
+    <string name="maximum_weight">Peso Máximo</string>
+    <string name="default_minutes">Minutos por Defecto</string>
+    <string name="notes_label">Notas:</string>
+    <string name="search_exercises_placeholder">Buscar ejercicios…</string>
+
+    <!-- Barcode scanner -->
+    <string name="barcode_scanned_success">¡Código de barras escaneado correctamente!</string>
+    <string name="opening_camera_scanner">Abriendo el escáner de la cámara…</string>
+    <string name="failed_to_install_scanner_modules_with_reason">No se pudieron instalar los módulos necesarios: %1$s</string>
+    <string name="no_barcode_value_found">No se encontró ningún código de barras</string>
+    <string name="scan_failed_with_reason">Error al escanear: %1$s</string>
+    <string name="scan_canceled">Escaneo cancelado</string>
+
+    <!-- Meal list items -->
+    <string name="food_image">Imagen del alimento</string>
+    <string name="source_scanned">Escaneado</string>
+    <string name="source_searched">Buscado</string>
+    <string name="source_manual">Manual</string>
+    <string name="nova_group_format">NOVA %1$d</string>
+    <string name="unknown_meal">Comida desconocida</string>
 </resources>

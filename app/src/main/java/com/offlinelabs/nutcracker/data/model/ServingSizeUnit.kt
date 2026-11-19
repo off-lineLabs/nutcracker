@@ -1,38 +1,43 @@
 package com.offlinelabs.nutcracker.data.model
 
+import androidx.annotation.StringRes
 import com.offlinelabs.nutcracker.R
 
 /**
- * Enum representing different serving size units for nutrition tracking
+ * Enum representing different serving size units for nutrition tracking.
+ *
+ * [abbreviation] is the stable key persisted in the database and used by import/export;
+ * never show it to the user directly. Use [abbreviationResId] for the localized display text.
  */
 enum class ServingSizeUnit(
-    val stringResourceId: Int,
+    @param:StringRes val stringResourceId: Int,
     val abbreviation: String,
+    @param:StringRes val abbreviationResId: Int,
     val isWeight: Boolean = true, // true for weight units, false for volume units
     val isMetric: Boolean = true // true for metric units, false for imperial
 ) {
     // Weight units
-    GRAMS(R.string.unit_grams, "g", true, true),
-    KILOGRAMS(R.string.unit_kilograms, "kg", true, true),
-    POUNDS(R.string.unit_pounds, "lb", true, false),
-    OUNCES(R.string.unit_ounces, "oz", true, false),
+    GRAMS(R.string.unit_grams, "g", R.string.unit_abbr_g, true, true),
+    KILOGRAMS(R.string.unit_kilograms, "kg", R.string.unit_abbr_kg, true, true),
+    POUNDS(R.string.unit_pounds, "lb", R.string.unit_abbr_lb, true, false),
+    OUNCES(R.string.unit_ounces, "oz", R.string.unit_abbr_oz, true, false),
     
     // Volume units
-    MILLILITERS(R.string.unit_milliliters, "ml", false, true),
-    LITERS(R.string.unit_liters, "L", false, true),
-    CUPS(R.string.unit_cups, "cup", false, false),
-    FLUID_OUNCES(R.string.unit_fluid_ounces, "fl oz", false, false),
-    TABLESPOONS(R.string.unit_tablespoons, "tbsp", false, false),
-    TEASPOONS(R.string.unit_teaspoons, "tsp", false, false),
+    MILLILITERS(R.string.unit_milliliters, "ml", R.string.unit_abbr_ml, false, true),
+    LITERS(R.string.unit_liters, "L", R.string.unit_abbr_l, false, true),
+    CUPS(R.string.unit_cups, "cup", R.string.unit_abbr_cup, false, false),
+    FLUID_OUNCES(R.string.unit_fluid_ounces, "fl oz", R.string.unit_abbr_fl_oz, false, false),
+    TABLESPOONS(R.string.unit_tablespoons, "tbsp", R.string.unit_abbr_tbsp, false, false),
+    TEASPOONS(R.string.unit_teaspoons, "tsp", R.string.unit_abbr_tsp, false, false),
     
     // Count units
-    PIECES(R.string.unit_pieces, "pcs", false, false),
-    SLICES(R.string.unit_slices, "slice", false, false),
-    UNITS(R.string.unit_units, "unit", false, false),
+    PIECES(R.string.unit_pieces, "pcs", R.string.unit_abbr_pcs, false, false),
+    SLICES(R.string.unit_slices, "slice", R.string.unit_abbr_slice, false, false),
+    UNITS(R.string.unit_units, "unit", R.string.unit_abbr_unit, false, false),
     
     // Special units
-    SERVINGS(R.string.unit_servings, "serving", false, false),
-    PORTIONS(R.string.unit_portions, "portion", false, false);
+    SERVINGS(R.string.unit_servings, "serving", R.string.unit_abbr_serving, false, false),
+    PORTIONS(R.string.unit_portions, "portion", R.string.unit_abbr_portion, false, false);
     
     companion object {
         /**

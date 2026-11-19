@@ -186,6 +186,7 @@ private fun CaloriesRing(
     val remaining = goalCalories - foodCalories + totalBonus
     val progress = if (goalCalories > 0) (foodCalories / goalCalories).toFloat().coerceIn(0f, 1f) else 0f
     val finalValueColor = if (remaining < 0) ExceededColor else valueColor
+    val kcalUnit = stringResource(R.string.unit_kcal)
 
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizeDp)) {
@@ -240,7 +241,8 @@ private fun CaloriesRing(
                     withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                         append(" / ")
                         append("${goalCalories.toInt()}")
-                        append(" kcal")
+                        append(" ")
+                        append(kcalUnit)
                     }
                 }
             )
@@ -317,6 +319,7 @@ private fun NutrientBox(
 ) {
     // Use themed colors instead of hardcoded values
     val track = progressTrackColor()
+    val gramsUnit = stringResource(R.string.unit_g)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -333,7 +336,7 @@ private fun NutrientBox(
             barStartColor = nutrientCarbsColor(),
             barEndColor = nutrientCarbsColor(),
             trackColor = track,
-            unit = "g"
+            unit = gramsUnit
         )
         Spacer(modifier = Modifier.height(12.dp))
         NutrientBarRow(
@@ -343,7 +346,7 @@ private fun NutrientBox(
             barStartColor = nutrientProteinColor(),
             barEndColor = nutrientProteinColor(),
             trackColor = track,
-            unit = "g"
+            unit = gramsUnit
         )
         Spacer(modifier = Modifier.height(12.dp))
         NutrientBarRow(
@@ -353,7 +356,7 @@ private fun NutrientBox(
             barStartColor = nutrientFatColor(),
             barEndColor = nutrientFatColor(),
             trackColor = track,
-            unit = "g"
+            unit = gramsUnit
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = track)
         // Secondary nutrients
@@ -361,7 +364,7 @@ private fun NutrientBox(
             nutrientName = stringResource(id = R.string.fiber_label),
             consumed = totals?.totalFiber ?: 0.0,
             goal = goals.fiberGoal_g.toDouble(),
-            unit = "g",
+            unit = gramsUnit,
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
             goalColor = appTextSecondaryColor()
@@ -370,7 +373,7 @@ private fun NutrientBox(
             nutrientName = stringResource(id = R.string.sodium_label),
             consumed = (totals?.totalSodium ?: 0.0) / MILLIGRAMS_PER_GRAM,
             goal = goals.sodiumGoal_mg.toDouble() / MILLIGRAMS_PER_GRAM,
-            unit = "g",
+            unit = gramsUnit,
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
             goalColor = appTextSecondaryColor()
@@ -848,7 +851,7 @@ fun DashboardScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Help,
-                                contentDescription = "Help",
+                                contentDescription = stringResource(R.string.help),
                                 tint = appTextSecondaryColor(),
                                 modifier = Modifier.size(22.dp)
                             )
@@ -1683,7 +1686,7 @@ fun DashboardScreen(
                         try {
                             foodLogRepository.deleteExercise(exerciseToDelete)
                             snackbarHostState.showSnackbar(
-                                message = "Exercise deleted successfully!"
+                                message = exerciseDeletedSuccess
                             )
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
@@ -1691,7 +1694,7 @@ fun DashboardScreen(
                                 "exerciseName" to exerciseToDelete.name
                             ))
                             snackbarHostState.showSnackbar(
-                                message = "Failed to delete exercise: ${e.message}"
+                                message = context.getString(R.string.failed_to_delete_exercise_with_reason, e.message.orEmpty())
                             )
                         }
                     }
@@ -1784,11 +1787,11 @@ fun DashboardScreen(
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
-                            snackbarHostState.showSnackbar(message = "Exercise saved and check-in completed!")
+                            snackbarHostState.showSnackbar(message = context.getString(R.string.exercise_saved_and_checked_in))
                             refreshCheckIns++
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to save and check-in exercise", e)
-                            snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                            snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_complete_action_with_reason, e.message.orEmpty()))
                         }
                     }
                     showAddExerciseDialog = false
@@ -1846,10 +1849,10 @@ fun DashboardScreen(
                                 AppLogger.i("DashboardScreen", "✓ updateExercise completed")
                             } ?: AppLogger.w("DashboardScreen", "capturedExternalExercise is null!")
                             
-                            snackbarHostState.showSnackbar(message = "Exercise saved successfully!")
+                            snackbarHostState.showSnackbar(message = context.getString(R.string.exercise_saved_success))
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to save exercise", e)
-                            snackbarHostState.showSnackbar(message = "Failed to save exercise: ${e.message}")
+                            snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_save_exercise_with_reason, e.message.orEmpty()))
                         }
                     }
                     showAddExerciseDialog = false
@@ -1922,11 +1925,11 @@ fun DashboardScreen(
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
-                            snackbarHostState.showSnackbar(message = "Check-in completed!")
+                            snackbarHostState.showSnackbar(message = checkInCompletedSuccess)
                             refreshCheckIns++
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to check-in exercise", e)
-                            snackbarHostState.showSnackbar(message = "Failed to check-in: ${e.message}")
+                            snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_check_in_with_reason, e.message.orEmpty()))
                         }
                     }
                     showAddExerciseDialog = false
@@ -2055,14 +2058,14 @@ fun DashboardScreen(
                                     // Then delete the pill
                                     foodLogRepository.deletePill(pill)
                                     snackbarHostState.showSnackbar(
-                                        message = "Pill deleted successfully"
+                                        message = context.getString(R.string.pill_deleted_success)
                                     )
                                 } catch (e: Exception) {
                                     AppLogger.exception("DashboardScreen", "Failed to delete pill", e, mapOf(
                                         "pillId" to pill.id.toString()
                                     ))
                                     snackbarHostState.showSnackbar(
-                                        message = "Failed to delete pill: ${e.message}"
+                                        message = context.getString(R.string.failed_to_delete_pill_with_reason, e.message.orEmpty())
                                     )
                                 }
                             }
@@ -2113,14 +2116,14 @@ fun DashboardScreen(
                                         val updatedPill = pill.copy(name = pillName.trim())
                                         foodLogRepository.updatePill(updatedPill)
                                         snackbarHostState.showSnackbar(
-                                            message = "Pill updated successfully"
+                                            message = context.getString(R.string.pill_updated_success)
                                         )
                                     } catch (e: Exception) {
                                         AppLogger.exception("DashboardScreen", "Failed to update pill", e, mapOf(
                                             "pillId" to pill.id.toString()
                                         ))
                                         snackbarHostState.showSnackbar(
-                                            message = "Failed to update pill: ${e.message}"
+                                            message = context.getString(R.string.failed_to_update_pill_with_reason, e.message.orEmpty())
                                         )
                                     }
                                 }
@@ -2187,12 +2190,12 @@ fun DashboardScreen(
                                 try {
                                     foodLogRepository.insertPill(Pill(name = pillName.trim()))
                                     snackbarHostState.showSnackbar(
-                                        message = "Pill added successfully"
+                                        message = context.getString(R.string.pill_added_success)
                                     )
                                 } catch (e: Exception) {
                                     AppLogger.exception("DashboardScreen", "Failed to add pill", e)
                                     snackbarHostState.showSnackbar(
-                                        message = "Failed to add pill: ${e.message}"
+                                        message = context.getString(R.string.failed_to_add_pill_with_reason, e.message.orEmpty())
                                     )
                                 }
                             }
@@ -2376,7 +2379,7 @@ fun DashboardScreen(
                 } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Unable to process food information"
+                            message = context.getString(R.string.unable_to_process_food_info)
                         )
                     }
                 }
@@ -2413,7 +2416,7 @@ fun DashboardScreen(
                                 } else {
                                     AppLogger.d("DashboardScreen", "FoodInfo is null, showing error message")
                                     snackbarHostState.showSnackbar(
-                                        message = "Food information not found for this barcode"
+                                        message = context.getString(R.string.food_info_not_found_for_barcode)
                                     )
                                 }
                             },
@@ -2422,7 +2425,7 @@ fun DashboardScreen(
                                     "barcode" to barcode
                                 ))
                                 snackbarHostState.showSnackbar(
-                                    message = "Failed to fetch food information: ${error.message}"
+                                    message = context.getString(R.string.failed_to_fetch_food_info_with_reason, error.message.orEmpty())
                                 )
                             }
                         )
@@ -2431,7 +2434,7 @@ fun DashboardScreen(
                             "barcode" to barcode
                         ))
                         snackbarHostState.showSnackbar(
-                            message = "An error occurred while fetching food information"
+                            message = context.getString(R.string.error_fetching_food_info)
                         )
                     }
                 }
@@ -2541,7 +2544,7 @@ fun DashboardScreen(
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Save and Check-in: Check-in created successfully with mealId: ${savedMeal.id}")
-                        snackbarHostState.showSnackbar(message = "Meal saved and check-in completed successfully!")
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.meal_saved_and_checked_in))
                         // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
                         refreshCheckIns++
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
@@ -2550,7 +2553,7 @@ fun DashboardScreen(
                         AppLogger.exception("DashboardScreen", "Failed to save and check-in meal", e, mapOf(
                             "foodName" to foodInfo.name
                         ))
-                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_complete_action_with_reason, e.message.orEmpty()))
                     }
                 }
             },
@@ -2592,14 +2595,14 @@ fun DashboardScreen(
                         // Update the meal with the new ID from database
                         val savedMeal = finalMeal.copy(id = newMealId)
                         
-                        snackbarHostState.showSnackbar(message = "Meal saved successfully!")
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.meal_saved_success))
                         // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
                         
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to save meal", e, mapOf(
                             "foodName" to foodInfo.name
                         ))
-                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_complete_action_with_reason, e.message.orEmpty()))
                     }
                 }
             },
@@ -2653,7 +2656,7 @@ fun DashboardScreen(
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Check-in created successfully with mealId: ${savedMeal.id}")
-                        snackbarHostState.showSnackbar(message = "Check-in completed successfully!")
+                        snackbarHostState.showSnackbar(message = checkInCompletedSuccess)
                         refreshCheckIns++
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         
@@ -2661,7 +2664,7 @@ fun DashboardScreen(
                         AppLogger.exception("DashboardScreen", "Failed to check-in meal", e, mapOf(
                             "foodName" to foodInfo.name
                         ))
-                        snackbarHostState.showSnackbar(message = "Failed to complete action: ${e.message}")
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_complete_action_with_reason, e.message.orEmpty()))
                     }
                 }
             }
@@ -2699,7 +2702,7 @@ fun DashboardScreen(
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to get exercise data for check-in", e)
                         snackbarHostState.showSnackbar(
-                            message = "Failed to load exercise data"
+                            message = context.getString(R.string.failed_to_load_exercise_data)
                         )
                     }
                 }
@@ -2742,7 +2745,7 @@ fun DashboardScreen(
                     try {
                         foodLogRepository.updateMeal(updatedMeal)
                         snackbarHostState.showSnackbar(
-                            message = "Meal updated successfully!"
+                            message = mealUpdatedSuccess
                         )
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to update meal", e, mapOf(
@@ -2750,7 +2753,7 @@ fun DashboardScreen(
                             "mealName" to updatedMeal.name
                         ))
                         snackbarHostState.showSnackbar(
-                            message = "Failed to update meal: ${e.message}"
+                            message = context.getString(R.string.failed_to_update_meal_with_reason, e.message.orEmpty())
                         )
                     }
                 }
@@ -2760,7 +2763,7 @@ fun DashboardScreen(
                     try {
                         foodLogRepository.deleteMeal(meal)
                         snackbarHostState.showSnackbar(
-                            message = "Meal deleted successfully!"
+                            message = mealDeletedSuccess
                         )
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
@@ -2768,7 +2771,7 @@ fun DashboardScreen(
                             "mealName" to meal.name
                         ))
                         snackbarHostState.showSnackbar(
-                            message = "Failed to delete meal: ${e.message}"
+                            message = context.getString(R.string.failed_to_delete_meal_with_reason, e.message.orEmpty())
                         )
                     }
                 }

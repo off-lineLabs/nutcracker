@@ -42,7 +42,7 @@
     <string name="add_meal">Add Meal</string>
     <string name="set_goal">Set Goal</string>
     <string name="no_meals_added">No meals added yet</string>
-    <string name="registrar_comida">Registrar comida</string>
+    <string name="registrar_comida">Log food</string>
     <string name="scan_barcode">Scan barcode</string>
     <string name="search_meal_database">Search Meal Database</string>
     <string name="recent_check_ins">Recent Check-ins</string>
@@ -410,7 +410,7 @@
     <!-- Other Labels -->
     <string name="brand_label">Brand: %1$s</string>
     <string name="check_in_meal">Check-in Meal</string>
-    <string name="per_serving_size">per %1$d%2$s</string>
+    <string name="per_serving_size">per %1$d %2$s</string>
     <string name="food_product_image">Food product image</string>
     
     <!-- Barcode Scanner -->
@@ -517,4 +517,108 @@
     <!-- Accessibility strings -->
     <string name="locked">Locked</string>
     <string name="unlocked">Unlocked</string>
+    <string name="help">Help</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="link">Link</string>
+    <string name="unlink">Unlink</string>
+    <string name="none">None</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="error_with_reason">Error: %1$s</string>
+    <string name="exercise_bonus_toggle">Toggle exercise bonus calories</string>
+    <string name="tef_bonus_toggle">Toggle TEF bonus calories</string>
+    <string name="pill_content_description">Supplement</string>
+
+    <!-- Generic units and value formats -->
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_g">g</string>
+    <string name="kcal_value_format">%1$s kcal</string>
+    <string name="kcal_per_100g_format">%1$d kcal/100g</string>
+    <string name="grams_value_format">%1$sg</string>
+    <string name="milligrams_value_format">%1$smg</string>
+    <string name="kg_value_format">%1$s kg</string>
+    <string name="percentage_value_format">%1$s%%</string>
+    <string name="duration_ms_format">%1$d ms</string>
+
+    <!-- Serving size unit abbreviations (display only; the persisted key stays in ServingSizeUnit.abbreviation) -->
+    <string name="unit_abbr_g">g</string>
+    <string name="unit_abbr_kg">kg</string>
+    <string name="unit_abbr_lb">lb</string>
+    <string name="unit_abbr_oz">oz</string>
+    <string name="unit_abbr_ml">ml</string>
+    <string name="unit_abbr_l">L</string>
+    <string name="unit_abbr_cup">cup</string>
+    <string name="unit_abbr_fl_oz">fl oz</string>
+    <string name="unit_abbr_tbsp">tbsp</string>
+    <string name="unit_abbr_tsp">tsp</string>
+    <string name="unit_abbr_pcs">pcs</string>
+    <string name="unit_abbr_slice">slice</string>
+    <string name="unit_abbr_unit">unit</string>
+    <string name="unit_abbr_serving">serving</string>
+    <string name="unit_abbr_portion">portion</string>
+
+    <!-- Dashboard feedback messages -->
+    <string name="exercise_saved_success">Exercise saved successfully</string>
+    <string name="exercise_saved_and_checked_in">Exercise saved and check-in completed</string>
+    <string name="failed_to_save_exercise_with_reason">Failed to save exercise: %1$s</string>
+    <string name="failed_to_delete_exercise_with_reason">Failed to delete exercise: %1$s</string>
+    <string name="failed_to_complete_action_with_reason">Failed to complete action: %1$s</string>
+    <string name="failed_to_check_in_with_reason">Failed to check in: %1$s</string>
+    <string name="failed_to_load_exercise_data">Failed to load exercise data</string>
+    <string name="pill_added_success">Pill added successfully</string>
+    <string name="pill_updated_success">Pill updated successfully</string>
+    <string name="pill_deleted_success">Pill deleted successfully</string>
+    <string name="failed_to_add_pill_with_reason">Failed to add pill: %1$s</string>
+    <string name="failed_to_update_pill_with_reason">Failed to update pill: %1$s</string>
+    <string name="failed_to_delete_pill_with_reason">Failed to delete pill: %1$s</string>
+    <string name="unable_to_process_food_info">Unable to process food information</string>
+    <string name="food_info_not_found_for_barcode">Food information not found for this barcode</string>
+    <string name="failed_to_fetch_food_info_with_reason">Failed to fetch food information: %1$s</string>
+    <string name="error_fetching_food_info">An error occurred while fetching food information</string>
+    <string name="meal_saved_success">Meal saved successfully</string>
+    <string name="meal_saved_and_checked_in">Meal saved and check-in completed successfully</string>
+    <string name="failed_to_update_meal_with_reason">Failed to update meal: %1$s</string>
+    <string name="failed_to_delete_meal_with_reason">Failed to delete meal: %1$s</string>
+
+    <!-- Import / export results -->
+    <string name="import_total_processed_label">Total processed:</string>
+    <string name="import_successfully_imported_label">Successfully imported:</string>
+    <string name="import_skipped_label">Skipped:</string>
+    <string name="import_failed_label">Failed:</string>
+    <string name="import_success_rate_label">Success rate:</string>
+    <string name="import_duration_label">Duration:</string>
+    <string name="import_failed_with_reason">Import failed: %1$s</string>
+    <string name="export_failed_with_reason">Export failed: %1$s</string>
+
+    <!-- Exercise details -->
+    <string name="check_in_exercise">Check-in Exercise</string>
+    <string name="exercise_image">Exercise image</string>
+    <string name="exercise_image_numbered">Exercise image %1$d</string>
+    <string name="exercise_image_for">Exercise image for %1$s</string>
+    <string name="exercise_force">Force</string>
+    <string name="exercise_level">Level</string>
+    <string name="exercise_mechanic">Mechanic</string>
+    <string name="primary_muscles">Primary Muscles</string>
+    <string name="secondary_muscles">Secondary Muscles</string>
+    <string name="default_weight">Default Weight</string>
+    <string name="maximum_weight">Maximum Weight</string>
+    <string name="default_minutes">Default Minutes</string>
+    <string name="notes_label">Notes:</string>
+    <string name="search_exercises_placeholder">Search exercises…</string>
+
+    <!-- Barcode scanner -->
+    <string name="barcode_scanned_success">Barcode scanned successfully!</string>
+    <string name="opening_camera_scanner">Opening camera scanner…</string>
+    <string name="failed_to_install_scanner_modules_with_reason">Failed to install required modules: %1$s</string>
+    <string name="no_barcode_value_found">No barcode value found</string>
+    <string name="scan_failed_with_reason">Scan failed: %1$s</string>
+    <string name="scan_canceled">Scan canceled</string>
+
+    <!-- Meal list items -->
+    <string name="food_image">Food image</string>
+    <string name="source_scanned">Scanned</string>
+    <string name="source_searched">Searched</string>
+    <string name="source_manual">Manual</string>
+    <string name="nova_group_format">NOVA %1$d</string>
+    <string name="unknown_meal">Unknown meal</string>
 </resources>

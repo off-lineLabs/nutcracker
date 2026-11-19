@@ -52,6 +52,7 @@ fun FoodSearchDialog(
     var isLoading by remember { mutableStateOf(false) }
     var isLoadingMore by remember { mutableStateOf(false) }
     var technicalErrorMessage by remember { mutableStateOf<String?>(null) }
+    val unknownErrorText = stringResource(R.string.unknown_error)
     var hasSearched by remember { mutableStateOf(false) }
     var wholeFoodsOnly by remember { mutableStateOf(false) }
     var currentPage by remember { mutableStateOf(1) }
@@ -146,13 +147,13 @@ fun FoodSearchDialog(
                         }
                     },
                     onFailure = { error ->
-                        technicalErrorMessage = error.message ?: "Unknown error"
+                        technicalErrorMessage = error.message ?: unknownErrorText
                         searchResults = emptyList()
                         hasSearched = true
                     }
                 )
             } catch (e: Exception) {
-                technicalErrorMessage = e.message ?: "Unknown error"
+                technicalErrorMessage = e.message ?: unknownErrorText
                 searchResults = emptyList()
                 hasSearched = true
             } finally {
@@ -581,7 +582,7 @@ private fun ProductSearchResultItem(
                     ) {
                         nutriments.energyKcal100g?.let { calories ->
                             Text(
-                                text = "${calories.toInt()} kcal/100g",
+                                text = stringResource(R.string.kcal_per_100g_format, calories.toInt()),
                                 color = appTextSecondaryColor(),
                                 fontSize = 12.sp
                             )

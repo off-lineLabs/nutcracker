@@ -124,7 +124,7 @@ fun AddExerciseDialog(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.back),
                         tint = dialogPrimary
                     )
                 }
@@ -295,7 +295,7 @@ fun AddExerciseDialog(
                         OutlinedTextField(
                             value = defaultMinutes,
                             onValueChange = { defaultMinutes = it },
-                            label = { Text("Default Minutes") },
+                            label = { Text(stringResource(R.string.default_minutes)) },
                             colors = dialogTextFieldColors,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -308,7 +308,7 @@ fun AddExerciseDialog(
                         OutlinedTextField(
                             value = defaultBodyweightReps,
                             onValueChange = { defaultBodyweightReps = it },
-                            label = { Text("Default Reps") },
+                            label = { Text(stringResource(R.string.default_reps)) },
                             colors = dialogTextFieldColors,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,

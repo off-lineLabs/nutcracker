@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.getContrastingIconColor
@@ -60,7 +62,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                 meal.localImagePath?.let { imagePath ->
                     AsyncImage(
                         model = imagePath,
-                        contentDescription = "Food image",
+                        contentDescription = stringResource(R.string.food_image),
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(8.dp)),
@@ -70,7 +72,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                 } ?: meal.imageUrl?.let { imageUrl ->
                     AsyncImage(
                         model = imageUrl,
-                        contentDescription = "Food image",
+                        contentDescription = stringResource(R.string.food_image),
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(8.dp)),
@@ -85,7 +87,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                 ) {
                     // Serving size (moved from nutrition column)
                     Text(
-                        text = "${meal.servingSize_value.toInt()}${meal.servingSize_unit.abbreviation}",
+                        text = "${meal.servingSize_value.toInt()} ${stringResource(meal.servingSize_unit.abbreviationResId)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = contrastingTextColor.copy(alpha = 0.7f)
                     )
@@ -108,12 +110,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                             "barcode" -> {
                                 Icon(
                                     Icons.Filled.QrCodeScanner,
-                                    contentDescription = "Scanned",
+                                    contentDescription = stringResource(R.string.source_scanned),
                                     modifier = Modifier.size(12.dp),
                                     tint = softerContrastingColor
                                 )
                                 Text(
-                                    text = "Scanned",
+                                    text = stringResource(R.string.source_scanned),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = softerContrastingColor
                                 )
@@ -121,12 +123,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                             "search" -> {
                                 Icon(
                                     Icons.Filled.Search,
-                                    contentDescription = "Searched",
+                                    contentDescription = stringResource(R.string.source_searched),
                                     modifier = Modifier.size(12.dp),
                                     tint = softerContrastingColor
                                 )
                                 Text(
-                                    text = "Searched",
+                                    text = stringResource(R.string.source_searched),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = softerContrastingColor
                                 )
@@ -134,12 +136,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                             else -> {
                                 Icon(
                                     Icons.Filled.Edit,
-                                    contentDescription = "Manual",
+                                    contentDescription = stringResource(R.string.source_manual),
                                     modifier = Modifier.size(12.dp),
                                     tint = contrastingTextColor.copy(alpha = 0.6f)
                                 )
                                 Text(
-                                    text = "Manual",
+                                    text = stringResource(R.string.source_manual),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = contrastingTextColor.copy(alpha = 0.6f)
                                 )
@@ -154,7 +156,7 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                 ) {
                     // Calories
                     Text(
-                        text = "${meal.calories} kcal",
+                        text = stringResource(R.string.kcal_value_format, meal.calories.toString()),
                         style = MaterialTheme.typography.bodyMedium, // Same size as title
                         fontWeight = FontWeight.SemiBold,
                         color = contrastingTextColor
@@ -176,12 +178,12 @@ fun MealItem(meal: Meal, onMealClick: (Meal) -> Unit) {
                         ) {
                             Icon(
                                 icon,
-                                contentDescription = "NOVA ${classification.group}",
+                                contentDescription = stringResource(R.string.nova_group_format, classification.group),
                                 modifier = Modifier.size(10.dp),
                                 tint = color
                             )
                             Text(
-                                text = "NOVA ${classification.group}",
+                                text = stringResource(R.string.nova_group_format, classification.group),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = color
                             )

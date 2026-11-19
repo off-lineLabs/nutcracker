@@ -240,7 +240,7 @@ fun EditMealDialog(
                                 painter = painterResource(
                                     id = if (isLinked) R.drawable.link else R.drawable.link_off
                                 ),
-                                contentDescription = if (isLinked) "Unlink" else "Link",
+                                contentDescription = stringResource(if (isLinked) R.string.unlink else R.string.link),
                                 tint = if (isLinked) 
                                     dialogPrimary 
                                 else 

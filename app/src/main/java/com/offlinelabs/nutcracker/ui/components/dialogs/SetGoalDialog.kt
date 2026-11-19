@@ -130,7 +130,7 @@ fun SetGoalDialog(
                     // Always render to prevent layout shift, but hide text if matches
                     Text(
                         text = if (actualKcal != targetKcal && targetKcal > 0) {
-                            "Actual: $actualKcal kcal ($differenceText)"
+                            stringResource(R.string.actual_calories, actualKcal, differenceText)
                         } else {
                             "" // Empty but still takes up space
                         },
@@ -193,7 +193,7 @@ fun SetGoalDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (useTEFAdjustment && tefBonus > 0) {
                             Text(
-                                text = "+$tefBonus kcal",
+                                text = stringResource(R.string.kcal_value_format, "+$tefBonus"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary,

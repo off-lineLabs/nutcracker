@@ -278,7 +278,7 @@ private fun ExerciseCheckInContent(
                 CaloriesSummaryCard(
                     label = stringResource(R.string.calories_burned),
                     labelColor = BrandRedLight,
-                    valueText = "${caloriesBurned.toInt()} kcal"
+                    valueText = stringResource(R.string.calories_value, caloriesBurned.toInt())
                 )
 
                 // Notes field
@@ -423,7 +423,7 @@ private fun MealCheckInContent(
                         R.string.meal_calories_info,
                         meal.calories,
                         meal.servingSize_value.toInt(),
-                        meal.servingSize_unit.abbreviation
+                        stringResource(meal.servingSize_unit.abbreviationResId)
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -520,7 +520,7 @@ private fun MealCheckInContent(
                     },
                     suffix = {
                         Text(
-                            text = meal.servingSize_unit.abbreviation,
+                            text = stringResource(meal.servingSize_unit.abbreviationResId),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -547,7 +547,7 @@ private fun MealCheckInContent(
                 CaloriesSummaryCard(
                     label = stringResource(R.string.total_calories),
                     labelColor = BrandGoldLight,
-                    valueText = "$totalCalories kcal"
+                    valueText = stringResource(R.string.calories_value, totalCalories)
                 )
 
                 // Notes field

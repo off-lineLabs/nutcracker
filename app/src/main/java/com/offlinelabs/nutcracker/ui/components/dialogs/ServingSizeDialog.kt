@@ -95,7 +95,7 @@ fun ServingSizeDialog(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = selectedUnit?.abbreviation ?: stringResource(R.string.select_unit),
+                            text = selectedUnit?.let { stringResource(it.abbreviationResId) } ?: stringResource(R.string.select_unit),
                             color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
                         )
                     }
@@ -131,7 +131,7 @@ fun ServingSizeDialog(
                                     color = brandAccentShade(2)
                                 )
                                 Text(
-                                    text = "${(it * multiplier / 100).toInt()} kcal",
+                                    text = stringResource(R.string.calories_value, (it * multiplier / 100).toInt()),
                                     color = brandAccentShade(3)
                                 )
                             }
@@ -143,7 +143,7 @@ fun ServingSizeDialog(
                                     color = brandAccentShade(2)
                                 )
                                 Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    text = stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it * multiplier / 100)),
                                     color = brandAccentShade(3)
                                 )
                             }
@@ -155,7 +155,7 @@ fun ServingSizeDialog(
                                     color = brandAccentShade(2)
                                 )
                                 Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    text = stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it * multiplier / 100)),
                                     color = brandAccentShade(3)
                                 )
                             }
@@ -167,7 +167,7 @@ fun ServingSizeDialog(
                                     color = brandAccentShade(2)
                                 )
                                 Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
+                                    text = stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it * multiplier / 100)),
                                     color = brandAccentShade(3)
                                 )
                             }
@@ -358,7 +358,7 @@ private fun UnitItem(
         ) {
             Column {
                 Text(
-                    text = unit.abbreviation,
+                    text = stringResource(unit.abbreviationResId),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
