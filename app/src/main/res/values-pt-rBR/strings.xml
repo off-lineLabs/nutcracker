@@ -560,4 +560,7 @@
     <string name="source_manual">Manual</string>
     <string name="nova_group_format">NOVA %1$d</string>
     <string name="unknown_meal">Refeição desconhecida</string>
+    <string name="exercise_weight_label">Peso</string>
+    <string name="datetime_error_hour">A hora deve estar entre 0 e 23</string>
+    <string name="datetime_error_minute">Os minutos devem estar entre 0 e 59</string>
 </resources>

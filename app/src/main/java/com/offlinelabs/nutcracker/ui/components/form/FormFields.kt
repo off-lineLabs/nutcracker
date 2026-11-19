@@ -195,6 +195,7 @@ fun NumericInputRow(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     fieldWidth: Dp = FormDefaults.numberFieldWidth(),
     unitWidth: Dp = FormDefaults.UnitSuffixWidth,
+    keyboardType: KeyboardType = KeyboardType.Decimal,
     colors: FormColors = FormDefaults.colors()
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -227,6 +228,7 @@ fun NumericInputRow(
                 enabled = enabled,
                 imeAction = imeAction,
                 keyboardActions = keyboardActions,
+                keyboardType = keyboardType,
                 textStyle = if (emphasized) {
                     MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 } else {
@@ -282,6 +284,9 @@ fun FormTextField(
     imeAction: ImeAction = ImeAction.Next,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     colors: FormColors = FormDefaults.colors()
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -294,7 +299,9 @@ fun FormTextField(
         placeholder = placeholder?.let { { Text(it) } },
         isError = errorText != null,
         supportingText = errorText?.let { { Text(it) } },
-        singleLine = true,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
         keyboardOptions = KeyboardOptions(capitalization = capitalization, imeAction = imeAction),
         keyboardActions = keyboardActions,
         interactionSource = interactionSource,
