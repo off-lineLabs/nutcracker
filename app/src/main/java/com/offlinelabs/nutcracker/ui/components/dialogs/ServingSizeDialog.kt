@@ -3,23 +3,50 @@ package com.offlinelabs.nutcracker.ui.components.dialogs
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Grain
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.OilBarrel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.FoodInfo
+import com.offlinelabs.nutcracker.data.model.NovaClassification
+import com.offlinelabs.nutcracker.data.model.NutritionInfo
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import com.offlinelabs.nutcracker.data.mapper.FoodInfoToMealMapper
 import androidx.compose.ui.res.stringResource
+import com.offlinelabs.nutcracker.ui.components.form.FormColors
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
+import com.offlinelabs.nutcracker.ui.components.form.FormDialog
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogStackedActions
+import com.offlinelabs.nutcracker.ui.components.form.FormDialogSurface
+import com.offlinelabs.nutcracker.ui.components.form.FormRowIcon
+import com.offlinelabs.nutcracker.ui.components.form.FormSection
+import com.offlinelabs.nutcracker.ui.components.form.FormSectionDivider
+import com.offlinelabs.nutcracker.ui.components.form.FormStackedAction
+import com.offlinelabs.nutcracker.ui.components.form.QuantityUnitInput
+import com.offlinelabs.nutcracker.ui.components.form.formatDecimal
+import com.offlinelabs.nutcracker.ui.components.form.parseDecimal
+import com.offlinelabs.nutcracker.ui.components.form.validateDecimal
+import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
-import java.util.Locale
+import com.offlinelabs.nutcracker.ui.theme.nutrientCarbsColor
+import com.offlinelabs.nutcracker.ui.theme.nutrientFatColor
+import com.offlinelabs.nutcracker.ui.theme.nutrientProteinColor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServingSizeDialog(
     foodInfo: FoodInfo,
@@ -29,236 +56,182 @@ fun ServingSizeDialog(
     onJustSave: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit,
     onJustCheckIn: (servingSizeValue: Double, servingSizeUnit: ServingSizeUnit) -> Unit
 ) {
-    var servingSizeValue by remember { mutableStateOf("") }
-    var selectedUnit by remember { mutableStateOf<ServingSizeUnit?>(null) }
-    var showUnitSelector by remember { mutableStateOf(false) }
-    
-    // Initialize with suggested serving size
-    LaunchedEffect(foodInfo) {
-        val suggested = FoodInfoToMealMapper.getSuggestedServingSize(foodInfo)
-        servingSizeValue = suggested.first.toString()
-        selectedUnit = suggested.second
+    // Initialize with the suggested serving size; survives rotation.
+    val suggested = remember(foodInfo) { FoodInfoToMealMapper.getSuggestedServingSize(foodInfo) }
+    var amount by rememberSaveable(foodInfo) { mutableStateOf(formatDecimal(suggested.first)) }
+    var unit by rememberSaveable(foodInfo) { mutableStateOf(suggested.second) }
+
+    val error = validateDecimal(amount, required = true, allowZero = false)
+    val parsed = parseDecimal(amount)
+    val isValid = error == null && parsed != null && parsed > 0
+
+    fun confirm(callback: (Double, ServingSizeUnit) -> Unit) {
+        val value = parsed ?: return
+        if (isValid) callback(value, unit)
     }
-    
-    AlertDialog(
+
+    FormDialog(
+        title = stringResource(R.string.add_to_my_meals),
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.add_to_my_meals),
-                style = MaterialTheme.typography.headlineSmall
+        actions = {
+            FormDialogStackedActions(
+                primaryText = stringResource(R.string.save_and_check_in),
+                onPrimary = { confirm(onSaveAndCheckIn) },
+                secondary = listOf(
+                    FormStackedAction(stringResource(R.string.just_save)) { confirm(onJustSave) },
+                    FormStackedAction(stringResource(R.string.just_check_in)) { confirm(onJustCheckIn) }
+                ),
+                onDismiss = onDismiss,
+                confirmEnabled = isValid
             )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Food name
+        }
+    ) {
+        ServingSizeContent(
+            foodInfo = foodInfo,
+            amount = amount,
+            onAmountChange = { amount = it },
+            unit = unit,
+            onUnitChange = { unit = it },
+            errorText = error?.let { stringResource(it.messageRes) }
+        )
+    }
+}
+
+/** Body of [ServingSizeDialog]: food header, amount + unit and the nutrition preview. */
+@Composable
+private fun ServingSizeContent(
+    foodInfo: FoodInfo,
+    amount: String,
+    onAmountChange: (String) -> Unit,
+    unit: ServingSizeUnit,
+    onUnitChange: (ServingSizeUnit) -> Unit,
+    errorText: String?,
+    modifier: Modifier = Modifier
+) {
+    val colors = FormDefaults.colors()
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = foodInfo.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.content,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+            foodInfo.brand?.let { brand ->
                 Text(
-                    text = foodInfo.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.brand_label, brand),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.contentSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                
-                foodInfo.brand?.let { brand ->
-                    Text(
-                        text = stringResource(R.string.brand_label, brand),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        }
+
+        QuantityUnitInput(
+            label = stringResource(R.string.serving_size),
+            amount = amount,
+            onAmountChange = onAmountChange,
+            unit = unit,
+            onUnitChange = onUnitChange,
+            errorText = errorText,
+            imeAction = ImeAction.Done,
+            colors = colors
+        )
+
+        // Same math as before: values are relative to the amount typed, from per-100 data.
+        val multiplier = parseDecimal(amount) ?: 0.0
+        val nutrition = foodInfo.nutrition
+        FormSection(header = stringResource(R.string.nutrition_preview), colors = colors) {
+            var first = true
+            @Composable
+            fun row(content: @Composable () -> Unit) {
+                if (!first) FormSectionDivider(colors = colors)
+                first = false
+                content()
+            }
+            nutrition.calories?.let {
+                row {
+                    PreviewValueRow(
+                        stringResource(R.string.calories_label),
+                        (it * multiplier / 100).toInt().toString(),
+                        stringResource(R.string.unit_kcal),
+                        Icons.Filled.LocalFireDepartment, brandAccentShade(2), colors
                     )
-                }
-                
-                // Serving size input
-                Text(
-                    text = stringResource(R.string.serving_size),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = servingSizeValue,
-                        onValueChange = { servingSizeValue = it },
-                        label = { Text(stringResource(R.string.amount)) },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                        )
-                    )
-                    
-                    OutlinedButton(
-                        onClick = { showUnitSelector = true },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = selectedUnit?.abbreviation ?: stringResource(R.string.select_unit),
-                            color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                        )
-                    }
-                }
-                
-                // Nutrition preview
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.nutrition_preview),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = brandAccentShade(4)
-                        )
-                        
-                        val multiplier = try {
-                            servingSizeValue.toDoubleOrNull() ?: 0.0
-                        } catch (e: Exception) { 0.0 }
-                        
-                        val nutrition = foodInfo.nutrition
-                        nutrition.calories?.let { 
-                            Row {
-                                Text(
-                                    text = stringResource(R.string.calories_label) + ": ",
-                                    color = brandAccentShade(2)
-                                )
-                                Text(
-                                    text = "${(it * multiplier / 100).toInt()} kcal",
-                                    color = brandAccentShade(3)
-                                )
-                            }
-                        }
-                        nutrition.proteins?.let { 
-                            Row {
-                                Text(
-                                    text = stringResource(R.string.protein_label) + ": ",
-                                    color = brandAccentShade(2)
-                                )
-                                Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
-                                    color = brandAccentShade(3)
-                                )
-                            }
-                        }
-                        nutrition.carbohydrates?.let { 
-                            Row {
-                                Text(
-                                    text = stringResource(R.string.carbs_g) + ": ",
-                                    color = brandAccentShade(2)
-                                )
-                                Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
-                                    color = brandAccentShade(3)
-                                )
-                            }
-                        }
-                        nutrition.fat?.let { 
-                            Row {
-                                Text(
-                                    text = stringResource(R.string.fat_g) + ": ",
-                                    color = brandAccentShade(2)
-                                )
-                                Text(
-                                    text = "${String.format(Locale.US, "%.1f", it * multiplier / 100)}g",
-                                    color = brandAccentShade(3)
-                                )
-                            }
-                        }
-                    }
                 }
             }
-        },
-        confirmButton = {
-            val parsedValue = servingSizeValue.toDoubleOrNull()
-            val isEnabled = parsedValue != null && parsedValue > 0 && selectedUnit != null
-            
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Save and Check-in button
-                Button(
-                    onClick = {
-                        val value = parsedValue ?: 0.0
-                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
-                        if (value > 0) {
-                            onSaveAndCheckIn(value, unit)
-                        }
-                    },
-                    enabled = isEnabled,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = brandAccentShade(0)
+            nutrition.carbohydrates?.let {
+                row {
+                    PreviewValueRow(
+                        stringResource(R.string.carbohydrates_label),
+                        formatDecimal(it * multiplier / 100, maxFractionDigits = 1),
+                        stringResource(R.string.unit_g),
+                        Icons.Filled.Grain, nutrientCarbsColor(), colors
                     )
-                ) {
-                    Text(stringResource(R.string.save_and_check_in))
                 }
-                
-                // Just Save button
-                Button(
-                    onClick = {
-                        val value = parsedValue ?: 0.0
-                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
-                        if (value > 0) {
-                            onJustSave(value, unit)
-                        }
-                    },
-                    enabled = isEnabled,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = brandAccentShade(1)
+            }
+            nutrition.proteins?.let {
+                row {
+                    PreviewValueRow(
+                        stringResource(R.string.protein_label),
+                        formatDecimal(it * multiplier / 100, maxFractionDigits = 1),
+                        stringResource(R.string.unit_g),
+                        Icons.Filled.FitnessCenter, nutrientProteinColor(), colors
                     )
-                ) {
-                    Text(stringResource(R.string.just_save))
                 }
-                
-                // Just Check-in button
-                Button(
-                    onClick = {
-                        val value = parsedValue ?: 0.0
-                        val unit = selectedUnit ?: ServingSizeUnit.GRAMS
-                        if (value > 0) {
-                            onJustCheckIn(value, unit)
-                        }
-                    },
-                    enabled = isEnabled,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = brandAccentShade(2)
-                    )
-                ) {
-                    Text(stringResource(R.string.just_check_in))
-                }
-                
-                // Cancel button
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
+            }
+            nutrition.fat?.let {
+                row {
+                    PreviewValueRow(
+                        stringResource(R.string.fat_label),
+                        formatDecimal(it * multiplier / 100, maxFractionDigits = 1),
+                        stringResource(R.string.unit_g),
+                        Icons.Filled.OilBarrel, nutrientFatColor(), colors
                     )
                 }
             }
         }
-    )
-    
-    // Unit selector dialog
-    if (showUnitSelector) {
-        UnitSelectorDialog(
-            onDismiss = { showUnitSelector = false },
-            onUnitSelected = { unit ->
-                selectedUnit = unit
-                showUnitSelector = false
-            }
+    }
+}
+
+/** Read-only counterpart of a numeric input row: `[icon] Label ........ value unit`. */
+@Composable
+private fun PreviewValueRow(
+    label: String,
+    value: String,
+    unit: String,
+    icon: ImageVector,
+    iconTint: Color,
+    colors: FormColors
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.size(FormDefaults.LeadingSize), contentAlignment = Alignment.Center) {
+            FormRowIcon(icon, iconTint)
+        }
+        Spacer(Modifier.width(if (FormDefaults.isCompactWidth) 8.dp else 10.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = colors.content,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "$value $unit",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.content,
+            maxLines = 1
         )
     }
 }
@@ -358,7 +331,7 @@ private fun UnitItem(
         ) {
             Column {
                 Text(
-                    text = unit.abbreviation,
+                    text = stringResource(unit.abbreviationResId),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -393,4 +366,56 @@ private fun getUnitDescription(unit: ServingSizeUnit): String {
     }
 }
 
+// ----- Previews -----
 
+@Composable
+private fun ServingSizePreviewContent(amount: String, error: String?) {
+    val food = FoodInfo(
+        name = "Crunchy granola with almonds and honey",
+        brand = "Nature Co.",
+        imageUrl = null,
+        nutritionImageUrl = null,
+        nutrition = NutritionInfo(
+            calories = 450.0, fat = 16.5, saturatedFat = null, carbohydrates = 62.0, proteins = 10.0,
+            sodium = null, fiber = null, sugars = null, cholesterol = null,
+            vitaminC = null, calcium = null, iron = null
+        ),
+        novaClassification = NovaClassification(1, ""),
+        greenScore = null,
+        nutriscore = null,
+        ingredients = null,
+        quantity = null,
+        servingSize = null
+    )
+    Box(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
+        FormDialogSurface(
+            title = stringResource(R.string.add_to_my_meals),
+            actions = {
+                FormDialogStackedActions(
+                    primaryText = stringResource(R.string.save_and_check_in),
+                    onPrimary = {},
+                    secondary = listOf(
+                        FormStackedAction(stringResource(R.string.just_save)) {},
+                        FormStackedAction(stringResource(R.string.just_check_in)) {}
+                    ),
+                    onDismiss = {},
+                    confirmEnabled = error == null
+                )
+            }
+        ) {
+            ServingSizeContent(food, amount, {}, ServingSizeUnit.GRAMS, {}, error)
+        }
+    }
+}
+
+@Preview(name = "Serving size - light", widthDp = 360, heightDp = 720, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Composable
+private fun ServingSizeLightPreview() {
+    FoodLogTheme(darkTheme = false) { ServingSizePreviewContent("100", null) }
+}
+
+@Preview(name = "Serving size - dark, error", widthDp = 360, heightDp = 720, showBackground = true, backgroundColor = 0xFF0B1426)
+@Composable
+private fun ServingSizeDarkErrorPreview() {
+    FoodLogTheme(darkTheme = true) { ServingSizePreviewContent("0", stringResource(R.string.form_error_must_be_positive)) }
+}

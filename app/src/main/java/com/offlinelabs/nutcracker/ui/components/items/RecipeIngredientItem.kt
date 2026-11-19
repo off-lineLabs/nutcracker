@@ -11,8 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
@@ -47,14 +49,14 @@ fun RecipeIngredientItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = meal?.name ?: "Unknown meal",
+                    text = meal?.name ?: stringResource(R.string.unknown_meal),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = contrastingTextColor
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${ingredient.quantity} ${ingredient.unit.abbreviation}",
+                    text = "${ingredient.quantity} ${stringResource(ingredient.unit.abbreviationResId)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = contrastingTextColor.copy(alpha = 0.7f)
                 )
@@ -68,7 +70,7 @@ fun RecipeIngredientItem(
                         )
                         val calories = (m.calories * multiplier).toInt()
                         Text(
-                            text = "$calories kcal",
+                            text = stringResource(R.string.calories_value, calories),
                             style = MaterialTheme.typography.bodySmall,
                             color = contrastingTextColor.copy(alpha = 0.6f)
                         )
@@ -85,7 +87,7 @@ fun RecipeIngredientItem(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = stringResource(R.string.edit),
                         tint = contrastingTextColor.copy(alpha = 0.7f)
                     )
                 }
@@ -95,7 +97,7 @@ fun RecipeIngredientItem(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

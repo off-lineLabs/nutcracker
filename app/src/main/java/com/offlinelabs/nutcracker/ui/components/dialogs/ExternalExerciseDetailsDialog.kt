@@ -57,7 +57,7 @@ fun ExternalExerciseDetailsDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Text(
                     text = exercise.name,
@@ -147,7 +147,7 @@ private fun ExerciseImageSlideshow(
             ) { page ->
                 AsyncImage(
                     model = externalExerciseService.getImageUrl(images[page]),
-                    contentDescription = "Exercise image ${page + 1}",
+                    contentDescription = stringResource(R.string.exercise_image_numbered, page + 1),
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(12.dp)),
@@ -207,18 +207,18 @@ private fun ExerciseDetailsCard(exercise: ExternalExercise) {
                 color = contrastingTextColor
             )
             
-            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
-            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
-            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
-            DetailRow("Level", exercise.level.replaceFirstChar { it.uppercase() }, contrastingTextColor)
-            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            DetailRow(stringResource(R.string.category), exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.equipment?.let { DetailRow(stringResource(R.string.equipment), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.force?.let { DetailRow(stringResource(R.string.exercise_force), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            DetailRow(stringResource(R.string.exercise_level), exercise.level.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.mechanic?.let { DetailRow(stringResource(R.string.exercise_mechanic), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
         }
     }

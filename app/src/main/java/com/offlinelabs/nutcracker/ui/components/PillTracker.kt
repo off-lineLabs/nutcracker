@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,7 +66,7 @@ fun PillTracker(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_pill_24),
-                contentDescription = "Pill",
+                contentDescription = stringResource(R.string.pill_content_description),
                 tint = if (isPillTaken) pillTakenColor() else pillNotTakenColor(),
                 modifier = Modifier.size(24.dp)
             )

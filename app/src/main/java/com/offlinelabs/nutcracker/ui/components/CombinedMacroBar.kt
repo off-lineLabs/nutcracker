@@ -300,7 +300,7 @@ private fun MacroStatBar(
                 )
             }
             Text(
-                text = "${grams.roundToInt()}g",
+                text = stringResource(R.string.grams_value_format, grams.roundToInt().toString()),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = appTextSecondaryColor()

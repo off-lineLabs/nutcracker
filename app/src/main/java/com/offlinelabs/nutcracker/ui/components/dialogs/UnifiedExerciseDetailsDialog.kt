@@ -64,7 +64,7 @@ fun UnifiedExerciseDetailsDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Text(
                     text = exercise.name,
@@ -128,7 +128,7 @@ fun UnifiedExerciseDetailsDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Check-in Exercise")
+                    Text(stringResource(R.string.check_in_exercise))
                 }
             }
         }
@@ -159,7 +159,7 @@ private fun ExerciseImageSlideshow(
                 if (imageFile != null) {
                     AsyncImage(
                         model = imageFile,
-                        contentDescription = "Exercise image ${page + 1}",
+                        contentDescription = stringResource(R.string.exercise_image_numbered, page + 1),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(12.dp)),
@@ -175,7 +175,7 @@ private fun ExerciseImageSlideshow(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.FitnessCenter,
-                            contentDescription = "Exercise image",
+                            contentDescription = stringResource(R.string.exercise_image),
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -235,18 +235,18 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
                 color = contrastingTextColor
             )
             
-            DetailRow("Category", exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
-            exercise.equipment?.let { DetailRow("Equipment", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
-            exercise.force?.let { DetailRow("Force", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
-            exercise.level?.let { DetailRow("Level", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
-            exercise.mechanic?.let { DetailRow("Mechanic", it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            DetailRow(stringResource(R.string.category), exercise.category.replaceFirstChar { it.uppercase() }, contrastingTextColor)
+            exercise.equipment?.let { DetailRow(stringResource(R.string.equipment), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.force?.let { DetailRow(stringResource(R.string.exercise_force), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.level?.let { DetailRow(stringResource(R.string.exercise_level), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
+            exercise.mechanic?.let { DetailRow(stringResource(R.string.exercise_mechanic), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow("Primary Muscles", exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow("Secondary Muscles", exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
             }
         }
     }
@@ -299,23 +299,23 @@ private fun PersonalDataCard(exercise: Exercise, foodLogRepository: FoodLogRepos
                 ) {
                     Icon(
                         Icons.Filled.Edit, 
-                        contentDescription = "Edit Exercise",
+                        contentDescription = stringResource(R.string.edit_exercise),
                         modifier = Modifier.size(18.dp),
                         tint = contrastingTextColor
                     )
                 }
             }
             
-            PersonalDataRow("Default Weight", "${exercise.defaultWeight} kg", contrastingTextColor)
-            PersonalDataRow("Maximum Weight", "${maxWeight} kg", contrastingTextColor)
-            PersonalDataRow("Default Reps", exercise.defaultReps.toString(), contrastingTextColor)
-            PersonalDataRow("Default Sets", exercise.defaultSets.toString(), contrastingTextColor)
+            PersonalDataRow(stringResource(R.string.default_weight), stringResource(R.string.kg_value_format, exercise.defaultWeight.toString()), contrastingTextColor)
+            PersonalDataRow(stringResource(R.string.maximum_weight), stringResource(R.string.kg_value_format, maxWeight.toString()), contrastingTextColor)
+            PersonalDataRow(stringResource(R.string.default_reps), exercise.defaultReps.toString(), contrastingTextColor)
+            PersonalDataRow(stringResource(R.string.default_sets), exercise.defaultSets.toString(), contrastingTextColor)
             
             exercise.kcalBurnedPerUnit?.let { 
                 val label = when (ExerciseCategoryMapper.getExerciseType(exercise.category)) {
-                    ExerciseType.STRENGTH -> "Kcal per Set"
-                    ExerciseType.CARDIO -> "Kcal per Minute"
-                    ExerciseType.BODYWEIGHT -> "Kcal per Rep"
+                    ExerciseType.STRENGTH -> stringResource(R.string.kcal_per_set)
+                    ExerciseType.CARDIO -> stringResource(R.string.kcal_per_minute)
+                    ExerciseType.BODYWEIGHT -> stringResource(R.string.kcal_per_rep)
                 }
                 PersonalDataRow(label, it.toString(), contrastingTextColor) 
             }
@@ -323,7 +323,7 @@ private fun PersonalDataCard(exercise: Exercise, foodLogRepository: FoodLogRepos
             exercise.notes?.takeIf { it.isNotBlank() }?.let { notes ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Notes:",
+                    text = stringResource(R.string.notes_label),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = contrastingTextColor.copy(alpha = 0.7f)

@@ -106,7 +106,7 @@ data class MonthData(
 )
 
 data class SelectedPeriodData(
-    val period: String,
+    val period: TimePeriod,
     val calories: Double,
     val date: LocalDate
 )
@@ -712,7 +712,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (dayData.size - 1).coerceAtLeast(0)
                     dayData.getOrNull(selectedIndex)?.let { 
                         SelectedPeriodData(
-                            period = stringResource(R.string.analytics_day),
+                            period = TimePeriod.DAYS,
                             calories = it.calories,
                             date = it.date
                         )
@@ -723,7 +723,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (weekData.size - 1).coerceAtLeast(0)
                     weekData.getOrNull(selectedIndex)?.let {
                         SelectedPeriodData(
-                            period = stringResource(R.string.analytics_week),
+                            period = TimePeriod.WEEKS,
                             calories = it.calories,
                             date = it.weekStart
                         )
@@ -734,7 +734,7 @@ fun NutritionAnalyticsContent(
                     val selectedIndex = selectedBarIndex ?: (monthData.size - 1).coerceAtLeast(0)
                     monthData.getOrNull(selectedIndex)?.let {
                         SelectedPeriodData(
-                            period = stringResource(R.string.analytics_month),
+                            period = TimePeriod.MONTHS,
                             calories = it.calories,
                             date = it.monthStart
                         )
@@ -1050,10 +1050,9 @@ fun StatsCards(
     val totalCalories = selectedPeriodData?.calories ?: dailyCalories.values.sum()
     val targetCalories = if (selectedPeriodData != null) {
         when (selectedPeriodData.period) {
-            "Day" -> calorieGoal
-            "Week" -> calorieGoal * 7
-            "Month" -> calorieGoal * 30
-            else -> calorieGoal
+            TimePeriod.DAYS -> calorieGoal
+            TimePeriod.WEEKS -> calorieGoal * 7
+            TimePeriod.MONTHS -> calorieGoal * 30
         }
     } else {
         calorieGoal * 7 // 7 days
@@ -1068,7 +1067,7 @@ fun StatsCards(
         // Card 1: Total calories consumed
         EnhancedStatCard(
             title = stringResource(R.string.analytics_total_calories_consumed),
-            value = "${totalCalories.toInt()} kcal",
+            value = stringResource(R.string.kcal_value_format, totalCalories.toInt().toString()),
             icon = Icons.Filled.LocalDining,
             gradientColors = listOf(
                 BrandGold.copy(alpha = 0.15f),
@@ -1079,7 +1078,10 @@ fun StatsCards(
         // Card 2: Final balance
         EnhancedStatCard(
             title = stringResource(R.string.analytics_your_final_balance),
-            value = "${if (balance >= 0) "+" else ""}${balance.toInt()} kcal",
+            value = stringResource(
+                R.string.kcal_value_format,
+                "${if (balance >= 0) "+" else ""}${balance.toInt()}"
+            ),
             valueColor = if (balance >= 0) ProteinFiberColor else ExceededColor,
             icon = if (balance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (balance >= 0) {
@@ -1098,7 +1100,10 @@ fun StatsCards(
         // Card 3: Average balance
         EnhancedStatCard(
             title = stringResource(R.string.analytics_average_balance_per_day),
-            value = "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()} kcal",
+            value = stringResource(
+                R.string.kcal_value_format,
+                "${if (averageBalance >= 0) "+" else ""}${averageBalance.toInt()}"
+            ),
             valueColor = if (averageBalance >= 0) ProteinFiberColor else ExceededColor,
             icon = if (averageBalance >= 0) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
             gradientColors = if (averageBalance >= 0) {
@@ -1455,7 +1460,7 @@ fun ExerciseAnalyticsContent() {
                             .joinToString(", ") { muscle -> 
                                 muscle.replaceFirstChar { char -> char.uppercase() }
                             }
-                            .takeIf { it.isNotEmpty() } ?: "None",
+                            .takeIf { it.isNotEmpty() } ?: stringResource(R.string.none),
                         icon = painterResource(R.drawable.ic_attribution),
                         color = BrandRed,
                         isSmallValue = true

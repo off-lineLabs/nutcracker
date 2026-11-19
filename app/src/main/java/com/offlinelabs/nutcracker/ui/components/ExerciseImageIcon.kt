@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
@@ -92,7 +94,7 @@ fun ExerciseImageIcon(
             // Display the exercise image filling the entire box
             androidx.compose.foundation.Image(
                 bitmap = imageBitmap!!,
-                contentDescription = "Exercise image for ${exercise.name}",
+                contentDescription = stringResource(R.string.exercise_image_for, exercise.name),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop // Show cropped version instead of stretched
             )

@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.export.DatabaseExportManager
 import kotlinx.coroutines.launch
@@ -43,12 +44,12 @@ fun rememberDatabaseExportHandler(
                             showMessage = true
                         },
                         onFailure = { exception ->
-                            exportMessage = "Export failed: ${exception.message}"
+                            exportMessage = context.getString(R.string.export_failed_with_reason, exception.message.orEmpty())
                             showMessage = true
                         }
                     )
                 } catch (e: Exception) {
-                    exportMessage = "Export failed: ${e.message}"
+                    exportMessage = context.getString(R.string.export_failed_with_reason, e.message.orEmpty())
                     showMessage = true
                 } finally {
                     isExporting = false
@@ -62,15 +63,15 @@ fun rememberDatabaseExportHandler(
         filePickerLauncher.launch(filename)
     }
     
-    return remember {
-        DatabaseExportHandler(
-            isExporting = isExporting,
-            exportMessage = exportMessage,
-            showMessage = showMessage,
-            onDismissMessage = { showMessage = false },
-            onStartExport = startExport
-        )
-    }
+    // Not remembered: a new snapshot is built on every recomposition so callers see the
+    // current isExporting / exportMessage / showMessage values.
+    return DatabaseExportHandler(
+        isExporting = isExporting,
+        exportMessage = exportMessage,
+        showMessage = showMessage,
+        onDismissMessage = { showMessage = false },
+        onStartExport = startExport
+    )
 }
 
 /**

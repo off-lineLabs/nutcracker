@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Balance
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.size
@@ -607,6 +608,7 @@ private fun ImportResultDialog(
                 ) {
                     Text(
                         text = stringResource(if (result.isSuccess) R.string.import_completed else R.string.import_failed),
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (result.isSuccess) 
@@ -616,7 +618,10 @@ private fun ImportResultDialog(
                     )
                     
                     IconButton(onClick = onDismiss) {
-                        Text("✕", style = MaterialTheme.typography.titleLarge)
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
                     }
                 }
                 
@@ -644,7 +649,7 @@ private fun ImportResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Total processed:")
+                            Text(stringResource(R.string.import_total_processed_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
                             Text("${result.totalRecordsProcessed}")
                         }
                         
@@ -652,7 +657,7 @@ private fun ImportResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Successfully imported:")
+                            Text(stringResource(R.string.import_successfully_imported_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
                             Text("${result.recordsImported}")
                         }
                         
@@ -660,7 +665,7 @@ private fun ImportResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Skipped:")
+                            Text(stringResource(R.string.import_skipped_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
                             Text("${result.recordsSkipped}")
                         }
                         
@@ -668,7 +673,7 @@ private fun ImportResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Failed:")
+                            Text(stringResource(R.string.import_failed_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
                             Text("${result.recordsFailed}")
                         }
                         
@@ -676,16 +681,21 @@ private fun ImportResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Success rate:")
-                            Text("${String.format(Locale.US, "%.1f", result.successRate)}%")
+                            Text(stringResource(R.string.import_success_rate_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
+                            Text(
+                                stringResource(
+                                    R.string.percentage_value_format,
+                                    String.format(Locale.getDefault(), "%.1f", result.successRate)
+                                )
+                            )
                         }
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Duration:")
-                            Text("${result.importDuration}ms")
+                            Text(stringResource(R.string.import_duration_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
+                            Text(stringResource(R.string.duration_ms_format, result.importDuration))
                         }
                     }
                 }
@@ -813,7 +823,7 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
                                         tableName = "import",
                                         rowNumber = 0,
                                         fieldName = null,
-                                        errorMessage = "Import failed: ${error.message}",
+                                        errorMessage = context.getString(R.string.import_failed_with_reason, error.message.orEmpty()),
                                         severity = com.offlinelabs.nutcracker.data.import.ErrorSeverity.FATAL
                                     )
                                 ),
