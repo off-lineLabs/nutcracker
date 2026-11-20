@@ -35,4 +35,19 @@ interface MealDao {
 
     @Query("DELETE FROM meals")
     suspend fun deleteAllMeals() // Useful for clearing all meals if needed
+
+    @Query("SELECT * FROM meals WHERE id = :mealId")
+    suspend fun getMealByIdSync(mealId: Long): Meal? // One-shot lookup, ignores isVisible
+
+    /**
+     * Removes placeholder meals (id <= 0) that nothing references any more.
+     * Used by the legacy recipe check-in repair; never deletes meals that have history.
+     */
+    @Query("""
+        DELETE FROM meals WHERE id <= 0
+        AND id NOT IN (SELECT mealId FROM meal_check_ins)
+        AND id NOT IN (SELECT mealId FROM recipe_ingredients)
+        AND id NOT IN (SELECT mealId FROM meal_tags)
+    """)
+    suspend fun deleteUnreferencedInvalidMeals(): Int
 }

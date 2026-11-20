@@ -1383,12 +1383,11 @@ fun DashboardScreen(
                 // Calculate nutrition and log recipe
                 coroutineScope.launch {
                     try {
-                        val recipeMeal = foodLogRepository.calculateRecipeNutrition(recipe.id, 1.0)
-                        if (recipeMeal != null) {
-                            // Create a temporary meal entry for the check-in
-                            val tempMealId = foodLogRepository.insertMeal(recipeMeal)
+                        // Each log gets its own hidden nutrition snapshot meal
+                        val snapshotMealId = foodLogRepository.createRecipeSnapshotMeal(recipe.id)
+                        if (snapshotMealId != null) {
                             val mealCheckIn = MealCheckIn.create(
-                                mealId = tempMealId,
+                                mealId = snapshotMealId,
                                 servingSize = 1.0,
                                 notes = "recipe:${recipe.id}"
                             )

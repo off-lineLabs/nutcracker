@@ -36,6 +36,9 @@ interface MealCheckInDao {
     @Query("SELECT * FROM meal_check_ins ORDER BY checkInDateTime DESC")
     fun getAllMealCheckIns(): Flow<List<MealCheckIn>>
 
+    @Query("SELECT * FROM meal_check_ins WHERE mealId <= 0 ORDER BY id ASC")
+    suspend fun getCheckInsWithInvalidMeal(): List<MealCheckIn>
+
     // Complex query to get daily calorie consumption with meal details
     @Transaction
     @Query("""

@@ -27,7 +27,6 @@ import com.offlinelabs.nutcracker.data.service.ImageDownloadService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.first
 
 /**
  * Interface for data operations.
@@ -107,6 +106,12 @@ interface FoodLogRepository {
 
     // Recipe nutrition calculation
     suspend fun calculateRecipeNutrition(recipeId: Long, servingMultiplier: Double = 1.0): Meal?
+
+    /**
+     * Inserts a NEW hidden meal holding a nutrition snapshot of the recipe and returns its id.
+     * Returns null if the recipe is missing or has no ingredients.
+     */
+    suspend fun createRecipeSnapshotMeal(recipeId: Long, servingMultiplier: Double = 1.0): Long?
 
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
@@ -263,7 +268,7 @@ class OfflineFoodLogRepository(
         
         // Fetch all meals
         val meals = mealIds.mapNotNull { mealId ->
-            mealDao.getMealById(mealId).first()
+            mealDao.getMealByIdSync(mealId)
         }
 
         // Calculate nutrition for each ingredient
@@ -308,11 +313,11 @@ class OfflineFoodLogRepository(
         totalIron *= servingMultiplier
 
         // Get recipe name
-        val recipe = recipeDao.getRecipeById(recipeId).first() ?: return null
+        val recipe = recipeDao.getRecipeByIdSync(recipeId) ?: return null
 
         // Create a temporary Meal object representing the recipe
         return Meal(
-            id = -1, // Not a real meal, just for nutrition calculation
+            id = 0, // Not persisted yet; insert generates a fresh id
             name = recipe.name,
             brand = null,
             calories = totalCalories.toInt(),
@@ -324,7 +329,7 @@ class OfflineFoodLogRepository(
             servingSize_value = servingMultiplier,
             servingSize_unit = ServingSizeUnit.SERVINGS,
             notes = "recipe:${recipeId}", // Store recipe ID in notes for reference
-            isVisible = true,
+            isVisible = false, // Snapshot, never shown in the meal library
             saturatedFat_g = if (totalSaturatedFat > 0) totalSaturatedFat else null,
             sugars_g = if (totalSugars > 0) totalSugars else null,
             cholesterol_mg = if (totalCholesterol > 0) totalCholesterol else null,
@@ -332,6 +337,11 @@ class OfflineFoodLogRepository(
             calcium_mg = if (totalCalcium > 0) totalCalcium else null,
             iron_mg = if (totalIron > 0) totalIron else null
         )
+    }
+
+    override suspend fun createRecipeSnapshotMeal(recipeId: Long, servingMultiplier: Double): Long? {
+        val snapshot = calculateRecipeNutrition(recipeId, servingMultiplier) ?: return null
+        return mealDao.insertMeal(snapshot.copy(id = 0, isVisible = false))
     }
 
     // Combined operations for dashboard

@@ -13,10 +13,18 @@ import com.offlinelabs.nutcracker.data.service.ImageDownloadService
 import com.offlinelabs.nutcracker.data.service.OpenFoodFactsService
 import com.offlinelabs.nutcracker.data.service.OpenFoodFactsApi
 import com.offlinelabs.nutcracker.util.logger.AppLogger
+import com.offlinelabs.nutcracker.data.repair.LegacyRecipeRepair
+import com.offlinelabs.nutcracker.data.repair.RoomLegacyRecipeRepairStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class FoodLogApplication : Application() {
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
     
@@ -74,6 +82,8 @@ class FoodLogApplication : Application() {
         
         // Create .nomedia files to hide app images from gallery
         createNoMediaFiles()
+
+        repairLegacyRecipeCheckIns()
         
         // Log the current locale state for debugging
         val storedLocales = AppCompatDelegate.getApplicationLocales()
@@ -81,6 +91,24 @@ class FoodLogApplication : Application() {
         AppLogger.d("FoodLogApplication", "System Locale.getDefault(): ${java.util.Locale.getDefault().toLanguageTag()}")
     }
     
+    /**
+     * One-time-per-start, idempotent repair of recipe check-ins that shared the stray meal id -1.
+     * Runs off the main thread; failures are logged and never crash startup.
+     */
+    private fun repairLegacyRecipeCheckIns() {
+        appScope.launch {
+            try {
+                val store = RoomLegacyRecipeRepairStore(database, foodLogRepository)
+                val repaired = LegacyRecipeRepair(store).repairLegacyRecipeCheckIns()
+                if (repaired > 0) {
+                    AppLogger.i("FoodLogApplication", "Repaired $repaired legacy recipe check-ins")
+                }
+            } catch (e: Exception) {
+                AppLogger.e("FoodLogApplication", "Legacy recipe check-in repair failed", e)
+            }
+        }
+    }
+
     /**
      * Creates .nomedia files in image directories to prevent them from appearing in the gallery.
      * This works for both new installs and existing users who already have images.
