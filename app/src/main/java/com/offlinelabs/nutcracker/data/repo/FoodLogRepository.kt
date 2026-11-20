@@ -12,6 +12,8 @@ import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
 import com.offlinelabs.nutcracker.data.dao.DailyNutritionEntry
 import com.offlinelabs.nutcracker.data.dao.DailyExerciseEntry
+import com.offlinelabs.nutcracker.data.dao.DailyExerciseCaloriesRow
+import com.offlinelabs.nutcracker.data.dao.DailyFoodTotalsRow
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
@@ -116,6 +118,10 @@ interface FoodLogRepository {
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
     fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true, includeTEFBonus: Boolean = false): Flow<DailyTotals?>
+
+    // Analytics range queries (inclusive yyyy-MM-dd bounds, one row per date that has data)
+    fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>>
+    fun getDailyExerciseCaloriesInRange(startDate: String, endDate: String): Flow<List<DailyExerciseCaloriesRow>>
 }
 
 /**
@@ -204,6 +210,10 @@ class OfflineFoodLogRepository(
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
+    override fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>> =
+        mealCheckInDao.getDailyFoodTotalsInRange(startDate, endDate)
+    override fun getDailyExerciseCaloriesInRange(startDate: String, endDate: String): Flow<List<DailyExerciseCaloriesRow>> =
+        exerciseLogDao.getDailyExerciseCaloriesInRange(startDate, endDate)
 
     // Pill operations
     override fun getAllPills(): Flow<List<Pill>> = pillDao.getAllPills()

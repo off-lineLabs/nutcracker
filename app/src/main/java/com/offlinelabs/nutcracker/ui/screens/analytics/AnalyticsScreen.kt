@@ -57,8 +57,6 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import com.offlinelabs.nutcracker.FoodLogApplication
-import com.offlinelabs.nutcracker.data.dao.DailyTotals
-import com.offlinelabs.nutcracker.data.model.UserGoal
 import com.offlinelabs.nutcracker.ui.components.ExerciseToggle
 import com.offlinelabs.nutcracker.ui.components.TEFToggle
 import com.offlinelabs.nutcracker.ui.theme.*
@@ -67,8 +65,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
-import java.time.DayOfWeek
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle as JavaTextStyle
 import java.util.Locale
 
@@ -84,32 +80,6 @@ enum class TimePeriod {
     WEEKS,
     MONTHS
 }
-
-// Data classes for different time periods
-data class DayData(
-    val date: LocalDate,
-    val calories: Double
-)
-
-data class WeekData(
-    val weekStart: LocalDate,
-    val weekEnd: LocalDate,
-    val calories: Double,
-    val weekLabel: String
-)
-
-data class MonthData(
-    val monthStart: LocalDate,
-    val monthEnd: LocalDate,
-    val calories: Double,
-    val monthLabel: String
-)
-
-data class SelectedPeriodData(
-    val period: TimePeriod,
-    val calories: Double,
-    val date: LocalDate
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -435,161 +405,19 @@ fun TimePeriodTabButton(
     }
 }
 
-// Helper functions for time period data
-fun generateDayData(last7Days: List<LocalDate>, dailyCalories: Map<LocalDate, Double>): List<DayData> {
-    return last7Days.map { date ->
-        DayData(
-            date = date,
-            calories = dailyCalories[date] ?: 0.0
-        )
-    }
-}
-
-fun generateWeekData(dailyCalories: Map<LocalDate, Double>): List<WeekData> {
-    val weeks = mutableListOf<WeekData>()
-    val sortedDates = dailyCalories.keys.sorted()
-    
-    if (sortedDates.isEmpty()) return weeks
-    
-    // Group dates by week (Monday to Sunday)
-    val weekGroups = mutableMapOf<String, MutableList<LocalDate>>()
-    
-    for (date in sortedDates) {
-        // Get Monday of the week
-        val monday = date.with(DayOfWeek.MONDAY)
-        val weekKey = monday.toString()
-        
-        weekGroups.getOrPut(weekKey) { mutableListOf() }.add(date)
-    }
-    
-    // Convert to WeekData
-    weekGroups.entries.sortedBy { it.key }.forEach { (_, dates) ->
-        val weekStart = dates.minOrNull() ?: return@forEach
-        val weekEnd = dates.maxOrNull() ?: return@forEach
-        val weekCalories = dates.sumOf { dailyCalories[it] ?: 0.0 }
-        
-        // Format: "29/09 - 05/10"
-        val startStr = "${weekStart.dayOfMonth.toString().padStart(2, '0')}/${weekStart.monthValue.toString().padStart(2, '0')}"
-        val endStr = "${weekEnd.dayOfMonth.toString().padStart(2, '0')}/${weekEnd.monthValue.toString().padStart(2, '0')}"
-        
-        weeks.add(
-            WeekData(
-                weekStart = weekStart,
-                weekEnd = weekEnd,
-                calories = weekCalories,
-                weekLabel = "$startStr - $endStr"
-            )
-        )
-    }
-    
-    return weeks.takeLast(7) // Return last 7 weeks
-}
-
-fun generateMonthData(dailyCalories: Map<LocalDate, Double>): List<MonthData> {
-    val months = mutableListOf<MonthData>()
-    val sortedDates = dailyCalories.keys.sorted()
-    
-    if (sortedDates.isEmpty()) return months
-    
-    var currentMonth = sortedDates.first().month
-    var currentYear = sortedDates.first().year
-    var monthStart = sortedDates.first()
-    var monthEnd = monthStart
-    var monthCalories = 0.0
-    
-    for (date in sortedDates) {
-        if (date.month == currentMonth && date.year == currentYear) {
-            monthEnd = date
-            monthCalories += dailyCalories[date] ?: 0.0
-        } else {
-            // Save previous month
-            months.add(
-                MonthData(
-                    monthStart = monthStart,
-                    monthEnd = monthEnd,
-                    calories = monthCalories,
-                    monthLabel = "${monthStart.month.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())} ${monthStart.year}"
-                )
-            )
-            
-            // Start new month
-            currentMonth = date.month
-            currentYear = date.year
-            monthStart = date
-            monthEnd = date
-            monthCalories = dailyCalories[date] ?: 0.0
-        }
-    }
-    
-    // Add the last month
-    months.add(
-        MonthData(
-            monthStart = monthStart,
-            monthEnd = monthEnd,
-            calories = monthCalories,
-            monthLabel = "${monthStart.month.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())} ${monthStart.year}"
-        )
-    )
-    
-    return months.takeLast(7) // Return last 7 months
-}
-
 @Composable
 fun NutritionAnalyticsContent(
     timePeriod: TimePeriod = TimePeriod.DAYS
 ) {
-    // State for selected bar
-    var selectedBarIndex by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
-    
-    // State for toggles
-    var includeExerciseCalories by remember { mutableStateOf(false) }
-    var includeTEFBonus by remember { mutableStateOf(false) }
-    
-    // State for data
-    var dailyCalories by remember { mutableStateOf<Map<LocalDate, Double>>(emptyMap()) }
-    var userGoal by remember { mutableStateOf(UserGoal.default()) }
-    
-    // Get last 7 days
-    val last7Days = remember {
-        (0..6).map { LocalDate.now().minusDays(it.toLong()) }.reversed()
+    val scope = rememberCoroutineScope()
+    val holder = remember(foodLogRepository) {
+        AnalyticsStateHolder(foodLogRepository, scope, initialPeriod = timePeriod)
     }
-    
-    // Load user goal
-    LaunchedEffect(foodLogRepository) {
-        foodLogRepository.getUserGoal().collectLatest { goal ->
-            userGoal = goal ?: UserGoal.default()
-        }
-    }
-    
-    // Load data for all 7 days
-    LaunchedEffect(foodLogRepository, includeExerciseCalories, includeTEFBonus) {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        
-        // Collect all flows simultaneously
-        kotlinx.coroutines.flow.combine(
-            last7Days.map { date ->
-                val dateString = date.format(dateFormatter)
-                if (includeExerciseCalories || includeTEFBonus) {
-                    foodLogRepository.getDailyCombinedTotals(
-                        dateString, 
-                        includeExerciseCalories, 
-                        includeTEFBonus
-                    )
-                } else {
-                    foodLogRepository.getDailyNutrientTotals(dateString)
-                }
-            }
-        ) { totalsArray ->
-            // Map each total to its corresponding date
-            last7Days.mapIndexed { index, date ->
-                date to (totalsArray[index]?.totalCalories ?: 0.0)
-            }.toMap()
-        }.collectLatest { caloriesMap ->
-            dailyCalories = caloriesMap
-        }
-    }
+    LaunchedEffect(timePeriod) { holder.setPeriod(timePeriod) }
+    val uiState by holder.state.collectAsState()
+    val summary = uiState.summary
     
     LazyColumn(
         modifier = Modifier
@@ -599,36 +427,17 @@ fun NutritionAnalyticsContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            // Bar Chart - now supports different time periods
-            when (timePeriod) {
-                TimePeriod.DAYS -> {
-                    val dayData = generateDayData(last7Days, dailyCalories)
-                    DayCaloriesBarChart(
-                        dayData = dayData,
-                        calorieGoal = userGoal.caloriesGoal.toDouble(),
-                        timePeriod = timePeriod,
-                        onBarSelected = { selectedBarIndex = it }
-                    )
-                }
-                TimePeriod.WEEKS -> {
-                    val weekData = generateWeekData(dailyCalories)
-                    WeekCaloriesBarChart(
-                        weekData = weekData,
-                        calorieGoal = userGoal.caloriesGoal.toDouble() * 7, // Weekly goal
-                        timePeriod = timePeriod,
-                        onBarSelected = { selectedBarIndex = it }
-                    )
-                }
-                TimePeriod.MONTHS -> {
-                    val monthData = generateMonthData(dailyCalories)
-                    MonthCaloriesBarChart(
-                        monthData = monthData,
-                        calorieGoal = userGoal.caloriesGoal.toDouble() * 30, // Monthly goal (approximate)
-                        timePeriod = timePeriod,
-                        onBarSelected = { selectedBarIndex = it }
-                    )
-                }
-            }
+            // One bar per bucket: avg net kcal per logged day (the day's net for DAYS)
+            CaloriesBarChartImpl(
+                data = uiState.buckets.map { it.stats.avgNetPerLoggedDay ?: 0.0 },
+                labels = uiState.buckets.map {
+                    if (uiState.period == TimePeriod.DAYS) it.label.take(1).uppercase() else it.label
+                },
+                calorieGoal = uiState.goals.kcal.toDouble(),
+                timePeriod = timePeriod,
+                selectedIndex = uiState.selectedBucketIndex,
+                onBarSelected = { holder.selectBucket(it) }
+            )
         }
         
         item {
@@ -638,52 +447,19 @@ fun NutritionAnalyticsContent(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Calculate exercise and TEF totals for display
-                var totalExerciseCalories by remember { mutableStateOf(0.0) }
-                var totalTEFCalories by remember { mutableStateOf(0.0) }
-                
-                LaunchedEffect(foodLogRepository, last7Days) {
-                    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                    
-                    // Collect exercise calories for all days
-                    val exerciseFlows = last7Days.map { date ->
-                        foodLogRepository.getDailyExerciseCalories(date.format(dateFormatter))
-                    }
-                    
-                    // Collect TEF calories for all days
-                    val tefFlows = last7Days.map { date ->
-                        foodLogRepository.getDailyNutrientTotals(date.format(dateFormatter))
-                    }
-                    
-                    kotlinx.coroutines.flow.combine(
-                        exerciseFlows + tefFlows
-                    ) { values ->
-                        @Suppress("UNCHECKED_CAST")
-                        val exerciseValues = values.take(7) as List<Double>
-                        @Suppress("UNCHECKED_CAST")
-                        val tefTotals = values.drop(7) as List<DailyTotals?>
-                        
-                        val exerciseSum = exerciseValues.sum()
-                        val tefSum = tefTotals.sumOf { totals ->
-                            totals?.let { com.offlinelabs.nutcracker.utils.TEFCalculator.calculateTEFBonus(it) } ?: 0.0
-                        }
-                        
-                        exerciseSum to tefSum
-                    }.collectLatest { (exerciseSum, tefSum) ->
-                        totalExerciseCalories = exerciseSum
-                        totalTEFCalories = tefSum
-                    }
-                }
+                // Exercise / TEF kcal of the logged days in the current summary span
+                val totalExerciseCalories = summary?.stats?.exerciseKcal ?: 0.0
+                val totalTEFCalories = summary?.stats?.tefKcal ?: 0.0
                 
                 ExerciseToggle(
-                    isEnabled = includeExerciseCalories,
-                    onToggle = { includeExerciseCalories = !includeExerciseCalories },
+                    isEnabled = uiState.includeExercise,
+                    onToggle = { holder.setIncludeExercise(!uiState.includeExercise) },
                     exerciseCalories = -totalExerciseCalories // Negative since it removes calories
                 )
                 
                 TEFToggle(
-                    isEnabled = includeTEFBonus,
-                    onToggle = { includeTEFBonus = !includeTEFBonus },
+                    isEnabled = uiState.includeTef,
+                    onToggle = { holder.setIncludeTef(!uiState.includeTef) },
                     tefCalories = -totalTEFCalories // Negative since it removes calories
                 )
             }
@@ -705,99 +481,10 @@ fun NutritionAnalyticsContent(
         }
         
         item {
-            // Stats Cards - now show data for selected period
-            val selectedPeriodData = when (timePeriod) {
-                TimePeriod.DAYS -> {
-                    val dayData = generateDayData(last7Days, dailyCalories)
-                    val selectedIndex = selectedBarIndex ?: (dayData.size - 1).coerceAtLeast(0)
-                    dayData.getOrNull(selectedIndex)?.let { 
-                        SelectedPeriodData(
-                            period = TimePeriod.DAYS,
-                            calories = it.calories,
-                            date = it.date
-                        )
-                    }
-                }
-                TimePeriod.WEEKS -> {
-                    val weekData = generateWeekData(dailyCalories)
-                    val selectedIndex = selectedBarIndex ?: (weekData.size - 1).coerceAtLeast(0)
-                    weekData.getOrNull(selectedIndex)?.let {
-                        SelectedPeriodData(
-                            period = TimePeriod.WEEKS,
-                            calories = it.calories,
-                            date = it.weekStart
-                        )
-                    }
-                }
-                TimePeriod.MONTHS -> {
-                    val monthData = generateMonthData(dailyCalories)
-                    val selectedIndex = selectedBarIndex ?: (monthData.size - 1).coerceAtLeast(0)
-                    monthData.getOrNull(selectedIndex)?.let {
-                        SelectedPeriodData(
-                            period = TimePeriod.MONTHS,
-                            calories = it.calories,
-                            date = it.monthStart
-                        )
-                    }
-                }
-            }
-            
-            StatsCards(
-                dailyCalories = dailyCalories,
-                calorieGoal = userGoal.caloriesGoal.toDouble(),
-                selectedPeriodData = selectedPeriodData
-            )
+            // Stats cards for the selected bucket (or the whole range when nothing is selected)
+            StatsCards(stats = summary?.stats)
         }
     }
-}
-
-// Chart functions for different time periods
-@Composable
-fun DayCaloriesBarChart(
-    dayData: List<DayData>,
-    calorieGoal: Double,
-    timePeriod: TimePeriod,
-    onBarSelected: (Int?) -> Unit = {}
-) {
-    CaloriesBarChartImpl(
-        data = dayData.map { it.calories },
-        labels = dayData.map { it.date.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()).take(1).uppercase() },
-        calorieGoal = calorieGoal,
-        timePeriod = timePeriod,
-        onBarSelected = onBarSelected
-    )
-}
-
-@Composable
-fun WeekCaloriesBarChart(
-    weekData: List<WeekData>,
-    calorieGoal: Double,
-    timePeriod: TimePeriod,
-    onBarSelected: (Int?) -> Unit = {}
-) {
-    CaloriesBarChartImpl(
-        data = weekData.map { it.calories },
-        labels = weekData.map { it.weekLabel },
-        calorieGoal = calorieGoal,
-        timePeriod = timePeriod,
-        onBarSelected = onBarSelected
-    )
-}
-
-@Composable
-fun MonthCaloriesBarChart(
-    monthData: List<MonthData>,
-    calorieGoal: Double,
-    timePeriod: TimePeriod,
-    onBarSelected: (Int?) -> Unit = {}
-) {
-    CaloriesBarChartImpl(
-        data = monthData.map { it.calories },
-        labels = monthData.map { it.monthLabel },
-        calorieGoal = calorieGoal,
-        timePeriod = timePeriod,
-        onBarSelected = onBarSelected
-    )
 }
 
 @Composable
@@ -806,6 +493,7 @@ fun CaloriesBarChartImpl(
     labels: List<String>,
     calorieGoal: Double,
     timePeriod: TimePeriod,
+    selectedIndex: Int?,
     onBarSelected: (Int?) -> Unit = {}
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -816,7 +504,7 @@ fun CaloriesBarChartImpl(
     val selectedBarColor = BrandGoldLight
     val goalLineColor = BrandRed.copy(alpha = 0.7f)
     
-    var selectedDayIndex by remember { mutableStateOf<Int?>(data.size - 1) } // Default to last bar
+    val selectedDayIndex = selectedIndex // Controlled by the state holder (defaults to last bar)
     
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -860,7 +548,7 @@ fun CaloriesBarChartImpl(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
+                    .pointerInput(data.size, selectedIndex) {
                         detectTapGestures { offset ->
                             // Calculate which bar was tapped
                             val chartWidth = size.width.toFloat()
@@ -870,8 +558,7 @@ fun CaloriesBarChartImpl(
                             data.forEachIndexed { index, _ ->
                                 val x = index * (barWidth + spacing) + spacing / 2
                                 if (offset.x >= x && offset.x <= x + barWidth) {
-                                    selectedDayIndex = if (selectedDayIndex == index) null else index
-                                    onBarSelected(selectedDayIndex)
+                                    onBarSelected(if (selectedDayIndex == index) null else index)
                                 }
                             }
                         }
@@ -1042,23 +729,13 @@ fun CaloriesBarChartImpl(
 
 @Composable
 fun StatsCards(
-    dailyCalories: Map<LocalDate, Double>,
-    calorieGoal: Double,
-    selectedPeriodData: SelectedPeriodData? = null
+    stats: PeriodStats?
 ) {
-    // Use selected period data if available, otherwise use total data
-    val totalCalories = selectedPeriodData?.calories ?: dailyCalories.values.sum()
-    val targetCalories = if (selectedPeriodData != null) {
-        when (selectedPeriodData.period) {
-            TimePeriod.DAYS -> calorieGoal
-            TimePeriod.WEEKS -> calorieGoal * 7
-            TimePeriod.MONTHS -> calorieGoal * 30
-        }
-    } else {
-        calorieGoal * 7 // 7 days
-    }
-    val balance = targetCalories - totalCalories // Inverted: remaining calories (positive = under goal, negative = over goal)
-    val averageBalance = if (selectedPeriodData != null) balance else balance / 7
+    // Net kcal (== consumed when no toggle is on) over the logged days only
+    val totalCalories = stats?.netKcal ?: 0.0
+    // The cards show REMAINING kcal (positive = under goal), the opposite sign of PeriodStats.balanceKcal
+    val balance = -(stats?.balanceKcal ?: 0.0)
+    val averageBalance = -(stats?.avgBalancePerLoggedDay ?: 0.0)
     
     Column(
         modifier = Modifier.fillMaxWidth(),
