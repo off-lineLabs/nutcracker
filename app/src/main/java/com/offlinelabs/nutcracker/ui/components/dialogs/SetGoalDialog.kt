@@ -78,7 +78,7 @@ private class GoalFormState(goal: UserGoal) {
     var protein by mutableIntStateOf(goal.proteinGoal_g)
     var fat by mutableIntStateOf(goal.fatGoal_g)
     var fiber by mutableStateOf(wholeGoalText(goal.fiberGoal_g))
-    var salt by mutableStateOf(saltMgToGramsText(goal.sodiumGoal_mg))
+    var salt by mutableStateOf(wholeGoalText(goal.sodiumGoal_mg))
     var useTef by mutableStateOf(false)
 
     fun buildGoal(id: Int): UserGoal? = buildUserGoal(id, calories, carbs, protein, fat, fiber, salt)
@@ -183,7 +183,7 @@ private fun ColumnScope.SetGoalBody(state: GoalFormState, colors: FormColors) {
 
     Spacer(Modifier.height(12.dp))
 
-    // Fiber (g) and salt (shown in g, stored in mg like the meal form and dashboard).
+    // Fiber (g) and salt (mg).
     FormSection {
         NumericInputRow(
             label = stringResource(R.string.fiber_label),
@@ -197,7 +197,7 @@ private fun ColumnScope.SetGoalBody(state: GoalFormState, colors: FormColors) {
             label = stringResource(R.string.sodium_label),
             value = state.salt,
             onValueChange = { state.salt = it },
-            unit = stringResource(R.string.unit_g),
+            unit = stringResource(R.string.unit_mg),
             errorText = saltError
         )
     }

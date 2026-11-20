@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import com.offlinelabs.nutcracker.ui.components.form.formatSaltMg
 import androidx.compose.runtime.*
 import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.Alignment
@@ -296,7 +297,7 @@ private fun BasicNutritionCard(meal: Meal, onEdit: (Meal) -> Unit) {
             NutritionRow(stringResource(R.string.protein_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.protein_g)), Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             NutritionRow(stringResource(R.string.fat_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.fat_g)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             NutritionRow(stringResource(R.string.fiber_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.fiber_g)), Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
-            NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", meal.sodium_mg)), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+            NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, formatSaltMg(meal.sodium_mg, Locale.getDefault())), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
         }
     }
 }

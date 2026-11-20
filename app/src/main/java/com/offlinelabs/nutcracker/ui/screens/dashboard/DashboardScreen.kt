@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
+import com.offlinelabs.nutcracker.ui.components.form.formatSaltMg
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,8 +111,6 @@ import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
 import android.content.Context
 
-/** Sodium is stored in milligrams but displayed in grams. */
-private const val MILLIGRAMS_PER_GRAM = 1000.0
 
 @Composable
 fun NutrientProgressDisplay(
@@ -121,8 +120,10 @@ fun NutrientProgressDisplay(
     unit: String,
     labelColor: Color,
     valueColor: Color,
-    goalColor: Color
+    goalColor: Color,
+    wholeNumbers: Boolean = false
 ) {
+    val locale = Locale.getDefault()
     val proteinFiberColor = ProteinFiberColor
     val fiberLabel = stringResource(R.string.fiber_label)
     val isFiber = nutrientName == fiberLabel
@@ -147,11 +148,11 @@ fun NutrientProgressDisplay(
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = finalValueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
-                    append(String.format(Locale.getDefault(), "%.1f", consumed))
+                    append(if (wholeNumbers) formatSaltMg(consumed, locale) else String.format(locale, "%.1f", consumed))
                 }
                 withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                     append(" / ")
-                    append(String.format(Locale.getDefault(), "%.1f", goal))
+                    append(if (wholeNumbers) formatSaltMg(goal, locale) else String.format(locale, "%.1f", goal))
                     append(" $unit")
                 }
             },
@@ -372,12 +373,13 @@ private fun NutrientBox(
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
-            consumed = (totals?.totalSodium ?: 0.0) / MILLIGRAMS_PER_GRAM,
-            goal = goals.sodiumGoal_mg.toDouble() / MILLIGRAMS_PER_GRAM,
-            unit = gramsUnit,
+            consumed = totals?.totalSodium ?: 0.0,
+            goal = goals.sodiumGoal_mg.toDouble(),
+            unit = stringResource(R.string.unit_mg),
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
-            goalColor = appTextSecondaryColor()
+            goalColor = appTextSecondaryColor(),
+            wholeNumbers = true
         )
     }
 }

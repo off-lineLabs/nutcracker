@@ -12,13 +12,8 @@ import kotlin.math.roundToInt
  * Pure logic behind SetGoalDialog, kept free of Compose so it can be unit tested.
  *
  * The salt goal is stored in milligrams (`UserGoal.sodiumGoal_mg`, like `Meal.sodium_mg`, which
- * holds salt). The dialog shows and edits it in grams, so it matches the dashboard and meal form.
+ * holds salt). The dialog shows and edits it in whole milligrams, like the rest of the app.
  */
-
-const val MILLIGRAMS_PER_GRAM = 1000.0
-
-/** Most fraction digits shown for the salt goal in grams (1 mg resolution). */
-const val SALT_GOAL_FRACTION_DIGITS = 3
 
 /** Calories goal text: required and, once rounded to a whole number, greater than zero. */
 fun validateCaloriesGoal(text: String): FieldError? {
@@ -31,20 +26,12 @@ fun validateCaloriesGoal(text: String): FieldError? {
 fun validateFiberGoal(text: String): FieldError? =
     validateDecimal(text, required = true, allowZero = true)
 
-/** Salt goal text (grams): required and not negative. */
+/** Salt goal text (mg): required and not negative. */
 fun validateSaltGoal(text: String): FieldError? =
     validateDecimal(text, required = true, allowZero = true)
 
 /** Whole-number grams/kcal for a stored `Int` goal; accepts `,` or `.`. Null if not a number. */
 fun parseWholeGoal(text: String): Int? = parseDecimal(text)?.roundToInt()
-
-/** Salt goal text in grams to the stored milligrams (rounded to a whole mg). Null if not a number. */
-fun saltGramsTextToMg(text: String): Int? =
-    parseDecimal(text)?.let { (it * MILLIGRAMS_PER_GRAM).roundToInt() }
-
-/** Stored salt goal in milligrams to the text shown in the dialog (grams, locale separator). */
-fun saltMgToGramsText(mg: Int, locale: Locale = Locale.getDefault()): String =
-    formatDecimal(mg / MILLIGRAMS_PER_GRAM, locale, SALT_GOAL_FRACTION_DIGITS)
 
 /** Whole goal (kcal or g) as shown in an input. */
 fun wholeGoalText(value: Int, locale: Locale = Locale.getDefault()): String =
@@ -67,9 +54,9 @@ fun buildUserGoal(
     proteinGrams: Int,
     fatGrams: Int,
     fiber: String,
-    saltGrams: String
+    saltMg: String
 ): UserGoal? {
-    if (!isGoalInputValid(calories, fiber, saltGrams)) return null
+    if (!isGoalInputValid(calories, fiber, saltMg)) return null
     return UserGoal(
         id = id,
         caloriesGoal = parseWholeGoal(calories) ?: return null,
@@ -77,6 +64,6 @@ fun buildUserGoal(
         proteinGoal_g = proteinGrams.coerceAtLeast(0),
         fatGoal_g = fatGrams.coerceAtLeast(0),
         fiberGoal_g = parseWholeGoal(fiber) ?: return null,
-        sodiumGoal_mg = saltGramsTextToMg(saltGrams) ?: return null
+        sodiumGoal_mg = parseWholeGoal(saltMg) ?: return null
     )
 }

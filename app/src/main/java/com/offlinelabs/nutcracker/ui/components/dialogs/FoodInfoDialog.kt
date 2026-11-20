@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import com.offlinelabs.nutcracker.ui.components.form.formatSaltMg
 import androidx.compose.runtime.*
 import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.Alignment
@@ -242,7 +243,7 @@ private fun NutritionInfoCard(nutrition: com.offlinelabs.nutcracker.data.model.N
                 NutritionRow(stringResource(R.string.protein_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.sodium?.let { 
-                NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, formatSaltMg(it, Locale.getDefault())), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
             }
             nutrition.fiber?.let { 
                 NutritionRow(stringResource(R.string.fiber_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)

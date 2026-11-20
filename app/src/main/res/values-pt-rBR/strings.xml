@@ -460,6 +460,7 @@
     <!-- Generic units and value formats -->
     <string name="unit_kcal">kcal</string>
     <string name="unit_g">g</string>
+    <string name="unit_mg">mg</string>
 
     <!-- Value-entry form kit -->
     <string name="form_error_required">Obrigatório</string>
@@ -474,7 +475,7 @@
     <string name="kcal_value_format">%1$s kcal</string>
     <string name="kcal_per_100g_format">%1$d kcal/100g</string>
     <string name="grams_value_format">%1$sg</string>
-    <string name="milligrams_value_format">%1$smg</string>
+    <string name="milligrams_value_format">%1$s mg</string>
     <string name="kg_value_format">%1$s kg</string>
     <string name="percentage_value_format">%1$s%%</string>
     <string name="duration_ms_format">%1$d ms</string>

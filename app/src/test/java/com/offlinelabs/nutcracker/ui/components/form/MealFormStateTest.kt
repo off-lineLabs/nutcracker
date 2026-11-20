@@ -78,27 +78,27 @@ class MealFormStateTest {
         val state = newForm().apply {
             onValueChange(MealField.Protein, "12,5")
             onValueChange(MealField.Carbs, "12.5")
-            onValueChange(MealField.Salt, "1,5")
+            onValueChange(MealField.Salt, "12,5")
             onValueChange(MealField.Quantity, "2,5")
         }
         val result = state.toResult()!!
         assertEquals(12.5, result.proteinG, 1e-9)
         assertEquals(12.5, result.carbohydratesG, 1e-9)
-        assertEquals(1500.0, result.sodiumMg, 0.0) // salt typed in g, stored in mg
+        assertEquals(12.5, result.sodiumMg, 1e-9) // salt typed and stored in mg
         assertEquals(2.5, result.servingSizeValue, 1e-9)
     }
 
-    // ----- salt (typed in g, stored in mg as Meal.sodium_mg) -----
+    // ----- salt (typed and stored in mg as Meal.sodium_mg) -----
 
     @Test
-    fun salt_typedGramsSaveAsMilligrams() {
+    fun salt_typedMilligramsSaveAsIs() {
         fun saltFor(text: String) = newForm().apply { onValueChange(MealField.Salt, text) }.toResult()!!.sodiumMg
-        assertEquals(1500.0, saltFor("1,5"), 0.0)
-        assertEquals(1500.0, saltFor("1.5"), 0.0)
-        assertEquals(1234.0, saltFor("1,234"), 0.0)
-        assertEquals(400.0, saltFor("0.4"), 0.0)
+        assertEquals(1500.0, saltFor("1500"), 0.0)
+        assertEquals(12.5, saltFor("12,5"), 1e-9)
+        assertEquals(12.5, saltFor("12.5"), 1e-9)
+        assertEquals(400.0, saltFor("400"), 0.0)
         assertEquals(0.0, saltFor(""), 0.0)
-        assertEquals(1500.0, newForm().apply { onValueChange(MealField.Salt, "1,5") }.toResult()!!.toNewMeal().sodium_mg, 0.0)
+        assertEquals(1500.0, newForm().apply { onValueChange(MealField.Salt, "1500") }.toResult()!!.toNewMeal().sodium_mg, 0.0)
     }
 
     @Test
@@ -112,12 +112,13 @@ class MealFormStateTest {
     }
 
     @Test
-    fun salt_prefillsMilligramsAsGramsWithThreeDecimals() {
-        val salty = meal.copy(sodium_mg = 1234.0)
-        assertEquals("1.234", MealFormState(salty, en).text(MealField.Salt))
-        assertEquals("1,234", MealFormState(salty, ptBR).text(MealField.Salt))
-        assertEquals("0.4", MealFormState(meal, en).text(MealField.Salt))
-        assertEquals("0,4", MealFormState(meal, ptBR).text(MealField.Salt))
+    fun salt_prefillsMilligrams() {
+        val salty = meal.copy(sodium_mg = 1500.0)
+        assertEquals("1500", MealFormState(salty, en).text(MealField.Salt))
+        assertEquals("1500", MealFormState(salty, ptBR).text(MealField.Salt))
+        assertEquals("12.5", MealFormState(meal.copy(sodium_mg = 12.5), en).text(MealField.Salt))
+        assertEquals("12,5", MealFormState(meal.copy(sodium_mg = 12.5), ptBR).text(MealField.Salt))
+        assertEquals("400", MealFormState(meal, en).text(MealField.Salt))
         assertEquals("0", MealFormState(meal.copy(sodium_mg = 0.0), en).text(MealField.Salt))
     }
 
@@ -125,14 +126,14 @@ class MealFormStateTest {
     fun salt_untouchedPrefillKeepsExactMilligrams() {
         val precise = meal.copy(sodium_mg = 1234.5678)
         val state = MealFormState(precise, en)
-        assertEquals("1.235", state.text(MealField.Salt))
+        assertEquals("1234.6", state.text(MealField.Salt))
         assertEquals(1234.5678, state.toResult()!!.sodiumMg, 0.0)
         assertEquals(precise, state.toResult()!!.applyTo(precise))
     }
 
     @Test
     fun salt_editedPrefillSavesNewValue() {
-        val state = MealFormState(meal, ptBR).apply { onValueChange(MealField.Salt, "1,5") }
+        val state = MealFormState(meal, ptBR).apply { onValueChange(MealField.Salt, "1500") }
         assertEquals(meal.copy(sodium_mg = 1500.0), state.toResult()!!.applyTo(meal))
     }
 
@@ -141,13 +142,13 @@ class MealFormStateTest {
         val state = MealFormState(meal, en)
         state.onValueChange(MealField.Quantity, "200")
         state.toggleLink()
-        assertEquals("0.8", state.text(MealField.Salt))
+        assertEquals("800", state.text(MealField.Salt))
         assertEquals(800.0, state.toResult()!!.sodiumMg, 0.0)
 
         val pt = MealFormState(meal.copy(sodium_mg = 1234.0), ptBR)
         pt.toggleLink()
         pt.onValueChange(MealField.Quantity, "50")
-        assertEquals("0,617", pt.text(MealField.Salt))
+        assertEquals("617", pt.text(MealField.Salt))
         assertEquals(617.0, pt.toResult()!!.sodiumMg, 0.0)
     }
 
@@ -250,7 +251,7 @@ class MealFormStateTest {
         assertEquals("6", state.text(MealField.Protein))
         assertEquals("4.25", state.text(MealField.Fat))
         assertEquals("1.5", state.text(MealField.Fiber))
-        assertEquals("0.2", state.text(MealField.Salt)) // 400 mg * 0.5 = 200 mg = 0.2 g
+        assertEquals("200", state.text(MealField.Salt)) // 400 mg * 0.5 = 200 mg
 
         val result = state.toResult()!!
         assertEquals(125, result.calories)
@@ -274,7 +275,7 @@ class MealFormStateTest {
         assertEquals("250", state.text(MealField.Calories)) // not linked yet
         state.toggleLink()
         assertEquals("500", state.text(MealField.Calories))
-        assertEquals("0.8", state.text(MealField.Salt))
+        assertEquals("800", state.text(MealField.Salt))
     }
 
     @Test
