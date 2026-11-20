@@ -28,7 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.offlinelabs.nutcracker.FoodLogApplication
 import com.offlinelabs.nutcracker.R
+import com.offlinelabs.nutcracker.data.GoalLinkMode
 import com.offlinelabs.nutcracker.data.model.UserGoal
 import com.offlinelabs.nutcracker.ui.components.CombinedMacroBar
 import com.offlinelabs.nutcracker.ui.components.form.FormColors
@@ -51,7 +54,8 @@ fun SetGoalDialog(
     onDismiss: () -> Unit,
     onSetGoal: (UserGoal) -> Unit
 ) {
-    val state = rememberGoalFormState(currentUserGoal)
+    val settingsManager = (LocalContext.current.applicationContext as FoodLogApplication).settingsManager
+    val state = remember { GoalFormState(currentUserGoal, settingsManager.goalLinkMode) }
     val colors = FormDefaults.colors()
     val goal = state.buildGoal(currentUserGoal.id)
 
@@ -67,12 +71,13 @@ fun SetGoalDialog(
             )
         }
     ) {
-        SetGoalBody(state, colors)
+        SetGoalBody(state, colors, onLinkModeChanged = { settingsManager.goalLinkMode = it })
     }
 }
 
 /** Editable state of the goal form. */
-private class GoalFormState(goal: UserGoal) {
+private class GoalFormState(goal: UserGoal, initialMode: GoalLinkMode = GoalLinkMode.KCAL_TO_MACROS) {
+    var linkMode by mutableStateOf(initialMode)
     var calories by mutableStateOf(wholeGoalText(goal.caloriesGoal))
     var carbs by mutableIntStateOf(goal.carbsGoal_g)
     var protein by mutableIntStateOf(goal.proteinGoal_g)
@@ -81,14 +86,78 @@ private class GoalFormState(goal: UserGoal) {
     var salt by mutableStateOf(wholeGoalText(goal.sodiumGoal_mg))
     var useTef by mutableStateOf(false)
 
+    /**
+     * Macros the ratios come from in Down mode. Updated only when the user drags the bar (and on
+     * open), so typing "2500" doesn't lose the split while passing through "2" and "25".
+     */
+    private var anchor = Triple(goal.carbsGoal_g, goal.proteinGoal_g, goal.fatGoal_g)
+
+    /** Bar scale (kcal) in Up mode; frozen while in that mode so a drag never changes it. */
+    var upBarKcal by mutableIntStateOf(0)
+        private set
+
+    init {
+        // Opening in Up mode keeps the stored kcal; it only follows the macros once the user edits them.
+        freezeUpBarScale()
+    }
+
+    private fun freezeUpBarScale() {
+        upBarKcal = upBarCeilingKcal(actualKcalFromMacros(carbs, protein, fat, useTef))
+    }
+
+    fun actualKcal(): Int = actualKcalFromMacros(carbs, protein, fat, useTef)
+
+    /** Up mode: the calories field mirrors the net kcal of the macros. */
+    fun syncCalories() {
+        if (linkMode == GoalLinkMode.MACROS_TO_KCAL) calories = wholeGoalText(actualKcal())
+    }
+
+    /** Down mode: rescale the macros to the typed calories, keeping the anchor ratios. */
+    fun rescaleMacros() {
+        if (linkMode != GoalLinkMode.KCAL_TO_MACROS || validateCaloriesGoal(calories) != null) return
+        val kcal = parseWholeGoal(calories) ?: return
+        val (c, p, f) = macrosForKcal(kcal, anchor.first, anchor.second, anchor.third, useTef)
+        carbs = c
+        protein = p
+        fat = f
+    }
+
+    fun onCaloriesEdited(text: String) {
+        calories = text
+        rescaleMacros()
+    }
+
+    fun onMacrosDragged(c: Int, p: Int, f: Int) {
+        carbs = c
+        protein = p
+        fat = f
+        anchor = Triple(c, p, f)
+        syncCalories()
+    }
+
+    fun onTefChanged(checked: Boolean) {
+        useTef = checked
+        rescaleMacros()
+        syncCalories()
+    }
+
+    /** Switching to Up sets kcal = Real at once; switching to Down keeps values until the next edit. */
+    fun setMode(mode: GoalLinkMode) {
+        linkMode = mode
+        if (mode == GoalLinkMode.MACROS_TO_KCAL) freezeUpBarScale()
+        syncCalories()
+    }
+
     fun buildGoal(id: Int): UserGoal? = buildUserGoal(id, calories, carbs, protein, fat, fiber, salt)
 }
 
 @Composable
-private fun rememberGoalFormState(goal: UserGoal): GoalFormState = remember { GoalFormState(goal) }
-
-@Composable
-private fun ColumnScope.SetGoalBody(state: GoalFormState, colors: FormColors) {
+private fun ColumnScope.SetGoalBody(
+    state: GoalFormState,
+    colors: FormColors,
+    onLinkModeChanged: (GoalLinkMode) -> Unit = {}
+) {
+    val linkMode = state.linkMode
     val carbsGrams = state.carbs.toDouble()
     val proteinGrams = state.protein.toDouble()
     val fatGrams = state.fat.toDouble()
@@ -120,19 +189,32 @@ private fun ColumnScope.SetGoalBody(state: GoalFormState, colors: FormColors) {
         NumericInputRow(
             label = stringResource(R.string.calories_label),
             value = state.calories,
-            onValueChange = { state.calories = it },
+            onValueChange = state::onCaloriesEdited,
             unit = stringResource(R.string.unit_kcal),
             emphasized = true,
+            readOnly = linkMode == GoalLinkMode.MACROS_TO_KCAL,
             errorText = caloriesError
+        )
+        GoalLinkRow(
+            mode = linkMode,
+            onToggle = {
+                val next = nextLinkMode(linkMode)
+                state.setMode(next)
+                onLinkModeChanged(next)
+            },
+            colors = colors
         )
         // Gross kcal from macros; with TEF, net = gross - TEF bonus.
         val grossKcal = MacroCalculator.calculateKcalFromMacros(carbsGrams, proteinGrams, fatGrams, useTEF = false)
         val actualKcal = if (state.useTef) grossKcal - tefBonus else grossKcal
         val difference = actualKcal - (targetKcal ?: 0)
         val differenceText = if (difference > 0) "+$difference" else "$difference"
+        // In Down mode small gaps are just gram rounding, so don't show a misleading "-2".
+        val hideForRounding = linkMode == GoalLinkMode.KCAL_TO_MACROS &&
+            abs(difference) <= REAL_KCAL_ROUNDING_TOLERANCE
         // Always rendered with a fixed height so the dialog doesn't jump.
         Text(
-            text = if (targetKcal != null && actualKcal != targetKcal) {
+            text = if (targetKcal != null && actualKcal != targetKcal && !hideForRounding) {
                 stringResource(R.string.actual_calories, actualKcal, differenceText)
             } else {
                 ""
@@ -161,21 +243,29 @@ private fun ColumnScope.SetGoalBody(state: GoalFormState, colors: FormColors) {
             carbsGrams = carbsGrams,
             proteinGrams = proteinGrams,
             fatGrams = fatGrams,
-            totalKcal = targetKcal ?: 2000,
+            // Up mode: the total follows the macros, so use a stable ceiling or the bar's scale
+            // would shrink while dragging.
+            totalKcal = if (linkMode == GoalLinkMode.MACROS_TO_KCAL) {
+                state.upBarKcal
+            } else {
+                targetKcal ?: 2000
+            },
             suggestedCarbsGrams = suggested.carbsGrams,
             suggestedProteinGrams = suggested.proteinGrams,
             suggestedFatGrams = suggested.fatGrams,
-            showSuggested = true,
+            showSuggested = linkMode != GoalLinkMode.MACROS_TO_KCAL,
             onMacrosChanged = { carbs, protein, fat ->
-                state.carbs = carbs.roundToInt().coerceAtLeast(0)
-                state.protein = protein.roundToInt().coerceAtLeast(0)
-                state.fat = fat.roundToInt().coerceAtLeast(0)
+                state.onMacrosDragged(
+                    carbs.roundToInt().coerceAtLeast(0),
+                    protein.roundToInt().coerceAtLeast(0),
+                    fat.roundToInt().coerceAtLeast(0)
+                )
             }
         )
         FormSectionDivider()
         TefRow(
             checked = state.useTef,
-            onCheckedChange = { state.useTef = it },
+            onCheckedChange = state::onTefChanged,
             bonus = tefBonus,
             colors = colors
         )
@@ -245,8 +335,12 @@ private fun TefRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit, bonus: 
 // ----- Previews -----
 
 @Composable
-private fun SetGoalPreview(goal: UserGoal, invalidCalories: Boolean) {
-    val state = remember { GoalFormState(goal) }
+private fun SetGoalPreview(
+    goal: UserGoal,
+    invalidCalories: Boolean,
+    mode: GoalLinkMode = GoalLinkMode.KCAL_TO_MACROS
+) {
+    val state = remember { GoalFormState(goal, mode) }
     if (invalidCalories) state.calories = "abc"
     Box(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
         FormDialogSurface(
@@ -269,6 +363,18 @@ private fun SetGoalPreview(goal: UserGoal, invalidCalories: Boolean) {
 @Composable
 private fun SetGoalLightPreview() {
     FoodLogTheme(darkTheme = false) { SetGoalPreview(UserGoal.default(), false) }
+}
+
+@Preview(name = "Set goals - light, unlinked", widthDp = 360, heightDp = 780, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Composable
+private fun SetGoalLightUnlinkedPreview() {
+    FoodLogTheme(darkTheme = false) { SetGoalPreview(UserGoal.default(), false, GoalLinkMode.UNLINKED) }
+}
+
+@Preview(name = "Set goals - dark, up", widthDp = 360, heightDp = 780, showBackground = true, backgroundColor = 0xFF0B1426)
+@Composable
+private fun SetGoalDarkUpPreview() {
+    FoodLogTheme(darkTheme = true) { SetGoalPreview(UserGoal.default(), false, GoalLinkMode.MACROS_TO_KCAL) }
 }
 
 @Preview(name = "Set goals - dark, error", widthDp = 360, heightDp = 780, showBackground = true, backgroundColor = 0xFF0B1426)

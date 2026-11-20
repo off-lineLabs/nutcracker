@@ -91,6 +91,7 @@ fun CompactNumberField(
     errorText: String? = null,
     placeholder: String? = null,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     keyboardType: KeyboardType = KeyboardType.Decimal,
@@ -103,10 +104,11 @@ fun CompactNumberField(
     val horizontalPadding = if (FormDefaults.isCompactWidth) 10.dp else 12.dp
     val borderColor = when {
         isError -> colors.error
+        readOnly -> colors.fieldBorder
         focused -> colors.fieldBorderFocused
         else -> colors.fieldBorder
     }
-    val borderWidth = if (focused || isError) 2.dp else 1.dp
+    val borderWidth = if ((focused && !readOnly) || isError) 2.dp else 1.dp
     val contentColor = if (enabled) colors.content else colors.content.copy(alpha = 0.38f)
 
     val textState = rememberFieldTextState(value)
@@ -123,6 +125,7 @@ fun CompactNumberField(
                 if (isError) error(errorText ?: "")
             },
         enabled = enabled,
+        readOnly = readOnly,
         singleLine = true,
         textStyle = textStyle.merge(TextStyle(color = contentColor, textAlign = textAlign)),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
@@ -132,7 +135,7 @@ fun CompactNumberField(
         decorationBox = { innerTextField ->
             Box(
                 modifier = Modifier
-                    .background(colors.field, FieldShape)
+                    .background(if (readOnly) Color.Transparent else colors.field, FieldShape)
                     .border(borderWidth, borderColor, FieldShape)
                     .padding(horizontal = horizontalPadding, vertical = 10.dp),
                 contentAlignment = if (textAlign == TextAlign.Start) Alignment.CenterStart else Alignment.CenterEnd
@@ -191,6 +194,7 @@ fun NumericInputRow(
     emphasized: Boolean = false,
     placeholder: String? = "0",
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     fieldWidth: Dp = FormDefaults.numberFieldWidth(),
@@ -226,6 +230,7 @@ fun NumericInputRow(
                 errorText = errorText,
                 placeholder = placeholder,
                 enabled = enabled,
+                readOnly = readOnly,
                 imeAction = imeAction,
                 keyboardActions = keyboardActions,
                 keyboardType = keyboardType,

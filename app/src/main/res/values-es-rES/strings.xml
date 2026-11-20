@@ -454,7 +454,15 @@
     <string name="thermic_effect_tef">Efecto Térmico (TEF)</string>
     <string name="higher_macros_same_kcal">Más macros, mismas kcal</string>
     <string name="actual_calories">Real: %1$d kcal (%2$s)</string>
-    
+    <string name="goal_link_kcal_to_macros_desc">Las calorías fijan los macros. Toca para cambiar.</string>
+    <string name="goal_link_macros_to_kcal_desc">Los macros fijan las calorías. Toca para cambiar.</string>
+    <string name="goal_link_unlinked_desc">Calorías y macros sin vincular. Toca para cambiar.</string>
+    <string name="goal_link_kcal_to_macros_caption">Las calorías fijan los macros</string>
+    <string name="goal_link_macros_to_kcal_caption">Los macros fijan las calorías</string>
+    <string name="goal_link_unlinked_caption">Sin vincular</string>
+    <string name="real_kcal_help">Real = las calorías que suman tus macros: carbohidratos y proteínas 4 kcal/g, grasas 9 kcal/g (menos la bonificación TEF si el TEF está activado). Usa la flecha para vincular calorías y macros.</string>
+    <string name="real_kcal_help_desc">¿Qué es el valor Real?</string>
+
     <!-- Accessibility strings -->
     <string name="locked">Bloqueado</string>
     <string name="unlocked">Desbloqueado</string>
