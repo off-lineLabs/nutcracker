@@ -139,6 +139,13 @@ class DatabaseImportManager(
             val (tsvFiles, mappings) = ZipInputStream(inputStream).use { extractZipContents(it) }
             imagePathMappings = mappings
             
+            // A file without any known table is not a backup; never wipe (or report success) for it
+            if (IMPORT_ORDER.none { it in tsvFiles }) {
+                return@withContext Result.failure(
+                    Exception("This file is not a Food log backup (no data tables found). Nothing was changed.")
+                )
+            }
+            
             // Never wipe without a backup
             if (mode == ImportMode.REPLACE) {
                 val backup = createBackup()
@@ -562,8 +569,12 @@ class DatabaseImportManager(
                             sodiumGoal_mg = row.getIntValue("sodiumGoal_mg") ?: 5750
                         )
                         
-                        if (mode == ImportMode.MERGE &&
-                            !ImportMergeKeys.shouldApplyBackupGoal(database.userGoalDao().getUserGoalSync())
+                        val existingGoal = database.userGoalDao().getUserGoalSync()
+                        if (existingGoal != null && existingGoal.copy(id = userGoal.id) == userGoal) {
+                            // Identical goal already in place: nothing to import
+                            skipped++
+                        } else if (mode == ImportMode.MERGE &&
+                            !ImportMergeKeys.shouldApplyBackupGoal(existingGoal)
                         ) {
                             // Keep the user's own goal
                             skipped++

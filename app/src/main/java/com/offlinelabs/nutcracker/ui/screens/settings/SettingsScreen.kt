@@ -27,6 +27,9 @@ import androidx.compose.material.icons.filled.Balance
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.offlinelabs.nutcracker.data.import.ImportMode
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.ui.Alignment
@@ -513,268 +516,6 @@ private fun ThemeOption(
     }
 }
 
-/**
- * Dialog showing import progress
- */
-@Composable
-private fun ImportProgressDialog(
-    progress: com.offlinelabs.nutcracker.data.import.ImportProgress,
-    onDismiss: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = stringResource(R.string.importing_database),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = stringResource(R.string.processing_format, progress.currentTable),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                LinearProgressIndicator(
-                    progress = { progress.overallProgress / 100f },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = stringResource(R.string.progress_percentage_format, progress.overallProgress),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.records_processed_format, progress.recordsProcessed),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = stringResource(R.string.records_imported_format, progress.recordsImported),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Dialog showing import results
- */
-@Composable
-private fun ImportResultDialog(
-    result: com.offlinelabs.nutcracker.data.import.ImportResult,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(if (result.isSuccess) R.string.import_completed else R.string.import_failed),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (result.isSuccess) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.error
-                    )
-                    
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close)
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Summary statistics
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.import_summary),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_total_processed_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text("${result.totalRecordsProcessed}")
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_successfully_imported_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text("${result.recordsImported}")
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_skipped_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text("${result.recordsSkipped}")
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_failed_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text("${result.recordsFailed}")
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_success_rate_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text(
-                                stringResource(
-                                    R.string.percentage_value_format,
-                                    String.format(Locale.getDefault(), "%.1f", result.successRate)
-                                )
-                            )
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.import_duration_label), modifier = Modifier.weight(1f).padding(end = 8.dp))
-                            Text(stringResource(R.string.duration_ms_format, result.importDuration))
-                        }
-                    }
-                }
-                
-                // Show errors if any
-                if (result.errors.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text(
-                        text = stringResource(R.string.errors_count_format, result.errors.size),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    result.errors.take(5).forEach { error ->
-                        Text(
-                            text = stringResource(R.string.error_item_format, error.tableName, error.rowNumber, error.errorMessage),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    
-                    if (result.errors.size > 5) {
-                        Text(
-                            text = stringResource(R.string.more_errors_format, result.errors.size - 5),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                // Show warnings if any
-                if (result.warnings.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text(
-                        text = stringResource(R.string.warnings_count_format, result.warnings.size),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    result.warnings.take(3).forEach { warning ->
-                        Text(
-                            text = stringResource(R.string.warning_item_format, warning.tableName, warning.rowNumber, warning.warningMessage),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    if (result.warnings.size > 3) {
-                        Text(
-                            text = stringResource(R.string.more_warnings_format, result.warnings.size - 3),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        }
-    }
-}
-
-
-
 @Composable
 private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: AppDatabase) {
     val context = LocalContext.current
@@ -785,7 +526,9 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
     var importResult by remember { mutableStateOf<com.offlinelabs.nutcracker.data.import.ImportResult?>(null) }
     var showResultDialog by remember { mutableStateOf(false) }
     var showProgressDialog by remember { mutableStateOf(false) }
-    
+    // Picked backup waiting for the user to choose Merge or Replace (survives rotation).
+    var pendingImportUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
     val importManager = remember { com.offlinelabs.nutcracker.data.import.DatabaseImportManager(context, database) }
     
     // Observe import progress
@@ -799,13 +542,18 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { selectedUri ->
+        // Ask Merge vs Replace before touching any data; a null uri means the picker was cancelled.
+        pendingImportUri = uri
+    }
+
+    fun startImport(selectedUri: Uri, mode: ImportMode) {
+        run {
             scope.launch {
                 isImporting = true
                 showProgressDialog = true
                 
                 try {
-                    val result = importManager.importDatabase(selectedUri)
+                    val result = importManager.importDatabase(selectedUri, mode)
                     result.fold(
                         onSuccess = { result ->
                             importResult = result
@@ -842,12 +590,13 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
         }
     }
     
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         DatabaseButton(
             title = stringResource(R.string.export_database),
             icon = Icons.Filled.FileUpload,
             onClick = exportHandler.onStartExport,
-            enabled = !exportHandler.isExporting
+            enabled = !exportHandler.isExporting,
+            filled = true
         )
         DatabaseButton(
             title = stringResource(R.string.import_database),
@@ -857,16 +606,25 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
                     filePickerLauncher.launch("application/zip")
                 }
             },
-            enabled = !isImporting
+            enabled = !isImporting,
+            filled = false
+        )
+    }
+
+    // Merge vs Replace choice, shown after a backup file is picked
+    pendingImportUri?.let { selectedUri ->
+        ImportModeDialog(
+            onSelect = { mode ->
+                pendingImportUri = null
+                startImport(selectedUri, mode)
+            },
+            onDismiss = { pendingImportUri = null }
         )
     }
     
     // Progress dialog
     if (showProgressDialog && importProgress != null) {
-        ImportProgressDialog(
-            progress = importProgress!!,
-            onDismiss = { /* Cannot dismiss during import */ }
-        )
+        ImportProgressDialog(progress = importProgress!!)
     }
     
     // Result dialog
@@ -886,27 +644,52 @@ private fun DatabaseButton(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    filled: Boolean = true
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) { onClick() }
-            .padding(vertical = 8.dp)
-            .alpha(if (enabled) 1f else 0.6f),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (enabled) appTextSecondaryColor() else appTextSecondaryColor().copy(alpha = 0.6f),
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+    val colors = FormDefaults.colors()
+    val modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+    val shape = RoundedCornerShape(14.dp)
+    val content: @Composable RowScope.() -> Unit = {
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(10.dp))
         Text(
             text = title,
-            color = if (enabled) appTextPrimaryColor() else appTextPrimaryColor().copy(alpha = 0.6f),
-            fontSize = 14.sp
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+    }
+    if (filled) {
+        Button(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = modifier,
+            shape = shape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colors.accent,
+                contentColor = colors.onAccent,
+                disabledContainerColor = colors.content.copy(alpha = 0.12f),
+                disabledContentColor = colors.content.copy(alpha = 0.38f)
+            ),
+            content = content
+        )
+    } else {
+        OutlinedButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = modifier,
+            shape = shape,
+            border = androidx.compose.foundation.BorderStroke(
+                1.5.dp,
+                if (enabled) colors.accent else colors.content.copy(alpha = 0.12f)
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = colors.accent,
+                disabledContentColor = colors.content.copy(alpha = 0.38f)
+            ),
+            content = content
         )
     }
 }

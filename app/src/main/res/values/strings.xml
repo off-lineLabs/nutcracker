@@ -599,6 +599,13 @@
     <string name="import_success_rate_label">Success rate:</string>
     <string name="import_duration_label">Duration:</string>
     <string name="import_failed_with_reason">Import failed: %1$s</string>
+    <string name="import_mode_dialog_title">Import backup</string>
+    <string name="import_mode_merge_title">Merge (recommended)</string>
+    <string name="import_mode_merge_desc">Add items from the backup that aren\'t already in the app. Nothing is deleted.</string>
+    <string name="import_mode_replace_title">Replace</string>
+    <string name="import_mode_replace_desc">Delete all current data and restore the backup exactly. A safety copy of your current data is saved first.</string>
+    <string name="import_mode_merge_action">Merge</string>
+    <string name="import_mode_replace_action">Replace</string>
     <string name="export_failed_with_reason">Export failed: %1$s</string>
 
     <!-- Exercise details -->

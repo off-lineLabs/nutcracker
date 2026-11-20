@@ -527,6 +527,13 @@
     <string name="import_success_rate_label">Tasa de éxito:</string>
     <string name="import_duration_label">Duración:</string>
     <string name="import_failed_with_reason">Error en la importación: %1$s</string>
+    <string name="import_mode_dialog_title">Importar copia de seguridad</string>
+    <string name="import_mode_merge_title">Combinar (recomendado)</string>
+    <string name="import_mode_merge_desc">Añade los elementos de la copia que aún no están en la app. No se borra nada.</string>
+    <string name="import_mode_replace_title">Reemplazar</string>
+    <string name="import_mode_replace_desc">Borra todos los datos actuales y restaura la copia tal cual. Antes se guarda una copia de seguridad de tus datos actuales.</string>
+    <string name="import_mode_merge_action">Combinar</string>
+    <string name="import_mode_replace_action">Reemplazar</string>
     <string name="export_failed_with_reason">Error en la exportación: %1$s</string>
 
     <!-- Exercise details -->

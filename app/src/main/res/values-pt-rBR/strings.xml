@@ -527,6 +527,13 @@
     <string name="import_success_rate_label">Taxa de sucesso:</string>
     <string name="import_duration_label">Duração:</string>
     <string name="import_failed_with_reason">Falha na importação: %1$s</string>
+    <string name="import_mode_dialog_title">Importar backup</string>
+    <string name="import_mode_merge_title">Mesclar (recomendado)</string>
+    <string name="import_mode_merge_desc">Adiciona os itens do backup que ainda não estão no app. Nada é apagado.</string>
+    <string name="import_mode_replace_title">Substituir</string>
+    <string name="import_mode_replace_desc">Apaga todos os dados atuais e restaura o backup exatamente. Antes, uma cópia de segurança dos seus dados atuais é salva.</string>
+    <string name="import_mode_merge_action">Mesclar</string>
+    <string name="import_mode_replace_action">Substituir</string>
     <string name="export_failed_with_reason">Falha na exportação: %1$s</string>
 
     <!-- Exercise details -->
