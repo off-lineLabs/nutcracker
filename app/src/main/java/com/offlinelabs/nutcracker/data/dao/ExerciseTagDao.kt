@@ -31,6 +31,9 @@ interface ExerciseTagDao {
     
     @Query("DELETE FROM exercise_tags")
     suspend fun deleteAllExerciseTags()
+
+    @Query("SELECT * FROM exercise_tags ORDER BY id ASC")
+    suspend fun getAllExerciseTagsSync(): List<ExerciseTag>
     
     @Query("SELECT * FROM exercise_tags")
     fun getAllExerciseTags(): Flow<List<ExerciseTag>>

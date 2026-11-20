@@ -176,7 +176,10 @@ object ImportValidators {
         
         // Meal ID validation
         val mealId = row.getLongValue("mealId")
-        if (mealId == null || mealId <= 0) {
+        // Old app versions logged recipes against a placeholder meal (id <= 0, notes "recipe:<id>"); accept those.
+        val isLegacyRecipeCheckIn = mealId != null && mealId <= 0 &&
+            com.offlinelabs.nutcracker.data.repair.LegacyRecipeRepair.parseRecipeId(row.getValue("notes")) != null
+        if (mealId == null || (mealId <= 0 && !isLegacyRecipeCheckIn)) {
             errors.add(ImportError(
                 tableName = "meal_check_ins",
                 rowNumber = row.rowNumber,

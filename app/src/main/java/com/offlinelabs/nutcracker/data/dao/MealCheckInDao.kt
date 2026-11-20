@@ -32,6 +32,9 @@ interface MealCheckInDao {
 
     @Query("DELETE FROM meal_check_ins")
     suspend fun deleteAllCheckIns()
+
+    @Query("SELECT * FROM meal_check_ins ORDER BY id ASC")
+    suspend fun getAllMealCheckInsSync(): List<MealCheckIn>
     
     @Query("SELECT * FROM meal_check_ins ORDER BY checkInDateTime DESC")
     fun getAllMealCheckIns(): Flow<List<MealCheckIn>>

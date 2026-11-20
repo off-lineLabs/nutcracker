@@ -37,4 +37,8 @@ interface RecipeDao {
 
     @Query("DELETE FROM recipes")
     suspend fun deleteAllRecipes()
+
+    /** One-shot list of every recipe including hidden ones (used by export and import). */
+    @Query("SELECT * FROM recipes ORDER BY id ASC")
+    suspend fun getAllRecipesIncludingHiddenSync(): List<Recipe>
 }

@@ -31,6 +31,9 @@ interface ExerciseLogDao {
 
     @Query("DELETE FROM exercise_logs")
     suspend fun deleteAllLogs()
+
+    @Query("SELECT * FROM exercise_logs ORDER BY id ASC")
+    suspend fun getAllExerciseLogsSync(): List<ExerciseLog>
     
     @Query("SELECT * FROM exercise_logs ORDER BY logDateTime DESC")
     fun getAllExerciseLogs(): Flow<List<ExerciseLog>>

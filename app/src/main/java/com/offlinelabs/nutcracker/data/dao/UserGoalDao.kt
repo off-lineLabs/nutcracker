@@ -15,5 +15,11 @@ interface UserGoalDao {
     // Using Flow to observe changes to the goal
     @Query("SELECT * FROM user_goals WHERE id = 1")
     fun getUserGoal(): Flow<UserGoal?> // Nullable if no goal is set yet
+
+    @Query("SELECT * FROM user_goals WHERE id = 1")
+    suspend fun getUserGoalSync(): UserGoal?
+
+    @Query("DELETE FROM user_goals")
+    suspend fun deleteAllUserGoals()
 }
 

@@ -36,4 +36,7 @@ interface TagDao {
     
     @Query("DELETE FROM tags")
     suspend fun deleteAllTags()
+
+    @Query("SELECT * FROM tags ORDER BY id ASC")
+    suspend fun getAllTagsSync(): List<Tag>
 }

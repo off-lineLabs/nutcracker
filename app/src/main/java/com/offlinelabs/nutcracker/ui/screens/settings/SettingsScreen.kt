@@ -805,7 +805,7 @@ private fun DatabaseSettings(exportHandler: DatabaseExportHandler, database: App
                 showProgressDialog = true
                 
                 try {
-                    val result = importManager.importDatabase(selectedUri, createBackup = true)
+                    val result = importManager.importDatabase(selectedUri)
                     result.fold(
                         onSuccess = { result ->
                             importResult = result

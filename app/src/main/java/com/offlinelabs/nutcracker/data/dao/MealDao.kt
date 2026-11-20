@@ -36,6 +36,19 @@ interface MealDao {
     @Query("DELETE FROM meals")
     suspend fun deleteAllMeals() // Useful for clearing all meals if needed
 
+    /** One-shot list of every meal including hidden ones (used by export and import). */
+    @Query("SELECT * FROM meals ORDER BY id ASC")
+    suspend fun getAllMealsIncludingHiddenSync(): List<Meal>
+
+    /** Deletes one meal only if no check-in, recipe ingredient or tag references it. */
+    @Query("""
+        DELETE FROM meals WHERE id = :mealId
+        AND id NOT IN (SELECT mealId FROM meal_check_ins)
+        AND id NOT IN (SELECT mealId FROM recipe_ingredients)
+        AND id NOT IN (SELECT mealId FROM meal_tags)
+    """)
+    suspend fun deleteMealIfUnreferenced(mealId: Long): Int
+
     @Query("SELECT * FROM meals WHERE id = :mealId")
     suspend fun getMealByIdSync(mealId: Long): Meal? // One-shot lookup, ignores isVisible
 

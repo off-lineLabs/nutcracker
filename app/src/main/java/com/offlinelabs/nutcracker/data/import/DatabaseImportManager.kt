@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import androidx.room.withTransaction
+import com.offlinelabs.nutcracker.data.repair.LegacyRecipeRepair
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -58,6 +59,8 @@ class DatabaseImportManager(
             EXERCISE_TAGS_TSV
         )
         
+        const val AUTO_BACKUP_FILENAME = "auto-before-restore.zip"
+        
         // Date formats for parsing
         private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         private val DATETIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
@@ -69,15 +72,35 @@ class DatabaseImportManager(
     private val idMappingManager = IdMappingManager()
     private var imagePathMappings: Map<String, String> = emptyMap()
     
+    private var mode: ImportMode = ImportMode.MERGE
+    // Old ids of backup recipes that matched an existing recipe (MERGE): their ingredients are not re-added
+    private val matchedRecipeOldIds = mutableSetOf<Long>()
+    // Ids of placeholder meal copies we inserted (legacy id <= 0 rows); removed again if unreferenced
+    private val placeholderCopyIds = mutableSetOf<Long>()
+    // Natural keys of the backup's parent rows by old id, used to dedupe child rows in MERGE
+    private val backupMealKeys = mutableMapOf<Long, ImportMergeKeys.MealKey>()
+    private val backupExerciseKeys = mutableMapOf<Long, ImportMergeKeys.ExerciseKey>()
+    private val backupTagKeys = mutableMapOf<Long, ImportMergeKeys.TagKey>()
+    private val backupPillNames = mutableMapOf<Long, String>()
+    // Parents inserted by this import: their children can't be duplicates of pre-existing rows
+    private val insertedMealIds = mutableSetOf<Long>()
+    private val insertedExerciseIds = mutableSetOf<Long>()
+    private val insertedTagIds = mutableSetOf<Long>()
+    private val insertedPillIds = mutableSetOf<Long>()
+    
+    private class ImportAbortedException(message: String) : Exception(message)
+    
     /**
-     * Import database from TSV files in ZIP archive
+     * Import database from TSV files in ZIP archive.
+     * The whole database part runs in one transaction: any exception rolls everything back.
      * @param sourceUri The URI of the ZIP file to import
-     * @param createBackup Whether to create a backup before importing
+     * @param mode MERGE skips rows that already exist; REPLACE backs up the current data to
+     *  filesDir/backups/auto-before-restore.zip, wipes all tables and restores the backup
      * @return Result containing import results and any errors
      */
     suspend fun importDatabase(
         sourceUri: Uri, 
-        createBackup: Boolean = true
+        mode: ImportMode = ImportMode.MERGE
     ): Result<ImportResult> = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
         val errors = mutableListOf<ImportError>()
@@ -94,21 +117,42 @@ class DatabaseImportManager(
                 return@withContext Result.failure(Exception("Source file does not exist"))
             }
             
-            // Create backup if requested
-            if (createBackup) {
-                createBackup()
-            }
+            this@DatabaseImportManager.mode = mode
             
-            // Clear ID mappings for fresh import
+            // Clear state for a fresh import
             idMappingManager.clear()
+            matchedRecipeOldIds.clear()
+            placeholderCopyIds.clear()
+            backupMealKeys.clear()
+            backupExerciseKeys.clear()
+            backupTagKeys.clear()
+            backupPillNames.clear()
+            insertedMealIds.clear()
+            insertedExerciseIds.clear()
+            insertedTagIds.clear()
+            insertedPillIds.clear()
             
-            // Open ZIP file
+            // Open ZIP file and read it fully before touching the database
             val inputStream = context.contentResolver.openInputStream(sourceUri)
                 ?: return@withContext Result.failure(Exception("Cannot open source file"))
             
-            ZipInputStream(inputStream).use { zipIn ->
-                val (tsvFiles, mappings) = extractZipContents(zipIn)
-                imagePathMappings = mappings
+            val (tsvFiles, mappings) = ZipInputStream(inputStream).use { extractZipContents(it) }
+            imagePathMappings = mappings
+            
+            // Never wipe without a backup
+            if (mode == ImportMode.REPLACE) {
+                val backup = createBackup()
+                if (backup.isFailure) {
+                    return@withContext Result.failure(
+                        Exception("Could not create safety backup, import aborted: ${backup.exceptionOrNull()?.message}")
+                    )
+                }
+            }
+            
+            database.withTransaction {
+                if (mode == ImportMode.REPLACE) {
+                    wipeAllTables()
+                }
                 
                 // Import tables in correct order
                 for ((index, tableName) in IMPORT_ORDER.withIndex()) {
@@ -131,6 +175,13 @@ class DatabaseImportManager(
                         errors.addAll(tableResult.errors)
                         warnings.addAll(tableResult.warnings)
                         
+                        // A restore is all-or-nothing: a row that failed to insert rolls everything back
+                        if (mode == ImportMode.REPLACE && tableResult.recordsFailed > 0) {
+                            throw ImportAbortedException(
+                                "Restore aborted, nothing was changed: ${tableResult.recordsFailed} rows failed in $tableName"
+                            )
+                        }
+                        
                         _importProgress.value = ImportProgress(
                             currentTable = tableName,
                             currentTableProgress = 100,
@@ -149,6 +200,9 @@ class DatabaseImportManager(
                         ))
                     }
                 }
+                
+                // Drop placeholder meal copies that no check-in ended up using
+                placeholderCopyIds.forEach { database.mealDao().deleteMealIfUnreferenced(it) }
             }
             
             val endTime = System.currentTimeMillis()
@@ -223,6 +277,15 @@ class DatabaseImportManager(
                     imagePathMappings[entry.name] = localFile.absolutePath
                     com.offlinelabs.nutcracker.util.logger.AppLogger.d("DatabaseImportManager", "Extracted meal image: ${entry.name} -> ${localFile.absolutePath}")
                 }
+                // Extract recipe images (recipes keep their pictures in the same folder as meals)
+                entry.name.startsWith("images/recipes/") && !entry.isDirectory -> {
+                    val fileName = File(entry.name).name
+                    val localFile = File(mealImagesDir, fileName)
+                    localFile.outputStream().use { output ->
+                        zipIn.copyTo(output)
+                    }
+                    imagePathMappings[entry.name] = localFile.absolutePath
+                }
                 // Extract exercise images
                 entry.name.startsWith("images/exercises/") && !entry.isDirectory -> {
                     val fileName = File(entry.name).name
@@ -283,10 +346,43 @@ class DatabaseImportManager(
     /**
      * Create a backup of the current database
      */
-    private suspend fun createBackup() {
-        // TODO: Implement backup creation
-        // This could export current database to a backup file
-        // For now, we'll skip backup creation to keep the implementation simple
+    private suspend fun createBackup(): Result<String> {
+        val dir = File(context.filesDir, "backups")
+        val target = File(dir, AUTO_BACKUP_FILENAME)
+        val temp = File(dir, "$AUTO_BACKUP_FILENAME.tmp")
+        return try {
+            dir.mkdirs()
+            val exported = com.offlinelabs.nutcracker.data.export.DatabaseExportManager(context, database).exportToFile(temp)
+            if (exported.isFailure) {
+                temp.delete()
+                return Result.failure(exported.exceptionOrNull() ?: Exception("Backup failed"))
+            }
+            // Only the latest automatic backup is kept
+            temp.copyTo(target, overwrite = true)
+            temp.delete()
+            Result.success(target.absolutePath)
+        } catch (e: Exception) {
+            temp.delete()
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Delete every user row in FK-safe order (junctions and logs first). Runs inside the import transaction.
+     */
+    private suspend fun wipeAllTables() {
+        database.mealTagDao().deleteAllMealTags()
+        database.exerciseTagDao().deleteAllExerciseTags()
+        database.recipeIngredientDao().deleteAllIngredients()
+        database.mealCheckInDao().deleteAllCheckIns()
+        database.exerciseLogDao().deleteAllLogs()
+        database.pillCheckInDao().deleteAllPillCheckIns()
+        database.recipeDao().deleteAllRecipes()
+        database.mealDao().deleteAllMeals()
+        database.exerciseDao().deleteAllExercises()
+        database.pillDao().deleteAllPills()
+        database.tagDao().deleteAllTags()
+        database.userGoalDao().deleteAllUserGoals()
     }
     
     /**
@@ -319,11 +415,7 @@ class DatabaseImportManager(
      * Unescape TSV values
      */
     private fun unescapeTsv(value: String): String {
-        return value
-            .replace("\\t", "\t")   // Unescape tabs
-            .replace("\\n", "\n")   // Unescape newlines
-            .replace("\\r", "\r")   // Unescape carriage returns
-            .replace("\\\\", "\\")  // Unescape backslashes (must be last)
+        return TsvCodec.unescape(value)
     }
     
     // Import methods for each table
@@ -337,6 +429,15 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            // Rows that existed before this import (first/lowest id wins); only used in MERGE mode
+            val existingIds = ImportMergeKeys.ExistingIdQueues(
+                if (mode == ImportMode.MERGE) {
+                    database.mealDao().getAllMealsIncludingHiddenSync().map { m ->
+                        ImportMergeKeys.mealKey(m.name, m.brand, m.calories, m.servingSize_value, m.servingSize_unit.abbreviation, m.isVisible) to m.id
+                    }
+                } else emptyList()
+            )
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validateMealData(row)
                 errors.addAll(validation.errors)
@@ -347,6 +448,10 @@ class DatabaseImportManager(
                         // Map old local image path to new extracted path
                         val oldLocalImagePath = row.getValue("localImagePath")
                         val newLocalImagePath = mapImagePath(oldLocalImagePath, "meals")
+                        
+                        val oldId = row.getValue("id")?.toLongOrNull()
+                        // Legacy placeholder meal (id <= 0): never a visible library meal
+                        val isPlaceholder = oldId != null && oldId <= 0
                         
                         val meal = Meal(
                             id = 0, // Let Room auto-generate
@@ -361,7 +466,7 @@ class DatabaseImportManager(
                             servingSize_value = row.getDoubleValue("servingSize_value") ?: 100.0,
                             servingSize_unit = ServingSizeUnit.fromAbbreviation(row.getValue("servingSize_unit") ?: "") ?: ServingSizeUnit.getDefault(),
                             notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
-                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
+                            isVisible = if (isPlaceholder) false else (row.getValue("isVisible")?.toBoolean() ?: true),
                             saturatedFat_g = row.getDoubleValue("saturatedFat_g"),
                             sugars_g = row.getDoubleValue("sugars_g"),
                             cholesterol_mg = row.getDoubleValue("cholesterol_mg"),
@@ -380,8 +485,24 @@ class DatabaseImportManager(
                             source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual"
                         )
                         
+                        val mealKey = ImportMergeKeys.mealKey(
+                            meal.name, meal.brand, meal.calories, meal.servingSize_value,
+                            meal.servingSize_unit.abbreviation, meal.isVisible
+                        )
+                        if (oldId != null) backupMealKeys[oldId] = mealKey
+                        val matchedId = existingIds.take(mealKey)
+                        if (matchedId != null) {
+                            if (oldId != null) {
+                                idMappings[oldId.toString()] = matchedId
+                                idMappingManager.addMapping("meals", oldId.toString(), matchedId)
+                            }
+                            skipped++
+                            return@forEach
+                        }
+                        
                         val newId = database.mealDao().insertMeal(meal)
-                        val oldId = row.getValue("id")?.toLongOrNull()
+                        insertedMealIds.add(newId)
+                        if (isPlaceholder) placeholderCopyIds.add(newId)
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
                             idMappingManager.addMapping("meals", oldId.toString(), newId)
@@ -441,8 +562,15 @@ class DatabaseImportManager(
                             sodiumGoal_mg = row.getIntValue("sodiumGoal_mg") ?: 5750
                         )
                         
-                        database.userGoalDao().upsertUserGoal(userGoal)
-                        imported++
+                        if (mode == ImportMode.MERGE &&
+                            !ImportMergeKeys.shouldApplyBackupGoal(database.userGoalDao().getUserGoalSync())
+                        ) {
+                            // Keep the user's own goal
+                            skipped++
+                        } else {
+                            database.userGoalDao().upsertUserGoal(userGoal)
+                            imported++
+                        }
                     } catch (e: Exception) {
                         errors.add(ImportError(
                             tableName = "user_goals",
@@ -480,6 +608,14 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingIds = ImportMergeKeys.ExistingIdQueues(
+                if (mode == ImportMode.MERGE) {
+                    database.recipeDao().getAllRecipesIncludingHiddenSync().map { r ->
+                        ImportMergeKeys.recipeKey(r.name, r.createdDate) to r.id
+                    }
+                } else emptyList()
+            )
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validateRecipeData(row)
                 errors.addAll(validation.errors)
@@ -501,8 +637,19 @@ class DatabaseImportManager(
                             createdDate = row.getValueOrEmpty("createdDate")
                         )
                         
-                        val newId = database.recipeDao().insertRecipe(recipe)
                         val oldId = row.getValue("id")?.toLongOrNull()
+                        val matchedId = existingIds.take(ImportMergeKeys.recipeKey(recipe.name, recipe.createdDate))
+                        if (matchedId != null) {
+                            if (oldId != null) {
+                                idMappings[oldId.toString()] = matchedId
+                                idMappingManager.addMapping("recipes", oldId.toString(), matchedId)
+                                matchedRecipeOldIds.add(oldId)
+                            }
+                            skipped++
+                            return@forEach
+                        }
+                        
+                        val newId = database.recipeDao().insertRecipe(recipe)
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
                             idMappingManager.addMapping("recipes", oldId.toString(), newId)
@@ -554,6 +701,11 @@ class DatabaseImportManager(
                 if (validation.isValid) {
                     try {
                         val oldRecipeId = row.getLongValue("recipeId")
+                        if (oldRecipeId != null && oldRecipeId in matchedRecipeOldIds) {
+                            // The existing recipe already has its ingredients
+                            skipped++
+                            return@forEach
+                        }
                         val newRecipeId = if (oldRecipeId != null) {
                             // Try to find the new recipe ID from our mappings
                             idMappingManager.getNewId("recipes", oldRecipeId.toString())
@@ -624,6 +776,18 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingKeys = HashSet<ImportMergeKeys.MealCheckInKey>()
+            val existingLegacyKeys = HashSet<ImportMergeKeys.LegacyCheckInKey>()
+            if (mode == ImportMode.MERGE) {
+                val mealKeysById = existingMealKeysById()
+                database.mealCheckInDao().getAllMealCheckInsSync().forEach { c ->
+                    mealKeysById[c.mealId]?.let { existingKeys.add(ImportMergeKeys.mealCheckInKey(it, c.checkInDateTime)) }
+                    if (LegacyRecipeRepair.parseRecipeId(c.notes) != null) {
+                        existingLegacyKeys.add(ImportMergeKeys.legacyCheckInKey(c.checkInDateTime, c.notes))
+                    }
+                }
+            }
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validateMealCheckInData(row)
                 errors.addAll(validation.errors)
@@ -631,22 +795,62 @@ class DatabaseImportManager(
                 
                 if (validation.isValid) {
                     try {
-                        val oldMealId = row.getLongValue("mealId")
-                        val newMealId = if (oldMealId != null) {
-                            // Try to find the new meal ID from our mappings
-                            idMappingManager.getNewId("meals", oldMealId.toString())
-                                ?: return@forEach // Skip if parent meal doesn't exist
+                        val oldMealId = row.getLongValue("mealId") ?: return@forEach
+                        val dateTime = row.getValueOrEmpty("checkInDateTime")
+                        var notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                        
+                        val legacyRecipeOldId = if (oldMealId <= 0) LegacyRecipeRepair.parseRecipeId(notes) else null
+                        val newMealId: Long
+                        if (legacyRecipeOldId != null) {
+                            // Old app versions logged recipes against a shared placeholder meal: build a own snapshot
+                            val mappedRecipeId = idMappingManager.getNewId("recipes", legacyRecipeOldId.toString())
+                                ?.takeIf { database.recipeDao().getRecipeByIdSync(it) != null }
+                            val mappedPlaceholderId = idMappingManager.getNewId("meals", oldMealId.toString())
+                            if (mappedRecipeId != null) notes = ImportMergeKeys.legacyNotes(mappedRecipeId)
+                            
+                            if (mode == ImportMode.MERGE &&
+                                ImportMergeKeys.legacyCheckInKey(dateTime, notes) in existingLegacyKeys
+                            ) {
+                                skipped++
+                                return@forEach
+                            }
+                            
+                            val resolved = when (val action = ImportMergeKeys.decideLegacyCheckIn(mappedRecipeId, mappedPlaceholderId)) {
+                                is ImportMergeKeys.LegacyCheckInAction.SnapshotFromRecipe ->
+                                    createLegacySnapshot(action.recipeId) ?: clonePlaceholder(mappedPlaceholderId)
+                                is ImportMergeKeys.LegacyCheckInAction.CloneMeal -> clonePlaceholder(action.mealId)
+                                ImportMergeKeys.LegacyCheckInAction.Skip -> null
+                            }
+                            if (resolved == null) {
+                                warnings.add(ImportWarning(
+                                    tableName = "meal_check_ins",
+                                    rowNumber = row.rowNumber,
+                                    fieldName = "mealId",
+                                    warningMessage = "Legacy recipe check-in skipped: recipe and placeholder meal not found"
+                                ))
+                                skipped++
+                                return@forEach
+                            }
+                            newMealId = resolved
                         } else {
-                            return@forEach
+                            // Try to find the new meal ID from our mappings
+                            newMealId = idMappingManager.getNewId("meals", oldMealId.toString())
+                                ?: return@forEach // Skip if parent meal doesn't exist
+                            
+                            val groupKey = backupMealKeys[oldMealId]?.let { ImportMergeKeys.mealCheckInKey(it, dateTime) }
+                            if (mode == ImportMode.MERGE && groupKey != null && newMealId !in insertedMealIds && groupKey in existingKeys) {
+                                skipped++
+                                return@forEach
+                            }
                         }
                         
                         val checkIn = MealCheckIn(
                             id = 0, // Let Room auto-generate
                             mealId = newMealId,
                             checkInDate = row.getValueOrEmpty("checkInDate"),
-                            checkInDateTime = row.getValueOrEmpty("checkInDateTime"),
+                            checkInDateTime = dateTime,
                             servingSize = row.getDoubleValue("servingSize") ?: 1.0,
-                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                            notes = notes
                         )
                         
                         val newId = database.mealCheckInDao().insertMealCheckIn(checkIn)
@@ -683,6 +887,33 @@ class DatabaseImportManager(
         }
     }
     
+    private suspend fun existingMealKeysById(): Map<Long, ImportMergeKeys.MealKey> =
+        database.mealDao().getAllMealsIncludingHiddenSync().associate { m ->
+            m.id to ImportMergeKeys.mealKey(m.name, m.brand, m.calories, m.servingSize_value, m.servingSize_unit.abbreviation, m.isVisible)
+        }
+    
+    private suspend fun existingExerciseKeysById(): Map<Long, ImportMergeKeys.ExerciseKey> =
+        database.exerciseDao().getAllExercisesIncludingHiddenSync().associate { e ->
+            e.id to ImportMergeKeys.exerciseKey(e.name, e.category)
+        }
+    
+    private suspend fun existingTagKeysById(): Map<Long, ImportMergeKeys.TagKey> =
+        database.tagDao().getAllTagsSync().associate { t -> t.id to ImportMergeKeys.tagKey(t.name, t.type.name) }
+    
+    /** Hidden snapshot meal with the nutrition of a recipe; null if it cannot be built. */
+    private suspend fun createLegacySnapshot(recipeId: Long): Long? {
+        val repository = (context.applicationContext as? com.offlinelabs.nutcracker.FoodLogApplication)?.foodLogRepository
+            ?: return null
+        return repository.createRecipeSnapshotMeal(recipeId)
+    }
+    
+    /** Hidden copy of an imported placeholder meal, so each check-in owns its meal row. */
+    private suspend fun clonePlaceholder(placeholderMealId: Long?): Long? {
+        if (placeholderMealId == null) return null
+        val source = database.mealDao().getMealByIdSync(placeholderMealId) ?: return null
+        return database.mealDao().insertMeal(source.copy(id = 0, isVisible = false))
+    }
+    
     private suspend fun importExercises(tsvData: String): TableImportResult {
         val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
@@ -693,6 +924,14 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingIds = ImportMergeKeys.ExistingIdQueues(
+                if (mode == ImportMode.MERGE) {
+                    database.exerciseDao().getAllExercisesIncludingHiddenSync().map { e ->
+                        ImportMergeKeys.exerciseKey(e.name, e.category) to e.id
+                    }
+                } else emptyList()
+            )
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validateExerciseData(row)
                 errors.addAll(validation.errors)
@@ -724,8 +963,21 @@ class DatabaseImportManager(
                             isVisible = row.getValue("isVisible")?.toBoolean() ?: true
                         )
                         
-                        val newId = database.exerciseDao().upsertExercise(exercise)
                         val oldId = row.getValue("id")?.toLongOrNull()
+                        val exerciseKey = ImportMergeKeys.exerciseKey(exercise.name, exercise.category)
+                        if (oldId != null) backupExerciseKeys[oldId] = exerciseKey
+                        val matchedId = existingIds.take(exerciseKey)
+                        if (matchedId != null) {
+                            if (oldId != null) {
+                                idMappings[oldId.toString()] = matchedId
+                                idMappingManager.addMapping("exercises", oldId.toString(), matchedId)
+                            }
+                            skipped++
+                            return@forEach
+                        }
+                        
+                        val newId = database.exerciseDao().upsertExercise(exercise)
+                        insertedExerciseIds.add(newId)
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
                             idMappingManager.addMapping("exercises", oldId.toString(), newId)
@@ -769,6 +1021,14 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingKeys = HashSet<ImportMergeKeys.ExerciseLogKey>()
+            if (mode == ImportMode.MERGE) {
+                val exerciseKeysById = existingExerciseKeysById()
+                database.exerciseLogDao().getAllExerciseLogsSync().forEach { l ->
+                    exerciseKeysById[l.exerciseId]?.let { existingKeys.add(ImportMergeKeys.exerciseLogKey(it, l.logDateTime)) }
+                }
+            }
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validateExerciseLogData(row)
                 errors.addAll(validation.errors)
@@ -782,6 +1042,13 @@ class DatabaseImportManager(
                             idMappingManager.getNewId("exercises", oldExerciseId.toString())
                                 ?: return@forEach // Skip if parent exercise doesn't exist
                         } else {
+                            return@forEach
+                        }
+                        
+                        val logGroupKey = backupExerciseKeys[oldExerciseId]
+                            ?.let { ImportMergeKeys.exerciseLogKey(it, row.getValueOrEmpty("logDateTime")) }
+                        if (logGroupKey != null && newExerciseId !in insertedExerciseIds && logGroupKey in existingKeys) {
+                            skipped++
                             return@forEach
                         }
                         
@@ -841,6 +1108,19 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            var existingPills: List<Pair<String, Long>> = emptyList()
+            if (mode == ImportMode.MERGE) {
+                val pills = database.pillDao().getAllPillsSync()
+                val checkInCount = database.pillCheckInDao().getAllPillCheckInsSync().size
+                if (ImportMergeKeys.shouldRemoveSeededDefaultPill(pills.size, checkInCount, rows.size)) {
+                    // Untouched auto-seeded default pill: the backup brings its own pills
+                    database.pillDao().deletePill(pills.first())
+                } else {
+                    existingPills = pills.map { ImportMergeKeys.pillKey(it.name) to it.id }
+                }
+            }
+            val existingIds = ImportMergeKeys.ExistingIdQueues(existingPills)
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validatePillData(row)
                 errors.addAll(validation.errors)
@@ -853,8 +1133,20 @@ class DatabaseImportManager(
                             name = row.getValueOrEmpty("name")
                         )
                         
-                        val newId = database.pillDao().insertPill(pill)
                         val oldId = row.getValue("id")?.toLongOrNull()
+                        if (oldId != null) backupPillNames[oldId] = pill.name
+                        val matchedId = existingIds.take(ImportMergeKeys.pillKey(pill.name))
+                        if (matchedId != null) {
+                            if (oldId != null) {
+                                idMappings[oldId.toString()] = matchedId
+                                idMappingManager.addMapping("pills", oldId.toString(), matchedId)
+                            }
+                            skipped++
+                            return@forEach
+                        }
+                        
+                        val newId = database.pillDao().insertPill(pill)
+                        insertedPillIds.add(newId)
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
                             idMappingManager.addMapping("pills", oldId.toString(), newId)
@@ -898,6 +1190,14 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingKeys = HashSet<ImportMergeKeys.PillCheckInKey>()
+            if (mode == ImportMode.MERGE) {
+                val pillNamesById = database.pillDao().getAllPillsSync().associate { it.id to it.name }
+                database.pillCheckInDao().getAllPillCheckInsSync().forEach { c ->
+                    pillNamesById[c.pillId]?.let { existingKeys.add(ImportMergeKeys.pillCheckInKey(it, c.timestamp.toString())) }
+                }
+            }
+            
             rows.forEach { row ->
                 val validation = ImportValidators.validatePillCheckInData(row)
                 errors.addAll(validation.errors)
@@ -919,6 +1219,13 @@ class DatabaseImportManager(
                             java.time.LocalDateTime.parse(timestampStr)
                         } catch (e: Exception) {
                             java.time.LocalDateTime.now()
+                        }
+                        
+                        val pillGroupKey = backupPillNames[oldPillId]
+                            ?.let { ImportMergeKeys.pillCheckInKey(it, timestamp.toString()) }
+                        if (pillGroupKey != null && newPillId !in insertedPillIds && pillGroupKey in existingKeys) {
+                            skipped++
+                            return@forEach
                         }
                         
                         val pillCheckIn = PillCheckIn(
@@ -974,6 +1281,12 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingIds = ImportMergeKeys.ExistingIdQueues(
+                if (mode == ImportMode.MERGE) {
+                    database.tagDao().getAllTagsSync().map { t -> ImportMergeKeys.tagKey(t.name, t.type.name) to t.id }
+                } else emptyList()
+            )
+            
             rows.forEach { row ->
                 try {
                     val tag = Tag(
@@ -983,8 +1296,21 @@ class DatabaseImportManager(
                         type = TagType.valueOf(row.getValueOrEmpty("type"))
                     )
                     
-                    val newId = database.tagDao().insertTag(tag)
                     val oldId = row.getValue("id")?.toLongOrNull()
+                    val tagKey = ImportMergeKeys.tagKey(tag.name, tag.type.name)
+                    if (oldId != null) backupTagKeys[oldId] = tagKey
+                    val matchedId = existingIds.take(tagKey)
+                    if (matchedId != null) {
+                        if (oldId != null) {
+                            idMappings[oldId.toString()] = matchedId
+                            idMappingManager.addMapping("tags", oldId.toString(), matchedId)
+                        }
+                        skipped++
+                        return@forEach
+                    }
+                    
+                    val newId = database.tagDao().insertTag(tag)
+                    insertedTagIds.add(newId)
                     if (oldId != null) {
                         idMappings[oldId.toString()] = newId
                         idMappingManager.addMapping("tags", oldId.toString(), newId)
@@ -1027,6 +1353,17 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingPairs = HashSet<ImportMergeKeys.MealTagKey>()
+            if (mode == ImportMode.MERGE) {
+                val mealKeysById = existingMealKeysById()
+                val tagKeysById = existingTagKeysById()
+                database.mealTagDao().getAllMealTagsSync().forEach { mt ->
+                    val mk = mealKeysById[mt.mealId]
+                    val tk = tagKeysById[mt.tagId]
+                    if (mk != null && tk != null) existingPairs.add(ImportMergeKeys.mealTagKey(mk, tk))
+                }
+            }
+            
             rows.forEach { row ->
                 try {
                     val oldMealId = row.getLongValue("mealId")
@@ -1040,7 +1377,13 @@ class DatabaseImportManager(
                         idMappingManager.getNewId("tags", oldTagId.toString())
                     } else null
                     
-                    if (newMealId != null && newTagId != null) {
+                    val mealTagGroup = backupMealKeys[oldMealId]?.let { mk ->
+                        backupTagKeys[oldTagId]?.let { tk -> ImportMergeKeys.mealTagKey(mk, tk) }
+                    }
+                    if (newMealId != null && newTagId != null && mealTagGroup != null &&
+                        newMealId !in insertedMealIds && newTagId !in insertedTagIds && mealTagGroup in existingPairs) {
+                        skipped++
+                    } else if (newMealId != null && newTagId != null) {
                         val mealTag = MealTag(
                             id = 0, // Let Room auto-generate
                             mealId = newMealId,
@@ -1088,6 +1431,17 @@ class DatabaseImportManager(
         var failed = 0
         
         return database.withTransaction {
+            val existingPairs = HashSet<ImportMergeKeys.ExerciseTagKey>()
+            if (mode == ImportMode.MERGE) {
+                val exerciseKeysById = existingExerciseKeysById()
+                val tagKeysById = existingTagKeysById()
+                database.exerciseTagDao().getAllExerciseTagsSync().forEach { et ->
+                    val ek = exerciseKeysById[et.exerciseId]
+                    val tk = tagKeysById[et.tagId]
+                    if (ek != null && tk != null) existingPairs.add(ImportMergeKeys.exerciseTagKey(ek, tk))
+                }
+            }
+            
             rows.forEach { row ->
                 try {
                     val oldExerciseId = row.getLongValue("exerciseId")
@@ -1101,7 +1455,13 @@ class DatabaseImportManager(
                         idMappingManager.getNewId("tags", oldTagId.toString())
                     } else null
                     
-                    if (newExerciseId != null && newTagId != null) {
+                    val exerciseTagGroup = backupExerciseKeys[oldExerciseId]?.let { ek ->
+                        backupTagKeys[oldTagId]?.let { tk -> ImportMergeKeys.exerciseTagKey(ek, tk) }
+                    }
+                    if (newExerciseId != null && newTagId != null && exerciseTagGroup != null &&
+                        newExerciseId !in insertedExerciseIds && newTagId !in insertedTagIds && exerciseTagGroup in existingPairs) {
+                        skipped++
+                    } else if (newExerciseId != null && newTagId != null) {
                         val exerciseTag = ExerciseTag(
                             id = 0, // Let Room auto-generate
                             exerciseId = newExerciseId,
