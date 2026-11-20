@@ -346,7 +346,7 @@ private fun MealCheckInContent(
 ) {
     val editing = if (isEditMode) existingMealCheckIn else null
     var servingSize by remember { mutableDoubleStateOf(editing?.servingSize ?: 1.0) }
-    var notes by remember { mutableStateOf(editing?.notes ?: "") }
+    var notes by remember { mutableStateOf(visibleCheckInNotes(editing?.notes)) }
     var selectedDateTime by remember { mutableStateOf(parseStoredDateTime(editing?.checkInDateTime)) }
     var dateTimeValid by remember { mutableStateOf(true) }
 
@@ -396,7 +396,7 @@ private fun MealCheckInContent(
                             checkInDate = dateFormatter.format(selectedDateTime),
                             checkInDateTime = dateTimeFormatter.format(selectedDateTime),
                             servingSize = servingSize,
-                            notes = notes.takeIf { it.isNotBlank() }
+                            notes = checkInNotesToSave(notes, editing.notes)
                         )
                     } else {
                         // Create new check-in with custom timestamp

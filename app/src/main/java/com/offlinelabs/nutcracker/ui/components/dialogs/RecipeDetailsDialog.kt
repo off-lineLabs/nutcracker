@@ -18,6 +18,7 @@ import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.res.stringResource
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.Recipe
+import com.offlinelabs.nutcracker.ui.components.form.ConfirmDeleteDialog
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.ui.components.items.RecipeIngredientItem
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
@@ -35,6 +36,18 @@ fun RecipeDetailsDialog(
     onDelete: () -> Unit,
     onLog: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    if (showDeleteConfirm) {
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.confirm_delete_recipe_title),
+            message = stringResource(R.string.confirm_delete_recipe_message, recipe.name),
+            onConfirm = {
+                showDeleteConfirm = false
+                onDelete()
+            },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
     Dialog(
         onDismissRequest = onBack,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -70,7 +83,7 @@ fun RecipeDetailsDialog(
                                 contentDescription = stringResource(R.string.edit)
                             )
                         }
-                        IconButton(onClick = onDelete) {
+                        IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
                                 contentDescription = stringResource(R.string.delete),
