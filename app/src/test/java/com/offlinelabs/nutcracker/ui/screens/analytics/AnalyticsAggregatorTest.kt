@@ -245,6 +245,37 @@ class AnalyticsAggregatorTest {
     }
 
     @Test
+    fun avgExerciseIsRawAndPerLoggedDay() {
+        val today = LocalDate.of(2025, 11, 20)
+        val days = listOf(
+            day(LocalDate.of(2025, 11, 18), exercise = 300.0),
+            day(LocalDate.of(2025, 11, 19)),
+            day(today, exercise = 180.0)
+        )
+        for (ex in listOf(false, true)) {
+            val stats = state(days, today, ex = ex).summary!!.stats
+            assertEquals(160.0, stats.avgExercisePerLoggedDay!!, 0.001)
+            assertEquals(480.0, stats.exerciseKcal, 0.001)
+        }
+        assertNull(state(emptyList(), today).summary!!.stats.avgExercisePerLoggedDay)
+    }
+
+    @Test
+    fun daysInRangeCountsElapsedCalendarDaysOnly() {
+        val today = LocalDate.of(2025, 11, 20) // Thursday
+        assertEquals(7, state(emptyList(), today).summary!!.daysInRange)
+        assertEquals(1, state(emptyList(), today, selected = 3).summary!!.daysInRange)
+        // Current month bucket: Nov 1..Nov 20 (the rest of November is in the future)
+        val months = state(emptyList(), today, TimePeriod.MONTHS, selected = AnalyticsAggregator.MONTH_BUCKETS - 1)
+        assertEquals(20, months.summary!!.daysInRange)
+        // Current week (Sunday start in en-US): Nov 16..Nov 20
+        val weeks = state(emptyList(), today, TimePeriod.WEEKS, selected = AnalyticsAggregator.WEEK_BUCKETS - 1)
+        assertEquals(5, weeks.summary!!.daysInRange)
+        // Whole range of weeks: 11 full weeks + 5 days
+        assertEquals(82, state(emptyList(), today, TimePeriod.WEEKS).summary!!.daysInRange)
+    }
+
+    @Test
     fun historyStartCoversTwelveMonths() {
         assertEquals(
             LocalDate.of(2025, 3, 1),

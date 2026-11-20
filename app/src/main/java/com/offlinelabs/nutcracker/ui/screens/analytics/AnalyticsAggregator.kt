@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -69,7 +70,9 @@ data class PeriodStats(
     val avgProteinG: Double?,
     val avgFatG: Double?,
     val avgFiberG: Double?,
-    val avgSaltMg: Double?
+    val avgSaltMg: Double?,
+    /** Raw exercise kcal per logged day, independent of the include-exercise toggle. */
+    val avgExercisePerLoggedDay: Double? = null
 )
 
 data class AnalyticsBucket(
@@ -92,7 +95,13 @@ data class AnalyticsSummary(
     val endDate: LocalDate,
     val stats: PeriodStats,
     val daysLogged: Int,
-    val streak: Int
+    val streak: Int,
+    /**
+     * Calendar days from [startDate] to min([endDate], today), i.e. the days that could have been
+     * logged so far (the "7" in "5 of 7 days"). The span's last elapsed day is
+     * startDate.plusDays(daysInRange - 1).
+     */
+    val daysInRange: Int = 0
 )
 
 data class AnalyticsUiState(
@@ -253,7 +262,8 @@ object AnalyticsAggregator {
             avgProteinG = avg(protein),
             avgFatG = avg(fat),
             avgFiberG = avg(fiber),
-            avgSaltMg = avg(salt)
+            avgSaltMg = avg(salt),
+            avgExercisePerLoggedDay = avg(exercise)
         )
     }
 
@@ -294,6 +304,8 @@ object AnalyticsAggregator {
         val stats = selected?.let { buckets[it].stats }
             ?: statsFor(days, summaryStart, summaryEnd, today, goal.caloriesGoal, includeExercise, includeTef)
         val wholeRangeLogged = buckets.sumOf { it.stats.loggedDays }
+        val elapsedEnd = if (summaryEnd.isAfter(today)) today else summaryEnd
+        val daysInRange = (ChronoUnit.DAYS.between(summaryStart, elapsedEnd) + 1).toInt().coerceAtLeast(0)
         return AnalyticsUiState(
             period = period,
             includeExercise = includeExercise,
@@ -305,7 +317,8 @@ object AnalyticsAggregator {
                 endDate = summaryEnd,
                 stats = stats,
                 daysLogged = stats.loggedDays,
-                streak = currentStreak(days, today)
+                streak = currentStreak(days, today),
+                daysInRange = daysInRange
             ),
             goals = goalsOf(goal),
             isEmpty = wholeRangeLogged == 0,

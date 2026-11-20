@@ -21,8 +21,8 @@ import java.util.Locale
  * composable remembers. It loads the last 12 months once (two range queries) and re-aggregates
  * in memory when the period, toggles, selection or goal change.
  *
- * Collect [state] with collectAsState(). Selection defaults to the last bucket; changing the
- * period resets it to the last bucket of the new period.
+ * Collect [state] with collectAsState(). Selection defaults to null (the whole range); changing the
+ * period clears it again.
  */
 class AnalyticsStateHolder(
     repository: FoodLogRepository,
@@ -40,7 +40,7 @@ class AnalyticsStateHolder(
     private val period = MutableStateFlow(initialPeriod)
     private val includeExercise = MutableStateFlow(false)
     private val includeTef = MutableStateFlow(false)
-    private val selected = MutableStateFlow<Int?>(AnalyticsAggregator.bucketCount(initialPeriod) - 1)
+    private val selected = MutableStateFlow<Int?>(null)
 
     private val dayInputs = run {
         val fmt = DateTimeFormatter.ISO_LOCAL_DATE
@@ -77,7 +77,7 @@ class AnalyticsStateHolder(
     fun setPeriod(newPeriod: TimePeriod) {
         if (period.value == newPeriod) return
         period.value = newPeriod
-        selected.value = AnalyticsAggregator.bucketCount(newPeriod) - 1
+        selected.value = null
     }
 
     fun setIncludeExercise(value: Boolean) = includeExercise.update { value }
