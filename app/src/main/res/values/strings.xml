@@ -181,7 +181,6 @@
     <string name="sets_unit">sets</string>
     
     <!-- Additional hardcoded strings from DashboardScreen -->
-    <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">Supplement</string>
     <string name="supplement_tracker">Supplement tracker</string>
     <string name="daily_supplement_taken">Daily supplement taken</string>
@@ -373,7 +372,7 @@
     <!-- FAQ Answers -->
     <string name="faq_answer_add_meal">To add a meal, tap the \'+\' button on the dashboard. You can then search for food items, scan a barcode, or manually enter nutrition information.</string>
     <string name="faq_answer_track_calories">Your calories are automatically tracked when you add meals. The dashboard shows your daily calorie intake and progress toward your goals.</string>
-    <string name="faq_answer_set_goals">Go to Settings and scroll down to \'Nutrition Goals\'. You can set daily targets for calories, protein, carbs, fat, fiber, and sodium.</string>
+    <string name="faq_answer_set_goals">On the home screen, tap the pencil icon on the goals card. You can set daily targets for calories, carbs, protein, fat, fiber, and salt (in mg).</string>
     <string name="faq_answer_add_exercise">Tap the \'+\' button on the dashboard and select \'Add Exercise\'. You can choose from cardio, strength training, or bodyweight exercises.</string>
     <string name="faq_answer_view_progress">Tap the analytics icon (bar chart) on the dashboard to view your weekly and monthly progress, including exercise history and nutrition trends.</string>
     <string name="faq_answer_change_date">Use the calendar icon on the dashboard to select a different date, or use the arrow buttons to navigate day by day.</string>

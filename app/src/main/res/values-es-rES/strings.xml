@@ -48,7 +48,6 @@
     <string name="dark_theme">Tema Oscuro</string>
     <string name="database">Base de Datos</string>
     <string name="database_export">Exportar Base de Datos</string>
-    <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">Suplemento</string>
     <string name="supplement_tracker">Rastreador de suplementos</string>
     <string name="edit_pill">Editar suplemento</string>
@@ -299,7 +298,7 @@
     <!-- FAQ Answers -->
     <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
     <string name="faq_answer_track_calories">Tus calorías se rastrean automáticamente cuando agregas comidas. El panel muestra tu ingesta calórica diaria y progreso hacia tus metas.</string>
-    <string name="faq_answer_set_goals">Ve a Configuración y desplázate hacia abajo hasta \'Metas Nutricionales\'. Puedes establecer objetivos diarios para calorías, proteína, carbohidratos, grasa, fibra y sodio.</string>
+    <string name="faq_answer_set_goals">En la pantalla de inicio, toca el icono del lápiz en la tarjeta de metas. Puedes establecer objetivos diarios para calorías, carbohidratos, proteína, grasa, fibra y sal (en mg).</string>
     <string name="faq_answer_add_exercise">Toca el botón \'+\' en el panel y selecciona \'Agregar Ejercicio\'. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
     <string name="faq_answer_view_progress">Toca el ícono de análisis (gráfico de barras) en el panel para ver tu progreso semanal y mensual, incluyendo historial de ejercicios y tendencias nutricionales.</string>
     <string name="faq_answer_change_date">Usa el ícono de calendario en el panel para seleccionar una fecha diferente, o usa los botones de flecha para navegar día a día.</string>

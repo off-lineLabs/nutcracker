@@ -293,10 +293,10 @@ private fun BasicNutritionCard(meal: Meal, onEdit: (Meal) -> Unit) {
             )
             
             NutritionRow(stringResource(R.string.calories_label), stringResource(R.string.kcal_value_format, meal.calories.toString()), Icons.Filled.LocalFireDepartment, contrastingTextColor, cardBackgroundColor)
-            NutritionRow(stringResource(R.string.carbs_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.carbohydrates_g)), Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
-            NutritionRow(stringResource(R.string.protein_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.protein_g)), Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
-            NutritionRow(stringResource(R.string.fat_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.fat_g)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
-            NutritionRow(stringResource(R.string.fiber_g), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", meal.fiber_g)), Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
+            NutritionRow(stringResource(R.string.carbs_g), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", meal.carbohydrates_g)), Icons.Filled.Grain, contrastingTextColor, cardBackgroundColor)
+            NutritionRow(stringResource(R.string.protein_g), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", meal.protein_g)), Icons.Filled.FitnessCenter, contrastingTextColor, cardBackgroundColor)
+            NutritionRow(stringResource(R.string.fat_g), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", meal.fat_g)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+            NutritionRow(stringResource(R.string.fiber_g), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", meal.fiber_g)), Icons.Filled.Park, contrastingTextColor, cardBackgroundColor)
             NutritionRow(stringResource(R.string.sodium_mg), stringResource(R.string.milligrams_value_format, formatSaltMg(meal.sodium_mg, Locale.getDefault())), Icons.Filled.Water, contrastingTextColor, cardBackgroundColor)
         }
     }
@@ -328,22 +328,22 @@ private fun ExtendedNutritionCard(meal: Meal) {
             )
             
             meal.saturatedFat_g?.let { 
-                NutritionRow(stringResource(R.string.saturated_fat_label), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.saturated_fat_label), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.OilBarrel, contrastingTextColor, cardBackgroundColor)
             }
             meal.sugars_g?.let { 
-                NutritionRow(stringResource(R.string.sugars_label), stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.sugars_label), stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.Cake, contrastingTextColor, cardBackgroundColor)
             }
             meal.cholesterol_mg?.let { 
-                NutritionRow(stringResource(R.string.cholesterol_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.cholesterol_label), stringResource(R.string.milligrams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.Favorite, contrastingTextColor, cardBackgroundColor)
             }
             meal.vitaminC_mg?.let { 
-                NutritionRow(stringResource(R.string.vitamin_c_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.vitamin_c_label), stringResource(R.string.milligrams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.LocalPharmacy, contrastingTextColor, cardBackgroundColor)
             }
             meal.calcium_mg?.let { 
-                NutritionRow(stringResource(R.string.calcium_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.calcium_label), stringResource(R.string.milligrams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.LocalDrink, contrastingTextColor, cardBackgroundColor)
             }
             meal.iron_mg?.let { 
-                NutritionRow(stringResource(R.string.iron_label), stringResource(R.string.milligrams_value_format, String.format(Locale.US, "%.1f", it)), Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
+                NutritionRow(stringResource(R.string.iron_label), stringResource(R.string.milligrams_value_format, String.format(Locale.getDefault(), "%.1f", it)), Icons.Filled.Build, contrastingTextColor, cardBackgroundColor)
             }
         }
     }

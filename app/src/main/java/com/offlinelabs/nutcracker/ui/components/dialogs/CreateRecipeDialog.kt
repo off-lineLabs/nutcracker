@@ -253,7 +253,7 @@ fun CreateRecipeDialog(
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.protein_label)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["protein"] ?: 0.0))}",
+                                text = "${stringResource(R.string.protein_label)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["protein"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -262,11 +262,11 @@ fun CreateRecipeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${stringResource(R.string.carbs_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["carbs"] ?: 0.0))}",
+                                text = "${stringResource(R.string.carbs_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["carbs"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.fat_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["fat"] ?: 0.0))}",
+                                text = "${stringResource(R.string.fat_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["fat"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

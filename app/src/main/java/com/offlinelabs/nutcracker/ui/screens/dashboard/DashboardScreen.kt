@@ -470,7 +470,6 @@ fun DashboardScreen(
     val exerciseDeletedSuccess = stringResource(R.string.exercise_deleted_success)
     val failedToDeleteExercise = stringResource(R.string.failed_to_delete_exercise)
     val defaultPillName = stringResource(R.string.default_pill_name)
-    val dateFormatPattern = stringResource(R.string.date_format_pattern)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -580,7 +579,8 @@ fun DashboardScreen(
     }
 
     val selectedDateString = remember(selectedDate) {
-        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
+        // DB/query key (yyyy-MM-dd); must never depend on translations
+        selectedDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = refreshCheckIns) {
@@ -922,8 +922,9 @@ fun DashboardScreen(
                         val dateText = if (selectedDate == today) {
                             stringResource(R.string.today)
                         } else {
-                            // Custom formatter with 2-digit year
-                            val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy")
+                            val formatter = java.time.format.DateTimeFormatter
+                                .ofLocalizedDate(java.time.format.FormatStyle.SHORT)
+                                .withLocale(java.util.Locale.getDefault())
                             selectedDate.format(formatter)
                         }
                         Text(

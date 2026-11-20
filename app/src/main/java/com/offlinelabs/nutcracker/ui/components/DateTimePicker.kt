@@ -19,7 +19,6 @@ import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.ui.components.form.CompactNumberField
 import com.offlinelabs.nutcracker.ui.components.form.FieldErrorText
 import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
-import java.text.SimpleDateFormat
 import java.util.*
 
 /** True if [text] is a whole number from 0 to [max] (used for the hour and minute fields). */
@@ -104,7 +103,7 @@ fun DateTimePicker(
     LaunchedEffect(timeValid) { onValidityChanged(timeValid) }
 
     // Format date for display
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, Locale.getDefault())
     val today = Calendar.getInstance()
     val isToday = calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                   calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)

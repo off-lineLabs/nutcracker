@@ -911,7 +911,7 @@ fun CaloriesBarChartImpl(
                         if (i > 0) {
                             val labelText = if (value >= 1000) {
                                 val kValue = value / 1000.0
-                                String.format(Locale.US, "%.1fk", kValue)
+                                String.format(Locale.getDefault(), "%.1fk", kValue)
                             } else {
                                 "$value"
                             }
