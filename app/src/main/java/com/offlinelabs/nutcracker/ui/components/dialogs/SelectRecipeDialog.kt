@@ -21,6 +21,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.res.stringResource
 import com.offlinelabs.nutcracker.data.model.Recipe
+import com.offlinelabs.nutcracker.ui.components.form.ConfirmDeleteDialog
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
 
@@ -34,6 +35,18 @@ fun SelectRecipeDialog(
     onEditRecipe: (Recipe) -> Unit = {},
     onDeleteRecipe: (Recipe) -> Unit = {}
 ) {
+    var recipePendingDelete by remember { mutableStateOf<Recipe?>(null) }
+    recipePendingDelete?.let { recipe ->
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.confirm_delete_recipe_title),
+            message = stringResource(R.string.confirm_delete_recipe_message, recipe.name),
+            onConfirm = {
+                recipePendingDelete = null
+                onDeleteRecipe(recipe)
+            },
+            onDismiss = { recipePendingDelete = null }
+        )
+    }
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -112,7 +125,7 @@ fun SelectRecipeDialog(
                                 recipe = recipe,
                                 onClick = { onSelectRecipe(recipe) },
                                 onEdit = { onEditRecipe(recipe) },
-                                onDelete = { onDeleteRecipe(recipe) }
+                                onDelete = { recipePendingDelete = recipe }
                             )
                         }
                     }

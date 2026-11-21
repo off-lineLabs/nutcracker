@@ -29,4 +29,7 @@ interface PillDao {
 
     @Query("DELETE FROM pills")
     suspend fun deleteAllPills()
+
+    @Query("SELECT * FROM pills ORDER BY id ASC")
+    suspend fun getAllPillsSync(): List<Pill>
 }

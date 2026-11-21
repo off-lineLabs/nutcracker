@@ -31,6 +31,9 @@ interface MealTagDao {
     
     @Query("DELETE FROM meal_tags")
     suspend fun deleteAllMealTags()
+
+    @Query("SELECT * FROM meal_tags ORDER BY id ASC")
+    suspend fun getAllMealTagsSync(): List<MealTag>
     
     @Query("SELECT * FROM meal_tags")
     fun getAllMealTags(): Flow<List<MealTag>>

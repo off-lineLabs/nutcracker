@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-22
+
+### Added
+- Redesigned Analytics: a summary of your average intake against your goal, tiles for average calories burned, average balance, days logged and logging streak, a clearer chart with a goal line, and a macro breakdown (carbs, protein, fat, fiber and salt) against your goals
+- Analytics weeks and months now show up to 12 weeks and 12 months of history; tap a bar to see that period
+- Redesigned Exercise tab in Analytics, matching the nutrition view
+- Daily goals: link calories and macros with the arrow next to Calories. Down lets calories set the macros, Up lets the macros set the calories. Your choice is remembered
+- Daily goals: each macro now shows its calories and its share of the total next to the grams
+- Daily goals: a "?" explains how the Real value is calculated
+- Importing a backup now asks whether to merge it with your data (nothing is deleted) or replace your data with it; replacing saves a safety copy first
+- Every delete now asks for confirmation, and deleted check-ins can be restored with Undo
+
+### Changed
+- Salt is shown and entered in milligrams everywhere (e.g. "1,500 mg")
+- Redesigned backup screen with clearer export and import buttons and readable import results in dark mode
+- Dates and decimal numbers follow your language (e.g. "12,5 g" in Spanish and Portuguese)
+
+### Fixed
+- Logging a recipe overwrote the nutrition of earlier recipe logs, added a stray item to your food list and could fail; existing recipe logs are repaired automatically
+- Backups were missing deleted foods and recipe logs, so restoring could lose history, and recipe check-ins failed to import ("Meal ID must be a positive integer")
+- Importing the same backup twice duplicated your data and the default supplement
+- Choosing a file that is not a backup no longer changes your data
+- Average balance per day in Analytics was not divided by the number of days
+- Exercises picked from the exercise database left "Kcal per set" empty
+- Meal details showed salt as "1500.0mg"
+- Daily goals: with one macro locked, the target markers on the macro bars were in the wrong place; they now show their target grams and calories
+- The FAQ said daily goals are set in Settings; they are edited with the pencil on the home screen
+- Rotating the phone or changing the language closed Settings, Analytics and Help
+
 ## [1.3.0] - 2026-11-20
 
 ### Added

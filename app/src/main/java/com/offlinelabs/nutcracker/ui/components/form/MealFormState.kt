@@ -13,14 +13,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.os.ConfigurationCompat
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
-import java.math.BigDecimal
 import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
  * The editable fields of [MealForm], in display order.
  *
- * [Salt] is entered in grams but stored in [Meal.sodium_mg], which (despite its name) holds salt in
+ * [Salt] is entered in mg and stored in [Meal.sodium_mg], which (despite its name) holds salt in
  * milligrams; [MealFormState] converts between the two.
  */
 enum class MealField { Name, Quantity, Calories, Carbs, Protein, Fat, Fiber, Salt }
@@ -77,10 +76,9 @@ data class MealFormResult(
  *   fresh form isn't covered in red; [isValid] (and the save button) always considers them.
  * - When editing ([original] != null) the link toggle rescales all nutrients proportionally from
  *   the original values whenever the quantity changes ([toggleLink]).
- * - Salt is shown and typed in grams (up to three decimals) but stored in mg: pre-fill shows
- *   `sodium_mg / 1000`, saving stores grams * 1000 in [MealFormResult.sodiumMg].
+ * - Salt is shown and typed in mg (stored as-is in [MealFormResult.sodiumMg]).
  * - Untouched pre-filled fields keep the original exact value, so a value shown rounded to two
- *   (salt: three) decimals isn't silently truncated on save.
+ *   (salt: one) decimals isn't silently truncated on save.
  *
  * Create it with [rememberMealFormState] so input survives configuration changes.
  */
@@ -191,13 +189,12 @@ class MealFormState(
             if (text == prefilledTexts[field]) return exact
         }
         val value = parseDecimal(text) ?: return 0.0
-        // BigDecimal keeps typed grams exact in mg (1.234 g -> 1234.0, not 1233.9999...).
-        return if (field == MealField.Salt) BigDecimal.valueOf(value).movePointRight(3).toDouble() else value
+        return value
     }
 
-    /** Display text for [value] given in storage units (salt: mg shown as g with up to 3 decimals). */
+    /** Display text for [value] given in storage units (salt: mg, up to one decimal). */
     private fun formatField(field: MealField, value: Double): String =
-        if (field == MealField.Salt) formatDecimal(value / MG_PER_G, locale, maxFractionDigits = 3)
+        if (field == MealField.Salt) saltMgToInputText(value, locale)
         else formatDecimal(value, locale)
 
     /** Sets every nutrient to original * (current quantity / original quantity). */
@@ -216,7 +213,6 @@ class MealFormState(
 
     companion object {
         const val DEFAULT_QUANTITY = "100"
-        private const val MG_PER_G = 1000.0
 
         /**
          * Saves the user's input (texts, unit, link toggle, edited flags). [original] and [locale]

@@ -13,38 +13,18 @@ class GoalFormLogicTest {
     private val en = Locale.US
 
     @Test
-    fun saltMgToGramsText_formatsWithoutTrailingZeros() {
-        assertEquals("5.75", saltMgToGramsText(5750, en))
-        assertEquals("5,75", saltMgToGramsText(5750, pt))
-        assertEquals("6", saltMgToGramsText(6000, en))
-        assertEquals("0", saltMgToGramsText(0, en))
-        assertEquals("0.001", saltMgToGramsText(1, en))
-        assertEquals("2.3", saltMgToGramsText(2300, en))
-    }
-
-    @Test
-    fun saltGramsTextToMg_acceptsCommaAndDot() {
-        assertEquals(5750, saltGramsTextToMg("5,75"))
-        assertEquals(5750, saltGramsTextToMg("5.75"))
-        assertEquals(6000, saltGramsTextToMg("6"))
-        assertEquals(1, saltGramsTextToMg("0,001"))
-        assertEquals(0, saltGramsTextToMg("0"))
-        assertNull(saltGramsTextToMg("abc"))
-        assertNull(saltGramsTextToMg(""))
-    }
-
-    @Test
-    fun saltGoal_roundTripsThroughGrams() {
+    fun saltGoal_roundTripsThroughInputText() {
         listOf(0, 1, 999, 2300, 5750, 6000, 12345).forEach { mg ->
-            assertEquals(mg, saltGramsTextToMg(saltMgToGramsText(mg, pt)))
-            assertEquals(mg, saltGramsTextToMg(saltMgToGramsText(mg, en)))
+            assertEquals(mg, parseWholeGoal(wholeGoalText(mg, pt)))
+            assertEquals(mg, parseWholeGoal(wholeGoalText(mg, en)))
         }
     }
 
     @Test
-    fun saltGramsTextToMg_roundsToWholeMilligram() {
-        assertEquals(1235, saltGramsTextToMg("1,2345"))
-        assertEquals(1234, saltGramsTextToMg("1,2344"))
+    fun saltGoal_roundsDecimalsToWholeMilligram() {
+        assertEquals(1235, parseWholeGoal("1234,5"))
+        assertEquals(1234, parseWholeGoal("1234.4"))
+        assertNull(parseWholeGoal("abc"))
     }
 
     @Test
@@ -65,14 +45,14 @@ class GoalFormLogicTest {
         assertEquals(FieldError.Negative, validateFiberGoal("-1"))
         assertEquals(FieldError.Required, validateFiberGoal(" "))
         assertNull(validateSaltGoal("0"))
-        assertNull(validateSaltGoal("5,75"))
-        assertEquals(FieldError.Negative, validateSaltGoal("-0,5"))
+        assertNull(validateSaltGoal("5750"))
+        assertEquals(FieldError.Negative, validateSaltGoal("-500"))
         assertEquals(FieldError.InvalidNumber, validateSaltGoal("x"))
     }
 
     @Test
-    fun buildUserGoal_convertsSaltAndKeepsId() {
-        val goal = buildUserGoal(1, "2000", 250, 100, 65, "30", "5,75")
+    fun buildUserGoal_keepsSaltMgAndId() {
+        val goal = buildUserGoal(1, "2000", 250, 100, 65, "30", "5750")
         assertNotNull(goal)
         assertEquals(UserGoal(1, 2000, 250, 100, 65, 30, 5750), goal)
     }
@@ -94,8 +74,8 @@ class GoalFormLogicTest {
     }
 
     @Test
-    fun defaultGoalPrefill_isFivePointSevenFiveGrams() {
-        assertEquals("5.75", saltMgToGramsText(UserGoal.default().sodiumGoal_mg, en))
+    fun defaultGoalPrefill_is5750Mg() {
+        assertEquals("5750", wholeGoalText(UserGoal.default().sodiumGoal_mg, en))
         assertEquals("30", wholeGoalText(UserGoal.default().fiberGoal_g, en))
     }
 }

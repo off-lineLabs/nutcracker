@@ -48,7 +48,6 @@
     <string name="dark_theme">Tema Oscuro</string>
     <string name="database">Base de Datos</string>
     <string name="database_export">Exportar Base de Datos</string>
-    <string name="date_format_pattern">yyyy-MM-dd</string>
     <string name="default_pill_name">Suplemento</string>
     <string name="supplement_tracker">Rastreador de suplementos</string>
     <string name="edit_pill">Editar suplemento</string>
@@ -56,6 +55,20 @@
     <string name="pill_name">Nombre del suplemento</string>
     <string name="pill_name_placeholder">Ingrese el nombre del suplemento</string>
     <string name="confirm_delete_pill_message">¿Estás seguro de que quieres eliminar este suplemento? Todos los registros de registro serán eliminados.</string>
+    <string name="confirm_delete_pill_title">¿Eliminar suplemento?</string>
+    <string name="confirm_delete_meal_title">¿Eliminar alimento?</string>
+    <string name="confirm_delete_meal_message">¿Eliminar \"%1$s\" de tu biblioteca de alimentos? Tus registros anteriores se conservan.</string>
+    <string name="confirm_delete_exercise_title">¿Eliminar ejercicio?</string>
+    <string name="confirm_delete_exercise_message">¿Eliminar \"%1$s\" de tus ejercicios? Tus registros anteriores se conservan.</string>
+    <string name="confirm_delete_recipe_title">¿Eliminar receta?</string>
+    <string name="confirm_delete_recipe_message">¿Eliminar la receta \"%1$s\"? Tus registros anteriores se conservan.</string>
+    <string name="confirm_delete_ingredient_title">¿Quitar ingrediente?</string>
+    <string name="confirm_delete_ingredient_message">¿Quitar \"%1$s\" de esta receta?</string>
+    <string name="confirm_delete_check_in_title">¿Eliminar registro?</string>
+    <string name="confirm_delete_check_in_message">¿Eliminar este registro de \"%1$s\"?</string>
+    <string name="confirm_delete_exercise_log_title">¿Eliminar registro de ejercicio?</string>
+    <string name="confirm_delete_exercise_log_message">¿Eliminar este registro de \"%1$s\"?</string>
+    <string name="undo">Deshacer</string>
     <string name="save">Guardar</string>
     <string name="default_reps">Repeticiones por Defecto</string>
     <string name="default_sets">Series por Defecto</string>
@@ -229,26 +242,64 @@
     <string name="analytics_days">Días</string>
     <string name="analytics_weeks">Semanas</string>
     <string name="analytics_months">Meses</string>
-    <string name="analytics_goal_format">Meta: %1$d kcal</string>
-    <string name="analytics_selected_period_overview">Resumen del Período Seleccionado</string>
-    <string name="analytics_total_calories_consumed">Total de calorías consumidas</string>
-    <string name="analytics_your_final_balance">Tu saldo final</string>
-    <string name="analytics_average_balance_per_day">Saldo promedio por día</string>
-    <string name="analytics_exercise_analytics">Análisis de Ejercicios</string>
-    <string name="analytics_calories_burned">Calorías Quemadas</string>
-    <string name="analytics_exercise_days">Días de Ejercicio</string>
-    <string name="analytics_days_since_last_exercise">Días Desde el Último Ejercicio</string>
-    <string name="analytics_last_exercise_muscles">Músculos del Último Ejercicio</string>
+    <string name="analytics_avg_intake_per_logged_day">Ingesta media por día registrado</string>
+    <string name="analytics_avg_net_per_logged_day">Ingesta neta media por día registrado</string>
+    <string name="analytics_of_goal_kcal">de un objetivo de %1$s kcal</string>
+    <string name="analytics_range_last_days">Últimos %1$d días</string>
+    <string name="analytics_range_last_weeks">Últimas %1$d semanas</string>
+    <string name="analytics_range_last_months">Últimos %1$d meses</string>
+    <string name="analytics_caption_format">%1$s · %2$s</string>
+    <string name="analytics_selected_day">Día seleccionado</string>
+    <string name="analytics_selected_week">Semana seleccionada</string>
+    <string name="analytics_selected_month">Mes seleccionado</string>
+    <string name="analytics_show_all">Ver todo</string>
+    <string name="analytics_nothing_logged_period">No hay registros en este periodo</string>
+    <string name="analytics_tile_avg_burned">Gasto medio / día</string>
+    <string name="analytics_tile_avg_balance">Balance medio / día</string>
+    <string name="analytics_tile_days_logged">Días registrados</string>
+    <string name="analytics_tile_streak">Racha</string>
+    <string name="analytics_total_kcal">%1$s kcal en total</string>
+    <string name="analytics_under_goal">por debajo del objetivo</string>
+    <string name="analytics_over_goal">por encima del objetivo</string>
+    <string name="analytics_on_goal">en el objetivo</string>
+    <string name="analytics_of_days">de %1$d días</string>
+    <string name="analytics_of_days_one">de %1$d día</string>
+    <string name="analytics_days_count">%1$d días</string>
+    <string name="analytics_days_count_one">%1$d día</string>
+    <string name="analytics_streak_supporting">seguidos</string>
+    <string name="analytics_chart_title_intake">Ingesta</string>
+    <string name="analytics_chart_title_net">Ingesta neta</string>
+    <string name="analytics_chart_subtitle_daily">kcal por día</string>
+    <string name="analytics_chart_subtitle_average">Media de kcal por día registrado</string>
+    <string name="analytics_chart_goal">Objetivo %1$s kcal</string>
+    <string name="analytics_chart_hint">Toca una barra para ver ese periodo</string>
+    <string name="analytics_bar_cd_value">%1$s: %2$s kcal</string>
+    <string name="analytics_bar_cd_average">%1$s: media de %2$s kcal</string>
+    <string name="analytics_bar_cd_empty">%1$s: sin registros</string>
+    <string name="analytics_week_of">Semana del %1$s</string>
+    <string name="analytics_include_exercise">Incluir ejercicio</string>
+    <string name="analytics_include_tef">Incluir TEF</string>
+    <string name="analytics_toggles_supporting">Resta de la ingesta las kcal quemadas con ejercicio (%1$s) y el efecto térmico de los alimentos (%2$s).</string>
+    <string name="analytics_macros_title">Macronutrientes</string>
+    <string name="analytics_macros_subtitle">Media por día registrado frente al objetivo</string>
+    <string name="analytics_energy_split">Energía por macronutriente</string>
+    <string name="analytics_amount_of_goal">%1$s / %2$s</string>
+    <string name="analytics_grams_format">%1$s g</string>
+    <string name="analytics_empty_title">Aún no hay comidas registradas</string>
+    <string name="analytics_empty_message">Registra comidas y aquí verás tus tendencias de este periodo.</string>
+    <string name="analytics_loading">Cargando estadísticas</string>
+    <string name="analytics_calories_burned">Calorías quemadas</string>
+    <string name="analytics_exercise_days">Días activos</string>
+    <string name="analytics_days_since_last_exercise">Desde el último ejercicio</string>
+    <string name="analytics_last_exercise_muscles">Músculos del último ejercicio</string>
     <string name="analytics_never">Nunca</string>
-    <string name="analytics_previous_month">Mes Anterior</string>
-    <string name="analytics_next_month">Próximo Mes</string>
-    <string name="analytics_monday">Lun</string>
-    <string name="analytics_tuesday">Mar</string>
-    <string name="analytics_wednesday">Mié</string>
-    <string name="analytics_thursday">Jue</string>
-    <string name="analytics_friday">Vie</string>
-    <string name="analytics_saturday">Sáb</string>
-    <string name="analytics_sunday">Dom</string>
+    <string name="analytics_today">Hoy</string>
+    <string name="analytics_previous_month">Mes anterior</string>
+    <string name="analytics_next_month">Mes siguiente</string>
+    <string name="analytics_exercise_tile_avg">Media / día activo</string>
+    <string name="analytics_exercise_empty_title">Aún no hay ejercicio registrado</string>
+    <string name="analytics_exercise_empty_message">Registra un entrenamiento y tu actividad aparecerá aquí.</string>
+    <string name="analytics_calendar_day_exercise">%1$s: ejercicio registrado</string>
     <string name="analytics_day">Día</string>
     <string name="analytics_week">Semana</string>
     <string name="analytics_month">Mes</string>
@@ -299,7 +350,7 @@
     <!-- FAQ Answers -->
     <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
     <string name="faq_answer_track_calories">Tus calorías se rastrean automáticamente cuando agregas comidas. El panel muestra tu ingesta calórica diaria y progreso hacia tus metas.</string>
-    <string name="faq_answer_set_goals">Ve a Configuración y desplázate hacia abajo hasta \'Metas Nutricionales\'. Puedes establecer objetivos diarios para calorías, proteína, carbohidratos, grasa, fibra y sodio.</string>
+    <string name="faq_answer_set_goals">En la pantalla de inicio, toca el icono del lápiz en la tarjeta de metas. Puedes establecer objetivos diarios para calorías, carbohidratos, proteína, grasa, fibra y sal (en mg).</string>
     <string name="faq_answer_add_exercise">Toca el botón \'+\' en el panel y selecciona \'Agregar Ejercicio\'. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
     <string name="faq_answer_view_progress">Toca el ícono de análisis (gráfico de barras) en el panel para ver tu progreso semanal y mensual, incluyendo historial de ejercicios y tendencias nutricionales.</string>
     <string name="faq_answer_change_date">Usa el ícono de calendario en el panel para seleccionar una fecha diferente, o usa los botones de flecha para navegar día a día.</string>
@@ -441,7 +492,15 @@
     <string name="thermic_effect_tef">Efecto Térmico (TEF)</string>
     <string name="higher_macros_same_kcal">Más macros, mismas kcal</string>
     <string name="actual_calories">Real: %1$d kcal (%2$s)</string>
-    
+    <string name="goal_link_kcal_to_macros_desc">Las calorías fijan los macros. Toca para cambiar.</string>
+    <string name="goal_link_macros_to_kcal_desc">Los macros fijan las calorías. Toca para cambiar.</string>
+    <string name="goal_link_kcal_to_macros_caption">Las calorías fijan los macros</string>
+    <string name="goal_link_macros_to_kcal_caption">Los macros fijan las calorías</string>
+    <string name="macro_legend_current">Actual</string>
+    <string name="macro_legend_target">Objetivo para %1$s kcal</string>
+    <string name="real_kcal_help">Real = las calorías que suman tus macros: carbohidratos y proteínas 4 kcal/g, grasas 9 kcal/g (menos la bonificación TEF si el TEF está activado). Usa la flecha para vincular calorías y macros.</string>
+    <string name="real_kcal_help_desc">¿Qué es el valor Real?</string>
+
     <!-- Accessibility strings -->
     <string name="locked">Bloqueado</string>
     <string name="unlocked">Desbloqueado</string>
@@ -460,6 +519,7 @@
     <!-- Generic units and value formats -->
     <string name="unit_kcal">kcal</string>
     <string name="unit_g">g</string>
+    <string name="unit_mg">mg</string>
 
     <!-- Value-entry form kit -->
     <string name="form_error_required">Obligatorio</string>
@@ -474,7 +534,7 @@
     <string name="kcal_value_format">%1$s kcal</string>
     <string name="kcal_per_100g_format">%1$d kcal/100g</string>
     <string name="grams_value_format">%1$sg</string>
-    <string name="milligrams_value_format">%1$smg</string>
+    <string name="milligrams_value_format">%1$s mg</string>
     <string name="kg_value_format">%1$s kg</string>
     <string name="percentage_value_format">%1$s%%</string>
     <string name="duration_ms_format">%1$d ms</string>
@@ -527,6 +587,13 @@
     <string name="import_success_rate_label">Tasa de éxito:</string>
     <string name="import_duration_label">Duración:</string>
     <string name="import_failed_with_reason">Error en la importación: %1$s</string>
+    <string name="import_mode_dialog_title">Importar copia de seguridad</string>
+    <string name="import_mode_merge_title">Combinar (recomendado)</string>
+    <string name="import_mode_merge_desc">Añade los elementos de la copia que aún no están en la app. No se borra nada.</string>
+    <string name="import_mode_replace_title">Reemplazar</string>
+    <string name="import_mode_replace_desc">Borra todos los datos actuales y restaura la copia tal cual. Antes se guarda una copia de seguridad de tus datos actuales.</string>
+    <string name="import_mode_merge_action">Combinar</string>
+    <string name="import_mode_replace_action">Reemplazar</string>
     <string name="export_failed_with_reason">Error en la exportación: %1$s</string>
 
     <!-- Exercise details -->

@@ -26,6 +26,9 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE id = :recipeId")
     fun getRecipeById(recipeId: Long): Flow<Recipe?>
 
+    @Query("SELECT * FROM recipes WHERE id = :recipeId")
+    suspend fun getRecipeByIdSync(recipeId: Long): Recipe?
+
     @Query("SELECT * FROM recipes WHERE isVisible = 1 AND id = :recipeId")
     fun getVisibleRecipeById(recipeId: Long): Flow<Recipe?>
 
@@ -34,4 +37,8 @@ interface RecipeDao {
 
     @Query("DELETE FROM recipes")
     suspend fun deleteAllRecipes()
+
+    /** One-shot list of every recipe including hidden ones (used by export and import). */
+    @Query("SELECT * FROM recipes ORDER BY id ASC")
+    suspend fun getAllRecipesIncludingHiddenSync(): List<Recipe>
 }

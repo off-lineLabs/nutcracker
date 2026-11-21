@@ -22,6 +22,8 @@ import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
+import com.offlinelabs.nutcracker.ui.components.form.ConfirmDeleteDialog
+import com.offlinelabs.nutcracker.ui.components.form.formatSaltMg
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,8 +112,6 @@ import com.offlinelabs.nutcracker.ui.components.tutorial.SpotlightOverlay
 import com.offlinelabs.nutcracker.ui.components.tutorial.TutorialStep
 import android.content.Context
 
-/** Sodium is stored in milligrams but displayed in grams. */
-private const val MILLIGRAMS_PER_GRAM = 1000.0
 
 @Composable
 fun NutrientProgressDisplay(
@@ -121,8 +121,10 @@ fun NutrientProgressDisplay(
     unit: String,
     labelColor: Color,
     valueColor: Color,
-    goalColor: Color
+    goalColor: Color,
+    wholeNumbers: Boolean = false
 ) {
+    val locale = Locale.getDefault()
     val proteinFiberColor = ProteinFiberColor
     val fiberLabel = stringResource(R.string.fiber_label)
     val isFiber = nutrientName == fiberLabel
@@ -147,11 +149,11 @@ fun NutrientProgressDisplay(
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = finalValueColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)) {
-                    append(String.format(Locale.getDefault(), "%.1f", consumed))
+                    append(if (wholeNumbers) formatSaltMg(consumed, locale) else String.format(locale, "%.1f", consumed))
                 }
                 withStyle(style = SpanStyle(color = goalColor, fontSize = 12.sp, fontWeight = FontWeight.Normal)) {
                     append(" / ")
-                    append(String.format(Locale.getDefault(), "%.1f", goal))
+                    append(if (wholeNumbers) formatSaltMg(goal, locale) else String.format(locale, "%.1f", goal))
                     append(" $unit")
                 }
             },
@@ -372,15 +374,19 @@ private fun NutrientBox(
         )
         NutrientProgressDisplay(
             nutrientName = stringResource(id = R.string.sodium_label),
-            consumed = (totals?.totalSodium ?: 0.0) / MILLIGRAMS_PER_GRAM,
-            goal = goals.sodiumGoal_mg.toDouble() / MILLIGRAMS_PER_GRAM,
-            unit = gramsUnit,
+            consumed = totals?.totalSodium ?: 0.0,
+            goal = goals.sodiumGoal_mg.toDouble(),
+            unit = stringResource(R.string.unit_mg),
             labelColor = appTextSecondaryColor(),
             valueColor = appTextPrimaryColor(),
-            goalColor = appTextSecondaryColor()
+            goalColor = appTextSecondaryColor(),
+            wholeNumbers = true
         )
     }
 }
+
+/** A delete waiting for the user's confirmation in the shared [ConfirmDeleteDialog]. */
+private class PendingDelete(val title: String, val message: String, val onConfirm: () -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -468,7 +474,6 @@ fun DashboardScreen(
     val exerciseDeletedSuccess = stringResource(R.string.exercise_deleted_success)
     val failedToDeleteExercise = stringResource(R.string.failed_to_delete_exercise)
     val defaultPillName = stringResource(R.string.default_pill_name)
-    val dateFormatPattern = stringResource(R.string.date_format_pattern)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showSelectExerciseDialog by remember { mutableStateOf(false) }
@@ -501,6 +506,7 @@ fun DashboardScreen(
     var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
     var showEditExerciseDialog by remember { mutableStateOf<DailyExerciseEntry?>(null) }
     var showEditPillDialog by remember { mutableStateOf<Pill?>(null) }
+    var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
     var showAddPillDialog by remember { mutableStateOf(false) }
     
     // Date navigation state - always start with today
@@ -578,7 +584,8 @@ fun DashboardScreen(
     }
 
     val selectedDateString = remember(selectedDate) {
-        selectedDate.format(java.time.format.DateTimeFormatter.ofPattern(dateFormatPattern))
+        // DB/query key (yyyy-MM-dd); must never depend on translations
+        selectedDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
     }
 
     LaunchedEffect(key1 = foodLogRepository, key2 = selectedDateString, key3 = refreshCheckIns) {
@@ -920,8 +927,9 @@ fun DashboardScreen(
                         val dateText = if (selectedDate == today) {
                             stringResource(R.string.today)
                         } else {
-                            // Custom formatter with 2-digit year
-                            val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy")
+                            val formatter = java.time.format.DateTimeFormatter
+                                .ofLocalizedDate(java.time.format.FormatStyle.SHORT)
+                                .withLocale(java.util.Locale.getDefault())
                             selectedDate.format(formatter)
                         }
                         Text(
@@ -1383,12 +1391,11 @@ fun DashboardScreen(
                 // Calculate nutrition and log recipe
                 coroutineScope.launch {
                     try {
-                        val recipeMeal = foodLogRepository.calculateRecipeNutrition(recipe.id, 1.0)
-                        if (recipeMeal != null) {
-                            // Create a temporary meal entry for the check-in
-                            val tempMealId = foodLogRepository.insertMeal(recipeMeal)
+                        // Each log gets its own hidden nutrition snapshot meal
+                        val snapshotMealId = foodLogRepository.createRecipeSnapshotMeal(recipe.id)
+                        if (snapshotMealId != null) {
                             val mealCheckIn = MealCheckIn.create(
-                                mealId = tempMealId,
+                                mealId = snapshotMealId,
                                 servingSize = 1.0,
                                 notes = "recipe:${recipe.id}"
                             )
@@ -1695,24 +1702,29 @@ fun DashboardScreen(
             onDelete = if (selectedExerciseForEdit != null) {
                 {
                     val exerciseToDelete = selectedExerciseForEdit!!
-                    coroutineScope.launch {
-                        try {
-                            foodLogRepository.deleteExercise(exerciseToDelete)
-                            snackbarHostState.showSnackbar(
-                                message = exerciseDeletedSuccess
-                            )
-                        } catch (e: Exception) {
-                            AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
-                                "exerciseId" to exerciseToDelete.id.toString(),
-                                "exerciseName" to exerciseToDelete.name
-                            ))
-                            snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.failed_to_delete_exercise_with_reason, e.message.orEmpty())
-                            )
+                    pendingDelete = PendingDelete(
+                        title = context.getString(R.string.confirm_delete_exercise_title),
+                        message = context.getString(R.string.confirm_delete_exercise_message, exerciseToDelete.name)
+                    ) {
+                        coroutineScope.launch {
+                            try {
+                                foodLogRepository.deleteExercise(exerciseToDelete)
+                                snackbarHostState.showSnackbar(
+                                    message = exerciseDeletedSuccess
+                                )
+                            } catch (e: Exception) {
+                                AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
+                                    "exerciseId" to exerciseToDelete.id.toString(),
+                                    "exerciseName" to exerciseToDelete.name
+                                ))
+                                snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.failed_to_delete_exercise_with_reason, e.message.orEmpty())
+                                )
+                            }
                         }
+                        showAddExerciseDialog = false
+                        selectedExerciseForEdit = null
                     }
-                    showAddExerciseDialog = false
-                    selectedExerciseForEdit = null
                 }
             } else null,
             onSaveAndCheckIn = if (selectedExternalExercise != null && selectedExerciseForEdit == null) {
@@ -2050,17 +2062,11 @@ fun DashboardScreen(
         val dialogTextFieldColors = dialogOutlinedTextFieldColorsMaxContrast()
         
         if (showDeleteConfirm) {
-            AlertDialog(
-                onDismissRequest = { showDeleteConfirm = false },
-                title = {
-                    Text(stringResource(R.string.delete))
-                },
-                text = {
-                    Text(stringResource(R.string.confirm_delete_pill_message))
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
+            ConfirmDeleteDialog(
+                title = stringResource(R.string.confirm_delete_pill_title),
+                message = stringResource(R.string.confirm_delete_pill_message),
+                onDismiss = { showDeleteConfirm = false },
+                onConfirm = {
                             coroutineScope.launch {
                                 try {
                                     // Delete all check-ins for this pill first
@@ -2084,21 +2090,6 @@ fun DashboardScreen(
                             }
                             showDeleteConfirm = false
                             showEditPillDialog = null
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text(stringResource(R.string.delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteConfirm = false }) {
-                        Text(
-                            text = stringResource(R.string.cancel),
-                            color = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                        )
-                    }
                 }
             )
         } else {
@@ -2274,23 +2265,34 @@ fun DashboardScreen(
                     showEditMealDialog = null
                 },
                 onDelete = {
-                    coroutineScope.launch {
-                        try {
-                            foodLogRepository.deleteMealCheckIn(existingMealCheckIn)
-                            snackbarHostState.showSnackbar(
-                                message = mealDeletedSuccess
-                            )
-                        } catch (e: Exception) {
-                            AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
-                                "mealId" to existingMealCheckIn.mealId,
-                                "date" to existingMealCheckIn.checkInDate
-                            ))
-                            snackbarHostState.showSnackbar(
-                                message = failedToDeleteMeal
-                            )
+                    pendingDelete = PendingDelete(
+                        title = context.getString(R.string.confirm_delete_check_in_title),
+                        message = context.getString(R.string.confirm_delete_check_in_message, foundMeal.name)
+                    ) {
+                        coroutineScope.launch {
+                            try {
+                                foodLogRepository.deleteMealCheckIn(existingMealCheckIn)
+                                val result = snackbarHostState.showSnackbar(
+                                    message = mealDeletedSuccess,
+                                    actionLabel = context.getString(R.string.undo),
+                                    duration = SnackbarDuration.Long
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    // REPLACE restores the same row (same id) with identical values
+                                    foodLogRepository.insertMealCheckIn(existingMealCheckIn)
+                                }
+                            } catch (e: Exception) {
+                                AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                                    "mealId" to existingMealCheckIn.mealId,
+                                    "date" to existingMealCheckIn.checkInDate
+                                ))
+                                snackbarHostState.showSnackbar(
+                                    message = failedToDeleteMeal
+                                )
+                            }
                         }
+                        showEditMealDialog = null
                     }
-                    showEditMealDialog = null
                 },
                 isEditMode = true,
                 meal = foundMeal,
@@ -2349,23 +2351,34 @@ fun DashboardScreen(
                     showEditExerciseDialog = null
                 },
                 onDelete = {
-                    coroutineScope.launch {
-                        try {
-                            foodLogRepository.deleteExerciseLog(existingExerciseLog)
-                            snackbarHostState.showSnackbar(
-                                message = exerciseDeletedSuccess
-                            )
-                        } catch (e: Exception) {
-                            AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
-                                "exerciseId" to existingExerciseLog.exerciseId,
-                                "date" to existingExerciseLog.logDate
-                            ))
-                            snackbarHostState.showSnackbar(
-                                message = failedToDeleteExercise
-                            )
+                    pendingDelete = PendingDelete(
+                        title = context.getString(R.string.confirm_delete_exercise_log_title),
+                        message = context.getString(R.string.confirm_delete_exercise_log_message, foundExercise.name)
+                    ) {
+                        coroutineScope.launch {
+                            try {
+                                foodLogRepository.deleteExerciseLog(existingExerciseLog)
+                                val result = snackbarHostState.showSnackbar(
+                                    message = exerciseDeletedSuccess,
+                                    actionLabel = context.getString(R.string.undo),
+                                    duration = SnackbarDuration.Long
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    // REPLACE restores the same row (same id) with identical values
+                                    foodLogRepository.insertExerciseLog(existingExerciseLog)
+                                }
+                            } catch (e: Exception) {
+                                AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(
+                                    "exerciseId" to existingExerciseLog.exerciseId,
+                                    "date" to existingExerciseLog.logDate
+                                ))
+                                snackbarHostState.showSnackbar(
+                                    message = failedToDeleteExercise
+                                )
+                            }
                         }
+                        showEditExerciseDialog = null
                     }
-                    showEditExerciseDialog = null
                 }
             )
         }
@@ -2772,24 +2785,42 @@ fun DashboardScreen(
                 }
             },
             onDelete = {
-                coroutineScope.launch {
-                    try {
-                        foodLogRepository.deleteMeal(meal)
-                        snackbarHostState.showSnackbar(
-                            message = mealDeletedSuccess
-                        )
-                    } catch (e: Exception) {
-                        AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
-                            "mealId" to meal.id.toString(),
-                            "mealName" to meal.name
-                        ))
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.failed_to_delete_meal_with_reason, e.message.orEmpty())
-                        )
+                pendingDelete = PendingDelete(
+                    title = context.getString(R.string.confirm_delete_meal_title),
+                    message = context.getString(R.string.confirm_delete_meal_message, meal.name)
+                ) {
+                    coroutineScope.launch {
+                        try {
+                            foodLogRepository.deleteMeal(meal)
+                            snackbarHostState.showSnackbar(
+                                message = mealDeletedSuccess
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                                "mealId" to meal.id.toString(),
+                                "mealName" to meal.name
+                            ))
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.failed_to_delete_meal_with_reason, e.message.orEmpty())
+                            )
+                        }
                     }
+                    openEditMealDefinition(null)
                 }
-                openEditMealDefinition(null)
             }
+        )
+    }
+
+    // Shared delete confirmation (cancel leaves the parent dialog untouched)
+    pendingDelete?.let { pending ->
+        ConfirmDeleteDialog(
+            title = pending.title,
+            message = pending.message,
+            onConfirm = {
+                pendingDelete = null
+                pending.onConfirm()
+            },
+            onDismiss = { pendingDelete = null }
         )
     }
     

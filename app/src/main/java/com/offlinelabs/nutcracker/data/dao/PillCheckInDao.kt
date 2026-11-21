@@ -38,4 +38,7 @@ interface PillCheckInDao {
 
     @Query("DELETE FROM pill_check_ins")
     suspend fun deleteAllPillCheckIns()
+
+    @Query("SELECT * FROM pill_check_ins ORDER BY id ASC")
+    suspend fun getAllPillCheckInsSync(): List<PillCheckIn>
 }

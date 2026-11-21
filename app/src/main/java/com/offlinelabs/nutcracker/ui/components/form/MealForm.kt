@@ -42,7 +42,7 @@ import java.util.Locale
 
 /**
  * The add/edit meal form body: Name, "Nutrition per <qty> <unit>" (with the link/rescale toggle
- * when editing), then the nutrition card (Calories, Carbs, Protein, Fat, Fiber, Salt in g).
+ * when editing), then the nutrition card (Calories, Carbs, Protein, Fat, Fiber in g, Salt in mg).
  * Place it inside a [FormDialog]; all state and validation live in [state].
  */
 @Composable
@@ -105,8 +105,8 @@ fun MealForm(state: MealFormState, modifier: Modifier = Modifier) {
             NutrientRow(state, MealField.Fat, R.string.fat_label, R.string.unit_g, Icons.Filled.OilBarrel, nutrientFatColor(), colors)
             NutrientRow(state, MealField.Fiber, R.string.fiber_label, R.string.unit_g, Icons.Filled.Park, nutrientFiberColor(), colors)
             NutrientRow(
-                // Salt in grams; MealFormState converts to/from the mg stored in Meal.sodium_mg.
-                state, MealField.Salt, R.string.sodium_label, R.string.unit_g,
+                // Salt in mg, as stored in Meal.sodium_mg.
+                state, MealField.Salt, R.string.sodium_label, R.string.unit_mg,
                 Icons.Filled.Water, getContrastingIconColor(sectionColor), colors, imeAction = ImeAction.Done
             )
         }

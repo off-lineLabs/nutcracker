@@ -57,31 +57,46 @@ class DatabaseExportManager(
             val outputStream = context.contentResolver.openOutputStream(destinationUri)
                 ?: return@withContext Result.failure(Exception("Cannot create output stream"))
             
-            ZipOutputStream(outputStream).use { zipOut ->
-                // Export each table to TSV
-                exportTableToTsv(zipOut, MEALS_TSV) { exportMeals() }
-                exportTableToTsv(zipOut, USER_GOALS_TSV) { exportUserGoals() }
-                exportTableToTsv(zipOut, RECIPES_TSV) { exportRecipes() }
-                exportTableToTsv(zipOut, RECIPE_INGREDIENTS_TSV) { exportRecipeIngredients() }
-                exportTableToTsv(zipOut, MEAL_CHECK_INS_TSV) { exportMealCheckIns() }
-                exportTableToTsv(zipOut, EXERCISES_TSV) { exportExercises() }
-                exportTableToTsv(zipOut, EXERCISE_LOGS_TSV) { exportExerciseLogs() }
-                exportTableToTsv(zipOut, PILLS_TSV) { exportPills() }
-                exportTableToTsv(zipOut, PILL_CHECK_INS_TSV) { exportPillCheckIns() }
-                exportTableToTsv(zipOut, TAGS_TSV) { exportTags() }
-                exportTableToTsv(zipOut, MEAL_TAGS_TSV) { exportMealTags() }
-                exportTableToTsv(zipOut, EXERCISE_TAGS_TSV) { exportExerciseTags() }
-                exportTableToTsv(zipOut, EXPORT_INFO_TSV) { exportMetadata() }
-                
-                // Export images
-                exportImages(zipOut)
-            }
+            writeZip(outputStream)
             
             val fileName = documentFile.name ?: "nutcracker_export.zip"
             Result.success("Database exported successfully to $fileName")
             
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Export all tables to a ZIP file on local storage, overwriting it if it exists.
+     * Used for the automatic backup taken before a destructive restore.
+     */
+    suspend fun exportToFile(file: java.io.File): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            file.parentFile?.mkdirs()
+            file.outputStream().use { writeZip(it) }
+            Result.success(file.absolutePath)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun writeZip(outputStream: java.io.OutputStream) {
+        ZipOutputStream(outputStream).use { zipOut ->
+            exportTableToTsv(zipOut, MEALS_TSV) { exportMeals() }
+            exportTableToTsv(zipOut, USER_GOALS_TSV) { exportUserGoals() }
+            exportTableToTsv(zipOut, RECIPES_TSV) { exportRecipes() }
+            exportTableToTsv(zipOut, RECIPE_INGREDIENTS_TSV) { exportRecipeIngredients() }
+            exportTableToTsv(zipOut, MEAL_CHECK_INS_TSV) { exportMealCheckIns() }
+            exportTableToTsv(zipOut, EXERCISES_TSV) { exportExercises() }
+            exportTableToTsv(zipOut, EXERCISE_LOGS_TSV) { exportExerciseLogs() }
+            exportTableToTsv(zipOut, PILLS_TSV) { exportPills() }
+            exportTableToTsv(zipOut, PILL_CHECK_INS_TSV) { exportPillCheckIns() }
+            exportTableToTsv(zipOut, TAGS_TSV) { exportTags() }
+            exportTableToTsv(zipOut, MEAL_TAGS_TSV) { exportMealTags() }
+            exportTableToTsv(zipOut, EXERCISE_TAGS_TSV) { exportExerciseTags() }
+            exportTableToTsv(zipOut, EXPORT_INFO_TSV) { exportMetadata() }
+            exportImages(zipOut)
         }
     }
     
@@ -114,8 +129,8 @@ class DatabaseExportManager(
      * Export meals table to CSV
      */
     private suspend fun exportMeals(): String = withContext(Dispatchers.IO) {
-        val meals = database.mealDao().getAllMeals()
-        val mealsList = meals.first() // Get the current value from Flow
+        // Include hidden rows: check-ins, snapshots and ingredients reference them
+        val mealsList = database.mealDao().getAllMealsIncludingHiddenSync()
         
         val tsv = StringBuilder()
         tsv.appendLine("id\tname\tbrand\tcalories\tcarbohydrates_g\tprotein_g\tfat_g\tfiber_g\tsodium_mg\tservingSize_value\tservingSize_unit\tnotes\tisVisible\tsaturatedFat_g\tsugars_g\tcholesterol_mg\tvitaminC_mg\tcalcium_mg\tiron_mg\timageUrl\tlocalImagePath\tnovaClassification\tgreenScore\tnutriscore\tingredients\tquantity\tservingSize\tbarcode\tsource")
@@ -131,8 +146,7 @@ class DatabaseExportManager(
      * Export recipes table to TSV
      */
     private suspend fun exportRecipes(): String = withContext(Dispatchers.IO) {
-        val recipes = database.recipeDao().getAllRecipes()
-        val recipesList = recipes.first() // Get the current value from Flow
+        val recipesList = database.recipeDao().getAllRecipesIncludingHiddenSync()
         
         val tsv = StringBuilder()
         tsv.appendLine("id\tname\tdescription\timageUrl\tlocalImagePath\tisVisible\tcreatedDate")
@@ -148,14 +162,8 @@ class DatabaseExportManager(
      * Export recipe ingredients junction table to TSV
      */
     private suspend fun exportRecipeIngredients(): String = withContext(Dispatchers.IO) {
-        // Get all recipes and their ingredients
-        val recipes = database.recipeDao().getAllRecipes().first()
-        val allIngredients = mutableListOf<RecipeIngredient>()
-        
-        recipes.forEach { recipe ->
-            val ingredients = database.recipeIngredientDao().getIngredientsByRecipeIdSync(recipe.id)
-            allIngredients.addAll(ingredients)
-        }
+        // Ingredients of every recipe, hidden ones included
+        val allIngredients = database.recipeIngredientDao().getAllIngredientsSync()
         
         val tsv = StringBuilder()
         tsv.appendLine("id\trecipeId\tmealId\tquantity\tunit\torder")
@@ -205,8 +213,7 @@ class DatabaseExportManager(
      * Export exercises table to CSV
      */
     private suspend fun exportExercises(): String = withContext(Dispatchers.IO) {
-        val exercises = database.exerciseDao().getAllExercises()
-        val exercisesList = exercises.first() // Get the current value from Flow
+        val exercisesList = database.exerciseDao().getAllExercisesIncludingHiddenSync()
         
         val tsv = StringBuilder()
         tsv.appendLine("id\tname\tkcalBurnedPerUnit\tdefaultWeight\tdefaultReps\tdefaultSets\tcategory\tequipment\tprimaryMuscles\tsecondaryMuscles\tforce\tlevel\tmechanic\tinstructions\tnotes\timagePaths\tisVisible")
@@ -326,9 +333,9 @@ class DatabaseExportManager(
     private suspend fun exportImages(zipOut: ZipOutputStream) = withContext(Dispatchers.IO) {
         try {
             // Get all meals with images
-            val meals = database.mealDao().getAllMeals().first()
-            val exercises = database.exerciseDao().getAllExercises().first()
-            val recipes = database.recipeDao().getAllRecipes().first()
+            val meals = database.mealDao().getAllMealsIncludingHiddenSync()
+            val exercises = database.exerciseDao().getAllExercisesIncludingHiddenSync()
+            val recipes = database.recipeDao().getAllRecipesIncludingHiddenSync()
             
             // Export meal images
             meals.forEach { meal ->
@@ -409,11 +416,7 @@ class DatabaseExportManager(
      * Escape TSV values that contain tabs, newlines, or backslashes
      */
     private fun escapeTsv(value: String): String {
-        return value
-            .replace("\\", "\\\\")  // Escape backslashes first
-            .replace("\t", "\\t")   // Escape tabs
-            .replace("\n", "\\n")   // Escape newlines
-            .replace("\r", "\\r")   // Escape carriage returns
+        return com.offlinelabs.nutcracker.data.import.TsvCodec.escape(value)
     }
     
     /**

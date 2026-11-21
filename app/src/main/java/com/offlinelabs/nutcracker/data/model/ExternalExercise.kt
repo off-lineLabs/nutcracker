@@ -89,7 +89,7 @@ private fun getDefaultSetsForExercise(external: ExternalExercise): Int {
     }
 }
 
-private fun getDefaultKcalPerUnit(external: ExternalExercise): Double {
+fun getDefaultKcalPerUnit(external: ExternalExercise): Double {
     return when (external.category.lowercase()) {
         "strength", "strongman", "olympic weightlifting" -> 5.0 // kcal per set
         "cardio", "plyometrics" -> 8.0 // kcal per minute

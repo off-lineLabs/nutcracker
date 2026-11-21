@@ -12,6 +12,8 @@ import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
 import com.offlinelabs.nutcracker.data.dao.DailyNutritionEntry
 import com.offlinelabs.nutcracker.data.dao.DailyExerciseEntry
+import com.offlinelabs.nutcracker.data.dao.DailyExerciseCaloriesRow
+import com.offlinelabs.nutcracker.data.dao.DailyFoodTotalsRow
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
@@ -27,7 +29,6 @@ import com.offlinelabs.nutcracker.data.service.ImageDownloadService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.first
 
 /**
  * Interface for data operations.
@@ -108,9 +109,19 @@ interface FoodLogRepository {
     // Recipe nutrition calculation
     suspend fun calculateRecipeNutrition(recipeId: Long, servingMultiplier: Double = 1.0): Meal?
 
+    /**
+     * Inserts a NEW hidden meal holding a nutrition snapshot of the recipe and returns its id.
+     * Returns null if the recipe is missing or has no ingredients.
+     */
+    suspend fun createRecipeSnapshotMeal(recipeId: Long, servingMultiplier: Double = 1.0): Long?
+
     // Combined operations for dashboard
     fun getDailyCombinedSummary(date: String): Flow<List<Any>>
     fun getDailyCombinedTotals(date: String, includeExerciseCalories: Boolean = true, includeTEFBonus: Boolean = false): Flow<DailyTotals?>
+
+    // Analytics range queries (inclusive yyyy-MM-dd bounds, one row per date that has data)
+    fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>>
+    fun getDailyExerciseCaloriesInRange(startDate: String, endDate: String): Flow<List<DailyExerciseCaloriesRow>>
 }
 
 /**
@@ -199,6 +210,10 @@ class OfflineFoodLogRepository(
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
+    override fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>> =
+        mealCheckInDao.getDailyFoodTotalsInRange(startDate, endDate)
+    override fun getDailyExerciseCaloriesInRange(startDate: String, endDate: String): Flow<List<DailyExerciseCaloriesRow>> =
+        exerciseLogDao.getDailyExerciseCaloriesInRange(startDate, endDate)
 
     // Pill operations
     override fun getAllPills(): Flow<List<Pill>> = pillDao.getAllPills()
@@ -263,7 +278,7 @@ class OfflineFoodLogRepository(
         
         // Fetch all meals
         val meals = mealIds.mapNotNull { mealId ->
-            mealDao.getMealById(mealId).first()
+            mealDao.getMealByIdSync(mealId)
         }
 
         // Calculate nutrition for each ingredient
@@ -308,11 +323,11 @@ class OfflineFoodLogRepository(
         totalIron *= servingMultiplier
 
         // Get recipe name
-        val recipe = recipeDao.getRecipeById(recipeId).first() ?: return null
+        val recipe = recipeDao.getRecipeByIdSync(recipeId) ?: return null
 
         // Create a temporary Meal object representing the recipe
         return Meal(
-            id = -1, // Not a real meal, just for nutrition calculation
+            id = 0, // Not persisted yet; insert generates a fresh id
             name = recipe.name,
             brand = null,
             calories = totalCalories.toInt(),
@@ -324,7 +339,7 @@ class OfflineFoodLogRepository(
             servingSize_value = servingMultiplier,
             servingSize_unit = ServingSizeUnit.SERVINGS,
             notes = "recipe:${recipeId}", // Store recipe ID in notes for reference
-            isVisible = true,
+            isVisible = false, // Snapshot, never shown in the meal library
             saturatedFat_g = if (totalSaturatedFat > 0) totalSaturatedFat else null,
             sugars_g = if (totalSugars > 0) totalSugars else null,
             cholesterol_mg = if (totalCholesterol > 0) totalCholesterol else null,
@@ -332,6 +347,11 @@ class OfflineFoodLogRepository(
             calcium_mg = if (totalCalcium > 0) totalCalcium else null,
             iron_mg = if (totalIron > 0) totalIron else null
         )
+    }
+
+    override suspend fun createRecipeSnapshotMeal(recipeId: Long, servingMultiplier: Double): Long? {
+        val snapshot = calculateRecipeNutrition(recipeId, servingMultiplier) ?: return null
+        return mealDao.insertMeal(snapshot.copy(id = 0, isVisible = false))
     }
 
     // Combined operations for dashboard

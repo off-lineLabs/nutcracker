@@ -4,6 +4,7 @@ import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
+import com.offlinelabs.nutcracker.data.model.getDefaultKcalPerUnit
 import com.offlinelabs.nutcracker.ui.components.form.FieldError
 import com.offlinelabs.nutcracker.ui.components.form.formatDecimal
 import com.offlinelabs.nutcracker.ui.components.form.parseDecimal
@@ -112,7 +113,11 @@ fun exerciseFormFrom(existing: Exercise, locale: Locale = Locale.getDefault()): 
 /** Initial form contents when importing [external], with the suggested defaults per type. */
 fun exerciseFormFrom(external: ExternalExercise, locale: Locale = Locale.getDefault()): ExerciseFormInput {
     val type = ExerciseCategoryMapper.getExerciseType(external.category)
-    val base = ExerciseFormInput(name = external.name, type = type)
+    val base = ExerciseFormInput(
+        name = external.name,
+        type = type,
+        kcal = formatDecimal(getDefaultKcalPerUnit(external), locale)
+    )
     return when (type) {
         ExerciseType.STRENGTH -> {
             val weight = when (external.equipment?.lowercase()) {
@@ -121,7 +126,7 @@ fun exerciseFormFrom(external: ExternalExercise, locale: Locale = Locale.getDefa
             }
             base.copy(weight = formatDecimal(weight, locale), reps = "8", sets = "3")
         }
-        ExerciseType.CARDIO -> base.copy(kcal = formatDecimal(8.0, locale))
+        ExerciseType.CARDIO -> base
         ExerciseType.BODYWEIGHT -> base.copy(
             bodyweightReps = when (external.category.lowercase()) {
                 "stretching" -> "1"
