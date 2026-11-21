@@ -496,6 +496,8 @@
     <string name="goal_link_macros_to_kcal_desc">Los macros fijan las calorías. Toca para cambiar.</string>
     <string name="goal_link_kcal_to_macros_caption">Las calorías fijan los macros</string>
     <string name="goal_link_macros_to_kcal_caption">Los macros fijan las calorías</string>
+    <string name="macro_legend_current">Actual</string>
+    <string name="macro_legend_target">Objetivo para %1$s kcal</string>
     <string name="real_kcal_help">Real = las calorías que suman tus macros: carbohidratos y proteínas 4 kcal/g, grasas 9 kcal/g (menos la bonificación TEF si el TEF está activado). Usa la flecha para vincular calorías y macros.</string>
     <string name="real_kcal_help_desc">¿Qué es el valor Real?</string>
 
