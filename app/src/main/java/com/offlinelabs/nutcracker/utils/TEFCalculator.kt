@@ -18,9 +18,9 @@ import com.offlinelabs.nutcracker.data.dao.DailyTotals
 object TEFCalculator {
     
     // TEF percentages for each macronutrient
-    private const val PROTEIN_TEF_PERCENTAGE = 0.25  // 25%
-    private const val CARBS_TEF_PERCENTAGE = 0.075   // 7.5%
-    private const val FAT_TEF_PERCENTAGE = 0.02      // 2%
+    const val PROTEIN_TEF_PERCENTAGE = 0.25  // 25%
+    const val CARBS_TEF_PERCENTAGE = 0.075   // 7.5%
+    const val FAT_TEF_PERCENTAGE = 0.02      // 2%
     
     // Calories per gram for each macronutrient
     private const val PROTEIN_CALORIES_PER_GRAM = 4.0

@@ -578,10 +578,8 @@
     <string name="actual_calories">Actual: %1$d kcal (%2$s)</string>
     <string name="goal_link_kcal_to_macros_desc">Calories set the macros. Tap to change.</string>
     <string name="goal_link_macros_to_kcal_desc">Macros set the calories. Tap to change.</string>
-    <string name="goal_link_unlinked_desc">Calories and macros not linked. Tap to change.</string>
     <string name="goal_link_kcal_to_macros_caption">Calories set the macros</string>
     <string name="goal_link_macros_to_kcal_caption">Macros set the calories</string>
-    <string name="goal_link_unlinked_caption">Not linked</string>
     <string name="real_kcal_help">Real = the calories your macros add up to: carbs and protein 4 kcal/g, fat 9 kcal/g (minus the TEF bonus when TEF is on). Use the arrow to link calories and macros.</string>
     <string name="real_kcal_help_desc">What is the Real value?</string>
 

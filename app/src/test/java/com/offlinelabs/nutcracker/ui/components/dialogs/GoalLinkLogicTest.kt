@@ -9,18 +9,47 @@ import kotlin.math.abs
 class GoalLinkLogicTest {
 
     @Test
-    fun upBarCeiling_hasHeadroomAndRoundsUp() {
-        assertEquals(4000, upBarCeilingKcal(2000))
-        assertEquals(4000, upBarCeilingKcal(0))
-        assertEquals(6000, upBarCeilingKcal(4000))
-        assertEquals(7000, upBarCeilingKcal(4500))
+    fun nextLinkMode_togglesDownAndUp() {
+        assertEquals(GoalLinkMode.MACROS_TO_KCAL, nextLinkMode(GoalLinkMode.KCAL_TO_MACROS))
+        assertEquals(GoalLinkMode.KCAL_TO_MACROS, nextLinkMode(GoalLinkMode.MACROS_TO_KCAL))
     }
 
     @Test
-    fun nextLinkMode_cyclesDownUpUnlinked() {
-        assertEquals(GoalLinkMode.MACROS_TO_KCAL, nextLinkMode(GoalLinkMode.KCAL_TO_MACROS))
-        assertEquals(GoalLinkMode.UNLINKED, nextLinkMode(GoalLinkMode.MACROS_TO_KCAL))
-        assertEquals(GoalLinkMode.KCAL_TO_MACROS, nextLinkMode(GoalLinkMode.UNLINKED))
+    fun upModeKcalForShare_reachesTheShareOfReal() {
+        for (tef in listOf(0.0, 0.25)) {
+            // Shares kept low enough that the 5000 kcal cap doesn't apply.
+            for (share in listOf(0.0, 0.1, 0.4, 0.75)) {
+                val others = 1200.0
+                val kcal = upModeKcalForShare(share, others, tef)
+                val real = kcal * (1 - tef) + others
+                assertEquals("share=$share tef=$tef", share, kcal / real, 1e-9)
+            }
+        }
+    }
+
+    @Test
+    fun upModeKcalForShare_capsShareAndKcal() {
+        // 0.95 of Real with 200 kcal of other macros = 3800 kcal, under the absolute cap.
+        assertEquals(3800.0, upModeKcalForShare(1.0, 200.0, 0.0), 1e-6)
+        // With 1000 kcal of others the share cap alone would allow 19000 kcal.
+        assertEquals(UP_BAR_MAX_MACRO_KCAL, upModeKcalForShare(1.0, 1000.0, 0.0), 1e-9)
+        assertEquals(0.0, upModeKcalForShare(-0.2, 1000.0, 0.0), 1e-9)
+    }
+
+    @Test
+    fun upMode_noOtherMacrosUsesFixedScale() {
+        assertEquals(0.5 * UP_BAR_MAX_MACRO_KCAL, upModeKcalForShare(0.5, 0.0, 0.075), 1e-9)
+        assertEquals(0.5, upModeFill(0.5 * UP_BAR_MAX_MACRO_KCAL, 0.0, 0.075), 1e-9)
+    }
+
+    @Test
+    fun upModeFill_invertsKcalForShare() {
+        for (tef in listOf(0.0, 0.02, 0.25)) {
+            for (share in listOf(0.0, 0.2, 0.5, 0.7)) {
+                val kcal = upModeKcalForShare(share, 1500.0, tef)
+                assertEquals("share=$share tef=$tef", share, upModeFill(kcal, 1500.0, tef), 1e-9)
+            }
+        }
     }
 
     @Test

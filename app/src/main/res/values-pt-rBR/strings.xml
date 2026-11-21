@@ -494,10 +494,8 @@
     <string name="actual_calories">Real: %1$d kcal (%2$s)</string>
     <string name="goal_link_kcal_to_macros_desc">As calorias definem os macros. Toque para alterar.</string>
     <string name="goal_link_macros_to_kcal_desc">Os macros definem as calorias. Toque para alterar.</string>
-    <string name="goal_link_unlinked_desc">Calorias e macros não vinculados. Toque para alterar.</string>
     <string name="goal_link_kcal_to_macros_caption">As calorias definem os macros</string>
     <string name="goal_link_macros_to_kcal_caption">Os macros definem as calorias</string>
-    <string name="goal_link_unlinked_caption">Não vinculados</string>
     <string name="real_kcal_help">Real = as calorias que seus macros somam: carboidratos e proteínas 4 kcal/g, gorduras 9 kcal/g (menos o bônus de TEF quando o TEF está ativado). Use a seta para vincular calorias e macros.</string>
     <string name="real_kcal_help_desc">O que é o valor Real?</string>
 

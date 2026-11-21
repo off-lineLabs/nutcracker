@@ -92,19 +92,6 @@ private class GoalFormState(goal: UserGoal, initialMode: GoalLinkMode = GoalLink
      */
     private var anchor = Triple(goal.carbsGoal_g, goal.proteinGoal_g, goal.fatGoal_g)
 
-    /** Bar scale (kcal) in Up mode; frozen while in that mode so a drag never changes it. */
-    var upBarKcal by mutableIntStateOf(0)
-        private set
-
-    init {
-        // Opening in Up mode keeps the stored kcal; it only follows the macros once the user edits them.
-        freezeUpBarScale()
-    }
-
-    private fun freezeUpBarScale() {
-        upBarKcal = upBarCeilingKcal(actualKcalFromMacros(carbs, protein, fat, useTef))
-    }
-
     fun actualKcal(): Int = actualKcalFromMacros(carbs, protein, fat, useTef)
 
     /** Up mode: the calories field mirrors the net kcal of the macros. */
@@ -144,7 +131,6 @@ private class GoalFormState(goal: UserGoal, initialMode: GoalLinkMode = GoalLink
     /** Switching to Up sets kcal = Real at once; switching to Down keeps values until the next edit. */
     fun setMode(mode: GoalLinkMode) {
         linkMode = mode
-        if (mode == GoalLinkMode.MACROS_TO_KCAL) freezeUpBarScale()
         syncCalories()
     }
 
@@ -243,17 +229,16 @@ private fun ColumnScope.SetGoalBody(
             carbsGrams = carbsGrams,
             proteinGrams = proteinGrams,
             fatGrams = fatGrams,
-            // Up mode: the total follows the macros, so use a stable ceiling or the bar's scale
-            // would shrink while dragging.
-            totalKcal = if (linkMode == GoalLinkMode.MACROS_TO_KCAL) {
-                state.upBarKcal
-            } else {
-                targetKcal ?: 2000
-            },
+            totalKcal = targetKcal ?: 2000,
             suggestedCarbsGrams = suggested.carbsGrams,
             suggestedProteinGrams = suggested.proteinGrams,
             suggestedFatGrams = suggested.fatGrams,
             showSuggested = linkMode != GoalLinkMode.MACROS_TO_KCAL,
+            // Both modes: a bar is that macro's kcal as a fraction of the calories. In Up mode the
+            // calories are Real, which moves with the drag, so the bar works that out itself.
+            scaleToNetKcal = linkMode == GoalLinkMode.MACROS_TO_KCAL,
+            useTef = state.useTef,
+            showKcalShare = true,
             onMacrosChanged = { carbs, protein, fat ->
                 state.onMacrosDragged(
                     carbs.roundToInt().coerceAtLeast(0),
@@ -365,10 +350,10 @@ private fun SetGoalLightPreview() {
     FoodLogTheme(darkTheme = false) { SetGoalPreview(UserGoal.default(), false) }
 }
 
-@Preview(name = "Set goals - light, unlinked", widthDp = 360, heightDp = 780, showBackground = true, backgroundColor = 0xFFFAFBFC)
+@Preview(name = "Set goals - light, up", widthDp = 412, heightDp = 820, showBackground = true, backgroundColor = 0xFFFAFBFC)
 @Composable
-private fun SetGoalLightUnlinkedPreview() {
-    FoodLogTheme(darkTheme = false) { SetGoalPreview(UserGoal.default(), false, GoalLinkMode.UNLINKED) }
+private fun SetGoalLightUpPreview() {
+    FoodLogTheme(darkTheme = false) { SetGoalPreview(UserGoal.default(), false, GoalLinkMode.MACROS_TO_KCAL) }
 }
 
 @Preview(name = "Set goals - dark, up", widthDp = 360, heightDp = 780, showBackground = true, backgroundColor = 0xFF0B1426)

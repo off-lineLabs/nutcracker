@@ -15,17 +15,39 @@ import kotlin.math.roundToInt
 /** The Real line is hidden in Down mode when it is this close to the target (gram rounding). */
 const val REAL_KCAL_ROUNDING_TOLERANCE = 5
 
-/** Frozen bar scale for Up mode: 1.5x the current Real (at least 4000), rounded up to 500 kcal. */
-fun upBarCeilingKcal(currentRealKcal: Int): Int {
-    val scaled = (currentRealKcal.coerceAtLeast(0) * 3 + 1) / 2
-    return (maxOf(4000, scaled) + 499) / 500 * 500
-}
+/** Highest fraction of Real one macro bar can be dragged to in Up mode (100% would need infinite grams). */
+const val MAX_UP_BAR_SHARE = 0.95
 
-/** Down -> Up -> Unlinked -> Down. */
+/**
+ * Up mode: most kcal one macro can be dragged to. Also the bar's full width when the other macros
+ * are all 0 (a share of Real would always be 100% then).
+ */
+const val UP_BAR_MAX_MACRO_KCAL = 5000.0
+
+/** Down <-> Up. */
 fun nextLinkMode(mode: GoalLinkMode): GoalLinkMode = when (mode) {
     GoalLinkMode.KCAL_TO_MACROS -> GoalLinkMode.MACROS_TO_KCAL
-    GoalLinkMode.MACROS_TO_KCAL -> GoalLinkMode.UNLINKED
-    GoalLinkMode.UNLINKED -> GoalLinkMode.KCAL_TO_MACROS
+    GoalLinkMode.MACROS_TO_KCAL -> GoalLinkMode.KCAL_TO_MACROS
+}
+
+/**
+ * Up mode drag. Each bar shows its macro's kcal as a fraction of the Real kcal, the same scale
+ * Down mode uses with the calories goal; but in Up mode Real grows with the macro being dragged.
+ * Returns the (gross) kcal the dragged macro needs so that `kcal / (its net kcal + otherNetKcal)`
+ * equals [share]. [tefFraction] is the macro's TEF percentage (0 without TEF), so its net kcal is
+ * `kcal * (1 - tefFraction)`.
+ */
+fun upModeKcalForShare(share: Double, otherNetKcal: Double, tefFraction: Double): Double {
+    if (otherNetKcal <= 0.0) return share.coerceIn(0.0, 1.0) * UP_BAR_MAX_MACRO_KCAL
+    val s = share.coerceIn(0.0, MAX_UP_BAR_SHARE)
+    return (s * otherNetKcal / (1 - s * (1 - tefFraction))).coerceAtMost(UP_BAR_MAX_MACRO_KCAL)
+}
+
+/** Up mode fill of a bar: the inverse of [upModeKcalForShare] (before its caps). */
+fun upModeFill(kcal: Double, otherNetKcal: Double, tefFraction: Double): Double {
+    if (otherNetKcal <= 0.0) return kcal / UP_BAR_MAX_MACRO_KCAL
+    val real = kcal * (1 - tefFraction) + otherNetKcal
+    return if (real > 0.0) kcal / real else 0.0
 }
 
 /**

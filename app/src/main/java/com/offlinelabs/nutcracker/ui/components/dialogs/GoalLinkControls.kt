@@ -20,10 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.offlinelabs.nutcracker.R
@@ -32,7 +28,7 @@ import com.offlinelabs.nutcracker.ui.components.form.FormColors
 import kotlinx.coroutines.launch
 
 /**
- * Row under the calories field: link-mode toggle (Down / Up / struck-through), a one-line caption
+ * Row under the calories field: link-mode toggle (Down / Up), a one-line caption
  * for the current mode, and a "?" that explains the Real value.
  */
 @Composable
@@ -41,48 +37,26 @@ fun GoalLinkRow(mode: GoalLinkMode, onToggle: () -> Unit, colors: FormColors) {
         when (mode) {
             GoalLinkMode.KCAL_TO_MACROS -> R.string.goal_link_kcal_to_macros_desc
             GoalLinkMode.MACROS_TO_KCAL -> R.string.goal_link_macros_to_kcal_desc
-            GoalLinkMode.UNLINKED -> R.string.goal_link_unlinked_desc
         }
     )
     val caption = stringResource(
         when (mode) {
             GoalLinkMode.KCAL_TO_MACROS -> R.string.goal_link_kcal_to_macros_caption
             GoalLinkMode.MACROS_TO_KCAL -> R.string.goal_link_macros_to_kcal_caption
-            GoalLinkMode.UNLINKED -> R.string.goal_link_unlinked_caption
         }
     )
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onToggle) {
-            val icon: ImageVector = if (mode == GoalLinkMode.MACROS_TO_KCAL) {
-                Icons.Filled.ArrowUpward
-            } else {
-                Icons.Filled.ArrowDownward
-            }
-            if (mode == GoalLinkMode.UNLINKED) {
-                val strike = colors.contentSecondary.copy(alpha = 0.7f)
-                Icon(
-                    imageVector = icon,
-                    contentDescription = description,
-                    tint = colors.contentSecondary.copy(alpha = 0.5f),
-                    modifier = Modifier.size(24.dp).drawWithContent {
-                        drawContent()
-                        drawLine(
-                            color = strike,
-                            start = Offset(size.width * 0.1f, size.height * 0.1f),
-                            end = Offset(size.width * 0.9f, size.height * 0.9f),
-                            strokeWidth = 2.dp.toPx(),
-                            cap = StrokeCap.Round
-                        )
-                    }
-                )
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = description,
-                    tint = colors.accent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                imageVector = if (mode == GoalLinkMode.MACROS_TO_KCAL) {
+                    Icons.Filled.ArrowUpward
+                } else {
+                    Icons.Filled.ArrowDownward
+                },
+                contentDescription = description,
+                tint = colors.accent,
+                modifier = Modifier.size(24.dp)
+            )
         }
         Text(
             text = caption,

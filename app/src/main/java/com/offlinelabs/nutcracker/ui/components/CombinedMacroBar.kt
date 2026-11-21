@@ -45,7 +45,11 @@ import com.offlinelabs.nutcracker.ui.theme.nutrientCarbsColor
 import com.offlinelabs.nutcracker.ui.theme.nutrientFatColor
 import com.offlinelabs.nutcracker.ui.theme.nutrientProteinColor
 import com.offlinelabs.nutcracker.ui.theme.progressTrackColor
-import com.offlinelabs.nutcracker.utils.MacroCalculator
+import com.offlinelabs.nutcracker.ui.components.dialogs.upModeFill
+import com.offlinelabs.nutcracker.ui.components.dialogs.upModeKcalForShare
+import com.offlinelabs.nutcracker.utils.TEFCalculator
+import java.text.NumberFormat
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -63,8 +67,12 @@ import kotlin.math.roundToInt
  * @param suggestedProteinGrams Suggested protein value to show as marker
  * @param suggestedFatGrams Suggested fat value to show as marker
  * @param showSuggested Whether to show suggested value markers
+ * @param scaleToNetKcal Full width = the net kcal the macros themselves add up to (the goals
+ *   dialog's Up mode, where the calories follow the macros) instead of [totalKcal]. Either way a
+ *   bar is that macro's kcal as a fraction of the calories.
+ * @param useTef With [scaleToNetKcal], net kcal subtract the TEF bonus.
+ * @param showKcalShare Show each macro's kcal and its % of the macros' total kcal next to the grams.
  * @param onMacrosChanged Callback when macros are adjusted via dragging
- * @param enabled Whether dragging is enabled
  */
 @Composable
 fun CombinedMacroBar(
@@ -76,6 +84,9 @@ fun CombinedMacroBar(
     suggestedProteinGrams: Double = 0.0,
     suggestedFatGrams: Double = 0.0,
     showSuggested: Boolean = false,
+    scaleToNetKcal: Boolean = false,
+    useTef: Boolean = false,
+    showKcalShare: Boolean = false,
     onMacrosChanged: (carbs: Double, protein: Double, fat: Double) -> Unit
 ) {
     val carbsColor = nutrientCarbsColor()
@@ -163,13 +174,29 @@ fun CombinedMacroBar(
     }
     
     val (finalSuggestedCarbs, finalSuggestedProtein, finalSuggestedFat) = adjustedSuggestions
-    
-    // Calculate current calorie percentages
+
+    // Gross kcal of each macro, and net kcal (minus TEF) for the Up-mode scale.
     val carbsKcal = carbsGrams * 4.0
     val proteinKcal = proteinGrams * 4.0
     val fatKcal = fatGrams * 9.0
-    val currentTotalKcal = carbsKcal + proteinKcal + fatKcal
-    
+    val grossKcal = carbsKcal + proteinKcal + fatKcal
+    val carbsTef = if (useTef) TEFCalculator.CARBS_TEF_PERCENTAGE else 0.0
+    val proteinTef = if (useTef) TEFCalculator.PROTEIN_TEF_PERCENTAGE else 0.0
+    val fatTef = if (useTef) TEFCalculator.FAT_TEF_PERCENTAGE else 0.0
+    val carbsNet = carbsKcal * (1 - carbsTef)
+    val proteinNet = proteinKcal * (1 - proteinTef)
+    val fatNet = fatKcal * (1 - fatTef)
+
+    fun fillRatio(grams: Double, kcal: Double, maxGrams: Double, otherNet: Double, tef: Double): Double = when {
+        scaleToNetKcal -> upModeFill(kcal, otherNet, tef)
+        maxGrams > 0 -> grams / maxGrams
+        else -> 0.0
+    }
+    fun gramsFor(fraction: Double, maxGrams: Double, otherNet: Double, tef: Double, kcalPerGram: Double): Double =
+        if (scaleToNetKcal) upModeKcalForShare(fraction, otherNet, tef) / kcalPerGram else fraction * maxGrams
+    fun dietShare(kcal: Double): Double = if (grossKcal > 0) kcal / grossKcal else 0.0
+    fun suggestedRatio(suggested: Double, maxGrams: Double): Double = if (maxGrams > 0) suggested / maxGrams else 0.0
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -178,8 +205,11 @@ fun CombinedMacroBar(
         MacroStatBar(
             label = stringResource(R.string.macro_carbs),
             grams = carbsGrams,
-            maxGrams = maxCarbsGrams,
-            suggestedGrams = finalSuggestedCarbs,
+            kcal = carbsKcal,
+            dietShare = dietShare(carbsKcal),
+            showKcalShare = showKcalShare,
+            fillRatio = fillRatio(carbsGrams, carbsKcal, maxCarbsGrams, proteinNet + fatNet, carbsTef),
+            suggestedRatio = suggestedRatio(finalSuggestedCarbs, maxCarbsGrams),
             showSuggested = showSuggested,
             color = carbsColor,
             trackColor = trackColor,
@@ -193,7 +223,8 @@ fun CombinedMacroBar(
                     lockedMacros // Already 2 locked, can't lock more
                 }
             },
-            onValueChange = { newValue ->
+            onFractionChange = { fraction ->
+                val newValue = gramsFor(fraction, maxCarbsGrams, proteinNet + fatNet, carbsTef, 4.0)
                 onMacrosChanged(newValue, proteinGrams, fatGrams)
             }
         )
@@ -202,8 +233,11 @@ fun CombinedMacroBar(
         MacroStatBar(
             label = stringResource(R.string.macro_protein),
             grams = proteinGrams,
-            maxGrams = maxProteinGrams,
-            suggestedGrams = finalSuggestedProtein,
+            kcal = proteinKcal,
+            dietShare = dietShare(proteinKcal),
+            showKcalShare = showKcalShare,
+            fillRatio = fillRatio(proteinGrams, proteinKcal, maxProteinGrams, carbsNet + fatNet, proteinTef),
+            suggestedRatio = suggestedRatio(finalSuggestedProtein, maxProteinGrams),
             showSuggested = showSuggested,
             color = proteinColor,
             trackColor = trackColor,
@@ -217,7 +251,8 @@ fun CombinedMacroBar(
                     lockedMacros // Already 2 locked, can't lock more
                 }
             },
-            onValueChange = { newValue ->
+            onFractionChange = { fraction ->
+                val newValue = gramsFor(fraction, maxProteinGrams, carbsNet + fatNet, proteinTef, 4.0)
                 onMacrosChanged(carbsGrams, newValue, fatGrams)
             }
         )
@@ -226,8 +261,11 @@ fun CombinedMacroBar(
         MacroStatBar(
             label = stringResource(R.string.macro_fat),
             grams = fatGrams,
-            maxGrams = maxFatGrams,
-            suggestedGrams = finalSuggestedFat,
+            kcal = fatKcal,
+            dietShare = dietShare(fatKcal),
+            showKcalShare = showKcalShare,
+            fillRatio = fillRatio(fatGrams, fatKcal, maxFatGrams, carbsNet + proteinNet, fatTef),
+            suggestedRatio = suggestedRatio(finalSuggestedFat, maxFatGrams),
             showSuggested = showSuggested,
             color = fatColor,
             trackColor = trackColor,
@@ -241,7 +279,8 @@ fun CombinedMacroBar(
                     lockedMacros // Already 2 locked, can't lock more
                 }
             },
-            onValueChange = { newValue ->
+            onFractionChange = { fraction ->
+                val newValue = gramsFor(fraction, maxFatGrams, carbsNet + proteinNet, fatTef, 9.0)
                 onMacrosChanged(carbsGrams, proteinGrams, newValue)
             }
         )
@@ -252,27 +291,36 @@ fun CombinedMacroBar(
 private fun MacroStatBar(
     label: String,
     grams: Double,
-    maxGrams: Double,
-    suggestedGrams: Double,
+    kcal: Double,
+    dietShare: Double,
+    showKcalShare: Boolean,
+    fillRatio: Double,
+    suggestedRatio: Double,
     showSuggested: Boolean,
     color: Color,
     trackColor: Color,
     isLocked: Boolean,
     onLockToggle: () -> Unit,
-    onValueChange: (Double) -> Unit
+    onFractionChange: (Double) -> Unit
 ) {
-    val fillRatio = if (maxGrams > 0) (grams / maxGrams).coerceIn(0.0, 1.0) else 0.0
-    val suggestedRatio = if (maxGrams > 0 && showSuggested) (suggestedGrams / maxGrams).coerceIn(0.0, 1.0) else 0.0
-    
-    // Track value at drag start - we'll add accumulated pixel deltas to this
-    var dragStartGrams by remember { mutableDoubleStateOf(0.0) }
+    val fillRatio = fillRatio.coerceIn(0.0, 1.0)
+    val suggestedRatio = if (showSuggested) suggestedRatio.coerceIn(0.0, 1.0) else 0.0
+
+    // Fill at drag start - accumulated pixel deltas (as a fraction of the width) are added to it.
+    var dragStartFraction by remember { mutableDoubleStateOf(0.0) }
     var totalPixelDrag by remember { mutableDoubleStateOf(0.0) }
-    // The pointerInput block below is only restarted when maxGrams/isLocked change, so reading
-    // `grams`/`onValueChange` directly inside it would use values captured when it started.
+    // The pointerInput block below is only restarted when isLocked changes, so reading
+    // `fillRatio`/`onFractionChange` directly inside it would use values captured when it started.
     // rememberUpdatedState always exposes the latest values without restarting the gesture.
-    val currentGrams by rememberUpdatedState(grams)
-    val currentOnValueChange by rememberUpdatedState(onValueChange)
-    
+    val currentFill by rememberUpdatedState(fillRatio)
+    val currentOnFractionChange by rememberUpdatedState(onFractionChange)
+    val locale = Locale.getDefault()
+    val kcalText = stringResource(
+        R.string.kcal_value_format,
+        remember(locale) { NumberFormat.getIntegerInstance(locale) }.format(kcal.roundToInt())
+    )
+    val shareText = remember(locale) { NumberFormat.getPercentInstance(locale) }.format(dietShare)
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -299,12 +347,24 @@ private fun MacroStatBar(
                     tint = if (isLocked) color else appTextSecondaryColor()
                 )
             }
-            Text(
-                text = stringResource(R.string.grams_value_format, grams.roundToInt().toString()),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = appTextSecondaryColor()
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.grams_value_format, grams.roundToInt().toString()),
+                    fontSize = 13.sp,
+                    fontWeight = if (showKcalShare) FontWeight.SemiBold else FontWeight.Medium,
+                    color = if (showKcalShare) appTextPrimaryColor() else appTextSecondaryColor(),
+                    maxLines = 1
+                )
+                if (showKcalShare) {
+                    Text(
+                        text = "  ·  $kcalText  ·  $shareText",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = appTextSecondaryColor(),
+                        maxLines = 1
+                    )
+                }
+            }
         }
         Spacer(modifier = Modifier.height(4.dp))
         
@@ -317,23 +377,21 @@ private fun MacroStatBar(
                     .height(12.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(trackColor)
-                    .pointerInput(maxGrams, isLocked) {
+                    .pointerInput(isLocked) {
                         if (!isLocked) {
                             detectHorizontalDragGestures(
                                 onDragStart = {
                                     // Capture starting point
-                                    dragStartGrams = currentGrams
+                                    dragStartFraction = currentFill
                                     totalPixelDrag = 0.0
                                 },
                                 onHorizontalDrag = { change, dragAmount ->
                                     change.consume()
-                                    // Accumulate pixel deltas
+                                    // Accumulate pixel deltas; the fill follows the finger.
                                     totalPixelDrag += dragAmount
                                     val barWidth = size.width.toFloat()
-                                    // Convert total pixels to grams once
-                                    val gramsDelta = (totalPixelDrag / barWidth) * maxGrams
-                                    val newGrams = (dragStartGrams + gramsDelta).coerceIn(0.0, maxGrams)
-                                    currentOnValueChange(newGrams)
+                                    val fraction = (dragStartFraction + totalPixelDrag / barWidth).coerceIn(0.0, 1.0)
+                                    currentOnFractionChange(fraction)
                                 }
                             )
                         }

@@ -21,11 +21,8 @@ enum class GoalLinkMode {
     /** Calories drive the macros (Down arrow). Default. */
     KCAL_TO_MACROS,
 
-    /** Macros drive the calories (Up arrow). */
-    MACROS_TO_KCAL,
-
-    /** Independent fields. */
-    UNLINKED
+    /** Macros drive the calories (Up arrow). A stored value that no longer exists reads as the default. */
+    MACROS_TO_KCAL
 }
 
 class SettingsManager(context: Context) {
