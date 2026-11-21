@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.4.0] - 2026-11-21
+## [1.4.0] - 2026-11-22
 
 ### Added
 - Redesigned Analytics: a summary of your average intake against your goal, tiles for average calories burned, average balance, days logged and logging streak, a clearer chart with a goal line, and a macro breakdown (carbs, protein, fat, fiber and salt) against your goals
@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Average balance per day in Analytics was not divided by the number of days
 - Exercises picked from the exercise database left "Kcal per set" empty
 - Meal details showed salt as "1500.0mg"
+- Daily goals: with one macro locked, the target markers on the macro bars were in the wrong place; they now show their target grams and calories
 - The FAQ said daily goals are set in Settings; they are edited with the pencil on the home screen
 - Rotating the phone or changing the language closed Settings, Analytics and Help
 
