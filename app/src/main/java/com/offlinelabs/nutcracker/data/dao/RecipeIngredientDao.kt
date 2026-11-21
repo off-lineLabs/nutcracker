@@ -34,4 +34,10 @@ interface RecipeIngredientDao {
 
     @Query("DELETE FROM recipe_ingredients WHERE id = :ingredientId")
     suspend fun deleteIngredientById(ingredientId: Long)
+
+    @Query("SELECT * FROM recipe_ingredients ORDER BY recipeId ASC, `order` ASC")
+    suspend fun getAllIngredientsSync(): List<RecipeIngredient>
+
+    @Query("DELETE FROM recipe_ingredients")
+    suspend fun deleteAllIngredients()
 }

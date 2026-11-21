@@ -31,6 +31,9 @@ interface ExerciseLogDao {
 
     @Query("DELETE FROM exercise_logs")
     suspend fun deleteAllLogs()
+
+    @Query("SELECT * FROM exercise_logs ORDER BY id ASC")
+    suspend fun getAllExerciseLogsSync(): List<ExerciseLog>
     
     @Query("SELECT * FROM exercise_logs ORDER BY logDateTime DESC")
     fun getAllExerciseLogs(): Flow<List<ExerciseLog>>
@@ -81,6 +84,16 @@ interface ExerciseLogDao {
     """)
     fun getDailyExerciseCalories(date: String): Flow<Double>
 
+    // Per-date burned kcal for a range (same SUM as getDailyExerciseCalories), one row per date with logs
+    @Query("""
+        SELECT logDate as logDate, COALESCE(SUM(caloriesBurned), 0.0) as caloriesBurned
+        FROM exercise_logs
+        WHERE logDate >= :startDate AND logDate <= :endDate
+        GROUP BY logDate
+        ORDER BY logDate ASC
+    """)
+    fun getDailyExerciseCaloriesInRange(startDate: String, endDate: String): Flow<List<DailyExerciseCaloriesRow>>
+
     // Analytics queries for exercise analytics screen
     @Query("""
         SELECT COALESCE(SUM(caloriesBurned), 0.0) as totalCaloriesBurned
@@ -123,6 +136,12 @@ interface ExerciseLogDao {
     """)
     fun getPrimaryMusclesFromLastExercise(): Flow<List<String>>
 }
+
+/** One row of [ExerciseLogDao.getDailyExerciseCaloriesInRange]. */
+data class DailyExerciseCaloriesRow(
+    val logDate: String,
+    val caloriesBurned: Double
+)
 
 // Data class for the complex query result
 data class DailyExerciseEntry(

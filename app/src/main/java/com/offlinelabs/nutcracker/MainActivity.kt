@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,8 +51,9 @@ fun AppContent() {
 fun AppNavigation(settingsManager: SettingsManager) {
     val context = LocalContext.current
     val database = (context.applicationContext as FoodLogApplication).database
-    var currentScreen by remember { mutableStateOf("dashboard") }
-    var shouldShowTutorial by remember { mutableStateOf(false) }
+    // Saveable so rotation or a language change (activity recreation) keeps the user on the same screen
+    var currentScreen by rememberSaveable { mutableStateOf("dashboard") }
+    var shouldShowTutorial by rememberSaveable { mutableStateOf(false) }
     
     // Check if user has agreed to terms - use state to track changes
     var hasAgreedToTerms by remember { mutableStateOf(settingsManager.hasAgreedToTerms()) }

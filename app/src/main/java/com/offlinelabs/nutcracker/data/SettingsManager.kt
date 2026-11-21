@@ -16,6 +16,15 @@ enum class AppLanguage {
     ENGLISH, PORTUGUESE, SPANISH
 }
 
+/** How the calories and the macros of the daily goal follow each other in the goals dialog. */
+enum class GoalLinkMode {
+    /** Calories drive the macros (Down arrow). Default. */
+    KCAL_TO_MACROS,
+
+    /** Macros drive the calories (Up arrow). A stored value that no longer exists reads as the default. */
+    MACROS_TO_KCAL
+}
+
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     
@@ -28,7 +37,16 @@ class SettingsManager(context: Context) {
         private const val KEY_TERMS_AGREED = "terms_agreed"
         private const val KEY_TERMS_AGREED_TIMESTAMP = "terms_agreed_timestamp"
         private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
+        private const val KEY_GOAL_LINK_MODE = "goal_link_mode"
     }
+
+    /** Last chosen link mode of the goals dialog; [GoalLinkMode.KCAL_TO_MACROS] until the user changes it. */
+    var goalLinkMode: GoalLinkMode
+        get() = GoalLinkMode.entries.firstOrNull { it.name == prefs.getString(KEY_GOAL_LINK_MODE, null) }
+            ?: GoalLinkMode.KCAL_TO_MACROS
+        set(value) {
+            prefs.edit().putString(KEY_GOAL_LINK_MODE, value.name).apply()
+        }
     
     private fun getStoredThemeMode(): ThemeMode {
         val stored = prefs.getString(KEY_THEME_MODE, null)

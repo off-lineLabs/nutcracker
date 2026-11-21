@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.offlinelabs.nutcracker.ui.components.form.ConfirmDeleteDialog
 import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
 import com.offlinelabs.nutcracker.ui.components.form.FormDialog
 import com.offlinelabs.nutcracker.ui.components.form.FormDialogActions
@@ -59,6 +60,20 @@ fun CreateRecipeDialog(
     var ingredients by remember { mutableStateOf(initialIngredients) }
     var editingIngredient by remember { mutableStateOf<RecipeIngredient?>(null) }
     var showMealSelector by remember { mutableStateOf(false) }
+    var ingredientIndexPendingDelete by remember { mutableStateOf<Int?>(null) }
+    
+    ingredientIndexPendingDelete?.let { index ->
+        val pendingName = ingredients.getOrNull(index)?.second?.name.orEmpty()
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.confirm_delete_ingredient_title),
+            message = stringResource(R.string.confirm_delete_ingredient_message, pendingName),
+            onConfirm = {
+                ingredients = ingredients.filterIndexed { i, _ -> i != index }
+                ingredientIndexPendingDelete = null
+            },
+            onDismiss = { ingredientIndexPendingDelete = null }
+        )
+    }
     
     // Update ingredients when initialIngredients change (for editing)
     LaunchedEffect(initialIngredients) {
@@ -218,9 +233,7 @@ fun CreateRecipeDialog(
                                 ingredient = ingredient,
                                 meal = meal,
                                 onEdit = { editingIngredient = it },
-                                onDelete = {
-                                    ingredients = ingredients.filterIndexed { i, _ -> i != index }
-                                }
+                                onDelete = { ingredientIndexPendingDelete = index }
                             )
                         }
                     }
@@ -253,7 +266,7 @@ fun CreateRecipeDialog(
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.protein_label)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["protein"] ?: 0.0))}",
+                                text = "${stringResource(R.string.protein_label)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["protein"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -262,11 +275,11 @@ fun CreateRecipeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${stringResource(R.string.carbs_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["carbs"] ?: 0.0))}",
+                                text = "${stringResource(R.string.carbs_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["carbs"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${stringResource(R.string.fat_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.US, "%.1f", nutritionTotals["fat"] ?: 0.0))}",
+                                text = "${stringResource(R.string.fat_g)}: ${stringResource(R.string.grams_value_format, String.format(Locale.getDefault(), "%.1f", nutritionTotals["fat"] ?: 0.0))}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

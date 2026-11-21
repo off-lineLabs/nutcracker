@@ -34,5 +34,9 @@ interface ExerciseDao {
 
     @Query("DELETE FROM exercises")
     suspend fun deleteAllExercises()
+
+    /** One-shot list of every exercise including hidden ones (used by export and import). */
+    @Query("SELECT * FROM exercises ORDER BY id ASC")
+    suspend fun getAllExercisesIncludingHiddenSync(): List<Exercise>
 }
 

@@ -130,8 +130,8 @@ fun CheckInItem(
                 }
                 
                 
-                // Show notes if available
-                checkIn.notes?.let { notes ->
+                // Show notes if available (never the internal "recipe:<id>" link)
+                com.offlinelabs.nutcracker.ui.components.dialogs.visibleCheckInNotes(checkIn.notes).let { notes ->
                     if (notes.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(

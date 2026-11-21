@@ -21,6 +21,33 @@ class ExerciseFormLogicTest {
         sets: String = ""
     ) = ExerciseFormInput(name = name, type = ExerciseType.STRENGTH, kcal = kcal, weight = weight, reps = reps, sets = sets)
 
+    private fun external(category: String) = com.offlinelabs.nutcracker.data.model.ExternalExercise(
+        id = "x", name = "Ext", force = null, level = "beginner", mechanic = null, equipment = null,
+        primaryMuscles = emptyList(), secondaryMuscles = emptyList(), instructions = emptyList(),
+        category = category, images = emptyList()
+    )
+
+    @Test
+    fun externalStrengthPrefillsKcalPerSet() {
+        val form = exerciseFormFrom(external("strength"), Locale.US)
+        assertEquals(ExerciseType.STRENGTH, form.type)
+        assertEquals("5", form.kcal)
+    }
+
+    @Test
+    fun externalBodyweightPrefillsKcal() {
+        val form = exerciseFormFrom(external("stretching"), pt)
+        assertEquals(ExerciseType.BODYWEIGHT, form.type)
+        assertEquals("0,5", form.kcal)
+    }
+
+    @Test
+    fun externalCardioPrefillsKcal() {
+        val form = exerciseFormFrom(external("cardio"), Locale.US)
+        assertEquals(ExerciseType.CARDIO, form.type)
+        assertEquals("8", form.kcal)
+    }
+
     @Test
     fun blankNumbersAreValid() {
         assertTrue(isExerciseFormValid(strength()))

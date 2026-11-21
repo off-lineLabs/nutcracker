@@ -32,9 +32,15 @@ interface MealCheckInDao {
 
     @Query("DELETE FROM meal_check_ins")
     suspend fun deleteAllCheckIns()
+
+    @Query("SELECT * FROM meal_check_ins ORDER BY id ASC")
+    suspend fun getAllMealCheckInsSync(): List<MealCheckIn>
     
     @Query("SELECT * FROM meal_check_ins ORDER BY checkInDateTime DESC")
     fun getAllMealCheckIns(): Flow<List<MealCheckIn>>
+
+    @Query("SELECT * FROM meal_check_ins WHERE mealId <= 0 ORDER BY id ASC")
+    suspend fun getCheckInsWithInvalidMeal(): List<MealCheckIn>
 
     // Complex query to get daily calorie consumption with meal details
     @Transaction
@@ -105,7 +111,42 @@ interface MealCheckInDao {
         WHERE mci.checkInDate = :date
     """)
     fun getDailyNutrientTotals(date: String): Flow<DailyTotals?>
+
+    /**
+     * Per-date food totals for [startDate]..[endDate] (inclusive, yyyy-MM-dd), one row per date
+     * that has at least one check-in. Same maths as [getDailyNutrientTotals]. Deliberately does
+     * not filter meals.isVisible: recipe check-ins point at hidden snapshot meals.
+     */
+    @Query("""
+        SELECT
+            mci.checkInDate as checkInDate,
+            COALESCE(SUM(m.calories * mci.servingSize), 0.0) as totalCalories,
+            COALESCE(SUM(m.carbohydrates_g * mci.servingSize), 0.0) as totalCarbohydrates,
+            COALESCE(SUM(m.protein_g * mci.servingSize), 0.0) as totalProtein,
+            COALESCE(SUM(m.fat_g * mci.servingSize), 0.0) as totalFat,
+            COALESCE(SUM(m.fiber_g * mci.servingSize), 0.0) as totalFiber,
+            COALESCE(SUM(m.sodium_mg * mci.servingSize), 0.0) as totalSaltMg,
+            COUNT(mci.id) as checkInCount
+        FROM meal_check_ins mci
+        INNER JOIN meals m ON mci.mealId = m.id
+        WHERE mci.checkInDate >= :startDate AND mci.checkInDate <= :endDate
+        GROUP BY mci.checkInDate
+        ORDER BY mci.checkInDate ASC
+    """)
+    fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>>
 }
+
+/** One row of [MealCheckInDao.getDailyFoodTotalsInRange]. */
+data class DailyFoodTotalsRow(
+    val checkInDate: String,
+    val totalCalories: Double,
+    val totalCarbohydrates: Double,
+    val totalProtein: Double,
+    val totalFat: Double,
+    val totalFiber: Double,
+    val totalSaltMg: Double,
+    val checkInCount: Int
+)
 
 // Data class for the complex query result
 data class DailyNutritionEntry(
