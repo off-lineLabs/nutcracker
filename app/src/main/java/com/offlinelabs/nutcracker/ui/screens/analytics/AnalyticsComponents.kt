@@ -64,6 +64,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -184,7 +186,10 @@ fun StatTile(
     supporting: String? = null,
     icon: ImageVector? = null,
     tone: StatTone = StatTone.Neutral,
-    colors: FormColors = FormDefaults.colors()
+    colors: FormColors = FormDefaults.colors(),
+    // Text values (e.g. a list of names) read better smaller and capped, not in the number style
+    valueStyle: TextStyle = MaterialTheme.typography.titleLarge,
+    valueMaxLines: Int = Int.MAX_VALUE
 ) {
     val toneColor = tone.color(colors)
     val isStatus = tone == StatTone.Positive || tone == StatTone.Negative
@@ -221,9 +226,11 @@ fun StatTile(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
+                style = valueStyle,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.content
+                color = colors.content,
+                maxLines = valueMaxLines,
+                overflow = TextOverflow.Ellipsis
             )
             if (supporting != null) {
                 Spacer(Modifier.height(2.dp))
