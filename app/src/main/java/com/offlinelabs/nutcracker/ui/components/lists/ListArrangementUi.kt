@@ -46,6 +46,7 @@ import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.gymLabel
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.ui.components.muscleLabel
+import com.offlinelabs.nutcracker.ui.components.mealcategory.mealCategoryLabel
 
 @Composable
 fun sortLabel(sort: ListSort): String = stringResource(
@@ -61,6 +62,7 @@ fun sortLabel(sort: ListSort): String = stringResource(
 fun mealGroupingLabel(grouping: MealGrouping): String = stringResource(
     when (grouping) {
         MealGrouping.NONE -> R.string.group_none
+        MealGrouping.MEAL_TYPE -> R.string.group_meal_type
         MealGrouping.NOVA -> R.string.group_nova
     }
 )
@@ -78,11 +80,13 @@ fun exerciseGroupingLabel(grouping: ExerciseGrouping): String = stringResource(
 
 @Composable
 fun groupTitleText(title: GroupTitle): String = when (title) {
+    is GroupTitle.MealType -> mealCategoryLabel(title.name, title.defaultKey)
+    GroupTitle.NoMealType -> stringResource(R.string.group_no_meal_type)
     is GroupTitle.Nova -> stringResource(R.string.group_nova_number, title.group)
     GroupTitle.NoNova -> stringResource(R.string.group_no_nova)
     is GroupTitle.GymName -> gymLabel(title.name, title.unit)
     GroupTitle.Shared -> stringResource(R.string.gym_shared_section)
-    is GroupTitle.RoutineName -> title.name
+    is GroupTitle.RoutineName -> title.gym?.let { "${title.name} · ${gymLabel(it.name, it.unit)}" } ?: title.name
     GroupTitle.NoRoutine -> stringResource(R.string.group_no_routine)
     is GroupTitle.Muscle -> muscleLabel(title.muscle)
     GroupTitle.NoMuscle -> stringResource(R.string.group_no_muscle)

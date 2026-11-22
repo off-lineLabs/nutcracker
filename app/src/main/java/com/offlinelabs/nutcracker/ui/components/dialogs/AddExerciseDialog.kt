@@ -10,6 +10,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncDisabled
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -61,6 +71,10 @@ fun AddExerciseDialog(
     defaultGymId: Long? = null,
     /** Muscle choices besides the selected ones (exercise database + muscles already in use). */
     muscleChoices: List<String> = emptyList(),
+    /** Gyms of the copies this exercise is synced with (e.g. "Basic Fit · Uni"); null when not synced. */
+    syncedWith: String? = null,
+    /** Stops syncing this exercise (applied right away). */
+    onUnsync: (() -> Unit)? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -81,6 +95,9 @@ fun AddExerciseDialog(
     }
     // Show "required" for the name only once the user has typed in it (or cleared it).
     var nameTouched by remember(externalExercise, existingExercise) { mutableStateOf(false) }
+    // Set once the user stops syncing here, so saving doesn't re-join the old sync group
+    var unsynced by remember(existingExercise) { mutableStateOf(false) }
+    var confirmUnsync by remember { mutableStateOf(false) }
 
     val errors = exerciseFormErrors(input)
     val valid = errors.isEmpty()
@@ -89,7 +106,8 @@ fun AddExerciseDialog(
     // Edit keeps everything the form doesn't show; import starts from the external exercise.
     fun createExercise(): Exercise {
         val base = existingExercise ?: externalExercise?.toInternalExercise() ?: Exercise(name = "")
-        return applyExerciseForm(base, input)
+        val form = applyExerciseForm(base, input)
+        return if (unsynced) form.copy(syncGroupId = null) else form
     }
 
     val showThreeButtons = externalExercise != null && existingExercise == null &&
@@ -132,6 +150,46 @@ fun AddExerciseDialog(
             gymOptions = gymPickerOptions(gyms),
             muscleChoices = muscleChoices
         )
+        if (syncedWith != null && onUnsync != null && !unsynced) {
+            SyncedWithRow(syncedWith, FormDefaults.colors(), onClick = { confirmUnsync = true })
+        }
+    }
+
+    if (confirmUnsync && syncedWith != null && onUnsync != null) {
+        val colors = FormDefaults.colors()
+        AlertDialog(
+            onDismissRequest = { confirmUnsync = false },
+            icon = { Icon(Icons.Filled.SyncDisabled, contentDescription = null) },
+            title = { Text(stringResource(R.string.sync_stop_title)) },
+            text = { Text(stringResource(R.string.sync_stop_message, syncedWith)) },
+            confirmButton = {
+                TextButton(onClick = { confirmUnsync = false; unsynced = true; onUnsync() }) {
+                    Text(stringResource(R.string.sync_stop), color = colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmUnsync = false }) { Text(stringResource(R.string.cancel), color = colors.accent) }
+            }
+        )
+    }
+}
+
+/** "Synced with …" note at the bottom of the form; tapping it offers to stop syncing. */
+@Composable
+private fun SyncedWithRow(syncedWith: String, colors: FormColors, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = colors.section,
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+    ) {
+        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Sync, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
+            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+                Text(stringResource(R.string.sync_synced_with, syncedWith), style = MaterialTheme.typography.bodyMedium, color = colors.content)
+                Text(stringResource(R.string.sync_tap_to_stop), style = MaterialTheme.typography.bodySmall, color = colors.contentSecondary)
+            }
+        }
     }
 }
 

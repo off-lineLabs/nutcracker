@@ -5,6 +5,8 @@ import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.Meal
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.data.model.MealCategoryMeal
 import com.offlinelabs.nutcracker.data.model.Routine
 import com.offlinelabs.nutcracker.data.model.RoutineExercise
 
@@ -26,18 +28,22 @@ enum class ListSort(
 }
 
 /** Food tab grouping. Stored by [name] in settings. */
-enum class MealGrouping { NONE, NOVA }
+enum class MealGrouping { NONE, MEAL_TYPE, NOVA }
 
 /** Exercise tab grouping. Stored by [name] in settings. */
 enum class ExerciseGrouping { NONE, GYM, ROUTINE, MUSCLE, TYPE }
 
 /** Title of a group; the UI turns it into localized text. */
 sealed interface GroupTitle {
+    /** A meal category; [defaultKey] set for the built-in, translated ones. */
+    data class MealType(val name: String, val defaultKey: String?) : GroupTitle
+    data object NoMealType : GroupTitle
     data class Nova(val group: Int) : GroupTitle
     data object NoNova : GroupTitle
     data class GymName(val name: String, val unit: String?) : GroupTitle
     data object Shared : GroupTitle
-    data class RoutineName(val name: String) : GroupTitle
+    /** [gym] is set when routines of several gyms are listed together (All gyms). */
+    data class RoutineName(val name: String, val gym: GymName? = null) : GroupTitle
     data object NoRoutine : GroupTitle
     data class Muscle(val muscle: String) : GroupTitle
     data object NoMuscle : GroupTitle
@@ -96,9 +102,33 @@ fun sortExercises(
 
 private val NOVA_GROUPS = listOf(1, 2, 3, 4)
 
-/** Groups already-sorted [meals]; NOVA 1–4 then "no NOVA". Empty groups are dropped. */
-fun groupMeals(meals: List<Meal>, grouping: MealGrouping): List<ListGroup<Meal>> = when (grouping) {
+/**
+ * Groups already-sorted [meals].
+ * - MEAL_TYPE: one group per category in [categories] order (a food in several appears in each),
+ *   then "no meal type".
+ * - NOVA: 1–4 then "no NOVA".
+ * Empty groups are dropped.
+ */
+fun groupMeals(
+    meals: List<Meal>,
+    grouping: MealGrouping,
+    categories: List<MealCategory> = emptyList(),
+    links: List<MealCategoryMeal> = emptyList()
+): List<ListGroup<Meal>> = when (grouping) {
     MealGrouping.NONE -> listOf(ListGroup("all", null, meals))
+    MealGrouping.MEAL_TYPE -> {
+        val categoryIds = categories.map { it.id }.toSet()
+        val categoriesByMeal = links.filter { it.categoryId in categoryIds }.groupBy({ it.mealId }, { it.categoryId })
+        categories.mapNotNull { c ->
+            meals.filter { c.id in categoriesByMeal[it.id].orEmpty() }
+                .takeIf { it.isNotEmpty() }
+                ?.let { ListGroup("mealtype_${c.id}", GroupTitle.MealType(c.name, c.defaultKey), it) }
+        } + listOfNotNull(
+            meals.filter { categoriesByMeal[it.id].isNullOrEmpty() }
+                .takeIf { it.isNotEmpty() }
+                ?.let { ListGroup("mealtype_none", GroupTitle.NoMealType, it) }
+        )
+    }
     MealGrouping.NOVA -> {
         val byGroup = meals.groupBy { m -> m.novaClassification?.group?.takeIf { it in NOVA_GROUPS } }
         NOVA_GROUPS.mapNotNull { g -> byGroup[g]?.let { ListGroup("nova_$g", GroupTitle.Nova(g), it) } } +
@@ -166,7 +196,10 @@ fun groupExercises(
                 .sortedBy { it.position }
                 .mapNotNull { byId[it.exerciseId] }
                 .takeIf { it.isNotEmpty() }
-                ?.let { ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name), it, routineId = r.id) }
+                ?.let {
+                    val gym = gyms.firstOrNull { g -> g.id == r.gymId }?.takeIf { selectedGymId == null }
+                    ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name, gym?.let { g -> GroupTitle.GymName(g.name, g.unit) }), it, routineId = r.id)
+                }
         } + listOfNotNull(
             exercises.filter { it.id !in inSomeRoutine }
                 .takeIf { it.isNotEmpty() }

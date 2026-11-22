@@ -50,8 +50,11 @@ fun UnifiedExerciseDetailsDialog(
     gym: Gym? = null,
     /** Visible gyms, the targets of "Copy to another gym". */
     gyms: List<Gym> = emptyList(),
-    /** Called with the target gym id (null = shared). When null the copy action is hidden. */
-    onCopyToGym: ((Long?) -> Unit)? = null,
+    /**
+     * Called with the target gym id (null = shared) and whether the copy stays in sync with this
+     * exercise. When null the copy action is hidden.
+     */
+    onCopyToGym: ((Long?, Boolean) -> Unit)? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onCheckIn: () -> Unit
@@ -62,6 +65,9 @@ fun UnifiedExerciseDetailsDialog(
         gymPickerOptions(gyms, excludeGymId = exercise.gymId, excludeShared = exercise.gymId == null)
     }
     var showCopyPicker by rememberSaveable { mutableStateOf(false) }
+    // Target picked in the sheet, waiting for the "keep in sync?" answer
+    var askSync by rememberSaveable { mutableStateOf(false) }
+    var copyTarget by rememberSaveable { mutableStateOf<Long?>(null) }
     
     // Auto-advance slideshow if there are multiple images
     LaunchedEffect(pagerState) {
@@ -191,9 +197,34 @@ fun UnifiedExerciseDetailsDialog(
             options = copyTargets,
             onSelected = { target ->
                 showCopyPicker = false
-                onCopyToGym(target)
+                copyTarget = target
+                askSync = true
             },
             onDismiss = { showCopyPicker = false }
+        )
+    }
+
+    if (askSync && onCopyToGym != null) {
+        val target = copyTarget
+        val targetName = gyms.firstOrNull { it.id == target }?.let { gymLabel(it.name, it.unit) }
+            ?: stringResource(R.string.gym_all_gyms_shared)
+        val accent = FormDefaults.colors().accent
+        AlertDialog(
+            onDismissRequest = { askSync = false },
+            icon = { Icon(Icons.Filled.Sync, contentDescription = null) },
+            title = { Text(stringResource(R.string.sync_dialog_title)) },
+            text = { Text(stringResource(R.string.sync_dialog_message, targetName)) },
+            confirmButton = {
+                Button(
+                    onClick = { askSync = false; onCopyToGym(target, true) },
+                    colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = FormDefaults.colors().onAccent)
+                ) { Text(stringResource(R.string.sync_keep)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { askSync = false; onCopyToGym(target, false) }) {
+                    Text(stringResource(R.string.sync_independent), color = accent)
+                }
+            }
         )
     }
 }

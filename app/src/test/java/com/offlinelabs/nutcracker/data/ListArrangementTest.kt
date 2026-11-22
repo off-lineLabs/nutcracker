@@ -4,6 +4,8 @@ import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.data.model.MealCategoryMeal
 import com.offlinelabs.nutcracker.data.model.NovaClassification
 import com.offlinelabs.nutcracker.data.model.Routine
 import com.offlinelabs.nutcracker.data.model.RoutineExercise
@@ -91,6 +93,42 @@ class ListArrangementTest {
     fun lastCheckedIn_mostRecentFirst_neverLast() {
         val last = mapOf(1L to "2026-11-01 08:00:00", 3L to "2026-11-20 19:30:00")
         assertEquals(listOf(3L, 1L, 2L), sortMeals(meals, ListSort.LAST_CHECKED_IN, last).map { it.id })
+    }
+
+    @Test
+    fun mealTypeGroups_followCategoryOrder_foodInSeveral_noneLast() {
+        val list = listOf(meal(1, "Oats"), meal(2, "Rice"), meal(3, "Cake"))
+        val categories = listOf(MealCategory(id = 7, name = "Snack", defaultKey = "snack"), MealCategory(id = 5, name = "Breakfast"))
+        val links = listOf(MealCategoryMeal(5, 1), MealCategoryMeal(7, 1), MealCategoryMeal(9, 3)) // 9: hidden category
+        val groups = groupMeals(list, MealGrouping.MEAL_TYPE, categories, links)
+        assertEquals(listOf("mealtype_7", "mealtype_5", "mealtype_none"), groups.map { it.key })
+        assertEquals(GroupTitle.MealType("Snack", "snack"), groups[0].title)
+        assertEquals(listOf(2L, 3L), groups[2].items.map { it.id })
+    }
+
+    @Test
+    fun syncedFields_copyEverySetting_keepPerCopyFields() {
+        val source = Exercise(id = 1, name = "Press", defaultWeight = 45.0, defaultReps = 12, notes = "slow", gymId = 10,
+            primaryMuscles = listOf("chest"), imagePaths = listOf("a.png"), sortOrder = 3, syncGroupId = "g")
+        val target = Exercise(id = 2, name = "Old", gymId = 20, imagePaths = listOf("b.png"), sortOrder = 9, syncGroupId = "g")
+        val result = applySyncedFields(target, source)
+        assertEquals("Press", result.name)
+        assertEquals(45.0, result.defaultWeight, 0.0)
+        assertEquals(listOf("chest"), result.primaryMuscles)
+        assertEquals("slow", result.notes)
+        assertEquals(2L, result.id)
+        assertEquals(20L, result.gymId)
+        assertEquals(listOf("b.png"), result.imagePaths)
+        assertEquals(9, result.sortOrder)
+    }
+
+    @Test
+    fun syncPartners_onlyVisibleOthersInSameGroup() {
+        val a = Exercise(id = 1, name = "a", syncGroupId = "g")
+        val all = listOf(a, Exercise(id = 2, name = "b", syncGroupId = "g"), Exercise(id = 3, name = "c", syncGroupId = "g", isVisible = false),
+            Exercise(id = 4, name = "d", syncGroupId = "h"))
+        assertEquals(listOf(2L), syncPartners(a, all).map { it.id })
+        assertEquals(emptyList<Exercise>(), syncPartners(Exercise(id = 9, name = "x"), all))
     }
 
     @Test

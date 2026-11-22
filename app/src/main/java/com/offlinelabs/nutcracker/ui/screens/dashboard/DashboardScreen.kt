@@ -75,6 +75,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.FormatListNumbered
 import com.offlinelabs.nutcracker.ui.components.dialogs.GoogleCodeScannerDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.FoodInfoDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.FoodSearchDialog
@@ -89,6 +90,12 @@ import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.groupExercises
 import com.offlinelabs.nutcracker.data.exercisesForGym
+import com.offlinelabs.nutcracker.data.syncPartners
+import com.offlinelabs.nutcracker.ui.components.routine.RoutineEditorDialog
+import com.offlinelabs.nutcracker.ui.components.mealcategory.MealCategoriesDialog
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.ui.components.routine.RoutinesDialog
+import com.offlinelabs.nutcracker.ui.components.routine.routinesForGym
 import com.offlinelabs.nutcracker.data.groupMeals
 import com.offlinelabs.nutcracker.data.reorderWithinGroup
 import com.offlinelabs.nutcracker.data.sortExercises
@@ -415,6 +422,9 @@ private fun NutrientBox(
     }
 }
 
+/** editingRoutineId value meaning "create a new routine". */
+private const val NEW_ROUTINE_ID = -1L
+
 /** A delete waiting for the user's confirmation in the shared [ConfirmDeleteDialog]. */
 private class PendingDelete(val title: String, val message: String, val onConfirm: () -> Unit)
 
@@ -647,28 +657,43 @@ fun DashboardScreen(
         val collator = java.text.Collator.getInstance().apply { strength = java.text.Collator.PRIMARY }
         Comparator<String> { a, b -> collator.compare(a, b) }
     }
-    val mealGroups = remember(meals, mealSort, mealDescending, mealGrouping, mealLastCheckIns) {
-        groupMeals(sortMeals(meals, mealSort, mealLastCheckIns, nameComparator, mealDescending), mealGrouping)
-    }
-    // Group by routine is offered once routines exist
-    val exerciseGroupings = if (routines.isEmpty()) {
+    // A gym shows its own and the shared exercises (and its routines); All gyms shows everything
+    val selectedGymForList = (gymSelection as? GymSelection.Specific)?.gymId
+    val listedRoutines = remember(routines, selectedGymForList) { routinesForGym(routines, selectedGymForList) }
+    // Group by routine is offered once the listed gym(s) have routines
+    val exerciseGroupings = if (listedRoutines.isEmpty()) {
         ExerciseGrouping.entries - ExerciseGrouping.ROUTINE
     } else {
         ExerciseGrouping.entries
     }
     val effectiveExerciseGrouping = if (exerciseGrouping in exerciseGroupings) exerciseGrouping else ExerciseGrouping.GYM
-    // A gym shows its own and the shared exercises; All gyms shows every exercise
-    val selectedGymForList = (gymSelection as? GymSelection.Specific)?.gymId
     val listedExercises = remember(exercises, selectedGymForList) { exercisesForGym(exercises, selectedGymForList) }
     val exerciseGroups = remember(
         listedExercises, exerciseSort, exerciseDescending, effectiveExerciseGrouping, exerciseLastCheckIns,
-        routines, routineMemberships, gyms, selectedGymForList
+        listedRoutines, routineMemberships, gyms, selectedGymForList
     ) {
         groupExercises(
             sortExercises(listedExercises, exerciseSort, exerciseLastCheckIns, nameComparator, exerciseDescending),
-            effectiveExerciseGrouping, routines, routineMemberships, gyms, selectedGymForList
+            effectiveExerciseGrouping, listedRoutines, routineMemberships, gyms, selectedGymForList
         )
     }
+
+    // Meal types (Breakfast, Lunch...) and their manager dialog
+    val mealCategories by remember(foodLogRepository) { foodLogRepository.getVisibleMealCategories() }
+        .collectAsState(initial = emptyList())
+    val mealCategoryLinks by remember(foodLogRepository) { foodLogRepository.getVisibleMealCategoryLinks() }
+        .collectAsState(initial = emptyList())
+    var showMealCategories by rememberSaveable { mutableStateOf(false) }
+    val mealGroups = remember(meals, mealSort, mealDescending, mealGrouping, mealLastCheckIns, mealCategories, mealCategoryLinks) {
+        groupMeals(
+            sortMeals(meals, mealSort, mealLastCheckIns, nameComparator, mealDescending),
+            mealGrouping, mealCategories, mealCategoryLinks
+        )
+    }
+
+    // Routines dialogs: the list, and the editor (NEW_ROUTINE_ID = creating one)
+    var showRoutines by rememberSaveable { mutableStateOf(false) }
+    var editingRoutineId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     // A drag reorders one group; its items swap into the slots they held in the full custom order
     fun saveMealOrder(@Suppress("UNUSED_PARAMETER") groupKey: String, groupOrder: List<Long>) {
@@ -1291,14 +1316,28 @@ fun DashboardScreen(
                         else -> null
                     },
                     header = {
-                        GymDropdown(
-                            selectedGym = selectedGymOrNull(gymSelection, gyms),
-                            gyms = gyms,
-                            onSelectAll = { selectGym(null) },
-                            onSelectGym = { selectGym(it) },
-                            onAddGym = { gymDialogsState.showAdd = true },
-                            onManageGyms = { gymDialogsState.showManage = true }
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GymDropdown(
+                                selectedGym = selectedGymOrNull(gymSelection, gyms),
+                                gyms = gyms,
+                                onSelectAll = { selectGym(null) },
+                                onSelectGym = { selectGym(it) },
+                                onAddGym = { gymDialogsState.showAdd = true },
+                                onManageGyms = { gymDialogsState.showManage = true }
+                            )
+                            OutlinedButton(
+                                onClick = { showRoutines = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                            ) {
+                                Icon(Icons.Filled.FormatListNumbered, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    if (listedRoutines.isEmpty()) stringResource(R.string.routines_button)
+                                    else "${stringResource(R.string.routines_button)} · ${listedRoutines.size}"
+                                )
+                            }
+                        }
                     },
                     externalExerciseService = externalExerciseService,
                     foodLogRepository = foodLogRepository,
@@ -1684,11 +1723,14 @@ fun DashboardScreen(
 
     if (showAddMealDialog) {
         AddMealDialog(
+            categories = mealCategories,
+            onManageCategories = { showMealCategories = true },
             onDismiss = { showAddMealDialog = false },
-            onAddMeal = { newMeal ->
+            onAddMeal = { newMeal, categoryIds ->
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.insertMeal(newMeal)
+                        val newId = foodLogRepository.insertMeal(newMeal)
+                        foodLogRepository.setMealCategories(newId, categoryIds)
                         snackbarHostState.showSnackbar(
                             message = mealAddedSuccess
                         )
@@ -1731,6 +1773,61 @@ fun DashboardScreen(
         )
     }
 
+    if (showMealCategories) {
+        MealCategoriesDialog(
+            categories = mealCategories,
+            onDismiss = { showMealCategories = false },
+            onAdd = { name -> coroutineScope.launch { foodLogRepository.upsertMealCategory(MealCategory(name = name)) } },
+            // A renamed built-in category keeps the typed text from then on
+            onRename = { category, name ->
+                coroutineScope.launch { foodLogRepository.upsertMealCategory(category.copy(name = name, defaultKey = null)) }
+            },
+            onDelete = { category -> coroutineScope.launch { foodLogRepository.deleteMealCategory(category.id) } },
+            onReorder = { ids -> coroutineScope.launch { foodLogRepository.applyMealCategoryOrder(ids) } }
+        )
+    }
+
+    if (showRoutines) {
+        RoutinesDialog(
+            routines = routines,
+            memberships = routineMemberships,
+            gyms = gyms,
+            selectedGymId = selectedGymForList,
+            onDismiss = { showRoutines = false },
+            onNew = { editingRoutineId = NEW_ROUTINE_ID },
+            onEdit = { editingRoutineId = it.id },
+            onReorder = { shownOrder ->
+                // Only the shown routines moved; the others keep their slots in the full order
+                val full = routinesForGym(routines, null).map { it.id }
+                coroutineScope.launch { foodLogRepository.applyRoutineOrder(reorderWithinGroup(full, shownOrder)) }
+            }
+        )
+    }
+    editingRoutineId?.let { routineId ->
+        val routine = routines.firstOrNull { it.id == routineId }
+        // key: a different routine (or a new one) starts with fresh editor state
+        androidx.compose.runtime.key(routineId) {
+            RoutineEditorDialog(
+                routine = routine,
+                initialExerciseIds = routineMemberships.filter { it.routineId == routineId }.sortedBy { it.position }.map { it.exerciseId },
+                gyms = gyms,
+                exercises = exercises,
+                defaultGymId = selectedGymForList,
+                onDismiss = { editingRoutineId = null },
+                onSave = { toSave, exerciseIds ->
+                    editingRoutineId = null
+                    coroutineScope.launch { foodLogRepository.saveRoutine(toSave, exerciseIds) }
+                },
+                onDelete = routine?.let { r ->
+                    {
+                        editingRoutineId = null
+                        coroutineScope.launch { foodLogRepository.deleteRoutine(r.id) }
+                    }
+                }
+            )
+        }
+    }
+
     GymDialogsHost(
         state = gymDialogsState,
         gyms = gyms,
@@ -1745,6 +1842,7 @@ fun DashboardScreen(
         val editedGym by produceState<Gym?>(null, editedGymId) {
             value = editedGymId?.let { foodLogRepository.getGymById(it) }
         }
+        val sharedGymLabel = stringResource(R.string.gym_all_gyms_shared)
         AddExerciseDialog(
             externalExercise = selectedExternalExercise,
             existingExercise = selectedExerciseForEdit,
@@ -1753,6 +1851,16 @@ fun DashboardScreen(
             // Database muscles plus any (custom) muscle already used, so custom entries come back
             muscleChoices = remember(exercises) {
                 externalExerciseService.getKnownMuscles() + exercises.flatMap { it.primaryMuscles }
+            },
+            // Gyms of the synced copies, e.g. "G1mart · U1, All gyms (shared)"
+            syncedWith = selectedExerciseForEdit?.let { edited ->
+                syncPartners(edited, exercises).takeIf { it.isNotEmpty() }?.map { partner ->
+                    gyms.firstOrNull { it.id == partner.gymId }?.let { gymLabel(it.name, it.unit) }
+                        ?: sharedGymLabel
+                }?.distinct()?.joinToString(", ")
+            },
+            onUnsync = selectedExerciseForEdit?.let { edited ->
+                { coroutineScope.launch { foodLogRepository.unsyncExercise(edited.id) } }
             },
             onDismiss = { 
                 showAddExerciseDialog = false
@@ -2895,12 +3003,12 @@ fun DashboardScreen(
             exercise = exercise,
             gym = exerciseGym,
             gyms = gyms,
-            onCopyToGym = { targetGymId ->
+            onCopyToGym = { targetGymId, sync ->
                 // Close the dialog so the confirmation snackbar is visible.
                 showUnifiedExerciseDetailDialog = null
                 coroutineScope.launch {
                     try {
-                        foodLogRepository.copyExerciseToGym(exercise, targetGymId)
+                        foodLogRepository.copyExerciseToGym(exercise, targetGymId, sync)
                         val targetName = gyms.firstOrNull { it.id == targetGymId }
                             ?.let { gymLabel(it.name, it.unit) }
                             ?: context.getString(R.string.gym_all_gyms_shared)
@@ -2970,12 +3078,18 @@ fun DashboardScreen(
 
     // Edit Meal Definition Dialog
     showEditMealDefinitionDialog?.let { meal ->
+        val mealCategoryIds by produceState(emptyList<Long>(), meal.id) {
+            value = foodLogRepository.getMealCategoryIds(meal.id)
+        }
         EditMealDialog(
             meal = meal,
+            categories = mealCategories,
+            initialCategoryIds = mealCategoryIds,
+            onManageCategories = { showMealCategories = true },
             onDismiss = {
                 openEditMealDefinition(null)
             },
-            onUpdateMeal = { updatedMeal ->
+            onUpdateMeal = { updatedMeal, categoryIds ->
                 // Close the edit dialog immediately
                 openEditMealDefinition(null)
                 showUnifiedMealDetailDialog = updatedMeal
@@ -2984,6 +3098,7 @@ fun DashboardScreen(
                 coroutineScope.launch {
                     try {
                         foodLogRepository.updateMeal(updatedMeal)
+                        foodLogRepository.setMealCategories(updatedMeal.id, categoryIds)
                         snackbarHostState.showSnackbar(
                             message = mealUpdatedSuccess
                         )
