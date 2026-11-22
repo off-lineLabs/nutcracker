@@ -22,6 +22,8 @@ import com.offlinelabs.nutcracker.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.offlinelabs.nutcracker.data.dao.DailyExerciseEntry
+import com.offlinelabs.nutcracker.data.gymLabel
+import androidx.compose.ui.text.style.TextOverflow
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.ui.theme.*
@@ -104,6 +106,17 @@ fun ExerciseItem(
                     fontWeight = FontWeight.SemiBold,
                     color = appTextPrimaryColor()
                 )
+
+                // Only exercises that belong to a gym show it; shared ones show nothing extra.
+                exerciseEntry.gymName?.let { gymName ->
+                    Text(
+                        text = gymLabel(gymName, exerciseEntry.gymUnit),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = appTextSecondaryColor(),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 

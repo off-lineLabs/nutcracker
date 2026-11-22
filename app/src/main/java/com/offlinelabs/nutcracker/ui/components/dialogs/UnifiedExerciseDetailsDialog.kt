@@ -24,6 +24,12 @@ import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.gymLabel
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerDialog
+import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextOverflow
 import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
 import com.offlinelabs.nutcracker.data.service.ExternalExerciseService
 import com.offlinelabs.nutcracker.data.service.ExerciseImageService
@@ -38,12 +44,22 @@ fun UnifiedExerciseDetailsDialog(
     externalExerciseService: ExternalExerciseService? = null,
     exerciseImageService: ExerciseImageService? = null,
     foodLogRepository: FoodLogRepository? = null,
+    /** The exercise's gym (may be a hidden one), for the header label. Null for shared exercises. */
+    gym: Gym? = null,
+    /** Visible gyms, the targets of "Copy to another gym". */
+    gyms: List<Gym> = emptyList(),
+    /** Called with the target gym id (null = shared). When null the copy action is hidden. */
+    onCopyToGym: ((Long?) -> Unit)? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onCheckIn: () -> Unit
 ) {
     val imagePaths = exercise.imagePaths
     val pagerState = rememberPagerState { imagePaths.size }
+    val copyTargets = remember(gyms, exercise.gymId) {
+        gymPickerOptions(gyms, excludeGymId = exercise.gymId, excludeShared = exercise.gymId == null)
+    }
+    var showCopyPicker by rememberSaveable { mutableStateOf(false) }
     
     // Auto-advance slideshow if there are multiple images
     LaunchedEffect(pagerState) {
@@ -66,11 +82,21 @@ fun UnifiedExerciseDetailsDialog(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    if (gym != null) {
+                        Text(
+                            text = gymLabel(gym.name, gym.unit),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         },
         text = {
@@ -95,6 +121,23 @@ fun UnifiedExerciseDetailsDialog(
                     PersonalDataCard(exercise = exercise, foodLogRepository = foodLogRepository, onEdit = onEdit)
                 }
                 
+                if (onCopyToGym != null && copyTargets.isNotEmpty()) {
+                    item {
+                        OutlinedButton(
+                            onClick = { showCopyPicker = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.gym_copy_action))
+                        }
+                    }
+                }
+
                 // Exercise details
                 item {
                     ExerciseDetailsCard(exercise = exercise)
@@ -133,6 +176,20 @@ fun UnifiedExerciseDetailsDialog(
             }
         }
     )
+
+    if (showCopyPicker && onCopyToGym != null) {
+        GymPickerDialog(
+            title = stringResource(R.string.gym_copy_title),
+            options = copyTargets,
+            selectedGymId = null,
+            showSelection = false,
+            onSelected = { target ->
+                showCopyPicker = false
+                onCopyToGym(target)
+            },
+            onDismiss = { showCopyPicker = false }
+        )
+    }
 }
 
 @Composable

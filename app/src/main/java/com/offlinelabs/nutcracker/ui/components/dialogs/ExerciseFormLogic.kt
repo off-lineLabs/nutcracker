@@ -29,7 +29,9 @@ data class ExerciseFormInput(
     val minutes: String = "",
     /** Bodyweight reps. */
     val bodyweightReps: String = "",
-    val notes: String = ""
+    val notes: String = "",
+    /** Gym the exercise belongs to; null means shared (All gyms). */
+    val gymId: Long? = null
 )
 
 /** Fields that can be invalid. */
@@ -89,7 +91,8 @@ fun applyExerciseForm(base: Exercise, input: ExerciseFormInput): Exercise = base
         ExerciseType.STRENGTH -> wholeOrZero(input.sets)
         ExerciseType.CARDIO, ExerciseType.BODYWEIGHT -> 1
     },
-    notes = input.notes.takeIf { it.isNotBlank() }
+    notes = input.notes.takeIf { it.isNotBlank() },
+    gymId = input.gymId
 )
 
 private fun whole(value: Int): String = value.toString()
@@ -106,15 +109,21 @@ fun exerciseFormFrom(existing: Exercise, locale: Locale = Locale.getDefault()): 
         sets = if (type == ExerciseType.STRENGTH) whole(existing.defaultSets) else "",
         minutes = if (type == ExerciseType.CARDIO) whole(existing.defaultReps) else "",
         bodyweightReps = if (type == ExerciseType.BODYWEIGHT) whole(existing.defaultReps) else "",
-        notes = existing.notes ?: ""
+        notes = existing.notes ?: "",
+        gymId = existing.gymId
     )
 }
 
 /** Initial form contents when importing [external], with the suggested defaults per type. */
-fun exerciseFormFrom(external: ExternalExercise, locale: Locale = Locale.getDefault()): ExerciseFormInput {
+fun exerciseFormFrom(
+    external: ExternalExercise,
+    locale: Locale = Locale.getDefault(),
+    gymId: Long? = null
+): ExerciseFormInput {
     val type = ExerciseCategoryMapper.getExerciseType(external.category)
     val base = ExerciseFormInput(
         name = external.name,
+        gymId = gymId,
         type = type,
         kcal = formatDecimal(getDefaultKcalPerUnit(external), locale)
     )

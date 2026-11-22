@@ -169,4 +169,34 @@ class ExerciseFormLogicTest {
         )
         assertEquals(existing, applyExerciseForm(existing, exerciseFormFrom(existing, pt)))
     }
+
+    @Test
+    fun editKeepsGymIdWhenOtherFieldsChange() {
+        val existing = Exercise(name = "Leg press", category = "strength", gymId = 7L)
+        val form = exerciseFormFrom(existing, pt)
+        assertEquals(7L, form.gymId)
+        val saved = applyExerciseForm(existing, form.copy(name = "Leg press 2", weight = "80"))
+        assertEquals(7L, saved.gymId)
+        assertEquals(existing.copy(name = "Leg press 2", defaultWeight = 80.0), saved)
+    }
+
+    @Test
+    fun editCanMoveExerciseToAnotherGymOrToShared() {
+        val existing = Exercise(name = "Leg press", category = "strength", gymId = 7L)
+        val form = exerciseFormFrom(existing, pt)
+        assertEquals(9L, applyExerciseForm(existing, form.copy(gymId = 9L)).gymId)
+        assertNull(applyExerciseForm(existing, form.copy(gymId = null)).gymId)
+    }
+
+    @Test
+    fun newExerciseCarriesPresetGymId() {
+        assertEquals(3L, applyExerciseForm(Exercise(name = ""), ExerciseFormInput(name = "Curl", gymId = 3L)).gymId)
+        assertNull(applyExerciseForm(Exercise(name = ""), ExerciseFormInput(name = "Curl")).gymId)
+    }
+
+    @Test
+    fun importPresetsGymId() {
+        assertEquals(4L, exerciseFormFrom(external("strength"), pt, gymId = 4L).gymId)
+        assertNull(exerciseFormFrom(external("strength"), pt).gymId)
+    }
 }

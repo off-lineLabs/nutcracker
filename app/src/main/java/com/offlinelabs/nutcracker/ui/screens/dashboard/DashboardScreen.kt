@@ -89,6 +89,8 @@ import com.offlinelabs.nutcracker.ui.components.gym.ExerciseListHint
 import com.offlinelabs.nutcracker.ui.components.gym.GymDialogsHost
 import com.offlinelabs.nutcracker.ui.components.gym.GymDropdown
 import com.offlinelabs.nutcracker.ui.components.gym.exerciseListHint
+import com.offlinelabs.nutcracker.ui.components.gym.gymsIncludingCurrent
+import com.offlinelabs.nutcracker.data.gymLabel
 import com.offlinelabs.nutcracker.ui.components.gym.rememberGymDialogsState
 import com.offlinelabs.nutcracker.ui.components.gym.selectedGymOrNull
 import com.offlinelabs.nutcracker.ui.components.dialogs.SetGoalDialog
@@ -1605,9 +1607,16 @@ fun DashboardScreen(
     )
 
     if (showAddExerciseDialog) {
+        val editedGymId = selectedExerciseForEdit?.gymId
+        // The edited exercise's gym may be hidden (soft-deleted); look it up so the picker can show it.
+        val editedGym by produceState<Gym?>(null, editedGymId) {
+            value = editedGymId?.let { foodLogRepository.getGymById(it) }
+        }
         AddExerciseDialog(
             externalExercise = selectedExternalExercise,
             existingExercise = selectedExerciseForEdit,
+            gyms = gymsIncludingCurrent(gyms, editedGymId, editedGym),
+            defaultGymId = (gymSelection as? GymSelection.Specific)?.gymId,
             onDismiss = { 
                 showAddExerciseDialog = false
                 selectedExternalExercise = null
@@ -1682,6 +1691,7 @@ fun DashboardScreen(
                                 // This ensures we preserve instructions, equipment, muscles, etc.
                                 val completeExercise = exercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
+                                    gymId = newExercise.gymId,
                                     kcalBurnedPerUnit = newExercise.kcalBurnedPerUnit,
                                     defaultWeight = newExercise.defaultWeight,
                                     defaultReps = newExercise.defaultReps,
@@ -1798,6 +1808,7 @@ fun DashboardScreen(
                                 // ALWAYS update the exercise with external data, even if image downloads failed
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
+                                    gymId = exercise.gymId,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,
@@ -1894,6 +1905,7 @@ fun DashboardScreen(
                                 // ALWAYS update the exercise with external data, even if image downloads failed
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
+                                    gymId = exercise.gymId,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,
@@ -1938,6 +1950,7 @@ fun DashboardScreen(
                                 // ALWAYS update the exercise with external data, even if image downloads failed
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
+                                    gymId = exercise.gymId,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,
@@ -2729,8 +2742,34 @@ fun DashboardScreen(
 
     // Unified Exercise Detail Dialog
     showUnifiedExerciseDetailDialog?.let { exercise ->
+        // Includes hidden gyms, so the header still names a deleted gym.
+        val exerciseGym by produceState<Gym?>(null, exercise.gymId) {
+            value = exercise.gymId?.let { foodLogRepository.getGymById(it) }
+        }
         UnifiedExerciseDetailsDialog(
             exercise = exercise,
+            gym = exerciseGym,
+            gyms = gyms,
+            onCopyToGym = { targetGymId ->
+                // Close the dialog so the confirmation snackbar is visible.
+                showUnifiedExerciseDetailDialog = null
+                coroutineScope.launch {
+                    try {
+                        foodLogRepository.copyExerciseToGym(exercise, targetGymId)
+                        val targetName = gyms.firstOrNull { it.id == targetGymId }
+                            ?.let { gymLabel(it.name, it.unit) }
+                            ?: context.getString(R.string.gym_all_gyms_shared)
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.gym_copied_format, targetName)
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.exception("DashboardScreen", "Failed to copy exercise to gym", e, mapOf(
+                            "exerciseId" to exercise.id.toString()
+                        ))
+                        snackbarHostState.showSnackbar(message = context.getString(R.string.gym_copy_failed))
+                    }
+                }
+            },
             externalExerciseService = externalExerciseService,
             exerciseImageService = exerciseImageService,
             foodLogRepository = foodLogRepository,

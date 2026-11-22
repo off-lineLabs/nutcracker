@@ -31,6 +31,10 @@ import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerField
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerOption
+import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
 import com.offlinelabs.nutcracker.data.model.toInternalExercise
 import com.offlinelabs.nutcracker.ui.components.form.FormColors
 import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
@@ -51,6 +55,10 @@ import java.util.Locale
 fun AddExerciseDialog(
     externalExercise: ExternalExercise? = null,
     existingExercise: Exercise? = null,
+    /** Gyms offered by the picker (visible ones, plus the exercise's own gym when editing). */
+    gyms: List<Gym> = emptyList(),
+    /** Gym preselected for a new exercise (null = shared). Ignored when editing. */
+    defaultGymId: Long? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -64,8 +72,8 @@ fun AddExerciseDialog(
         mutableStateOf(
             when {
                 existingExercise != null -> exerciseFormFrom(existingExercise, locale)
-                externalExercise != null -> exerciseFormFrom(externalExercise, locale)
-                else -> ExerciseFormInput()
+                externalExercise != null -> exerciseFormFrom(externalExercise, locale, gymId = defaultGymId)
+                else -> ExerciseFormInput(gymId = defaultGymId)
             }
         )
     }
@@ -118,7 +126,8 @@ fun AddExerciseDialog(
                 input = new
             },
             showNameError = nameTouched,
-            colors = FormDefaults.colors()
+            colors = FormDefaults.colors(),
+            gymOptions = gymPickerOptions(gyms)
         )
     }
 }
@@ -128,7 +137,8 @@ private fun ExerciseFormBody(
     input: ExerciseFormInput,
     onInputChange: (ExerciseFormInput) -> Unit,
     showNameError: Boolean,
-    colors: FormColors
+    colors: FormColors,
+    gymOptions: List<GymPickerOption>? = null
 ) {
     val nameError = if (showNameError) {
         validateExerciseFormField(ExerciseFormField.NAME, input)?.messageRes
@@ -148,6 +158,16 @@ private fun ExerciseFormBody(
         onSelected = { onInputChange(input.copy(type = it)) },
         colors = colors
     )
+
+    if (gymOptions != null) {
+        Spacer(Modifier.height(12.dp))
+        GymPickerField(
+            options = gymOptions,
+            selectedGymId = input.gymId,
+            onSelected = { onInputChange(input.copy(gymId = it)) },
+            colors = colors
+        )
+    }
 
     Spacer(Modifier.height(12.dp))
     FormSection {

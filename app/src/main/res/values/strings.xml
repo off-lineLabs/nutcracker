@@ -731,4 +731,10 @@
     <string name="gym_delete_message">What should happen to the exercises at %1$s? Past logs stay in your history either way.</string>
     <string name="gym_delete_only">Delete gym only</string>
     <string name="gym_delete_with_exercises">Delete gym and its exercises</string>
+    <string name="gym_all_gyms_shared">All gyms (shared)</string>
+    <string name="gym_picker_label">Gym</string>
+    <string name="gym_copy_action">Copy to another gym</string>
+    <string name="gym_copy_title">Copy to…</string>
+    <string name="gym_copied_format">Copied to %1$s</string>
+    <string name="gym_copy_failed">Could not copy the exercise</string>
 </resources>

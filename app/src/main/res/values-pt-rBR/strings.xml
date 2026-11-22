@@ -658,4 +658,10 @@
     <string name="gym_delete_message">O que deve acontecer com os exercícios de %1$s? Os registros anteriores permanecem no seu histórico nos dois casos.</string>
     <string name="gym_delete_only">Excluir apenas a academia</string>
     <string name="gym_delete_with_exercises">Excluir academia e seus exercícios</string>
+    <string name="gym_all_gyms_shared">Todas as academias (compartilhado)</string>
+    <string name="gym_picker_label">Academia</string>
+    <string name="gym_copy_action">Copiar para outra academia</string>
+    <string name="gym_copy_title">Copiar para…</string>
+    <string name="gym_copied_format">Copiado para %1$s</string>
+    <string name="gym_copy_failed">Não foi possível copiar o exercício</string>
 </resources>
