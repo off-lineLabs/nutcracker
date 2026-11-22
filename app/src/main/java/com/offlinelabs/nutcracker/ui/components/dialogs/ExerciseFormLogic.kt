@@ -47,6 +47,42 @@ fun normalizeMuscle(raw: String): String = raw.trim().replace(Regex("\\s+"), " "
 fun muscleOptions(known: List<String>, used: List<String>, selected: List<String>): List<String> =
     (known + used + selected).map(::normalizeMuscle).filter { it.isNotEmpty() }.distinct().sorted()
 
+/** Lower-case text without accents, so "glúteos" matches "Gluteos". */
+fun foldForSearch(text: String): String =
+    java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .lowercase(Locale.ROOT)
+        .trim()
+
+/**
+ * Suggestions for the muscle search: [options] not yet [selected] whose key or translated [label]
+ * contains [query] (case- and accent-insensitive), matches starting with the query first, then
+ * alphabetical by label. A blank query suggests every unselected option.
+ */
+fun muscleSuggestions(
+    options: List<String>,
+    selected: List<String>,
+    query: String,
+    label: (String) -> String
+): List<String> {
+    val q = foldForSearch(query)
+    return options.filter { it !in selected }
+        .map { it to foldForSearch(label(it)) }
+        .filter { (key, shown) -> q.isEmpty() || shown.contains(q) || foldForSearch(key).contains(q) }
+        .sortedWith(compareBy<Pair<String, String>> { (_, shown) -> if (q.isNotEmpty() && shown.startsWith(q)) 0 else 1 }.thenBy { it.second })
+        .map { it.first }
+}
+
+/**
+ * The muscle to store for typed [query]: an option whose key or [label] equals it (ignoring case
+ * and accents), otherwise the typed text itself as a custom muscle; null when blank.
+ */
+fun resolveTypedMuscle(options: List<String>, query: String, label: (String) -> String): String? {
+    val q = foldForSearch(query)
+    if (q.isEmpty()) return null
+    return options.firstOrNull { foldForSearch(it) == q || foldForSearch(label(it)) == q } ?: normalizeMuscle(query)
+}
+
 /** [muscles] with [muscle] added (normalized, ignored if blank or present) or removed if present. */
 fun toggleMuscle(muscles: List<String>, muscle: String): List<String> {
     val m = normalizeMuscle(muscle)

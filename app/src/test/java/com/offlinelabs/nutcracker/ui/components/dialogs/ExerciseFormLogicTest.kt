@@ -20,6 +20,27 @@ class ExerciseFormLogicTest {
         )
     }
 
+    private val ptNames = mapOf("glutes" to "Glúteos", "chest" to "Peito", "lower back" to "Lombar")
+    private val ptLabel: (String) -> String = { ptNames[it] ?: it }
+
+    @Test
+    fun muscleSuggestions_matchTranslatedNameIgnoringAccents_prefixFirst() {
+        val options = listOf("chest", "glutes", "lower back")
+        assertEquals(listOf("glutes"), muscleSuggestions(options, emptyList(), "glute", ptLabel)) // key match
+        assertEquals(listOf("glutes"), muscleSuggestions(options, emptyList(), "GLUTEOS", ptLabel)) // accentless label
+        // "l" starts "Lombar" (first) and is inside "Glúteos"; "Peito" has no l
+        assertEquals(listOf("lower back", "glutes"), muscleSuggestions(options, emptyList(), "l", ptLabel))
+        assertEquals(listOf("glutes", "lower back"), muscleSuggestions(options, listOf("chest"), "", ptLabel))
+    }
+
+    @Test
+    fun resolveTypedMuscle_prefersKnownKey_elseCustom() {
+        val options = listOf("chest", "glutes")
+        assertEquals("glutes", resolveTypedMuscle(options, " glúteos ", ptLabel))
+        assertEquals("rear delts", resolveTypedMuscle(options, "Rear  Delts", ptLabel))
+        assertNull(resolveTypedMuscle(options, "  ", ptLabel))
+    }
+
     @Test
     fun toggleMuscle_addsNormalizedAndRemoves() {
         assertEquals(listOf("chest", "lower back"), toggleMuscle(listOf("chest"), " Lower Back"))

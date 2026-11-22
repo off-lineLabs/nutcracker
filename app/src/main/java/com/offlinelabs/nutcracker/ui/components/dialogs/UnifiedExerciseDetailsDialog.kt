@@ -304,12 +304,13 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
             exercise.level?.let { DetailRow(stringResource(R.string.exercise_level), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             exercise.mechanic?.let { DetailRow(stringResource(R.string.exercise_mechanic), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
+            val muscleName = com.offlinelabs.nutcracker.ui.components.rememberMuscleLabeler()
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ", transform = muscleName), contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ", transform = muscleName), contrastingTextColor)
             }
         }
     }

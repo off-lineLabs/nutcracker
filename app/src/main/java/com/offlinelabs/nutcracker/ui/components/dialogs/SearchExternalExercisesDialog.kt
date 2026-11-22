@@ -225,7 +225,7 @@ fun SearchExternalExercisesDialog(
                                 )
                                 muscleOptions.forEach { muscle ->
                                     DropdownMenuItem(
-                                        text = { Text(muscle.replaceFirstChar { it.uppercase() }) },
+                                        text = { Text(com.offlinelabs.nutcracker.ui.components.muscleLabel(muscle)) },
                                         onClick = {
                                             onMuscleChange(if (muscle == selectedMuscle) null else muscle)
                                             showMuscleFilter = false
@@ -392,7 +392,10 @@ fun SearchExternalExercisesDialog(
                                         )
                                         if (exercise.primaryMuscles.isNotEmpty()) {
                                             Text(
-                                                text = stringResource(R.string.search_exercise_muscles, exercise.primaryMuscles.joinToString(", ")),
+                                                text = stringResource(
+                                                    R.string.search_exercise_muscles,
+                                                    exercise.primaryMuscles.joinToString(", ", transform = com.offlinelabs.nutcracker.ui.components.rememberMuscleLabeler())
+                                                ),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = getContrastingTextColor(MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.7f)
                                             )

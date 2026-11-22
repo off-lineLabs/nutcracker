@@ -45,6 +45,7 @@ import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.gymLabel
 import com.offlinelabs.nutcracker.data.model.ExerciseType
+import com.offlinelabs.nutcracker.ui.components.muscleLabel
 
 @Composable
 fun sortLabel(sort: ListSort): String = stringResource(
@@ -83,7 +84,7 @@ fun groupTitleText(title: GroupTitle): String = when (title) {
     GroupTitle.Shared -> stringResource(R.string.gym_shared_section)
     is GroupTitle.RoutineName -> title.name
     GroupTitle.NoRoutine -> stringResource(R.string.group_no_routine)
-    is GroupTitle.Muscle -> title.muscle.replaceFirstChar { it.uppercase() }
+    is GroupTitle.Muscle -> muscleLabel(title.muscle)
     GroupTitle.NoMuscle -> stringResource(R.string.group_no_muscle)
     is GroupTitle.Type -> stringResource(
         when (title.type) {
