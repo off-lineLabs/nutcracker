@@ -35,6 +35,38 @@ interface RoutineDao {
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId AND exerciseId = :exerciseId")
     suspend fun deleteRoutineExercise(routineId: Long, exerciseId: Long)
 
+    @Query("UPDATE routines SET isVisible = 0 WHERE id = :id")
+    suspend fun hideRoutine(id: Long)
+
+    @Query("UPDATE routines SET sortOrder = :sortOrder WHERE id = :id")
+    suspend fun setRoutineSortOrder(id: Long, sortOrder: Int)
+
+    /** Stores the order of routines: each id gets its index in [routineIds]. */
+    @Transaction
+    suspend fun applyRoutineOrder(routineIds: List<Long>) {
+        routineIds.forEachIndexed { index, id -> setRoutineSortOrder(id, index) }
+    }
+
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM routines")
+    suspend fun nextRoutineSortOrder(): Int
+
+    @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
+    suspend fun deleteExercisesOfRoutine(routineId: Long)
+
+    /** Replaces the exercises of [routineId] with [exerciseIds], in that order. */
+    @Transaction
+    suspend fun setExercisesForRoutine(routineId: Long, exerciseIds: List<Long>) {
+        deleteExercisesOfRoutine(routineId)
+        exerciseIds.distinct().forEachIndexed { index, id -> insertRoutineExercise(RoutineExercise(routineId, id, index)) }
+    }
+
+    /** Drops [exerciseId] from routines of gyms other than [gymId] (after it moved to [gymId]). */
+    @Query("""
+        DELETE FROM routine_exercises WHERE exerciseId = :exerciseId
+        AND routineId IN (SELECT id FROM routines WHERE gymId != :gymId)
+    """)
+    suspend fun removeExerciseFromOtherGyms(exerciseId: Long, gymId: Long)
+
     @Query("UPDATE routine_exercises SET position = :position WHERE routineId = :routineId AND exerciseId = :exerciseId")
     suspend fun setExercisePosition(routineId: Long, exerciseId: Long, position: Int)
 

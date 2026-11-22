@@ -6,15 +6,28 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * A workout routine (e.g. "Push day"). Exercises join routines through [RoutineExercise], so one
- * exercise can be part of several routines. There is no UI to manage routines yet (planned); the
- * table exists so exercise lists can already be grouped by routine.
+ * A workout routine (e.g. "Leg day") at one gym. Exercises join routines through [RoutineExercise]
+ * in a user-defined order; only exercises of that gym or shared ones belong in it, and one exercise
+ * can be part of several routines.
  */
-@Entity(tableName = "routines")
+@Entity(
+    tableName = "routines",
+    foreignKeys = [
+        ForeignKey(
+            entity = Gym::class,
+            parentColumns = ["id"],
+            childColumns = ["gymId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("gymId")]
+)
 data class Routine(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
+    /** Gym the routine is done at (required). */
+    val gymId: Long,
     /** Position among routines (ascending). */
     val sortOrder: Int = 0,
     /** Soft delete: false hides the routine. */

@@ -124,7 +124,7 @@ class ListArrangementTest {
     @Test
     fun routineGroups_manyToMany_inRoutineOrder_noRoutineLast() {
         val list = listOf(ex(1, "Bench"), ex(2, "Squat"), ex(3, "Curl"))
-        val routines = listOf(Routine(id = 20, name = "Full body"), Routine(id = 10, name = "Push day"))
+        val routines = listOf(Routine(id = 20, name = "Full body", gymId = 1), Routine(id = 10, name = "Push day", gymId = 1))
         // Full body lists Squat before Bench by its own positions, whatever the list sort
         val links = listOf(RoutineExercise(10, 1), RoutineExercise(20, 1, 1), RoutineExercise(20, 2, 0), RoutineExercise(99, 3))
         val groups = groupExercises(list, ExerciseGrouping.ROUTINE, routines, links)

@@ -36,13 +36,17 @@ interface GymDao {
     @Query("UPDATE exercises SET isVisible = 0 WHERE gymId = :gymId")
     suspend fun hideExercisesOfGym(gymId: Long)
 
+    @Query("UPDATE routines SET isVisible = 0 WHERE gymId = :gymId")
+    suspend fun hideRoutinesOfGym(gymId: Long)
+
     /**
-     * Soft-deletes the gym. If [removeExercises], its exercises are hidden (gymId kept, logs untouched);
-     * otherwise they become shared.
+     * Soft-deletes the gym and its routines (a routine always needs its gym). If [removeExercises],
+     * its exercises are hidden (gymId kept, logs untouched); otherwise they become shared.
      */
     @Transaction
     suspend fun deleteGym(gymId: Long, removeExercises: Boolean) {
         if (removeExercises) hideExercisesOfGym(gymId) else makeExercisesShared(gymId)
+        hideRoutinesOfGym(gymId)
         hideGym(gymId)
     }
 

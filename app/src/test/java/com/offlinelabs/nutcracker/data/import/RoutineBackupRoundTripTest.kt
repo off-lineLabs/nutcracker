@@ -7,6 +7,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.export.DatabaseExportManager
 import com.offlinelabs.nutcracker.data.model.Exercise
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.data.model.MealCategoryDefaults
+import com.offlinelabs.nutcracker.data.model.MealCategoryMeal
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.Routine
 import com.offlinelabs.nutcracker.data.model.RoutineExercise
@@ -56,10 +60,16 @@ class RoutineBackupRoundTripTest {
                 sortOrder = 4
             )
         )
-        val benchId = source.exerciseDao().upsertExercise(Exercise(name = "Bench", sortOrder = 2))
+        val gymId = source.gymDao().upsertGym(Gym(name = "Basic", unit = "Uni"))
+        val benchId = source.exerciseDao().upsertExercise(Exercise(name = "Bench", sortOrder = 2, gymId = gymId, syncGroupId = "sync-1"))
         val squatId = source.exerciseDao().upsertExercise(Exercise(name = "Squat", sortOrder = 1))
-        val push = source.routineDao().upsertRoutine(Routine(name = "Push day", sortOrder = 1))
-        val full = source.routineDao().upsertRoutine(Routine(name = "Full body", sortOrder = 0))
+        val push = source.routineDao().upsertRoutine(Routine(name = "Push day", gymId = gymId, sortOrder = 1))
+        val full = source.routineDao().upsertRoutine(Routine(name = "Full body", gymId = gymId, sortOrder = 0))
+        val oatsId = source.mealDao().getAllMealsIncludingHiddenSync().single().id
+        val breakfast = source.mealCategoryDao().upsertCategory(MealCategoryDefaults.all.first())
+        val preWorkout = source.mealCategoryDao().upsertCategory(MealCategory(name = "Pre-workout", sortOrder = 4))
+        source.mealCategoryDao().insertLink(MealCategoryMeal(breakfast, oatsId))
+        source.mealCategoryDao().insertLink(MealCategoryMeal(preWorkout, oatsId))
         source.routineDao().insertRoutineExercise(RoutineExercise(push, benchId, 0))
         source.routineDao().insertRoutineExercise(RoutineExercise(full, benchId, 1))
         source.routineDao().insertRoutineExercise(RoutineExercise(full, squatId, 0))
@@ -72,6 +82,18 @@ class RoutineBackupRoundTripTest {
         val exercises = target.exerciseDao().getAllExercisesIncludingHiddenSync().associateBy { it.name }
         assertEquals(2, exercises.getValue("Bench").sortOrder)
         assertEquals(1, exercises.getValue("Squat").sortOrder)
+        assertEquals("sync-1", exercises.getValue("Bench").syncGroupId)
+
+        val categories = target.mealCategoryDao().getAllCategoriesSync().associateBy { it.name }
+        assertEquals(setOf("Breakfast", "Pre-workout"), categories.keys)
+        assertEquals(MealCategoryDefaults.BREAKFAST, categories.getValue("Breakfast").defaultKey)
+        val newOats = target.mealDao().getAllMealsIncludingHiddenSync().single().id
+        assertEquals(
+            categories.values.map { it.id }.toSet(),
+            target.mealCategoryDao().getCategoryIdsForMeal(newOats).toSet()
+        )
+        val targetGym = target.gymDao().getAllGymsIncludingHiddenSync().single().id
+        assertTrue(target.routineDao().getAllRoutinesIncludingHiddenSync().all { it.gymId == targetGym })
 
         val routines = target.routineDao().getAllRoutinesIncludingHiddenSync().associateBy { it.name }
         assertEquals(setOf("Push day", "Full body"), routines.keys)

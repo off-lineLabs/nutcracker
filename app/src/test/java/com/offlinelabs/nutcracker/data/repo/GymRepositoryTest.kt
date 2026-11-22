@@ -7,6 +7,7 @@ import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
 import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.Routine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -37,7 +38,7 @@ class GymRepositoryTest {
         repo = OfflineFoodLogRepository(
             db.mealDao(), db.userGoalDao(), db.mealCheckInDao(), db.exerciseDao(), db.exerciseLogDao(),
             db.pillDao(), db.pillCheckInDao(), db.recipeDao(), db.recipeIngredientDao(), db.gymDao(),
-            db.routineDao()
+            db.routineDao(), db.mealCategoryDao()
         )
     }
 
@@ -136,6 +137,73 @@ class GymRepositoryTest {
 
         val sharedCopyId = repo.copyExerciseToGym(original, null)
         assertNull(exercise(sharedCopyId).gymId)
+    }
+
+    @Test
+    fun syncedCopy_editPropagatesEverything_exceptPerCopyFields() = runBlocking {
+        val gymA = repo.upsertGym(Gym(name = "A"))
+        val gymB = repo.upsertGym(Gym(name = "B"))
+        val original = exercise(repo.insertExercise(Exercise(name = "Press", gymId = gymA, defaultWeight = 35.0)))
+        val copyId = repo.copyExerciseToGym(original, gymB, sync = true)
+        val synced = exercise(original.id)
+        assertNotNull(synced.syncGroupId)
+        assertEquals(synced.syncGroupId, exercise(copyId).syncGroupId)
+
+        repo.updateExercise(synced.copy(defaultWeight = 45.0, defaultReps = 12, notes = "slow"))
+
+        val copy = exercise(copyId)
+        assertEquals(45.0, copy.defaultWeight, 0.0) // weight syncs too (user's choice)
+        assertEquals(12, copy.defaultReps)
+        assertEquals("slow", copy.notes)
+        assertEquals(gymB, copy.gymId) // the gym stays per copy
+    }
+
+    @Test
+    fun unsync_lastPairDissolvesGroup_andStopsPropagation() = runBlocking {
+        val gymA = repo.upsertGym(Gym(name = "A"))
+        val gymB = repo.upsertGym(Gym(name = "B"))
+        val original = exercise(repo.insertExercise(Exercise(name = "Press", gymId = gymA)))
+        val copyId = repo.copyExerciseToGym(original, gymB, sync = true)
+
+        repo.unsyncExercise(copyId)
+
+        assertNull(exercise(copyId).syncGroupId)
+        assertNull(exercise(original.id).syncGroupId) // alone in its group, so unlinked too
+        repo.updateExercise(exercise(original.id).copy(defaultReps = 20))
+        assertEquals(original.defaultReps, exercise(copyId).defaultReps)
+    }
+
+    @Test
+    fun movingExerciseToAnotherGym_dropsItFromThatGymsRoutines() = runBlocking {
+        val gymA = repo.upsertGym(Gym(name = "A"))
+        val gymB = repo.upsertGym(Gym(name = "B"))
+        val exId = repo.insertExercise(Exercise(name = "Press", gymId = gymA))
+        val routineId = repo.saveRoutine(Routine(name = "Day 1", gymId = gymA), listOf(exId))
+        assertEquals(1, db.routineDao().getAllRoutineExercisesSync().count { it.routineId == routineId })
+
+        repo.updateExercise(exercise(exId).copy(gymId = gymB))
+
+        assertTrue(db.routineDao().getAllRoutineExercisesSync().isEmpty())
+    }
+
+    @Test
+    fun deleteGym_hidesItsRoutines() = runBlocking {
+        val gymA = repo.upsertGym(Gym(name = "A"))
+        repo.saveRoutine(Routine(name = "Day 1", gymId = gymA), emptyList())
+        repo.deleteGym(gymA, removeExercises = false)
+        assertTrue(repo.getVisibleRoutines().first().isEmpty())
+    }
+
+    @Test
+    fun saveRoutine_keepsGivenExerciseOrder_andReplacesOnEdit() = runBlocking {
+        val gymA = repo.upsertGym(Gym(name = "A"))
+        val a = repo.insertExercise(Exercise(name = "A", gymId = gymA))
+        val b = repo.insertExercise(Exercise(name = "B"))
+        val routineId = repo.saveRoutine(Routine(name = "Day 1", gymId = gymA), listOf(b, a))
+        assertEquals(listOf(b, a), db.routineDao().getAllRoutineExercisesSync().sortedBy { it.position }.map { it.exerciseId })
+        repo.saveRoutine(repo.getVisibleRoutines().first().single().copy(name = "Day 2"), listOf(a))
+        assertEquals(listOf(a), db.routineDao().getAllRoutineExercisesSync().map { it.exerciseId })
+        assertEquals("Day 2", db.routineDao().getRoutineById(routineId)!!.name)
     }
 
     @Test

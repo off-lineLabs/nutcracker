@@ -2,8 +2,7 @@ package com.offlinelabs.nutcracker.data.dao // I'll create this new 'dao' packag
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -13,8 +12,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MealDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMeal(meal: Meal): Long // Returns the new rowId of the inserted item
+    /**
+     * Insert or update; returns the new row id, or -1 when an existing row was updated.
+     * @Upsert rather than REPLACE: REPLACE deletes the row first, which would cascade-delete its
+     * meal-category links.
+     */
+    @Upsert
+    suspend fun insertMeal(meal: Meal): Long
 
     @Update
     suspend fun updateMeal(meal: Meal)

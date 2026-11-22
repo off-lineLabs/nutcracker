@@ -15,6 +15,22 @@ object OldSchemaBuilder {
     val V21_TABLES = setOf("routines", "routine_exercises")
     val V21_INDICES = setOf("index_routine_exercises_exerciseId")
 
+    /** Tables and indices added in v22 (meal categories, routine gym, sync group). */
+    val V22_TABLES = setOf("meal_categories", "meal_category_meals")
+    val V22_INDICES = setOf("index_meal_category_meals_mealId", "index_routines_gymId", "index_exercises_syncGroupId")
+
+    /** Strips the v22 `syncGroupId` column from the exercises CREATE statement. */
+    fun stripSyncGroup(sql: String): String =
+        sql.replace(Regex(",\\s*`syncGroupId` TEXT"), "").also {
+            assertFalse("syncGroupId must be stripped", it.contains("syncGroupId"))
+        }
+
+    /** The v21 routines table: no gymId column and no gym foreign key. */
+    fun stripRoutineGym(sql: String): String =
+        sql.replace(Regex(",\\s*`gymId` INTEGER NOT NULL"), "")
+            .replace(Regex(",\\s*FOREIGN KEY\\(`gymId`\\)[^)]*\\)[^,)]*?ON DELETE CASCADE"), "")
+            .also { assertFalse("gymId must be stripped from v21 routines", it.contains("gymId")) }
+
     /** Strips the v21 `sortOrder` column from the meals/exercises CREATE statement. */
     fun stripSortOrder(sql: String): String =
         sql.replace(Regex(",\\s*`sortOrder` INTEGER NOT NULL DEFAULT 0"), "").also {

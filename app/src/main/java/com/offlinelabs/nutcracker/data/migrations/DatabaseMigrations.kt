@@ -136,5 +136,60 @@ object DatabaseMigrations {
         }
     }
 
+    // Migration from version 21 to 22 - Routines belong to a gym; synced exercise copies; meal categories
+    val MIGRATION_21_22 = object : Migration(21, 22) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // v21 routines had no UI and no gym, so there is nothing to keep: recreate both tables
+            db.execSQL("DROP TABLE IF EXISTS routine_exercises")
+            db.execSQL("DROP TABLE IF EXISTS routines")
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS routines (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    gymId INTEGER NOT NULL,
+                    sortOrder INTEGER NOT NULL,
+                    isVisible INTEGER NOT NULL,
+                    FOREIGN KEY(gymId) REFERENCES gyms(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_routines_gymId ON routines(gymId)")
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS routine_exercises (
+                    routineId INTEGER NOT NULL,
+                    exerciseId INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    PRIMARY KEY(routineId, exerciseId),
+                    FOREIGN KEY(routineId) REFERENCES routines(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+                    FOREIGN KEY(exerciseId) REFERENCES exercises(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_routine_exercises_exerciseId ON routine_exercises(exerciseId)")
+
+            db.execSQL("ALTER TABLE exercises ADD COLUMN syncGroupId TEXT")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_exercises_syncGroupId ON exercises(syncGroupId)")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS meal_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    defaultKey TEXT,
+                    sortOrder INTEGER NOT NULL,
+                    isVisible INTEGER NOT NULL
+                )
+            """)
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS meal_category_meals (
+                    categoryId INTEGER NOT NULL,
+                    mealId INTEGER NOT NULL,
+                    PRIMARY KEY(categoryId, mealId),
+                    FOREIGN KEY(categoryId) REFERENCES meal_categories(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+                    FOREIGN KEY(mealId) REFERENCES meals(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_meal_category_meals_mealId ON meal_category_meals(mealId)")
+            com.offlinelabs.nutcracker.data.model.MealCategoryDefaults.insertStatements().forEach { db.execSQL(it) }
+        }
+    }
+
     // Add more migrations here as needed
 }

@@ -18,7 +18,7 @@ import androidx.room.TypeConverters
             onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index("gymId")]
+    indices = [Index("gymId"), Index("syncGroupId")]
 )
 @TypeConverters(ExerciseTypeConverters::class)
 data class Exercise(
@@ -43,7 +43,12 @@ data class Exercise(
     val gymId: Long? = null, // Gym this exercise belongs to; null means shared across gyms
     /** Position in the user's custom order (ascending; ties fall back to name). */
     @ColumnInfo(defaultValue = "0")
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    /**
+     * Copies at other gyms that stay in sync share this id (a UUID); saving one updates the others'
+     * settings. Null when not synced.
+     */
+    val syncGroupId: String? = null
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

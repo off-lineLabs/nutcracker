@@ -43,10 +43,14 @@ class Migration20To21Test {
     private fun createV20WithData() {
         val statements = OldSchemaBuilder.statements(
             context, dbName,
-            skipTables = OldSchemaBuilder.V21_TABLES,
-            skipIndices = OldSchemaBuilder.V21_INDICES
+            skipTables = OldSchemaBuilder.V21_TABLES + OldSchemaBuilder.V22_TABLES,
+            skipIndices = OldSchemaBuilder.V21_INDICES + OldSchemaBuilder.V22_INDICES
         ) { table, sql ->
-            if (table == "meals" || table == "exercises") OldSchemaBuilder.stripSortOrder(sql) else sql
+            when (table) {
+                "meals" -> OldSchemaBuilder.stripSortOrder(sql)
+                "exercises" -> OldSchemaBuilder.stripSortOrder(OldSchemaBuilder.stripSyncGroup(sql))
+                else -> sql
+            }
         }
         val file = context.getDatabasePath(dbName)
         file.parentFile?.mkdirs()
@@ -75,7 +79,9 @@ class Migration20To21Test {
         createV20WithData()
 
         val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(DatabaseMigrations.MIGRATION_19_20, DatabaseMigrations.MIGRATION_20_21)
+            .addMigrations(
+                DatabaseMigrations.MIGRATION_19_20, DatabaseMigrations.MIGRATION_20_21, DatabaseMigrations.MIGRATION_21_22
+            )
             .allowMainThreadQueries()
             .build()
         try {
@@ -87,7 +93,7 @@ class Migration20To21Test {
             assertEquals(0, meals.single().sortOrder)
 
             // New tables work, including the many-to-many link and its cascade on routine delete
-            val routineId = db.routineDao().upsertRoutine(Routine(name = "Push day"))
+            val routineId = db.routineDao().upsertRoutine(Routine(name = "Push day", gymId = 3))
             db.routineDao().insertRoutineExercise(RoutineExercise(routineId, 7L, 0))
             assertEquals(-1L, db.routineDao().insertRoutineExercise(RoutineExercise(routineId, 7L, 1)))
             assertEquals(1, db.routineDao().getVisibleRoutineExercises().first().size)
@@ -95,7 +101,7 @@ class Migration20To21Test {
             assertTrue(db.routineDao().getAllRoutineExercisesSync().isEmpty())
 
             // Updating an exercise keeps its routine memberships (@Upsert, not REPLACE)
-            val r2 = db.routineDao().upsertRoutine(Routine(name = "Legs"))
+            val r2 = db.routineDao().upsertRoutine(Routine(name = "Legs", gymId = 3))
             db.routineDao().insertRoutineExercise(RoutineExercise(r2, 7L, 0))
             assertEquals(-1L, db.exerciseDao().upsertExercise(exercises[0].copy(defaultWeight = 45.0)))
             assertEquals(1, db.routineDao().getAllRoutineExercisesSync().size)

@@ -46,12 +46,12 @@ class Migration19To20Test {
     /** CREATE statements of the current schema, minus the gym (v20) and v21 additions. */
     private fun v19Statements(): List<String> = OldSchemaBuilder.statements(
         context, dbName,
-        skipTables = setOf("gyms") + OldSchemaBuilder.V21_TABLES,
-        skipIndices = setOf("index_exercises_gymId") + OldSchemaBuilder.V21_INDICES
+        skipTables = setOf("gyms") + OldSchemaBuilder.V21_TABLES + OldSchemaBuilder.V22_TABLES,
+        skipIndices = setOf("index_exercises_gymId") + OldSchemaBuilder.V21_INDICES + OldSchemaBuilder.V22_INDICES
     ) { table, sql ->
         when (table) {
             "meals" -> OldSchemaBuilder.stripSortOrder(sql)
-            "exercises" -> OldSchemaBuilder.stripSortOrder(sql)
+            "exercises" -> OldSchemaBuilder.stripSortOrder(OldSchemaBuilder.stripSyncGroup(sql))
                 .replace(Regex(",\\s*`gymId` INTEGER"), "")
                 .replace(Regex(",\\s*FOREIGN KEY\\(`gymId`\\)[^)]*\\)[^,)]*?ON DELETE SET NULL"), "")
                 .also { assertFalse("gymId must be stripped from the v19 exercises table", it.contains("gymId")) }
@@ -92,7 +92,8 @@ class Migration19To20Test {
                 DatabaseMigrations.MIGRATION_17_18,
                 DatabaseMigrations.MIGRATION_18_19,
                 DatabaseMigrations.MIGRATION_19_20,
-                DatabaseMigrations.MIGRATION_20_21
+                DatabaseMigrations.MIGRATION_20_21,
+                DatabaseMigrations.MIGRATION_21_22
             )
             .allowMainThreadQueries()
             .build()

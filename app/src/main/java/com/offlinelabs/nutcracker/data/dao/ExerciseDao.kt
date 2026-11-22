@@ -53,6 +53,23 @@ interface ExerciseDao {
         orderedIds.forEachIndexed { index, id -> setSortOrder(id, index) }
     }
 
+    /** One-shot lookup, ignores isVisible. */
+    @Query("SELECT * FROM exercises WHERE id = :exerciseId")
+    suspend fun getExerciseByIdSync(exerciseId: Long): Exercise?
+
+    /** Other members of a sync group (hidden ones included, so they stay consistent if restored). */
+    @Query("SELECT * FROM exercises WHERE syncGroupId = :groupId AND id != :exceptId")
+    suspend fun getSyncPartners(groupId: String, exceptId: Long): List<Exercise>
+
+    @Query("UPDATE exercises SET syncGroupId = :groupId WHERE id = :exerciseId")
+    suspend fun setSyncGroup(exerciseId: Long, groupId: String?)
+
+    @Query("SELECT COUNT(*) FROM exercises WHERE syncGroupId = :groupId AND isVisible = 1")
+    suspend fun countVisibleInSyncGroup(groupId: String): Int
+
+    @Query("UPDATE exercises SET syncGroupId = NULL WHERE syncGroupId = :groupId")
+    suspend fun clearSyncGroup(groupId: String)
+
     /** Latest log per exercise. */
     @Query("SELECT exerciseId AS id, MAX(logDateTime) AS lastCheckIn FROM exercise_logs GROUP BY exerciseId")
     fun getLastCheckIns(): Flow<List<LastCheckIn>>
