@@ -666,4 +666,6 @@
     <string name="gym_copy_title">Copiar para…</string>
     <string name="gym_copied_format">Copiado para %1$s</string>
     <string name="gym_copy_failed">Não foi possível copiar o exercício</string>
+    <string name="gym_shared_option_hint">Aparece em todas as academias</string>
+    <string name="gym_copy_subtitle">Cria uma cópia separada com os mesmos valores, sem o histórico.</string>
 </resources>

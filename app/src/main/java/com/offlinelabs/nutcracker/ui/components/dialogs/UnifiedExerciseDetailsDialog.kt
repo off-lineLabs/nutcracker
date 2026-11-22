@@ -26,7 +26,9 @@ import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.gymLabel
-import com.offlinelabs.nutcracker.ui.components.gym.GymPickerDialog
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerSheet
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
+import androidx.compose.foundation.BorderStroke
 import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,9 +125,14 @@ fun UnifiedExerciseDetailsDialog(
                 
                 if (onCopyToGym != null && copyTargets.isNotEmpty()) {
                     item {
+                        // The theme's primary is navy on a navy surface in dark mode; the form
+                        // accent is primary in light and a max-contrast shade in dark.
+                        val copyColor = FormDefaults.colors().accent
                         OutlinedButton(
                             onClick = { showCopyPicker = true },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = copyColor),
+                            border = BorderStroke(1.dp, copyColor.copy(alpha = 0.6f))
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.ContentCopy,
@@ -178,11 +185,10 @@ fun UnifiedExerciseDetailsDialog(
     )
 
     if (showCopyPicker && onCopyToGym != null) {
-        GymPickerDialog(
-            title = stringResource(R.string.gym_copy_title),
+        GymPickerSheet(
+            title = stringResource(R.string.gym_copy_action),
+            subtitle = stringResource(R.string.gym_copy_subtitle),
             options = copyTargets,
-            selectedGymId = null,
-            showSelection = false,
             onSelected = { target ->
                 showCopyPicker = false
                 onCopyToGym(target)

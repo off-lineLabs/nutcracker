@@ -136,7 +136,8 @@ private fun SelectedCheck() {
     Icon(
         imageVector = Icons.Filled.Check,
         contentDescription = stringResource(R.string.gym_selected),
-        tint = MaterialTheme.colorScheme.primary
+        // primary is navy on the dark menu surface; onSurface reads in both themes
+        tint = MaterialTheme.colorScheme.onSurface
     )
 }
 
