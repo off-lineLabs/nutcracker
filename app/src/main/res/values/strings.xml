@@ -741,4 +741,7 @@
     <string name="gym_copy_failed">Could not copy the exercise</string>
     <string name="gym_shared_option_hint">Shown at every gym</string>
     <string name="gym_copy_subtitle">Creates a separate copy with the same defaults, without its history.</string>
+    <string name="muscle_groups_label">Muscle groups</string>
+    <string name="muscle_other">Other…</string>
+    <string name="muscle_custom_label">Muscle group</string>
 </resources>

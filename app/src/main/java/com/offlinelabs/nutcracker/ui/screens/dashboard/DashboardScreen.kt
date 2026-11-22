@@ -1633,6 +1633,10 @@ fun DashboardScreen(
             existingExercise = selectedExerciseForEdit,
             gyms = gymsIncludingCurrent(gyms, editedGymId, editedGym),
             defaultGymId = (gymSelection as? GymSelection.Specific)?.gymId,
+            // Database muscles plus any (custom) muscle already used, so custom entries come back
+            muscleChoices = remember(exercises) {
+                externalExerciseService.getKnownMuscles() + exercises.flatMap { it.primaryMuscles }
+            },
             onDismiss = { 
                 showAddExerciseDialog = false
                 selectedExternalExercise = null
@@ -1825,6 +1829,7 @@ fun DashboardScreen(
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
                                     gymId = exercise.gymId,
+                                    primaryMuscles = exercise.primaryMuscles,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,
@@ -1923,6 +1928,7 @@ fun DashboardScreen(
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
                                     gymId = exercise.gymId,
+                                    primaryMuscles = exercise.primaryMuscles,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,
@@ -1968,6 +1974,7 @@ fun DashboardScreen(
                                 val completeExercise = externalExercise.toInternalExercise(localImagePaths).copy(
                                     id = exerciseId,
                                     gymId = exercise.gymId,
+                                    primaryMuscles = exercise.primaryMuscles,
                                     kcalBurnedPerUnit = exercise.kcalBurnedPerUnit,
                                     defaultWeight = exercise.defaultWeight,
                                     defaultReps = exercise.defaultReps,

@@ -11,6 +11,31 @@ import org.junit.Test
 import java.util.Locale
 
 class ExerciseFormLogicTest {
+
+    @Test
+    fun muscleOptions_mergesNormalizesAndSorts() {
+        assertEquals(
+            listOf("biceps", "chest", "rear delts"),
+            muscleOptions(listOf("chest", "biceps"), listOf(" Chest ", "Rear  Delts"), listOf("", "biceps"))
+        )
+    }
+
+    @Test
+    fun toggleMuscle_addsNormalizedAndRemoves() {
+        assertEquals(listOf("chest", "lower back"), toggleMuscle(listOf("chest"), " Lower Back"))
+        assertEquals(emptyList<String>(), toggleMuscle(listOf("chest"), "CHEST"))
+        assertEquals(listOf("chest"), toggleMuscle(listOf("chest"), "  "))
+    }
+
+    @Test
+    fun primaryMusclesSurviveEditRoundTrip() {
+        val existing = Exercise(id = 4, name = "Bench", primaryMuscles = listOf("Chest", "triceps"), sortOrder = 7)
+        val input = exerciseFormFrom(existing, Locale.US)
+        assertEquals(listOf("chest", "triceps"), input.primaryMuscles)
+        val saved = applyExerciseForm(existing, input.copy(primaryMuscles = toggleMuscle(input.primaryMuscles, "shoulders")))
+        assertEquals(listOf("chest", "triceps", "shoulders"), saved.primaryMuscles)
+        assertEquals(7, saved.sortOrder) // edits keep the custom position
+    }
     private val pt = Locale.forLanguageTag("pt-BR")
 
     private fun strength(

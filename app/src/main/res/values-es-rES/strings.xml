@@ -668,4 +668,7 @@
     <string name="gym_copy_failed">No se pudo copiar el ejercicio</string>
     <string name="gym_shared_option_hint">Se muestra en todos los gimnasios</string>
     <string name="gym_copy_subtitle">Crea una copia aparte con los mismos valores, sin su historial.</string>
+    <string name="muscle_groups_label">Grupos musculares</string>
+    <string name="muscle_other">Otro…</string>
+    <string name="muscle_custom_label">Grupo muscular</string>
 </resources>

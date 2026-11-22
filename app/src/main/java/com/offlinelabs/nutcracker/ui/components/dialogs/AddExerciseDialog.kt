@@ -59,6 +59,8 @@ fun AddExerciseDialog(
     gyms: List<Gym> = emptyList(),
     /** Gym preselected for a new exercise (null = shared). Ignored when editing. */
     defaultGymId: Long? = null,
+    /** Muscle choices besides the selected ones (exercise database + muscles already in use). */
+    muscleChoices: List<String> = emptyList(),
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -127,7 +129,8 @@ fun AddExerciseDialog(
             },
             showNameError = nameTouched,
             colors = FormDefaults.colors(),
-            gymOptions = gymPickerOptions(gyms)
+            gymOptions = gymPickerOptions(gyms),
+            muscleChoices = muscleChoices
         )
     }
 }
@@ -138,7 +141,8 @@ private fun ExerciseFormBody(
     onInputChange: (ExerciseFormInput) -> Unit,
     showNameError: Boolean,
     colors: FormColors,
-    gymOptions: List<GymPickerOption>? = null
+    gymOptions: List<GymPickerOption>? = null,
+    muscleChoices: List<String> = emptyList()
 ) {
     val nameError = if (showNameError) {
         validateExerciseFormField(ExerciseFormField.NAME, input)?.messageRes
@@ -168,6 +172,14 @@ private fun ExerciseFormBody(
             colors = colors
         )
     }
+
+    Spacer(Modifier.height(12.dp))
+    MusclePicker(
+        options = muscleOptions(muscleChoices, emptyList(), input.primaryMuscles),
+        selected = input.primaryMuscles,
+        onSelectedChange = { onInputChange(input.copy(primaryMuscles = it)) },
+        colors = colors
+    )
 
     Spacer(Modifier.height(12.dp))
     FormSection {
