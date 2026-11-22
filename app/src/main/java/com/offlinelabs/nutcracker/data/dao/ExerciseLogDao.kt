@@ -68,9 +68,12 @@ interface ExerciseLogDao {
             el.caloriesBurned,
             el.notes,
             e.name as exerciseName,
-            e.category as exerciseType
+            e.category as exerciseType,
+            g.name as gymName,
+            g.unit as gymUnit
         FROM exercise_logs el
         INNER JOIN exercises e ON el.exerciseId = e.id
+        LEFT JOIN gyms g ON e.gymId = g.id
         WHERE el.logDate = :date
         ORDER BY el.logDateTime DESC
     """)
@@ -155,5 +158,7 @@ data class DailyExerciseEntry(
     val caloriesBurned: Double,
     val notes: String?,
     val exerciseName: String,
-    val exerciseType: String
+    val exerciseType: String,
+    val gymName: String? = null, // Name of the exercise's gym (hidden gyms included); null when shared
+    val gymUnit: String? = null
 )

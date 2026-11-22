@@ -1,11 +1,24 @@
 package com.offlinelabs.nutcracker.data.model
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
-@Entity(tableName = "exercises")
+@Entity(
+    tableName = "exercises",
+    foreignKeys = [
+        ForeignKey(
+            entity = Gym::class,
+            parentColumns = ["id"],
+            childColumns = ["gymId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [Index("gymId")]
+)
 @TypeConverters(ExerciseTypeConverters::class)
 data class Exercise(
     @PrimaryKey(autoGenerate = true)
@@ -25,7 +38,8 @@ data class Exercise(
     val instructions: List<String> = emptyList(), // Exercise instructions
     val notes: String? = null, // Optional notes
     val imagePaths: List<String> = emptyList(), // Local paths to exercise images
-    val isVisible: Boolean = true // Soft delete field - true means visible in My Exercises
+    val isVisible: Boolean = true, // Soft delete field - true means visible in My Exercises
+    val gymId: Long? = null // Gym this exercise belongs to; null means shared across gyms
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

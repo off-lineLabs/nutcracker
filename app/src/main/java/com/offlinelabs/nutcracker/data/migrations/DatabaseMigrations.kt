@@ -84,5 +84,28 @@ object DatabaseMigrations {
         }
     }
     
+    // Migration from version 19 to 20 - Add gyms; exercises can belong to a gym (null = shared)
+    val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS gyms (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    unit TEXT,
+                    mapsPlaceId TEXT,
+                    mapsProvider TEXT,
+                    isVisible INTEGER NOT NULL
+                )
+            """)
+
+            // Existing exercises keep gymId NULL, so they all become shared
+            db.execSQL(
+                "ALTER TABLE exercises ADD COLUMN gymId INTEGER " +
+                    "REFERENCES gyms(id) ON UPDATE NO ACTION ON DELETE SET NULL"
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_exercises_gymId ON exercises(gymId)")
+        }
+    }
+
     // Add more migrations here as needed
 }

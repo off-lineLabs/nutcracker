@@ -107,6 +107,29 @@ class ExerciseImageService(private val context: Context) {
     }
     
     /**
+     * Copies existing image files so a duplicated exercise owns its own files
+     * (deleting one exercise deletes its image files).
+     * @return Paths of the new files; sources that are missing or fail to copy are skipped
+     */
+    suspend fun copyImages(sourcePaths: List<String>, newExerciseId: String): List<String> =
+        withContext(Dispatchers.IO) {
+            val copied = mutableListOf<String>()
+            sourcePaths.forEachIndexed { index, sourcePath ->
+                try {
+                    val source = File(sourcePath)
+                    if (source.exists()) {
+                        val target = File(imageDir, "${newExerciseId}_${index}.jpg")
+                        source.copyTo(target, overwrite = true)
+                        copied.add(target.absolutePath)
+                    }
+                } catch (e: Exception) {
+                    AppLogger.e("ExerciseImageService", "Failed to copy image: $sourcePath", e)
+                }
+            }
+            copied
+        }
+
+    /**
      * Deletes a single image file
      * @param imagePath The local file path to delete
      */

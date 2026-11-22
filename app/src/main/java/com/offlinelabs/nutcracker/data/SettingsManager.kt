@@ -38,7 +38,17 @@ class SettingsManager(context: Context) {
         private const val KEY_TERMS_AGREED_TIMESTAMP = "terms_agreed_timestamp"
         private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
         private const val KEY_GOAL_LINK_MODE = "goal_link_mode"
+        private const val KEY_LAST_SELECTED_GYM_ID = "last_selected_gym_id"
     }
+
+    /** Last gym picked in the Exercise tab dropdown; null means "All gyms". */
+    var lastSelectedGymId: Long?
+        get() = if (prefs.contains(KEY_LAST_SELECTED_GYM_ID)) prefs.getLong(KEY_LAST_SELECTED_GYM_ID, 0L) else null
+        set(value) {
+            prefs.edit().apply {
+                if (value == null) remove(KEY_LAST_SELECTED_GYM_ID) else putLong(KEY_LAST_SELECTED_GYM_ID, value)
+            }.apply()
+        }
 
     /** Last chosen link mode of the goals dialog; [GoalLinkMode.KCAL_TO_MACROS] until the user changes it. */
     var goalLinkMode: GoalLinkMode

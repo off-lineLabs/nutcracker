@@ -42,6 +42,7 @@ class FoodLogApplication : Application() {
             database.pillCheckInDao(),
             database.recipeDao(),
             database.recipeIngredientDao(),
+            database.gymDao(),
             exerciseImageService,
             imageDownloadService
         )

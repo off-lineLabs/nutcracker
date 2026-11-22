@@ -7,6 +7,7 @@ import com.offlinelabs.nutcracker.data.dao.ExerciseDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseLogDao
 import com.offlinelabs.nutcracker.data.dao.PillDao
 import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
+import com.offlinelabs.nutcracker.data.dao.GymDao
 import com.offlinelabs.nutcracker.data.dao.RecipeDao
 import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
@@ -21,6 +22,7 @@ import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
 import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
+import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
@@ -61,6 +63,22 @@ interface FoodLogRepository {
     suspend fun updateExercise(exercise: Exercise)
     suspend fun deleteExercise(exercise: Exercise)
     suspend fun deleteAllExercises()
+
+    // Gym operations
+    fun getVisibleGyms(): Flow<List<Gym>>
+    suspend fun getGymById(id: Long): Gym?
+    /** Inserts or updates the gym and returns its id. */
+    suspend fun upsertGym(gym: Gym): Long
+    /**
+     * Soft-deletes the gym. [removeExercises] false: its exercises become shared;
+     * true: they are hidden (gym id kept, logs stay).
+     */
+    suspend fun deleteGym(gymId: Long, removeExercises: Boolean)
+    /**
+     * Inserts a visible copy of [exercise] in [targetGymId] (null = shared) and returns the new id.
+     * Logs and tags are not copied; image files are duplicated.
+     */
+    suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?): Long
 
     // ExerciseLog operations
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
@@ -137,6 +155,7 @@ class OfflineFoodLogRepository(
     private val pillCheckInDao: PillCheckInDao,
     private val recipeDao: RecipeDao,
     private val recipeIngredientDao: RecipeIngredientDao,
+    private val gymDao: GymDao,
     private val exerciseImageService: ExerciseImageService? = null,
     private val imageDownloadService: ImageDownloadService? = null
 ) : FoodLogRepository {
@@ -200,6 +219,29 @@ class OfflineFoodLogRepository(
         exerciseDao.hideExercise(exercise.id)
     }
     override suspend fun deleteAllExercises() = exerciseDao.deleteAllExercises()
+
+    // Gym operations
+    override fun getVisibleGyms(): Flow<List<Gym>> = gymDao.getVisibleGyms()
+    override suspend fun getGymById(id: Long): Gym? = gymDao.getGymById(id)
+    override suspend fun upsertGym(gym: Gym): Long {
+        val rowId = gymDao.upsertGym(gym)
+        return if (rowId == -1L) gym.id else rowId // @Upsert returns -1 when it updated
+    }
+    override suspend fun deleteGym(gymId: Long, removeExercises: Boolean) = gymDao.deleteGym(gymId, removeExercises)
+    override suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?): Long {
+        val newId = exerciseDao.upsertExercise(
+            exercise.copy(id = 0, gymId = targetGymId, isVisible = true, imagePaths = emptyList())
+        )
+        if (exercise.imagePaths.isNotEmpty() && exerciseImageService != null) {
+            val copiedPaths = exerciseImageService.copyImages(exercise.imagePaths, newId.toString())
+            if (copiedPaths.isNotEmpty()) {
+                exerciseDao.updateExercise(
+                    exercise.copy(id = newId, gymId = targetGymId, isVisible = true, imagePaths = copiedPaths)
+                )
+            }
+        }
+        return newId
+    }
 
     // ExerciseLog operations
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
