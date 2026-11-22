@@ -48,10 +48,10 @@ fun MealPickerContent(
     registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null,
     /** [meals] sorted and grouped for display; defaults to one ungrouped group in the given order. */
     groups: List<ListGroup<Meal>> = listOf(ListGroup("all", null, meals)),
-    /** True in custom order: rows can be dragged within their group. */
-    reorderEnabled: Boolean = false,
-    /** New order of the dragged group's meal ids, called when a row is dropped. */
-    onReorder: (List<Long>) -> Unit = {},
+    /** Whether rows of a group can be dragged (custom order). */
+    canReorder: (ListGroup<Meal>) -> Boolean = { false },
+    /** New order of a dragged group's meal ids, called with the group key when a row is dropped. */
+    onReorder: (groupKey: String, ids: List<Long>) -> Unit = { _, _ -> },
     /** Sort/group controls shown above the list. */
     arrangementBar: @Composable () -> Unit = {}
 ) {
@@ -181,13 +181,14 @@ fun MealPickerContent(
                 group.title?.let { title ->
                     item(key = "meal_header_${group.key}") { ListGroupHeader(groupTitleText(title)) }
                 }
+                val draggable = canReorder(group)
                 items(group.items, key = { reorder.itemKey(group.key, it) }) { meal ->
                     DraggableListRow(
                         state = reorderableState,
                         key = reorder.itemKey(group.key, meal),
-                        enabled = reorderEnabled,
+                        enabled = draggable,
                         handleDescription = stringResource(R.string.reorder_handle_description, meal.name),
-                        onDragStopped = { onReorder(reorder.groupOrder(group.key)) }
+                        onDragStopped = { onReorder(group.key, reorder.groupOrder(group.key)) }
                     ) {
                         MealItem(
                             meal = meal,

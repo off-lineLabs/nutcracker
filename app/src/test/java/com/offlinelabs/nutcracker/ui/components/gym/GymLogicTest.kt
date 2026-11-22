@@ -55,7 +55,8 @@ class GymLogicTest {
         assertEquals(ExerciseListHint.NONE, exerciseListHint(GymSelection.AllGyms, shared, 1))
         val none = PartitionedExercises(emptyList(), emptyList())
         assertEquals(ExerciseListHint.LIBRARY_EMPTY, exerciseListHint(GymSelection.AllGyms, none, 0))
-        assertEquals(ExerciseListHint.PICK_GYM, exerciseListHint(GymSelection.AllGyms, none, 3))
+        // All gyms lists every exercise, so gym-only exercises need no hint
+        assertEquals(ExerciseListHint.NONE, exerciseListHint(GymSelection.AllGyms, none, 3))
     }
 
     @Test

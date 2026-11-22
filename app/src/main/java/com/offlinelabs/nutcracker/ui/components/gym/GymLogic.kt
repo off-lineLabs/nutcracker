@@ -25,14 +25,12 @@ enum class ExerciseListHint {
     LIBRARY_EMPTY,
 
     /** A gym is selected but has no exercises of its own. */
-    GYM_EMPTY,
-
-    /** "All gyms" has no shared exercises, but exercises exist at gyms. */
-    PICK_GYM
+    GYM_EMPTY
 }
 
 /**
- * Decides the empty-state hint of the Exercise tab.
+ * Decides the empty-state hint of the Exercise tab. "All gyms" lists every exercise, so it only
+ * needs a hint when the library is empty.
  * @param totalVisibleExercises all visible exercises, regardless of gym.
  */
 fun exerciseListHint(
@@ -42,11 +40,8 @@ fun exerciseListHint(
 ): ExerciseListHint = when (selection) {
     is GymSelection.Specific ->
         if (partitioned.gymExercises.isEmpty()) ExerciseListHint.GYM_EMPTY else ExerciseListHint.NONE
-    GymSelection.AllGyms -> when {
-        partitioned.shared.isNotEmpty() -> ExerciseListHint.NONE
-        totalVisibleExercises == 0 -> ExerciseListHint.LIBRARY_EMPTY
-        else -> ExerciseListHint.PICK_GYM
-    }
+    GymSelection.AllGyms ->
+        if (totalVisibleExercises == 0) ExerciseListHint.LIBRARY_EMPTY else ExerciseListHint.NONE
 }
 
 /** The gym whose name the dropdown header shows, or null for "All gyms". */

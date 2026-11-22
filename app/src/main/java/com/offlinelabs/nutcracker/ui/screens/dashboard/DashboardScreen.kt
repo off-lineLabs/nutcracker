@@ -88,6 +88,7 @@ import com.offlinelabs.nutcracker.data.ExerciseGrouping
 import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.groupExercises
+import com.offlinelabs.nutcracker.data.exercisesForGym
 import com.offlinelabs.nutcracker.data.groupMeals
 import com.offlinelabs.nutcracker.data.reorderWithinGroup
 import com.offlinelabs.nutcracker.data.sortExercises
@@ -625,9 +626,11 @@ fun DashboardScreen(
     // ----- Order and grouping of the Food and Exercise tab lists (persisted in settings) -----
     var mealSort by rememberSaveable { mutableStateOf(settingsManager?.mealListSort ?: ListSort.ALPHABETICAL) }
     var mealGrouping by rememberSaveable { mutableStateOf(settingsManager?.mealListGrouping ?: MealGrouping.NONE) }
+    var mealDescending by rememberSaveable { mutableStateOf(settingsManager?.mealListDescending ?: false) }
     var exerciseSort by rememberSaveable { mutableStateOf(settingsManager?.exerciseListSort ?: ListSort.ALPHABETICAL) }
+    var exerciseDescending by rememberSaveable { mutableStateOf(settingsManager?.exerciseListDescending ?: false) }
     var exerciseGrouping by rememberSaveable {
-        mutableStateOf(settingsManager?.exerciseListGrouping ?: ExerciseGrouping.NONE)
+        mutableStateOf(settingsManager?.exerciseListGrouping ?: ExerciseGrouping.GYM)
     }
     val mealLastCheckIns by remember(foodLogRepository) {
         foodLogRepository.getMealLastCheckIns().map { rows -> rows.mapNotNull { r -> r.lastCheckIn?.let { r.id to it } }.toMap() }
@@ -644,28 +647,46 @@ fun DashboardScreen(
         val collator = java.text.Collator.getInstance().apply { strength = java.text.Collator.PRIMARY }
         Comparator<String> { a, b -> collator.compare(a, b) }
     }
-    val mealGroups = remember(meals, mealSort, mealGrouping, mealLastCheckIns) {
-        groupMeals(sortMeals(meals, mealSort, mealLastCheckIns, nameComparator), mealGrouping)
+    val mealGroups = remember(meals, mealSort, mealDescending, mealGrouping, mealLastCheckIns) {
+        groupMeals(sortMeals(meals, mealSort, mealLastCheckIns, nameComparator, mealDescending), mealGrouping)
     }
-    // Group by routine is offered once routines exist (no routine UI yet)
+    // Group by routine is offered once routines exist
     val exerciseGroupings = if (routines.isEmpty()) {
         ExerciseGrouping.entries - ExerciseGrouping.ROUTINE
     } else {
         ExerciseGrouping.entries
     }
-    val effectiveExerciseGrouping = if (exerciseGrouping in exerciseGroupings) exerciseGrouping else ExerciseGrouping.NONE
+    val effectiveExerciseGrouping = if (exerciseGrouping in exerciseGroupings) exerciseGrouping else ExerciseGrouping.GYM
+    // A gym shows its own and the shared exercises; All gyms shows every exercise
+    val selectedGymForList = (gymSelection as? GymSelection.Specific)?.gymId
+    val listedExercises = remember(exercises, selectedGymForList) { exercisesForGym(exercises, selectedGymForList) }
+    val exerciseGroups = remember(
+        listedExercises, exerciseSort, exerciseDescending, effectiveExerciseGrouping, exerciseLastCheckIns,
+        routines, routineMemberships, gyms, selectedGymForList
+    ) {
+        groupExercises(
+            sortExercises(listedExercises, exerciseSort, exerciseLastCheckIns, nameComparator, exerciseDescending),
+            effectiveExerciseGrouping, routines, routineMemberships, gyms, selectedGymForList
+        )
+    }
 
     // A drag reorders one group; its items swap into the slots they held in the full custom order
-    fun saveMealOrder(groupOrder: List<Long>) {
+    fun saveMealOrder(@Suppress("UNUSED_PARAMETER") groupKey: String, groupOrder: List<Long>) {
         coroutineScope.launch {
             val custom = sortMeals(meals, ListSort.CUSTOM, emptyMap(), nameComparator).map { it.id }
             foodLogRepository.applyMealSortOrder(reorderWithinGroup(custom, groupOrder))
         }
     }
-    fun saveExerciseOrder(groupOrder: List<Long>) {
+    // Routine groups keep the routine's own order; any other group edits the custom order
+    fun saveExerciseOrder(groupKey: String, groupOrder: List<Long>) {
+        val routineId = exerciseGroups.firstOrNull { it.key == groupKey }?.routineId
         coroutineScope.launch {
-            val custom = sortExercises(exercises, ListSort.CUSTOM, emptyMap(), nameComparator).map { it.id }
-            foodLogRepository.applyExerciseSortOrder(reorderWithinGroup(custom, groupOrder))
+            if (routineId != null) {
+                foodLogRepository.applyRoutineExerciseOrder(routineId, groupOrder)
+            } else {
+                val custom = sortExercises(exercises, ListSort.CUSTOM, emptyMap(), nameComparator).map { it.id }
+                foodLogRepository.applyExerciseSortOrder(reorderWithinGroup(custom, groupOrder))
+            }
         }
     }
 
@@ -1219,12 +1240,19 @@ fun DashboardScreen(
                     onSelectRecipe = { showSelectRecipeDialog = true },
                     registerElementCoordinates = registerElementCoordinates,
                     groups = mealGroups,
-                    reorderEnabled = mealSort == ListSort.CUSTOM,
+                    canReorder = { mealSort == ListSort.CUSTOM },
                     onReorder = ::saveMealOrder,
                     arrangementBar = {
                         ListArrangementBar(
                             sort = mealSort,
-                            onSortChange = { mealSort = it; settingsManager?.mealListSort = it },
+                            descending = mealDescending,
+                            onSortChange = {
+                                mealSort = it
+                                mealDescending = it.defaultDescending
+                                settingsManager?.mealListSort = it
+                                settingsManager?.mealListDescending = it.defaultDescending
+                            },
+                            onDescendingChange = { mealDescending = it; settingsManager?.mealListDescending = it },
                             grouping = mealGrouping,
                             groupings = MealGrouping.entries,
                             groupingLabel = { mealGroupingLabel(it) },
@@ -1235,40 +1263,31 @@ fun DashboardScreen(
                 2 -> {
                   val partitioned = partitionExercisesForSelection(exercises, gymSelection)
                   val listHint = exerciseListHint(gymSelection, partitioned, exercises.size)
-                  val isGymSelected = gymSelection is GymSelection.Specific
-                  val mainExercises = if (isGymSelected) partitioned.gymExercises else partitioned.shared
-                  val sectionShared = if (isGymSelected) partitioned.shared else emptyList()
-                  fun arrange(list: List<Exercise>) = groupExercises(
-                      sortExercises(list, exerciseSort, exerciseLastCheckIns, nameComparator),
-                      effectiveExerciseGrouping, routines, routineMemberships
-                  )
-                  val mainGroups = remember(mainExercises, exerciseSort, effectiveExerciseGrouping, exerciseLastCheckIns, routines, routineMemberships) {
-                      arrange(mainExercises)
-                  }
-                  val sharedGroups = remember(sectionShared, exerciseSort, effectiveExerciseGrouping, exerciseLastCheckIns, routines, routineMemberships) {
-                      arrange(sectionShared)
-                  }
                   ExercisePickerContent(
-                    exercises = mainExercises,
-                    sharedExercises = sectionShared,
-                    groups = mainGroups,
-                    sharedGroups = sharedGroups,
-                    reorderEnabled = exerciseSort == ListSort.CUSTOM,
+                    exercises = listedExercises,
+                    groups = exerciseGroups,
+                    // Routine groups always follow (and edit) the routine's own order
+                    canReorder = { group -> group.routineId != null || exerciseSort == ListSort.CUSTOM },
                     onReorder = ::saveExerciseOrder,
                     arrangementBar = {
                         ListArrangementBar(
                             sort = exerciseSort,
-                            onSortChange = { exerciseSort = it; settingsManager?.exerciseListSort = it },
+                            descending = exerciseDescending,
+                            onSortChange = {
+                                exerciseSort = it
+                                exerciseDescending = it.defaultDescending
+                                settingsManager?.exerciseListSort = it
+                                settingsManager?.exerciseListDescending = it.defaultDescending
+                            },
+                            onDescendingChange = { exerciseDescending = it; settingsManager?.exerciseListDescending = it },
                             grouping = effectiveExerciseGrouping,
                             groupings = exerciseGroupings,
                             groupingLabel = { exerciseGroupingLabel(it) },
                             onGroupingChange = { exerciseGrouping = it; settingsManager?.exerciseListGrouping = it }
                         )
                     },
-                    sharedSectionTitle = if (isGymSelected) stringResource(R.string.gym_shared_section) else null,
                     emptyHint = when (listHint) {
                         ExerciseListHint.GYM_EMPTY -> stringResource(R.string.gym_empty_at_gym)
-                        ExerciseListHint.PICK_GYM -> stringResource(R.string.gym_pick_hint)
                         else -> null
                     },
                     header = {

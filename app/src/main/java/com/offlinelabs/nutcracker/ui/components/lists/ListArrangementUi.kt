@@ -1,40 +1,49 @@
 package com.offlinelabs.nutcracker.ui.components.lists
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Workspaces
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.ExerciseGrouping
 import com.offlinelabs.nutcracker.data.GroupTitle
 import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
+import com.offlinelabs.nutcracker.data.gymLabel
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 
 @Composable
@@ -51,7 +60,7 @@ fun sortLabel(sort: ListSort): String = stringResource(
 fun mealGroupingLabel(grouping: MealGrouping): String = stringResource(
     when (grouping) {
         MealGrouping.NONE -> R.string.group_none
-        MealGrouping.NUTRI_SCORE -> R.string.group_nutri_score
+        MealGrouping.NOVA -> R.string.group_nova
     }
 )
 
@@ -59,6 +68,7 @@ fun mealGroupingLabel(grouping: MealGrouping): String = stringResource(
 fun exerciseGroupingLabel(grouping: ExerciseGrouping): String = stringResource(
     when (grouping) {
         ExerciseGrouping.NONE -> R.string.group_none
+        ExerciseGrouping.GYM -> R.string.group_gym
         ExerciseGrouping.ROUTINE -> R.string.group_routine
         ExerciseGrouping.MUSCLE -> R.string.group_muscle
         ExerciseGrouping.TYPE -> R.string.group_exercise_type
@@ -67,8 +77,10 @@ fun exerciseGroupingLabel(grouping: ExerciseGrouping): String = stringResource(
 
 @Composable
 fun groupTitleText(title: GroupTitle): String = when (title) {
-    is GroupTitle.NutriScore -> stringResource(R.string.group_nutri_grade, title.grade)
-    GroupTitle.NoNutriScore -> stringResource(R.string.group_no_nutri_score)
+    is GroupTitle.Nova -> stringResource(R.string.group_nova_number, title.group)
+    GroupTitle.NoNova -> stringResource(R.string.group_no_nova)
+    is GroupTitle.GymName -> gymLabel(title.name, title.unit)
+    GroupTitle.Shared -> stringResource(R.string.gym_shared_section)
     is GroupTitle.RoutineName -> title.name
     GroupTitle.NoRoutine -> stringResource(R.string.group_no_routine)
     is GroupTitle.Muscle -> title.muscle.replaceFirstChar { it.uppercase() }
@@ -83,14 +95,16 @@ fun groupTitleText(title: GroupTitle): String = when (title) {
 }
 
 /**
- * "Sort: …" and "Group: …" chips, each opening a menu. [groupings] empty hides the group chip.
- * In custom order a hint explains how to reorder.
+ * One row with two compact controls: Sort (with an up/down direction toggle) and Group (hidden
+ * when [groupings] has a single entry). Each shows a small label above the selected value and
+ * opens a menu. In custom order a hint explains how to reorder.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <G> ListArrangementBar(
     sort: ListSort,
+    descending: Boolean,
     onSortChange: (ListSort) -> Unit,
+    onDescendingChange: (Boolean) -> Unit,
     grouping: G,
     groupings: List<G>,
     groupingLabel: @Composable (G) -> String,
@@ -98,23 +112,40 @@ fun <G> ListArrangementBar(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MenuChip(
-                text = stringResource(R.string.sort_chip_format, sortLabel(sort)),
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MenuField(
+                label = stringResource(R.string.sort_label),
                 icon = Icons.AutoMirrored.Filled.Sort,
                 options = ListSort.entries,
                 selected = sort,
                 optionLabel = { sortLabel(it) },
-                onSelect = onSortChange
+                onSelect = onSortChange,
+                modifier = Modifier.weight(1f),
+                trailing = if (sort.hasDirection) {
+                    {
+                        IconButton(onClick = { onDescendingChange(!descending) }, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = if (descending) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                                contentDescription = stringResource(
+                                    if (descending) R.string.sort_descending else R.string.sort_ascending
+                                ),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                } else {
+                    null
+                }
             )
             if (groupings.size > 1) {
-                MenuChip(
-                    text = stringResource(R.string.group_chip_format, groupingLabel(grouping)),
+                MenuField(
+                    label = stringResource(R.string.group_label),
                     icon = Icons.Filled.Workspaces,
                     options = groupings,
                     selected = grouping,
                     optionLabel = groupingLabel,
-                    onSelect = onGroupingChange
+                    onSelect = onGroupingChange,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -123,34 +154,67 @@ fun <G> ListArrangementBar(
                 text = stringResource(R.string.reorder_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp)
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
             )
         }
     }
 }
 
 @Composable
-private fun <T> MenuChip(
-    text: String,
+private fun <T> MenuField(
+    label: String,
     icon: ImageVector,
     options: List<T>,
     selected: T,
     optionLabel: @Composable (T) -> String,
-    onSelect: (T) -> Unit
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box {
-        AssistChip(
+    Box(modifier = modifier) {
+        Surface(
             onClick = { expanded = true },
-            label = { Text(text, maxLines = 1) },
-            leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            colors = AssistChipDefaults.assistChipColors(
-                labelColor = MaterialTheme.colorScheme.onSurface,
-                leadingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                trailingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        )
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+                Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = optionLabel(selected),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                trailing?.invoke()
+                Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -171,8 +235,8 @@ private fun <T> MenuChip(
 }
 
 /**
- * Title above a group of list items. Smaller than section titles such as "Shared" (titleSmall), so
- * a group inside a section reads as a sub-level.
+ * Title above a group of list items: a small uppercase label, so groups read as a sub-level of
+ * the screen's own titles.
  */
 @Composable
 fun ListGroupHeader(text: String, modifier: Modifier = Modifier) {
@@ -180,7 +244,7 @@ fun ListGroupHeader(text: String, modifier: Modifier = Modifier) {
         text = text.uppercase(),
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp),
+        letterSpacing = TextUnit(1f, TextUnitType.Sp),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
         modifier = modifier.padding(top = 6.dp, start = 4.dp)
     )

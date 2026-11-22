@@ -95,6 +95,8 @@ interface FoodLogRepository {
     // Routines (no management UI yet; used for grouping)
     fun getVisibleRoutines(): Flow<List<Routine>>
     fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>>
+    /** Saves a routine's exercise order: each exercise gets its index in [exerciseIds]. */
+    suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>)
 
     // ExerciseLog operations
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
@@ -275,6 +277,8 @@ class OfflineFoodLogRepository(
     // Routines
     override fun getVisibleRoutines(): Flow<List<Routine>> = routineDao.getVisibleRoutines()
     override fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>> = routineDao.getVisibleRoutineExercises()
+    override suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>) =
+        routineDao.applyExerciseOrder(routineId, exerciseIds)
 
     // ExerciseLog operations
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)

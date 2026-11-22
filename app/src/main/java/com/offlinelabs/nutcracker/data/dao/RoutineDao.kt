@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.offlinelabs.nutcracker.data.model.Routine
 import com.offlinelabs.nutcracker.data.model.RoutineExercise
@@ -33,6 +34,15 @@ interface RoutineDao {
 
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId AND exerciseId = :exerciseId")
     suspend fun deleteRoutineExercise(routineId: Long, exerciseId: Long)
+
+    @Query("UPDATE routine_exercises SET position = :position WHERE routineId = :routineId AND exerciseId = :exerciseId")
+    suspend fun setExercisePosition(routineId: Long, exerciseId: Long, position: Int)
+
+    /** Stores a routine's exercise order: each exercise gets its index in [exerciseIds]. */
+    @Transaction
+    suspend fun applyExerciseOrder(routineId: Long, exerciseIds: List<Long>) {
+        exerciseIds.forEachIndexed { index, id -> setExercisePosition(routineId, id, index) }
+    }
 
     /** One-shot lists including hidden routines (used by export and import). */
     @Query("SELECT * FROM routines ORDER BY id ASC")

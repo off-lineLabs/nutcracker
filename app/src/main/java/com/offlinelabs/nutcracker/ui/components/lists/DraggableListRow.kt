@@ -61,14 +61,15 @@ fun LazyItemScope.DraggableListRow(
                     imageVector = Icons.Filled.DragIndicator,
                     contentDescription = handleDescription,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Slim handle (the whole row also drags on long-press, so it needn't be a big target)
                     modifier = Modifier
-                        .padding(start = 4.dp)
+                        .padding(start = 2.dp)
                         .draggableHandle(
                             onDragStarted = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
                             onDragStopped = { onDragStopped() }
                         )
-                        .padding(8.dp)
-                        .size(24.dp)
+                        .padding(vertical = 12.dp)
+                        .size(width = 16.dp, height = 20.dp)
                 )
             }
         }

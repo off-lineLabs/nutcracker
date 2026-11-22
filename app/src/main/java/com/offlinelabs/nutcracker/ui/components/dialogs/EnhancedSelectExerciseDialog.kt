@@ -56,16 +56,14 @@ fun ExercisePickerContent(
     onEditExercise: (Exercise) -> Unit,
     modifier: Modifier = Modifier,
     header: @Composable () -> Unit = {},
-    sharedExercises: List<Exercise> = emptyList(),
-    sharedSectionTitle: String? = null,
+    /** Shown above the list when it has no exercise of the selected gym (null = nothing). */
     emptyHint: String? = null,
-    /** [exercises] / [sharedExercises] sorted and grouped for display (default: ungrouped). */
+    /** [exercises] sorted and grouped for display (default: ungrouped). */
     groups: List<ListGroup<Exercise>> = listOf(ListGroup("all", null, exercises)),
-    sharedGroups: List<ListGroup<Exercise>> = listOf(ListGroup("all", null, sharedExercises)),
-    /** True in custom order: rows can be dragged within their group. */
-    reorderEnabled: Boolean = false,
-    /** New order of the dragged group's exercise ids, called when a row is dropped. */
-    onReorder: (List<Long>) -> Unit = {},
+    /** Whether rows of a group can be dragged (e.g. custom order, or a routine's own order). */
+    canReorder: (ListGroup<Exercise>) -> Boolean = { false },
+    /** New order of a dragged group's exercise ids, called with the group key when a row is dropped. */
+    onReorder: (groupKey: String, ids: List<Long>) -> Unit = { _, _ -> },
     /** Sort/group controls shown above the list. */
     arrangementBar: @Composable () -> Unit = {}
 ) {
@@ -131,12 +129,9 @@ fun ExercisePickerContent(
         onSearchExternal = { dialogState = DialogState.SEARCH },
         modifier = modifier,
         header = header,
-        sharedExercises = sharedExercises,
-        sharedSectionTitle = sharedSectionTitle,
         emptyHint = emptyHint,
         groups = groups,
-        sharedGroups = sharedGroups,
-        reorderEnabled = reorderEnabled,
+        canReorder = canReorder,
         onReorder = onReorder,
         arrangementBar = arrangementBar
     )
@@ -204,46 +199,16 @@ private fun MainExerciseSelectionContent(
     onSearchExternal: () -> Unit,
     modifier: Modifier = Modifier,
     header: @Composable () -> Unit = {},
-    sharedExercises: List<Exercise> = emptyList(),
-    sharedSectionTitle: String? = null,
     emptyHint: String? = null,
     groups: List<ListGroup<Exercise>>,
-    sharedGroups: List<ListGroup<Exercise>>,
-    reorderEnabled: Boolean,
-    onReorder: (List<Long>) -> Unit,
+    canReorder: (ListGroup<Exercise>) -> Boolean,
+    onReorder: (groupKey: String, ids: List<Long>) -> Unit,
     arrangementBar: @Composable () -> Unit
 ) {
-    val gymReorder = rememberGroupedReorderState(groups, prefix = "gym") { it.id }
-    val sharedReorder = rememberGroupedReorderState(sharedGroups, prefix = "shared") { it.id }
+    val reorder = rememberGroupedReorderState(groups, prefix = "exercise") { it.id }
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        // Each section has its own state; a move across sections or groups is ignored
-        if (!gymReorder.move(from.key, to.key)) sharedReorder.move(from.key, to.key)
-    }
-
-    @Composable
-    fun LazyItemScope.row(state: GroupedReorderState<Exercise>, groupKey: String, exercise: Exercise) {
-        DraggableListRow(
-            state = reorderableState,
-            key = state.itemKey(groupKey, exercise),
-            enabled = reorderEnabled,
-            handleDescription = stringResource(R.string.reorder_handle_description, exercise.name),
-            onDragStopped = { onReorder(state.groupOrder(groupKey)) }
-        ) {
-            ExerciseListCard(exercise, foodLogRepository, onSelectExercise, onEditExercise)
-        }
-    }
-
-    fun LazyListScope.section(state: GroupedReorderState<Exercise>, label: String) {
-        state.groups.forEach { group ->
-            if (group.items.isEmpty()) return@forEach
-            group.title?.let { title ->
-                item(key = "${label}_header_${group.key}") { ListGroupHeader(groupTitleText(title)) }
-            }
-            items(group.items, key = { state.itemKey(group.key, it) }) { exercise ->
-                row(state, group.key, exercise)
-            }
-        }
+        reorder.move(from.key, to.key) // moves across groups are ignored
     }
 
     LazyColumn(
@@ -291,7 +256,7 @@ private fun MainExerciseSelectionContent(
         }
 
         // Existing exercises list
-        if (exercises.isEmpty() && sharedExercises.isEmpty()) {
+        if (exercises.isEmpty()) {
             item(key = "no_exercises") {
                     Text(
                         text = emptyHint ?: stringResource(R.string.no_exercises_yet),
@@ -304,7 +269,7 @@ private fun MainExerciseSelectionContent(
             item(key = "arrangement_bar") {
                 Box(modifier = Modifier.padding(top = 8.dp)) { arrangementBar() }
             }
-            if (exercises.isEmpty() && emptyHint != null) {
+            if (emptyHint != null) {
                 item(key = "empty_hint") {
                     Text(
                         text = emptyHint,
@@ -313,20 +278,23 @@ private fun MainExerciseSelectionContent(
                     )
                 }
             }
-            section(gymReorder, "gym")
-            if (sharedExercises.isNotEmpty()) {
-                if (sharedSectionTitle != null) {
-                    item(key = "shared_header") {
-                        Text(
-                            text = sharedSectionTitle,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp, start = 4.dp)
-                        )
+            reorder.groups.forEach { group ->
+                if (group.items.isEmpty()) return@forEach
+                group.title?.let { title ->
+                    item(key = "exercise_header_${group.key}") { ListGroupHeader(groupTitleText(title)) }
+                }
+                val draggable = canReorder(group)
+                items(group.items, key = { reorder.itemKey(group.key, it) }) { exercise ->
+                    DraggableListRow(
+                        state = reorderableState,
+                        key = reorder.itemKey(group.key, exercise),
+                        enabled = draggable,
+                        handleDescription = stringResource(R.string.reorder_handle_description, exercise.name),
+                        onDragStopped = { onReorder(group.key, reorder.groupOrder(group.key)) }
+                    ) {
+                        ExerciseListCard(exercise, foodLogRepository, onSelectExercise, onEditExercise)
                     }
                 }
-                section(sharedReorder, "shared")
             }
         }
     }

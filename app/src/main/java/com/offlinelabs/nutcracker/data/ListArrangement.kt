@@ -3,6 +3,7 @@ package com.offlinelabs.nutcracker.data
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
+import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.Routine
 import com.offlinelabs.nutcracker.data.model.RoutineExercise
@@ -12,18 +13,30 @@ import com.offlinelabs.nutcracker.data.model.RoutineExercise
  */
 
 /** How a list is ordered. Stored by [name] in settings. */
-enum class ListSort { CUSTOM, ALPHABETICAL, ADDED_DATE, LAST_CHECKED_IN }
+enum class ListSort(
+    /** Direction picked when the user switches to this sort (newest/most recent first for dates). */
+    val defaultDescending: Boolean,
+    /** Whether the up/down direction applies (custom order is the user's own order). */
+    val hasDirection: Boolean = true
+) {
+    CUSTOM(defaultDescending = false, hasDirection = false),
+    ALPHABETICAL(defaultDescending = false),
+    ADDED_DATE(defaultDescending = true),
+    LAST_CHECKED_IN(defaultDescending = true)
+}
 
 /** Food tab grouping. Stored by [name] in settings. */
-enum class MealGrouping { NONE, NUTRI_SCORE }
+enum class MealGrouping { NONE, NOVA }
 
 /** Exercise tab grouping. Stored by [name] in settings. */
-enum class ExerciseGrouping { NONE, ROUTINE, MUSCLE, TYPE }
+enum class ExerciseGrouping { NONE, GYM, ROUTINE, MUSCLE, TYPE }
 
 /** Title of a group; the UI turns it into localized text. */
 sealed interface GroupTitle {
-    data class NutriScore(val grade: String) : GroupTitle
-    data object NoNutriScore : GroupTitle
+    data class Nova(val group: Int) : GroupTitle
+    data object NoNova : GroupTitle
+    data class GymName(val name: String, val unit: String?) : GroupTitle
+    data object Shared : GroupTitle
     data class RoutineName(val name: String) : GroupTitle
     data object NoRoutine : GroupTitle
     data class Muscle(val muscle: String) : GroupTitle
@@ -31,27 +44,32 @@ sealed interface GroupTitle {
     data class Type(val type: ExerciseType) : GroupTitle
 }
 
-/** One group of a list. [key] is stable and unique within the list (used for item keys). */
-data class ListGroup<T>(val key: String, val title: GroupTitle?, val items: List<T>)
+/**
+ * One group of a list. [key] is stable and unique within the list (used for item keys).
+ * [routineId] is set for routine groups, whose order is the routine's own exercise order.
+ */
+data class ListGroup<T>(val key: String, val title: GroupTitle?, val items: List<T>, val routineId: Long? = null)
 
 /** What sorting needs to know about an item. */
 private class SortFields(val id: Long, val name: String, val sortOrder: Int, val lastCheckIn: String?)
 
 private fun <T> comparatorFor(
     sort: ListSort,
+    descending: Boolean,
     nameComparator: Comparator<String>,
     fields: (T) -> SortFields
 ): Comparator<T> {
     val byName = Comparator<T> { a, b -> nameComparator.compare(fields(a).name, fields(b).name) }
     val byId = compareBy<T> { fields(it).id }
+    fun Comparator<T>.directed() = if (descending) reversed() else this
     return when (sort) {
         ListSort.CUSTOM -> compareBy<T> { fields(it).sortOrder }.then(byName).then(byId)
-        ListSort.ALPHABETICAL -> byName.then(byId)
-        // Ids are assigned in insertion order, so the newest item has the highest id
-        ListSort.ADDED_DATE -> compareByDescending<T> { fields(it).id }
-        // Never checked in goes last; the stored "yyyy-MM-dd HH:mm:ss" text sorts chronologically
+        ListSort.ALPHABETICAL -> byName.then(byId).directed()
+        // Ids are assigned in insertion order, so a higher id was added later
+        ListSort.ADDED_DATE -> byId.directed()
+        // Never checked in always goes last; the stored "yyyy-MM-dd HH:mm:ss" text sorts chronologically
         ListSort.LAST_CHECKED_IN -> compareBy<T> { fields(it).lastCheckIn == null }
-            .thenByDescending { fields(it).lastCheckIn }
+            .then(compareBy<T> { fields(it).lastCheckIn }.directed())
             .then(byName).then(byId)
     }
 }
@@ -60,44 +78,70 @@ fun sortMeals(
     meals: List<Meal>,
     sort: ListSort,
     lastCheckIns: Map<Long, String>,
-    nameComparator: Comparator<String> = String.CASE_INSENSITIVE_ORDER
+    nameComparator: Comparator<String> = String.CASE_INSENSITIVE_ORDER,
+    descending: Boolean = sort.defaultDescending
 ): List<Meal> = meals.sortedWith(
-    comparatorFor(sort, nameComparator) { SortFields(it.id, it.name, it.sortOrder, lastCheckIns[it.id]) }
+    comparatorFor(sort, descending, nameComparator) { SortFields(it.id, it.name, it.sortOrder, lastCheckIns[it.id]) }
 )
 
 fun sortExercises(
     exercises: List<Exercise>,
     sort: ListSort,
     lastCheckIns: Map<Long, String>,
-    nameComparator: Comparator<String> = String.CASE_INSENSITIVE_ORDER
+    nameComparator: Comparator<String> = String.CASE_INSENSITIVE_ORDER,
+    descending: Boolean = sort.defaultDescending
 ): List<Exercise> = exercises.sortedWith(
-    comparatorFor(sort, nameComparator) { SortFields(it.id, it.name, it.sortOrder, lastCheckIns[it.id]) }
+    comparatorFor(sort, descending, nameComparator) { SortFields(it.id, it.name, it.sortOrder, lastCheckIns[it.id]) }
 )
 
-private val NUTRI_GRADES = listOf("A", "B", "C", "D", "E")
+private val NOVA_GROUPS = listOf(1, 2, 3, 4)
 
-/** Groups already-sorted [meals]; group order is A–E then "no score". Empty groups are dropped. */
+/** Groups already-sorted [meals]; NOVA 1–4 then "no NOVA". Empty groups are dropped. */
 fun groupMeals(meals: List<Meal>, grouping: MealGrouping): List<ListGroup<Meal>> = when (grouping) {
     MealGrouping.NONE -> listOf(ListGroup("all", null, meals))
-    MealGrouping.NUTRI_SCORE -> {
-        val byGrade = meals.groupBy { m -> m.nutriscore?.grade?.trim()?.uppercase()?.takeIf { it in NUTRI_GRADES } }
-        NUTRI_GRADES.mapNotNull { g -> byGrade[g]?.let { ListGroup("nutri_$g", GroupTitle.NutriScore(g), it) } } +
-            listOfNotNull(byGrade[null]?.let { ListGroup("nutri_none", GroupTitle.NoNutriScore, it) })
+    MealGrouping.NOVA -> {
+        val byGroup = meals.groupBy { m -> m.novaClassification?.group?.takeIf { it in NOVA_GROUPS } }
+        NOVA_GROUPS.mapNotNull { g -> byGroup[g]?.let { ListGroup("nova_$g", GroupTitle.Nova(g), it) } } +
+            listOfNotNull(byGroup[null]?.let { ListGroup("nova_none", GroupTitle.NoNova, it) })
     }
 }
 
 /**
- * Groups already-sorted [exercises]. An exercise appears in every routine it belongs to and under
- * every primary muscle. Routines follow their own order, muscles are alphabetical, types follow
- * [ExerciseType]; the "none" group is last. Empty groups are dropped.
+ * The exercises listed for a gym selection: a gym shows its own and the shared ones; All gyms
+ * ([selectedGymId] null) shows every exercise.
+ */
+fun exercisesForGym(exercises: List<Exercise>, selectedGymId: Long?): List<Exercise> =
+    if (selectedGymId == null) exercises else exercises.filter { it.gymId == selectedGymId || it.gymId == null }
+
+/**
+ * Groups already-sorted [exercises] (see [exercisesForGym]).
+ * - GYM: with a gym selected, its exercises (untitled) then "Shared"; with All gyms, one group per
+ *   gym in [gyms] order, then "Shared" (exercises of an unlisted gym count as shared).
+ * - ROUTINE: one group per routine in [routines] order, items in the routine's own order; an
+ *   exercise appears in every routine it belongs to; "no routine" last.
+ * - MUSCLE: an exercise appears under every primary muscle; alphabetical; "no muscle group" last.
+ * - TYPE: in [ExerciseType] order.
+ * Empty groups are dropped.
  */
 fun groupExercises(
     exercises: List<Exercise>,
     grouping: ExerciseGrouping,
     routines: List<Routine> = emptyList(),
-    memberships: List<RoutineExercise> = emptyList()
+    memberships: List<RoutineExercise> = emptyList(),
+    gyms: List<Gym> = emptyList(),
+    selectedGymId: Long? = null
 ): List<ListGroup<Exercise>> = when (grouping) {
     ExerciseGrouping.NONE -> listOf(ListGroup("all", null, exercises))
+    ExerciseGrouping.GYM -> {
+        val knownGymIds = gyms.map { it.id }.toSet()
+        val shared = exercises.filter { it.gymId == null || it.gymId !in knownGymIds }
+        val gymGroups = if (selectedGymId != null) {
+            listOf(ListGroup("gym_$selectedGymId", null, exercises.filter { it.gymId == selectedGymId }))
+        } else {
+            gyms.map { g -> ListGroup("gym_${g.id}", GroupTitle.GymName(g.name, g.unit), exercises.filter { it.gymId == g.id }) }
+        }
+        (gymGroups + ListGroup("shared", GroupTitle.Shared, shared)).filter { it.items.isNotEmpty() }
+    }
     ExerciseGrouping.TYPE -> {
         val byType = exercises.groupBy { ExerciseCategoryMapper.getExerciseType(it.category) }
         ExerciseType.entries.mapNotNull { t ->
@@ -114,13 +158,17 @@ fun groupExercises(
             )
     }
     ExerciseGrouping.ROUTINE -> {
-        val routineIdsByExercise = memberships.groupBy({ it.exerciseId }, { it.routineId })
+        val byId = exercises.associateBy { it.id }
+        val routineIds = routines.map { it.id }.toSet()
+        val inSomeRoutine = memberships.filter { it.routineId in routineIds }.map { it.exerciseId }.toSet()
         routines.mapNotNull { r ->
-            exercises.filter { r.id in routineIdsByExercise[it.id].orEmpty() }
+            memberships.filter { it.routineId == r.id }
+                .sortedBy { it.position }
+                .mapNotNull { byId[it.exerciseId] }
                 .takeIf { it.isNotEmpty() }
-                ?.let { ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name), it) }
+                ?.let { ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name), it, routineId = r.id) }
         } + listOfNotNull(
-            exercises.filter { e -> routineIdsByExercise[e.id].orEmpty().none { id -> routines.any { it.id == id } } }
+            exercises.filter { it.id !in inSomeRoutine }
                 .takeIf { it.isNotEmpty() }
                 ?.let { ListGroup("routine_none", GroupTitle.NoRoutine, it) }
         )
