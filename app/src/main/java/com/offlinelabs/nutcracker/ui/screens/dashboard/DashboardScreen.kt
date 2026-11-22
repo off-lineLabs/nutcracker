@@ -70,13 +70,17 @@ import com.offlinelabs.nutcracker.data.mapper.FoodInfoMapper
 import com.offlinelabs.nutcracker.data.mapper.FoodInfoToMealMapper
 import com.offlinelabs.nutcracker.ui.components.dialogs.AddMealDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.CheckInMealDialog
-import com.offlinelabs.nutcracker.ui.components.dialogs.SelectMealForCheckInDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.MealPickerContent
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.filled.Home
 import com.offlinelabs.nutcracker.ui.components.dialogs.GoogleCodeScannerDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.FoodInfoDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.FoodSearchDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.ServingSizeDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.AddExerciseDialog
-import com.offlinelabs.nutcracker.ui.components.dialogs.EnhancedSelectExerciseDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.ExercisePickerContent
 import com.offlinelabs.nutcracker.ui.components.dialogs.SetGoalDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedCheckInDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedExerciseDetailsDialog
@@ -429,7 +433,6 @@ fun DashboardScreen(
     // Saveable so the Add Meal form survives rotation and its saved draft is consumed by the same
     // dialog instead of leaking into the next one that opens.
     var showAddMealDialog by rememberSaveable { mutableStateOf(false) }
-    var showSelectMealDialog by remember { mutableStateOf(false) }
     var showBarcodeScanDialog by remember { mutableStateOf(false) }
     var showFoodSearchDialog by remember { mutableStateOf(false) }
     var showFoodInfoDialog by remember { 
@@ -476,7 +479,6 @@ fun DashboardScreen(
     val defaultPillName = stringResource(R.string.default_pill_name)
     var showCheckInMealDialog by remember { mutableStateOf<Meal?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
-    var showSelectExerciseDialog by remember { mutableStateOf(false) }
     var showCheckInExerciseDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedExerciseDetailDialog by remember { mutableStateOf<Exercise?>(null) }
     var showUnifiedMealDetailDialog by remember { mutableStateOf<Meal?>(null) }
@@ -514,6 +516,31 @@ fun DashboardScreen(
     
     // Snackbar state for error handling
     var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
+
+    // Bottom tabs: 0 = Food, 1 = Home (default), 2 = Exercise. rememberPagerState is saveable.
+    val pagerState = rememberPagerState(initialPage = 1) { 3 }
+    val loggedText = stringResource(R.string.snackbar_logged)
+    val viewText = stringResource(R.string.snackbar_view)
+
+    // After a successful check-in: on Food/Exercise stay on the tab and offer a way to see it on
+    // Home; on Home just show the usual confirmation.
+    // Non-blocking, so the code after a check-in doesn't wait for the snackbar to go away.
+    fun showCheckInLoggedSnackbar(homeMessage: String) {
+        coroutineScope.launch {
+            if (pagerState.currentPage == 1) {
+                snackbarHostState.showSnackbar(message = homeMessage)
+            } else {
+                val result = snackbarHostState.showSnackbar(
+                    message = loggedText,
+                    actionLabel = viewText,
+                    duration = SnackbarDuration.Long
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    pagerState.animateScrollToPage(1)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllMeals().collectLatest { mealList ->
@@ -775,8 +802,13 @@ fun DashboardScreen(
     var showHistorySpotlight by remember { mutableStateOf(false) }
     
     // Function to register element coordinates
+    // Positions change every frame while the pager is swiped; writing them then would recompose the whole
+    // dashboard per frame. The tutorial only runs with the pager at rest on Home, so mid-swipe values are useless.
     val registerElementCoordinates: (String, ComposeOffset, androidx.compose.ui.geometry.Size) -> Unit = { id, offset, size ->
-        elementCoordinates = elementCoordinates + (id to (offset to size))
+        val entry = offset to size
+        if (!pagerState.isScrollInProgress && elementCoordinates[id] != entry) {
+            elementCoordinates = elementCoordinates + (id to entry)
+        }
     }
     
     // Start tutorial if needed
@@ -844,6 +876,18 @@ fun DashboardScreen(
             else -> {
                 showHistorySpotlight = true // For all other steps, show immediately
             }
+        }
+    }
+
+    // Back from Food or Exercise returns to Home; on Home back behaves as before.
+    BackHandler(enabled = pagerState.currentPage != 1) {
+        coroutineScope.launch { pagerState.animateScrollToPage(1) }
+    }
+
+    // The tutorial spotlights Home content and the tab items: keep the pager on Home meanwhile.
+    LaunchedEffect(tutorialState.isActive) {
+        if (tutorialState.isActive && pagerState.currentPage != 1) {
+            pagerState.scrollToPage(1)
         }
     }
 
@@ -1014,65 +1058,14 @@ fun DashboardScreen(
                 }
             }
         },
-        floatingActionButton = {
-            // Two FABs for Add Meal and Add Exercise with modern styling
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Add Exercise FAB - using your brand red
-                FloatingActionButton(
-                    onClick = { showSelectExerciseDialog = true },
-                    containerColor = fabExerciseColor(),
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
-                    ),
-                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
-                        val bounds = coordinates.boundsInWindow()
-                        val center = bounds.center
-                        val padding = with(density) { 12.dp.toPx() }
-                        val size = androidx.compose.ui.geometry.Size(
-                            width = bounds.width + padding * 2,
-                            height = bounds.height + padding * 2
-                        )
-                        registerElementCoordinates("add_exercise_fab", center, size)
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_sprint), 
-                        contentDescription = stringResource(R.string.add_exercise),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                
-                // Add Meal FAB - using your brand gold
-                FloatingActionButton(
-                    onClick = { showSelectMealDialog = true },
-                    containerColor = fabMealColor(),
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
-                    ),
-                    modifier = Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
-                        val bounds = coordinates.boundsInWindow()
-                        val center = bounds.center
-                        val padding = with(density) { 12.dp.toPx() }
-                        val size = androidx.compose.ui.geometry.Size(
-                            width = bounds.width + padding * 2,
-                            height = bounds.height + padding * 2
-                        )
-                        registerElementCoordinates("add_meal_fab", center, size)
-                    }
-                ) {
-                    Icon(
-                        Icons.Filled.Restaurant, 
-                        contentDescription = stringResource(R.string.add_meal),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+        bottomBar = {
+            DashboardTabBar(
+                selectedPage = pagerState.currentPage,
+                onSelectPage = { page ->
+                    coroutineScope.launch { pagerState.animateScrollToPage(page) }
+                },
+                registerElementCoordinates = registerElementCoordinates
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
@@ -1086,8 +1079,17 @@ fun DashboardScreen(
                     )
                 )
                 .padding(scaffoldPaddingValues)
-                .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
+          HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = !tutorialState.isActive
+          ) { page ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+            ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1097,7 +1099,34 @@ fun DashboardScreen(
                     )
                     .clip(RoundedCornerShape(24.dp))
             ) {
-                LazyColumn(
+              when (page) {
+                0 -> MealPickerContent(
+                    meals = meals,
+                    onAddMeal = { showAddMealDialog = true },
+                    onSelectMeal = { meal -> showCheckInMealDialog = meal },
+                    onEditMeal = { meal -> openEditMealDefinition(meal) },
+                    onSearchMeal = { showFoodSearchDialog = true },
+                    onScanBarcode = { showBarcodeScanDialog = true },
+                    onSelectRecipe = { showSelectRecipeDialog = true },
+                    registerElementCoordinates = registerElementCoordinates
+                )
+                2 -> ExercisePickerContent(
+                    exercises = exercises,
+                    externalExerciseService = externalExerciseService,
+                    foodLogRepository = foodLogRepository,
+                    onAddExercise = { showAddExerciseDialog = true },
+                    onSelectExercise = { exercise -> showUnifiedExerciseDetailDialog = exercise },
+                    onImportExternalExercise = { externalExercise ->
+                        // Store the external exercise for pre-populating the AddExerciseDialog
+                        selectedExternalExercise = externalExercise
+                        showAddExerciseDialog = true
+                    },
+                    onEditExercise = { exercise ->
+                        selectedExerciseForEdit = exercise
+                        showAddExerciseDialog = true
+                    }
+                )
+                else -> LazyColumn(
                     state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
@@ -1303,7 +1332,10 @@ fun DashboardScreen(
                         }
                     }
                 }
+              }
             }
+            }
+          }
         }
     }
 
@@ -1344,38 +1376,6 @@ fun DashboardScreen(
         )
     }
 
-    if (showSelectMealDialog) {
-        SelectMealForCheckInDialog(
-            meals = meals,
-            onDismiss = { showSelectMealDialog = false },
-            onAddMeal = {
-                showSelectMealDialog = false
-                showAddMealDialog = true
-            },
-            onSelectMeal = { meal ->
-                showSelectMealDialog = false
-                showCheckInMealDialog = meal
-            },
-            onEditMeal = { meal ->
-                showSelectMealDialog = false
-                openEditMealDefinition(meal)
-            },
-            onSearchMeal = {
-                showSelectMealDialog = false
-                showFoodSearchDialog = true
-            },
-            onScanBarcode = {
-                showSelectMealDialog = false
-                showBarcodeScanDialog = true
-            },
-            onSelectRecipe = {
-                showSelectMealDialog = false
-                showSelectRecipeDialog = true
-            },
-            registerElementCoordinates = registerElementCoordinates
-        )
-    }
-
     // Recipe dialogs
     if (showSelectRecipeDialog) {
         SelectRecipeDialog(
@@ -1400,9 +1400,7 @@ fun DashboardScreen(
                                 notes = "recipe:${recipe.id}"
                             )
                             foodLogRepository.insertMealCheckIn(mealCheckIn)
-                            snackbarHostState.showSnackbar(
-                                message = checkInCompletedSuccess
-                            )
+                            showCheckInLoggedSnackbar(checkInCompletedSuccess)
                         } else {
                             // Recipe nutrition could not be calculated (e.g., no ingredients)
                             snackbarHostState.showSnackbar(
@@ -1526,9 +1524,7 @@ fun DashboardScreen(
                 coroutineScope.launch {
                     try {
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
-                        snackbarHostState.showSnackbar(
-                            message = checkInCompletedSuccess
-                        )
+                        showCheckInLoggedSnackbar(checkInCompletedSuccess)
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to complete meal check-in", e, mapOf(
                             "mealId" to mealCheckIn.mealId,
@@ -1540,34 +1536,6 @@ fun DashboardScreen(
                     }
                 }
                 showCheckInMealDialog = null
-            }
-        )
-    }
-
-    if (showSelectExerciseDialog) {
-        EnhancedSelectExerciseDialog(
-            exercises = exercises,
-            externalExerciseService = externalExerciseService,
-            foodLogRepository = foodLogRepository,
-            onDismiss = { showSelectExerciseDialog = false },
-            onAddExercise = {
-                showSelectExerciseDialog = false
-                showAddExerciseDialog = true
-            },
-            onSelectExercise = { exercise ->
-                showSelectExerciseDialog = false
-                showUnifiedExerciseDetailDialog = exercise
-            },
-            onImportExternalExercise = { externalExercise ->
-                // Store the external exercise for pre-populating the AddExerciseDialog
-                selectedExternalExercise = externalExercise
-                showSelectExerciseDialog = false
-                showAddExerciseDialog = true
-            },
-            onEditExercise = { exercise ->
-                showSelectExerciseDialog = false
-                selectedExerciseForEdit = exercise
-                showAddExerciseDialog = true
             }
         )
     }
@@ -1812,7 +1780,7 @@ fun DashboardScreen(
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
-                            snackbarHostState.showSnackbar(message = context.getString(R.string.exercise_saved_and_checked_in))
+                            showCheckInLoggedSnackbar(context.getString(R.string.exercise_saved_and_checked_in))
                             refreshCheckIns++
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to save and check-in exercise", e)
@@ -1950,7 +1918,7 @@ fun DashboardScreen(
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
-                            snackbarHostState.showSnackbar(message = checkInCompletedSuccess)
+                            showCheckInLoggedSnackbar(checkInCompletedSuccess)
                             refreshCheckIns++
                         } catch (e: Exception) {
                             AppLogger.exception("DashboardScreen", "Failed to check-in exercise", e)
@@ -1979,9 +1947,7 @@ fun DashboardScreen(
                 coroutineScope.launch {
                     try {
                         foodLogRepository.insertExerciseLog(checkInData.exerciseLog)
-                        snackbarHostState.showSnackbar(
-                            message = exerciseCheckInCompletedSuccess
-                        )
+                        showCheckInLoggedSnackbar(exerciseCheckInCompletedSuccess)
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to complete exercise check-in", e, mapOf(
                             "exerciseId" to checkInData.exerciseLog.exerciseId,
@@ -2570,7 +2536,7 @@ fun DashboardScreen(
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Save and Check-in: Check-in created successfully with mealId: ${savedMeal.id}")
-                        snackbarHostState.showSnackbar(message = context.getString(R.string.meal_saved_and_checked_in))
+                        showCheckInLoggedSnackbar(context.getString(R.string.meal_saved_and_checked_in))
                         // showUnifiedMealDetailDialog = savedMeal  // Removed to prevent dialog from showing
                         refreshCheckIns++
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
@@ -2682,7 +2648,7 @@ fun DashboardScreen(
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: About to increment refreshCheckIns")
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: Before refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         AppLogger.d("DashboardScreen", "Check-in created successfully with mealId: ${savedMeal.id}")
-                        snackbarHostState.showSnackbar(message = checkInCompletedSuccess)
+                        showCheckInLoggedSnackbar(checkInCompletedSuccess)
                         refreshCheckIns++
                         AppLogger.d("DashboardScreen", "🔍 DIALOG STATE: After refreshCheckIns++ - showServingSizeDialog = $showServingSizeDialog, showFoodInfoDialog = $showFoodInfoDialog")
                         

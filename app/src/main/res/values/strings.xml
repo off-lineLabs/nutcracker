@@ -703,4 +703,11 @@
     <string name="exercise_weight_label">Weight</string>
     <string name="datetime_error_hour">Hour must be 0–23</string>
     <string name="datetime_error_minute">Minute must be 0–59</string>
+
+    <!-- Dashboard bottom tabs -->
+    <string name="tab_food">Food</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_exercise">Exercise</string>
+    <string name="snackbar_logged">Logged</string>
+    <string name="snackbar_view">View</string>
 </resources>

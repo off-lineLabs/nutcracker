@@ -29,17 +29,23 @@ import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandSecondaryShade
 import kotlinx.coroutines.delay
 
+/**
+ * Inline exercise picker shown on the dashboard's Exercise tab. It fills the space it is given and
+ * has no dialog chrome. The external-database search and exercise-details sub-views still open as
+ * dialogs over it. [header] is rendered above the action buttons and the list (scrolls with them).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnhancedSelectExerciseDialog(
+fun ExercisePickerContent(
     exercises: List<Exercise>,
     externalExerciseService: ExternalExerciseService,
     foodLogRepository: FoodLogRepository? = null,
-    onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
     onImportExternalExercise: (ExternalExercise) -> Unit,
-    onEditExercise: (Exercise) -> Unit
+    onEditExercise: (Exercise) -> Unit,
+    modifier: Modifier = Modifier,
+    header: @Composable () -> Unit = {}
 ) {
     var dialogState by remember { mutableStateOf(DialogState.MAIN) }
     var searchQuery by remember { mutableStateOf("") }
@@ -54,7 +60,9 @@ fun EnhancedSelectExerciseDialog(
     val keyboardController = LocalSoftwareKeyboardController.current
     
     // Smart search with filter count trigger
-    LaunchedEffect(searchQuery, selectedEquipment, selectedMuscle, selectedCategory) {
+    LaunchedEffect(dialogState, searchQuery, selectedEquipment, selectedMuscle, selectedCategory) {
+        // Only needed while the external search sub-view is open
+        if (dialogState == DialogState.MAIN) return@LaunchedEffect
         isLoading = true
         delay(300) // Debounce
         
@@ -92,18 +100,19 @@ fun EnhancedSelectExerciseDialog(
         isLoading = false
     }
     
+    MainExerciseSelectionContent(
+        exercises = exercises,
+        foodLogRepository = foodLogRepository,
+        onAddExercise = onAddExercise,
+        onSelectExercise = onSelectExercise,
+        onEditExercise = onEditExercise,
+        onSearchExternal = { dialogState = DialogState.SEARCH },
+        modifier = modifier,
+        header = header
+    )
+
     when (dialogState) {
-        DialogState.MAIN -> {
-            MainExerciseSelectionDialog(
-                exercises = exercises,
-                foodLogRepository = foodLogRepository,
-                onDismiss = onDismiss,
-                onAddExercise = onAddExercise,
-                onSelectExercise = onSelectExercise,
-                onEditExercise = onEditExercise,
-                onSearchExternal = { dialogState = DialogState.SEARCH }
-            )
-        }
+        DialogState.MAIN -> Unit
         
         DialogState.SEARCH -> {
             SearchExternalExercisesDialog(
@@ -139,8 +148,10 @@ fun EnhancedSelectExerciseDialog(
                     externalExerciseService = externalExerciseService,
                     onBack = { dialogState = DialogState.SEARCH },
                     onImport = { 
+                        dialogState = DialogState.MAIN
+                        searchQuery = ""
+                        searchResults = emptyList()
                         onImportExternalExercise(exercise)
-                        onDismiss()
                     }
                 )
             }
@@ -154,60 +165,25 @@ enum class DialogState {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainExerciseSelectionDialog(
+private fun MainExerciseSelectionContent(
     exercises: List<Exercise>,
     foodLogRepository: FoodLogRepository? = null,
-    onDismiss: () -> Unit,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
     onEditExercise: (Exercise) -> Unit,
-    onSearchExternal: () -> Unit
+    onSearchExternal: () -> Unit,
+    modifier: Modifier = Modifier,
+    header: @Composable () -> Unit = {}
 ) {
-    Dialog(
-        onDismissRequest = onDismiss
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.98f)
-                .fillMaxHeight(0.9f)
-                .padding(4.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp)
-            ) {
-                // Custom title with back arrow
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Back arrow button on the left
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.close),
-                            tint = getContrastingTextColor(MaterialTheme.colorScheme.surface)
-                        )
-                    }
-                    
-                    // Centered title
-                    Text(
-                        text = stringResource(R.string.my_exercises),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.align(Alignment.Center),
-                        textAlign = TextAlign.Center
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                // Search external database button
+        item(key = "header") { header() }
+        item(key = "search_database") {
                 Button(
                     onClick = onSearchExternal,
                     modifier = Modifier.fillMaxWidth(),
@@ -223,10 +199,8 @@ private fun MainExerciseSelectionDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.search_exercise_database))
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Add new exercise button
+        }
+        item(key = "add_exercise") {
                 Button(
                     onClick = onAddExercise,
                     modifier = Modifier.fillMaxWidth(),
@@ -242,25 +216,21 @@ private fun MainExerciseSelectionDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.type_information))
                 }
+        }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Existing exercises list
-                if (exercises.isEmpty()) {
+        // Existing exercises list
+        if (exercises.isEmpty()) {
+            item(key = "no_exercises") {
                     Text(
                         text = stringResource(R.string.no_exercises_yet),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
-                } else {
-                    
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(exercises) { exercise ->
+            }
+        } else {
+            item(key = "exercises_spacer") { Spacer(modifier = Modifier.height(8.dp)) }
+                        items(exercises, key = { it.id }) { exercise ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -313,9 +283,6 @@ private fun MainExerciseSelectionDialog(
                                 }
                             }
                         }
-                    }
-                }
-            }
         }
     }
 }

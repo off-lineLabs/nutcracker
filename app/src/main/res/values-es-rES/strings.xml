@@ -630,4 +630,11 @@
     <string name="exercise_weight_label">Peso</string>
     <string name="datetime_error_hour">La hora debe estar entre 0 y 23</string>
     <string name="datetime_error_minute">Los minutos deben estar entre 0 y 59</string>
+
+    <!-- Dashboard bottom tabs -->
+    <string name="tab_food">Comida</string>
+    <string name="tab_home">Inicio</string>
+    <string name="tab_exercise">Ejercicio</string>
+    <string name="snackbar_logged">Registrado</string>
+    <string name="snackbar_view">Ver</string>
 </resources>
