@@ -37,8 +37,8 @@ const val DASHBOARD_PAGE_EXERCISE = 2
  * Bottom tab bar: Food, Home, Exercise. The selected item's indicator pill is tinted with the
  * former FAB colours (gold / red) and a neutral grey for Home.
  *
- * The Food and Exercise items register their coordinates under the tutorial's existing
- * "add_meal_fab" / "add_exercise_fab" keys.
+ * The Food and Exercise items register their coordinates under the tutorial's
+ * "food_tab" / "exercise_tab" keys.
  */
 @Composable
 fun DashboardTabBar(
@@ -90,7 +90,7 @@ fun DashboardTabBar(
             icon = { Icon(Icons.Filled.Restaurant, contentDescription = null) },
             labelRes = R.string.tab_food,
             pillColor = fabMealColor(),
-            tutorialKey = "add_meal_fab"
+            tutorialKey = "food_tab"
         )
         TabItem(
             page = DASHBOARD_PAGE_HOME,
@@ -110,7 +110,7 @@ fun DashboardTabBar(
             },
             labelRes = R.string.tab_exercise,
             pillColor = fabExerciseColor(),
-            tutorialKey = "add_exercise_fab"
+            tutorialKey = "exercise_tab"
         )
     }
 }

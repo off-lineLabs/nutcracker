@@ -423,13 +423,15 @@
     <string name="faq_what_logo_means">What is the logo supposed to mean?</string>
     
     <!-- FAQ Answers -->
-    <string name="faq_answer_add_meal">To add a meal, tap the \'+\' button on the dashboard. You can then search for food items, scan a barcode, or manually enter nutrition information.</string>
+    <string name="faq_answer_add_meal">To add a meal, open the Food tab at the bottom of the screen (tap it or swipe). You can search for food items, scan a barcode, or manually enter nutrition information.</string>
     <string name="faq_answer_track_calories">Your calories are automatically tracked when you add meals. The dashboard shows your daily calorie intake and progress toward your goals.</string>
     <string name="faq_answer_set_goals">On the home screen, tap the pencil icon on the goals card. You can set daily targets for calories, carbs, protein, fat, fiber, and salt (in mg).</string>
-    <string name="faq_answer_add_exercise">Tap the \'+\' button on the dashboard and select \'Add Exercise\'. You can choose from cardio, strength training, or bodyweight exercises.</string>
+    <string name="faq_answer_add_exercise">Open the Exercise tab at the bottom of the screen (tap it or swipe) and pick an exercise from the list. You can choose from cardio, strength training, or bodyweight exercises.</string>
+    <string name="faq_how_gyms">What are gyms and how do I use them?</string>
+    <string name="faq_answer_gyms">The same machine can weigh differently at different gyms, so you can keep separate exercises per gym. On the Exercise tab, open the gym menu at the top and choose \'Add gym…\' to create one with a name and an optional unit or location. Pick a gym to see its exercises followed by the shared ones, or choose \'All gyms\' to see the shared exercises. You can assign an exercise to a gym, move it to another gym, or copy it (a copy starts with no history). Use \'Manage gyms…\' to edit or delete a gym; when deleting, you choose whether to keep its exercises as shared or remove them too. Gyms are included in backups.</string>
     <string name="faq_answer_view_progress">Tap the analytics icon (bar chart) on the dashboard to view your weekly and monthly progress, including exercise history and nutrition trends.</string>
     <string name="faq_answer_change_date">Use the calendar icon on the dashboard to select a different date, or use the arrow buttons to navigate day by day.</string>
-    <string name="faq_answer_scan_barcode">When adding a meal, tap the barcode scanner icon. Point your camera at the product\'s barcode to automatically find nutrition information.</string>
+    <string name="faq_answer_scan_barcode">On the Food tab, tap the barcode scanner icon. Point your camera at the product\'s barcode to automatically find nutrition information.</string>
     <string name="faq_answer_edit_entries">Tap on any meal or exercise entry in your daily log to view details. From there, you can edit or delete the entry.</string>
     <string name="faq_answer_change_theme">Go to Settings and select your preferred theme: Light, Dark, or System Default.</string>
     <string name="faq_answer_change_language">Go to Settings and select your preferred language from the Language option.</string>
@@ -504,11 +506,11 @@
     <string name="tutorial_calorie_ring_title">Daily Calorie Tracking</string>
     <string name="tutorial_calorie_ring_description">This ring shows your daily calorie progress. You can see how many calories you still have available, how many you’ve consumed, and your daily goal.</string>
     
-    <string name="tutorial_add_meal_title">Add Meals</string>
-    <string name="tutorial_add_meal_description">Tap here to manage your meals. Scan a barcode to automatically get a product’s nutritional data or enter the information manually.</string>
+    <string name="tutorial_add_meal_title">Food Tab</string>
+    <string name="tutorial_add_meal_description">Tap Food or swipe to log meals. Search, scan a barcode to automatically get a product’s nutritional data, browse the food database or use your recipes.</string>
     
-    <string name="tutorial_add_exercise_title">Add Exercise</string>
-    <string name="tutorial_add_exercise_description">Manage your exercises here. You can search among hundreds of preloaded exercises or enter the data manually.</string>
+    <string name="tutorial_add_exercise_title">Exercise Tab</string>
+    <string name="tutorial_add_exercise_description">Tap Exercise or swipe to log workouts. Use the gym menu at the top to keep separate exercises and weights per gym.</string>
     
     <string name="tutorial_calendar_title">Change Date</string>
     <string name="tutorial_calendar_description">View or edit entries from different days. Perfect for logging meals you forgot to track.</string>

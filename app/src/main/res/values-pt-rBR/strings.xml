@@ -345,13 +345,15 @@
     <string name="faq_what_logo_means">O que o logo deveria significar?</string>
     
     <!-- FAQ Answers -->
-    <string name="faq_answer_add_meal">Para adicionar uma refeição, toque no botão \'+\' no painel. Você pode então pesquisar itens alimentares, escanear um código de barras ou inserir manualmente as informações nutricionais.</string>
+    <string name="faq_answer_add_meal">Para adicionar uma refeição, abra a aba Comida na parte inferior da tela (toque nela ou deslize). Você pode pesquisar alimentos, escanear um código de barras ou inserir manualmente as informações nutricionais.</string>
     <string name="faq_answer_track_calories">Suas calorias são rastreadas automaticamente quando você adiciona refeições. O painel mostra sua ingestão calórica diária e progresso em direção às suas metas.</string>
     <string name="faq_answer_set_goals">Na tela inicial, toque no ícone de lápis no cartão de metas. Você pode definir metas diárias para calorias, carboidratos, proteína, gordura, fibra e sal (em mg).</string>
-    <string name="faq_answer_add_exercise">Toque no botão \'+\' no painel e selecione \'Adicionar Exercício\'. Você pode escolher entre cardio, treinamento de força ou exercícios com peso corporal.</string>
+    <string name="faq_answer_add_exercise">Abra a aba Exercício na parte inferior da tela (toque nela ou deslize) e escolha um exercício da lista. Você pode escolher entre cardio, treinamento de força ou exercícios com peso corporal.</string>
+    <string name="faq_how_gyms">O que são academias e como usá-las?</string>
+    <string name="faq_answer_gyms">A mesma máquina pode pesar diferente em cada academia, então você pode manter exercícios separados por academia. Na aba Exercício, abra o menu de academias no topo e escolha \'Adicionar academia…\' para criar uma com nome e unidade ou local opcional. Escolha uma academia para ver seus exercícios seguidos dos compartilhados, ou escolha \'Todas as academias\' para ver os exercícios compartilhados. Você pode atribuir um exercício a uma academia, movê-lo para outra ou copiá-lo (a cópia começa sem histórico). Use \'Gerenciar academias…\' para editar ou excluir uma academia; ao excluir, você escolhe se mantém seus exercícios como compartilhados ou os remove também. As academias são incluídas nos backups.</string>
     <string name="faq_answer_view_progress">Toque no ícone de análise (gráfico de barras) no painel para visualizar seu progresso semanal e mensal, incluindo histórico de exercícios e tendências nutricionais.</string>
     <string name="faq_answer_change_date">Use o ícone de calendário no painel para selecionar uma data diferente, ou use os botões de seta para navegar dia a dia.</string>
-    <string name="faq_answer_scan_barcode">Ao adicionar uma refeição, toque no ícone do scanner de código de barras. Aponte sua câmera para o código de barras do produto para encontrar automaticamente as informações nutricionais.</string>
+    <string name="faq_answer_scan_barcode">Na aba Comida, toque no ícone do scanner de código de barras. Aponte sua câmera para o código de barras do produto para encontrar automaticamente as informações nutricionais.</string>
     <string name="faq_answer_edit_entries">Toque em qualquer entrada de refeição ou exercício em seu registro diário para visualizar detalhes. A partir daí, você pode editar ou excluir a entrada.</string>
     <string name="faq_answer_change_theme">Vá para Configurações e selecione seu tema preferido: Claro, Escuro ou Padrão do Sistema.</string>
     <string name="faq_answer_change_language">Vá para Configurações e selecione seu idioma preferido na opção Idioma.</string>
@@ -425,11 +427,11 @@
     <string name="tutorial_calorie_ring_title">Rastreamento Diário de Calorias</string>
     <string name="tutorial_calorie_ring_description">Este anel mostra seu progresso diário de calorias. Você pode ver quantas calorias disponíveis ainda tem, quantas consumiu e seu objetivo diário.</string>
     
-    <string name="tutorial_add_meal_title">Adicionar Refeições</string>
-    <string name="tutorial_add_meal_description">Toque aqui para gerenciar suas refeições. Escaneie um código de barra para obter automaticamente os dados nutricionais de um produto ou insira as informações manualmente.</string>
+    <string name="tutorial_add_meal_title">Aba Comida</string>
+    <string name="tutorial_add_meal_description">Toque em Comida ou deslize para registrar refeições. Pesquise, escaneie um código de barras para obter automaticamente os dados nutricionais de um produto, explore a base de alimentos ou use suas receitas.</string>
     
-    <string name="tutorial_add_exercise_title">Adicionar Exercício</string>
-    <string name="tutorial_add_exercise_description">Registre seus treinos aqui. Escolha entre centenas de exercícios ou adicione suas próprias atividades personalizadas.</string>
+    <string name="tutorial_add_exercise_title">Aba Exercício</string>
+    <string name="tutorial_add_exercise_description">Toque em Exercício ou deslize para registrar treinos. Use o menu de academias no topo para manter exercícios e cargas separados por academia.</string>
     
     <string name="tutorial_calendar_title">Alterar Data</string>
     <string name="tutorial_calendar_description">Visualize ou edite entradas de diferentes dias. Perfeito para registrar refeições que você esqueceu de rastrear.</string>

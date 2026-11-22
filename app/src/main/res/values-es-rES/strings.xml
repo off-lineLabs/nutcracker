@@ -348,13 +348,15 @@
     <string name="faq_what_logo_means">¿Qué se supone que significa el logo?</string>
     
     <!-- FAQ Answers -->
-    <string name="faq_answer_add_meal">Para agregar una comida, toca el botón \'+\' en el panel. Luego puedes buscar elementos alimenticios, escanear un código de barras o ingresar manualmente la información nutricional.</string>
+    <string name="faq_answer_add_meal">Para agregar una comida, abre la pestaña Comida en la parte inferior de la pantalla (tócala o desliza). Puedes buscar alimentos, escanear un código de barras o ingresar manualmente la información nutricional.</string>
     <string name="faq_answer_track_calories">Tus calorías se rastrean automáticamente cuando agregas comidas. El panel muestra tu ingesta calórica diaria y progreso hacia tus metas.</string>
     <string name="faq_answer_set_goals">En la pantalla de inicio, toca el icono del lápiz en la tarjeta de metas. Puedes establecer objetivos diarios para calorías, carbohidratos, proteína, grasa, fibra y sal (en mg).</string>
-    <string name="faq_answer_add_exercise">Toca el botón \'+\' en el panel y selecciona \'Agregar Ejercicio\'. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
+    <string name="faq_answer_add_exercise">Abre la pestaña Ejercicio en la parte inferior de la pantalla (tócala o desliza) y elige un ejercicio de la lista. Puedes elegir entre cardio, entrenamiento de fuerza o ejercicios con peso corporal.</string>
+    <string name="faq_how_gyms">¿Qué son los gimnasios y cómo se usan?</string>
+    <string name="faq_answer_gyms">La misma máquina puede pesar distinto en cada gimnasio, por eso puedes tener ejercicios separados por gimnasio. En la pestaña Ejercicio, abre el menú de gimnasios en la parte superior y elige \'Añadir gimnasio…\' para crear uno con un nombre y una unidad o ubicación opcional. Elige un gimnasio para ver sus ejercicios seguidos de los compartidos, o elige \'Todos los gimnasios\' para ver los ejercicios compartidos. Puedes asignar un ejercicio a un gimnasio, moverlo a otro o copiarlo (la copia empieza sin historial). Usa \'Gestionar gimnasios…\' para editar o eliminar un gimnasio; al eliminarlo eliges si conservar sus ejercicios como compartidos o eliminarlos también. Los gimnasios se incluyen en las copias de seguridad.</string>
     <string name="faq_answer_view_progress">Toca el ícono de análisis (gráfico de barras) en el panel para ver tu progreso semanal y mensual, incluyendo historial de ejercicios y tendencias nutricionales.</string>
     <string name="faq_answer_change_date">Usa el ícono de calendario en el panel para seleccionar una fecha diferente, o usa los botones de flecha para navegar día a día.</string>
-    <string name="faq_answer_scan_barcode">Al agregar una comida, toca el ícono del escáner de código de barras. Apunta tu cámara al código de barras del producto para encontrar automáticamente la información nutricional.</string>
+    <string name="faq_answer_scan_barcode">En la pestaña Comida, toca el ícono del escáner de código de barras. Apunta tu cámara al código de barras del producto para encontrar automáticamente la información nutricional.</string>
     <string name="faq_answer_edit_entries">Toca cualquier entrada de comida o ejercicio en tu registro diario para ver detalles. Desde ahí, puedes editar o eliminar la entrada.</string>
     <string name="faq_answer_change_theme">Ve a Configuración y selecciona tu tema preferido: Claro, Oscuro o Predeterminado del Sistema.</string>
     <string name="faq_answer_change_language">Ve a Configuración y selecciona tu idioma preferido de la opción Idioma.</string>
@@ -425,11 +427,11 @@
     <string name="tutorial_calorie_ring_title">Seguimiento Diario de Calorías</string>
     <string name="tutorial_calorie_ring_description">Puedes ver cuántas calorías disponibles te quedan, cuántas has consumido y tu objetivo diario.</string>
     
-    <string name="tutorial_add_meal_title">Agregar Comidas</string>
-    <string name="tutorial_add_meal_description">Toca aquí para gestionar tus comidas. Escanea un código de barras para obtener automáticamente los datos nutricionales de un producto o introduce la información manualmente.</string>
+    <string name="tutorial_add_meal_title">Pestaña Comida</string>
+    <string name="tutorial_add_meal_description">Toca Comida o desliza para registrar comidas. Busca, escanea un código de barras para obtener automáticamente los datos nutricionales de un producto, explora la base de datos de alimentos o usa tus recetas.</string>
     
-    <string name="tutorial_add_exercise_title">Agregar Ejercicio</string>
-    <string name="tutorial_add_exercise_description">Gestiona tus ejercicios aquí. Puedes buscar entre cientos de ejercicios preprogramados o introducir los datos manualmente.</string>
+    <string name="tutorial_add_exercise_title">Pestaña Ejercicio</string>
+    <string name="tutorial_add_exercise_description">Toca Ejercicio o desliza para registrar entrenamientos. Usa el menú de gimnasios de arriba para mantener ejercicios y pesos separados por gimnasio.</string>
     
     <string name="tutorial_calendar_title">Cambiar Fecha</string>
     <string name="tutorial_calendar_description">Ve o edita entradas de diferentes días. Perfecto para registrar comidas que olvidaste rastrear.</string>

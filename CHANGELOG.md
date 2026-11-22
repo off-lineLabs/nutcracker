@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - Unreleased
+
+### Added
+- Gyms: the same machine can weigh differently at different gyms, so you can now keep separate exercises per gym. Create a gym with a name and an optional unit or location, edit it, or delete it
+- Deleting a gym asks whether to keep its exercises as shared or remove them too
+- A gym dropdown at the top of the Exercise tab: pick a gym to see its exercises followed by a Shared section, or choose All gyms to see the shared exercises. Your selection is remembered
+- Assign an exercise to a gym, move it to another gym, or copy it to another gym (a copy starts with no history)
+- Gym names show on exercise check-ins on Home and in the exercise details
+- Backups now include your gyms
+- A new Help entry explaining gyms
+
+### Changed
+- The two buttons on the home screen are replaced by a tab bar with Food, Home and Exercise. Swipe between tabs or tap them
+- The Food tab shows the meal picker directly (search, add, barcode scan, food database and recipes) and the Exercise tab shows your exercise list, both full height under the same header
+- After logging from the Food or Exercise tab you stay on that tab and a "Logged · View" message appears; View takes you to Home
+- Back from the Food or Exercise tab returns to Home
+- The tutorial and Help now describe the tabs instead of the buttons
+
+### Fixed
+- The meal details dialog stays open when the phone is rotated
+
 ## [1.4.0] - 2026-11-22
 
 ### Added

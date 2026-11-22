@@ -2937,18 +2937,18 @@ private fun createTutorialSteps(elementCoordinates: Map<String, Pair<ComposeOffs
             targetSize = elementCoordinates["calorie_ring"]?.second
         ),
         TutorialStep(
-            id = "add_meal_fab",
+            id = "food_tab",
             title = context.getString(R.string.tutorial_add_meal_title),
             description = context.getString(R.string.tutorial_add_meal_description),
-            targetOffset = elementCoordinates["add_meal_fab"]?.first,
-            targetSize = elementCoordinates["add_meal_fab"]?.second
+            targetOffset = elementCoordinates["food_tab"]?.first,
+            targetSize = elementCoordinates["food_tab"]?.second
         ),
         TutorialStep(
-            id = "add_exercise_fab",
+            id = "exercise_tab",
             title = context.getString(R.string.tutorial_add_exercise_title),
             description = context.getString(R.string.tutorial_add_exercise_description),
-            targetOffset = elementCoordinates["add_exercise_fab"]?.first,
-            targetSize = elementCoordinates["add_exercise_fab"]?.second
+            targetOffset = elementCoordinates["exercise_tab"]?.first,
+            targetSize = elementCoordinates["exercise_tab"]?.second
         ),
         TutorialStep(
             id = "analytics_icon",
@@ -2997,8 +2997,8 @@ private fun getStepIdFromIndex(index: Int): String {
     return when (index) {
         0 -> "dashboard_overview"
         1 -> "calorie_ring"
-        2 -> "add_meal_fab"
-        3 -> "add_exercise_fab"
+        2 -> "food_tab"
+        3 -> "exercise_tab"
         4 -> "analytics_icon"
         5 -> "settings_icon"
         6 -> "edit_goals_icon"

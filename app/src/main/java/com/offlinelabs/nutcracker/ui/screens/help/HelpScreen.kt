@@ -130,6 +130,10 @@ fun HelpScreen(
             answer = stringResource(R.string.faq_answer_add_exercise)
         ),
         FAQItem(
+            question = stringResource(R.string.faq_how_gyms),
+            answer = stringResource(R.string.faq_answer_gyms)
+        ),
+        FAQItem(
             question = stringResource(R.string.faq_how_view_progress),
             answer = stringResource(R.string.faq_answer_view_progress)
         ),
