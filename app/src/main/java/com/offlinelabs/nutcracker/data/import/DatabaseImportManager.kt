@@ -32,6 +32,7 @@ class DatabaseImportManager(
         private const val MEALS_TSV = "meals.tsv"
         private const val USER_GOALS_TSV = "user_goals.tsv"
         private const val MEAL_CHECK_INS_TSV = "meal_check_ins.tsv"
+        private const val GYMS_TSV = "gyms.tsv"
         private const val EXERCISES_TSV = "exercises.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
         private const val PILLS_TSV = "pills.tsv"
@@ -46,6 +47,7 @@ class DatabaseImportManager(
         // Import order to maintain referential integrity
         private val IMPORT_ORDER = listOf(
             MEALS_TSV,
+            GYMS_TSV,
             EXERCISES_TSV,
             PILLS_TSV,
             TAGS_TSV,
@@ -198,7 +200,7 @@ class DatabaseImportManager(
                             recordsImported = tableResult.recordsImported,
                             isComplete = false
                         )
-                    } else {
+                    } else if (tableName != GYMS_TSV) { // gyms.tsv is absent in backups before 2.0
                         warnings.add(ImportWarning(
                             tableName = tableName,
                             rowNumber = 0,
@@ -325,6 +327,7 @@ class DatabaseImportManager(
             RECIPES_TSV -> importRecipes(tsvData)
             RECIPE_INGREDIENTS_TSV -> importRecipeIngredients(tsvData)
             MEAL_CHECK_INS_TSV -> importMealCheckIns(tsvData)
+            GYMS_TSV -> importGyms(tsvData)
             EXERCISES_TSV -> importExercises(tsvData)
             EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
             PILLS_TSV -> importPills(tsvData)
@@ -387,6 +390,7 @@ class DatabaseImportManager(
         database.recipeDao().deleteAllRecipes()
         database.mealDao().deleteAllMeals()
         database.exerciseDao().deleteAllExercises()
+        database.gymDao().deleteAllGyms()
         database.pillDao().deleteAllPills()
         database.tagDao().deleteAllTags()
         database.userGoalDao().deleteAllUserGoals()
@@ -905,7 +909,7 @@ class DatabaseImportManager(
     
     private suspend fun existingExerciseKeysById(): Map<Long, ImportMergeKeys.ExerciseKey> =
         database.exerciseDao().getAllExercisesIncludingHiddenSync().associate { e ->
-            e.id to ImportMergeKeys.exerciseKey(e.name, e.category)
+            e.id to ImportMergeKeys.exerciseKey(e.name, e.category, e.gymId)
         }
     
     private suspend fun existingTagKeysById(): Map<Long, ImportMergeKeys.TagKey> =
@@ -925,6 +929,91 @@ class DatabaseImportManager(
         return database.mealDao().insertMeal(source.copy(id = 0, isVisible = false))
     }
     
+    private suspend fun importGyms(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            // MERGE: reuse an existing gym with the same name and unit (case-insensitive)
+            val existing = HashMap<ImportMergeKeys.GymKey, Long>()
+            if (mode == ImportMode.MERGE) {
+                database.gymDao().getAllGymsIncludingHiddenSync().forEach { g ->
+                    existing.putIfAbsent(ImportMergeKeys.gymKey(g.name, g.unit), g.id)
+                }
+            }
+
+            rows.forEach { row ->
+                val validation = ImportValidators.validateGymData(row)
+                errors.addAll(validation.errors)
+                if (!validation.isValid) {
+                    skipped++
+                    return@forEach
+                }
+                try {
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    val name = row.getValueOrEmpty("name").trim()
+                    val unit = row.getValue("unit")?.trim().takeIf { !it.isNullOrEmpty() }
+                    val key = ImportMergeKeys.gymKey(name, unit)
+                    val matchedId = existing[key]
+                    if (matchedId != null) {
+                        // A visible imported gym that matches a deleted (hidden) one revives it;
+                        // otherwise its exercises would attach to a gym the dropdown never lists
+                        if (row.getBooleanValue("isVisible") != false) {
+                            database.gymDao().getGymById(matchedId)
+                                ?.takeIf { !it.isVisible }
+                                ?.let { database.gymDao().upsertGym(it.copy(isVisible = true)) }
+                        }
+                        if (oldId != null) {
+                            idMappings[oldId.toString()] = matchedId
+                            idMappingManager.addMapping("gyms", oldId.toString(), matchedId)
+                        }
+                        skipped++
+                        return@forEach
+                    }
+                    val gym = Gym(
+                        id = 0,
+                        name = name,
+                        unit = unit,
+                        mapsPlaceId = row.getValue("mapsPlaceId").takeIf { !it.isNullOrBlank() },
+                        mapsProvider = row.getValue("mapsProvider").takeIf { !it.isNullOrBlank() },
+                        isVisible = row.getBooleanValue("isVisible") ?: true
+                    )
+                    val newId = database.gymDao().upsertGym(gym)
+                    if (mode == ImportMode.MERGE) existing[key] = newId
+                    if (oldId != null) {
+                        idMappings[oldId.toString()] = newId
+                        idMappingManager.addMapping("gyms", oldId.toString(), newId)
+                    }
+                    imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "gyms",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert gym: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+
+            TableImportResult(
+                tableName = "gyms",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList(),
+                idMappings = idMappings
+            )
+        }
+    }
+
     private suspend fun importExercises(tsvData: String): TableImportResult {
         val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
@@ -938,7 +1027,7 @@ class DatabaseImportManager(
             val existingIds = ImportMergeKeys.ExistingIdQueues(
                 if (mode == ImportMode.MERGE) {
                     database.exerciseDao().getAllExercisesIncludingHiddenSync().map { e ->
-                        ImportMergeKeys.exerciseKey(e.name, e.category) to e.id
+                        ImportMergeKeys.exerciseKey(e.name, e.category, e.gymId) to e.id
                     }
                 } else emptyList()
             )
@@ -971,11 +1060,14 @@ class DatabaseImportManager(
                             instructions = parseMuscleList(row.getValue("instructions")),
                             notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
                             imagePaths = newImagePaths,
-                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true
+                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
+                            gymId = ImportMergeKeys.resolveGymId(row.getValue("gymId")) {
+                                idMappingManager.getNewId("gyms", it)
+                            }
                         )
                         
                         val oldId = row.getValue("id")?.toLongOrNull()
-                        val exerciseKey = ImportMergeKeys.exerciseKey(exercise.name, exercise.category)
+                        val exerciseKey = ImportMergeKeys.exerciseKey(exercise.name, exercise.category, exercise.gymId)
                         if (oldId != null) backupExerciseKeys[oldId] = exerciseKey
                         val matchedId = existingIds.take(exerciseKey)
                         if (matchedId != null) {
