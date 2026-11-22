@@ -45,7 +45,10 @@ fun ExercisePickerContent(
     onImportExternalExercise: (ExternalExercise) -> Unit,
     onEditExercise: (Exercise) -> Unit,
     modifier: Modifier = Modifier,
-    header: @Composable () -> Unit = {}
+    header: @Composable () -> Unit = {},
+    sharedExercises: List<Exercise> = emptyList(),
+    sharedSectionTitle: String? = null,
+    emptyHint: String? = null
 ) {
     var dialogState by remember { mutableStateOf(DialogState.MAIN) }
     var searchQuery by remember { mutableStateOf("") }
@@ -108,7 +111,10 @@ fun ExercisePickerContent(
         onEditExercise = onEditExercise,
         onSearchExternal = { dialogState = DialogState.SEARCH },
         modifier = modifier,
-        header = header
+        header = header,
+        sharedExercises = sharedExercises,
+        sharedSectionTitle = sharedSectionTitle,
+        emptyHint = emptyHint
     )
 
     when (dialogState) {
@@ -173,7 +179,10 @@ private fun MainExerciseSelectionContent(
     onEditExercise: (Exercise) -> Unit,
     onSearchExternal: () -> Unit,
     modifier: Modifier = Modifier,
-    header: @Composable () -> Unit = {}
+    header: @Composable () -> Unit = {},
+    sharedExercises: List<Exercise> = emptyList(),
+    sharedSectionTitle: String? = null,
+    emptyHint: String? = null
 ) {
     LazyColumn(
         modifier = modifier
@@ -219,10 +228,10 @@ private fun MainExerciseSelectionContent(
         }
 
         // Existing exercises list
-        if (exercises.isEmpty()) {
+        if (exercises.isEmpty() && sharedExercises.isEmpty()) {
             item(key = "no_exercises") {
                     Text(
-                        text = stringResource(R.string.no_exercises_yet),
+                        text = emptyHint ?: stringResource(R.string.no_exercises_yet),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
@@ -230,7 +239,45 @@ private fun MainExerciseSelectionContent(
             }
         } else {
             item(key = "exercises_spacer") { Spacer(modifier = Modifier.height(8.dp)) }
-                        items(exercises, key = { it.id }) { exercise ->
+            if (exercises.isEmpty() && emptyHint != null) {
+                item(key = "empty_hint") {
+                    Text(
+                        text = emptyHint,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            items(exercises, key = { it.id }) { exercise ->
+                ExerciseListCard(exercise, foodLogRepository, onSelectExercise, onEditExercise)
+            }
+            if (sharedExercises.isNotEmpty()) {
+                if (sharedSectionTitle != null) {
+                    item(key = "shared_header") {
+                        Text(
+                            text = sharedSectionTitle,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+                        )
+                    }
+                }
+                items(sharedExercises, key = { it.id }) { exercise ->
+                    ExerciseListCard(exercise, foodLogRepository, onSelectExercise, onEditExercise)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExerciseListCard(
+    exercise: Exercise,
+    foodLogRepository: FoodLogRepository?,
+    onSelectExercise: (Exercise) -> Unit,
+    onEditExercise: (Exercise) -> Unit
+) {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -282,9 +329,6 @@ private fun MainExerciseSelectionContent(
                                     }
                                 }
                             }
-                        }
-        }
-    }
 }
 
 @Composable

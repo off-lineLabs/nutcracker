@@ -637,4 +637,25 @@
     <string name="tab_exercise">Ejercicio</string>
     <string name="snackbar_logged">Registrado</string>
     <string name="snackbar_view">Ver</string>
+    <string name="gym_all_gyms">Todos los gimnasios</string>
+    <string name="gym_dropdown_click_label">Elegir gimnasio</string>
+    <string name="gym_selected">Seleccionado</string>
+    <string name="gym_menu_add">Añadir gimnasio…</string>
+    <string name="gym_menu_manage">Gestionar gimnasios…</string>
+    <string name="gym_shared_section">Compartidos</string>
+    <string name="gym_empty_at_gym">Aún no hay ejercicios en este gimnasio</string>
+    <string name="gym_pick_hint">Elige un gimnasio en el menú desplegable para ver sus ejercicios</string>
+    <string name="gym_form_add_title">Añadir gimnasio</string>
+    <string name="gym_form_edit_title">Editar gimnasio</string>
+    <string name="gym_name_label">Nombre</string>
+    <string name="gym_unit_label">Sede / ubicación (opcional)</string>
+    <string name="gym_name_required">Introduce un nombre para el gimnasio</string>
+    <string name="gym_manage_title">Gestionar gimnasios</string>
+    <string name="gym_manage_empty">Aún no hay gimnasios. Usa Añadir gimnasio… en el menú desplegable para crear uno.</string>
+    <string name="gym_edit_description">Editar %1$s</string>
+    <string name="gym_delete_description">Eliminar %1$s</string>
+    <string name="gym_delete_title">¿Eliminar gimnasio?</string>
+    <string name="gym_delete_message">¿Qué debe pasar con los ejercicios de %1$s? Los registros anteriores se conservan en tu historial en ambos casos.</string>
+    <string name="gym_delete_only">Eliminar solo el gimnasio</string>
+    <string name="gym_delete_with_exercises">Eliminar gimnasio y sus ejercicios</string>
 </resources>

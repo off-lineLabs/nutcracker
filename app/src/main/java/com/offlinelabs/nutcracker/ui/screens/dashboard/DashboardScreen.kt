@@ -81,6 +81,16 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.FoodSearchDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.ServingSizeDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.AddExerciseDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.ExercisePickerContent
+import com.offlinelabs.nutcracker.data.GymSelection
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.partitionExercisesForSelection
+import com.offlinelabs.nutcracker.data.resolveGymSelection
+import com.offlinelabs.nutcracker.ui.components.gym.ExerciseListHint
+import com.offlinelabs.nutcracker.ui.components.gym.GymDialogsHost
+import com.offlinelabs.nutcracker.ui.components.gym.GymDropdown
+import com.offlinelabs.nutcracker.ui.components.gym.exerciseListHint
+import com.offlinelabs.nutcracker.ui.components.gym.rememberGymDialogsState
+import com.offlinelabs.nutcracker.ui.components.gym.selectedGymOrNull
 import com.offlinelabs.nutcracker.ui.components.dialogs.SetGoalDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedCheckInDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedExerciseDetailsDialog
@@ -503,6 +513,17 @@ fun DashboardScreen(
     var lastExerciseLog by remember { mutableStateOf<ExerciseLog?>(null) }
     var maxExerciseWeight by remember { mutableStateOf<Double?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
+
+    // Exercise tab gym dropdown. [selectedGymId] (null = All gyms) is restored from settings and
+    // survives rotation; [gymSelection] is the resolved value (stale ids fall back to All gyms).
+    var gyms by remember { mutableStateOf(emptyList<Gym>()) }
+    var selectedGymId by rememberSaveable { mutableStateOf(settingsManager?.lastSelectedGymId) }
+    val gymSelection: GymSelection = resolveGymSelection(selectedGymId, gyms)
+    val gymDialogsState = rememberGymDialogsState()
+    fun selectGym(gymId: Long?) {
+        selectedGymId = gymId
+        settingsManager?.lastSelectedGymId = gymId
+    }
     
     // Edit dialog state variables
     var showEditMealDialog by remember { mutableStateOf<DailyNutritionEntry?>(null) }
@@ -557,6 +578,19 @@ fun DashboardScreen(
     LaunchedEffect(key1 = foodLogRepository) {
         foodLogRepository.getAllExercises().collectLatest { exerciseList ->
             exercises = exerciseList
+        }
+    }
+
+    LaunchedEffect(key1 = foodLogRepository) {
+        var firstEmission = true
+        foodLogRepository.getVisibleGyms().collectLatest { gymList ->
+            gyms = gymList
+            // Drop a stale persisted selection once, when the real gym list first arrives. Later
+            // emissions are left alone so a just-added gym isn't deselected by a late emission.
+            if (firstEmission && selectedGymId != null && gymList.none { it.id == selectedGymId }) {
+                selectGym(null)
+            }
+            firstEmission = false
         }
     }
 
@@ -1110,8 +1144,29 @@ fun DashboardScreen(
                     onSelectRecipe = { showSelectRecipeDialog = true },
                     registerElementCoordinates = registerElementCoordinates
                 )
-                2 -> ExercisePickerContent(
-                    exercises = exercises,
+                2 -> {
+                  val partitioned = partitionExercisesForSelection(exercises, gymSelection)
+                  val listHint = exerciseListHint(gymSelection, partitioned, exercises.size)
+                  val isGymSelected = gymSelection is GymSelection.Specific
+                  ExercisePickerContent(
+                    exercises = if (isGymSelected) partitioned.gymExercises else partitioned.shared,
+                    sharedExercises = if (isGymSelected) partitioned.shared else emptyList(),
+                    sharedSectionTitle = if (isGymSelected) stringResource(R.string.gym_shared_section) else null,
+                    emptyHint = when (listHint) {
+                        ExerciseListHint.GYM_EMPTY -> stringResource(R.string.gym_empty_at_gym)
+                        ExerciseListHint.PICK_GYM -> stringResource(R.string.gym_pick_hint)
+                        else -> null
+                    },
+                    header = {
+                        GymDropdown(
+                            selectedGym = selectedGymOrNull(gymSelection, gyms),
+                            gyms = gyms,
+                            onSelectAll = { selectGym(null) },
+                            onSelectGym = { selectGym(it) },
+                            onAddGym = { gymDialogsState.showAdd = true },
+                            onManageGyms = { gymDialogsState.showManage = true }
+                        )
+                    },
                     externalExerciseService = externalExerciseService,
                     foodLogRepository = foodLogRepository,
                     onAddExercise = { showAddExerciseDialog = true },
@@ -1125,7 +1180,8 @@ fun DashboardScreen(
                         selectedExerciseForEdit = exercise
                         showAddExerciseDialog = true
                     }
-                )
+                  )
+                }
                 else -> LazyColumn(
                     state = lazyListState,
                     modifier = Modifier
@@ -1539,6 +1595,14 @@ fun DashboardScreen(
             }
         )
     }
+
+    GymDialogsHost(
+        state = gymDialogsState,
+        gyms = gyms,
+        selectedGymId = selectedGymId,
+        onSelectedGymIdChange = { selectGym(it) },
+        repository = foodLogRepository
+    )
 
     if (showAddExerciseDialog) {
         AddExerciseDialog(

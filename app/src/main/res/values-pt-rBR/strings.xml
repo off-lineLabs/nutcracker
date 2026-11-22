@@ -637,4 +637,25 @@
     <string name="tab_exercise">Exercício</string>
     <string name="snackbar_logged">Registrado</string>
     <string name="snackbar_view">Ver</string>
+    <string name="gym_all_gyms">Todas as academias</string>
+    <string name="gym_dropdown_click_label">Escolher academia</string>
+    <string name="gym_selected">Selecionada</string>
+    <string name="gym_menu_add">Adicionar academia…</string>
+    <string name="gym_menu_manage">Gerenciar academias…</string>
+    <string name="gym_shared_section">Compartilhados</string>
+    <string name="gym_empty_at_gym">Ainda não há exercícios nesta academia</string>
+    <string name="gym_pick_hint">Escolha uma academia no menu suspenso para ver os exercícios dela</string>
+    <string name="gym_form_add_title">Adicionar academia</string>
+    <string name="gym_form_edit_title">Editar academia</string>
+    <string name="gym_name_label">Nome</string>
+    <string name="gym_unit_label">Unidade / local (opcional)</string>
+    <string name="gym_name_required">Informe o nome da academia</string>
+    <string name="gym_manage_title">Gerenciar academias</string>
+    <string name="gym_manage_empty">Ainda não há academias. Use Adicionar academia… no menu suspenso para criar uma.</string>
+    <string name="gym_edit_description">Editar %1$s</string>
+    <string name="gym_delete_description">Excluir %1$s</string>
+    <string name="gym_delete_title">Excluir academia?</string>
+    <string name="gym_delete_message">O que deve acontecer com os exercícios de %1$s? Os registros anteriores permanecem no seu histórico nos dois casos.</string>
+    <string name="gym_delete_only">Excluir apenas a academia</string>
+    <string name="gym_delete_with_exercises">Excluir academia e seus exercícios</string>
 </resources>

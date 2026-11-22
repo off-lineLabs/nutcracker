@@ -710,4 +710,25 @@
     <string name="tab_exercise">Exercise</string>
     <string name="snackbar_logged">Logged</string>
     <string name="snackbar_view">View</string>
+    <string name="gym_all_gyms">All gyms</string>
+    <string name="gym_dropdown_click_label">Choose gym</string>
+    <string name="gym_selected">Selected</string>
+    <string name="gym_menu_add">Add gym…</string>
+    <string name="gym_menu_manage">Manage gyms…</string>
+    <string name="gym_shared_section">Shared</string>
+    <string name="gym_empty_at_gym">No exercises at this gym yet</string>
+    <string name="gym_pick_hint">Pick a gym from the dropdown to see its exercises</string>
+    <string name="gym_form_add_title">Add gym</string>
+    <string name="gym_form_edit_title">Edit gym</string>
+    <string name="gym_name_label">Name</string>
+    <string name="gym_unit_label">Unit / location (optional)</string>
+    <string name="gym_name_required">Enter a gym name</string>
+    <string name="gym_manage_title">Manage gyms</string>
+    <string name="gym_manage_empty">No gyms yet. Use Add gym… in the dropdown to create one.</string>
+    <string name="gym_edit_description">Edit %1$s</string>
+    <string name="gym_delete_description">Delete %1$s</string>
+    <string name="gym_delete_title">Delete gym?</string>
+    <string name="gym_delete_message">What should happen to the exercises at %1$s? Past logs stay in your history either way.</string>
+    <string name="gym_delete_only">Delete gym only</string>
+    <string name="gym_delete_with_exercises">Delete gym and its exercises</string>
 </resources>
