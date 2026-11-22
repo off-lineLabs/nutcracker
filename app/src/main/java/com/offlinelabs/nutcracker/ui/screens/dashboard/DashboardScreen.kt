@@ -95,6 +95,7 @@ import com.offlinelabs.nutcracker.ui.components.gym.rememberGymDialogsState
 import com.offlinelabs.nutcracker.ui.components.gym.selectedGymOrNull
 import com.offlinelabs.nutcracker.ui.components.dialogs.SetGoalDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedCheckInDialog
+import com.offlinelabs.nutcracker.ui.components.dialogs.defaultCheckInDateTime
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedExerciseDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
@@ -408,12 +409,18 @@ private class PendingDelete(val title: String, val message: String, val onConfir
 @Composable
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToAnalytics: () -> Unit = {},
+    /** Opens analytics; [fromExerciseTab] is true when the user was on the Exercise tab. */
+    onNavigateToAnalytics: (fromExerciseTab: Boolean) -> Unit = {},
     onNavigateToHelp: () -> Unit = {},
     isDarkTheme: Boolean,
     settingsManager: com.offlinelabs.nutcracker.data.SettingsManager? = null,
     shouldShowTutorial: Boolean = false,
-    onTutorialCompleted: () -> Unit = {}
+    onTutorialCompleted: () -> Unit = {},
+    /** Tab and day to show when (re)entering the dashboard, e.g. after returning from analytics. */
+    initialPage: Int = DASHBOARD_PAGE_HOME,
+    initialDate: java.time.LocalDate? = null,
+    onPageChanged: (Int) -> Unit = {},
+    onDateChanged: (java.time.LocalDate) -> Unit = {}
 ) {
     val context = LocalContext.current
     val foodLogRepository = (context.applicationContext as FoodLogApplication).foodLogRepository
@@ -535,13 +542,20 @@ fun DashboardScreen(
     var showAddPillDialog by remember { mutableStateOf(false) }
     
     // Date navigation state - always start with today
-    var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(initialDate ?: java.time.LocalDate.now()) }
+    LaunchedEffect(selectedDate) { onDateChanged(selectedDate) }
+    // New check-ins default to the day shown in the header (today: now; other days: that day
+    // at the current time), since the Food/Exercise tabs have no date of their own.
+    fun newCheckInDateTime(): java.util.Date = defaultCheckInDateTime(selectedDate)
     
     // Snackbar state for error handling
     var snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
 
     // Bottom tabs: 0 = Food, 1 = Home (default), 2 = Exercise. rememberPagerState is saveable.
-    val pagerState = rememberPagerState(initialPage = 1) { 3 }
+    val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { onPageChanged(it) }
+    }
     val loggedText = stringResource(R.string.snackbar_logged)
     val viewText = stringResource(R.string.snackbar_view)
 
@@ -1069,7 +1083,7 @@ fun DashboardScreen(
                         
                         // Progress bar button
                         IconButton(
-                            onClick = onNavigateToAnalytics,
+                            onClick = { onNavigateToAnalytics(pagerState.currentPage == DASHBOARD_PAGE_EXERCISE) },
                             modifier = Modifier
                                 .size(44.dp)
                                 .onGloballyPositioned { coordinates: LayoutCoordinates ->
@@ -1455,7 +1469,8 @@ fun DashboardScreen(
                             val mealCheckIn = MealCheckIn.create(
                                 mealId = snapshotMealId,
                                 servingSize = 1.0,
-                                notes = "recipe:${recipe.id}"
+                                notes = "recipe:${recipe.id}",
+                                customDateTime = newCheckInDateTime()
                             )
                             foodLogRepository.insertMealCheckIn(mealCheckIn)
                             showCheckInLoggedSnackbar(checkInCompletedSuccess)
@@ -1577,6 +1592,7 @@ fun DashboardScreen(
     showCheckInMealDialog?.let { mealToCheckIn ->
         CheckInMealDialog(
             meal = mealToCheckIn,
+            defaultDateTime = remember(mealToCheckIn) { newCheckInDateTime() },
             onDismiss = { showCheckInMealDialog = null },
             onCheckIn = { mealCheckIn ->
                 coroutineScope.launch {
@@ -1851,7 +1867,8 @@ fun DashboardScreen(
                                 reps = reps,
                                 sets = sets,
                                 caloriesBurned = caloriesBurned,
-                                notes = null
+                                notes = null,
+                                customDateTime = newCheckInDateTime()
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
@@ -1991,7 +2008,8 @@ fun DashboardScreen(
                                 reps = reps,
                                 sets = sets,
                                 caloriesBurned = caloriesBurned,
-                                notes = null
+                                notes = null,
+                                customDateTime = newCheckInDateTime()
                             )
                             foodLogRepository.insertExerciseLog(exerciseLog)
                             
@@ -2012,6 +2030,7 @@ fun DashboardScreen(
     showCheckInExerciseDialog?.let { exerciseToCheckIn ->
         UnifiedCheckInDialog<CheckInData.Exercise>(
             exercise = exerciseToCheckIn,
+            defaultDateTime = remember(exerciseToCheckIn) { newCheckInDateTime() },
             lastLog = lastExerciseLog,
             maxWeight = maxExerciseWeight,
             onDismiss = { 
@@ -2605,7 +2624,8 @@ fun DashboardScreen(
                         val mealCheckIn = MealCheckIn.create(
                             mealId = savedMeal.id,
                             servingSize = 1.0,
-                            notes = null
+                            notes = null,
+                            customDateTime = newCheckInDateTime()
                         )
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)
@@ -2717,7 +2737,8 @@ fun DashboardScreen(
                         val mealCheckIn = MealCheckIn.create(
                             mealId = savedMeal.id,
                             servingSize = 1.0,
-                            notes = null
+                            notes = null,
+                            customDateTime = newCheckInDateTime()
                         )
                         
                         foodLogRepository.insertMealCheckIn(mealCheckIn)

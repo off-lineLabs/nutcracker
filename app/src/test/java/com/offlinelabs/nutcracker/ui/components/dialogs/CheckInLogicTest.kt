@@ -10,6 +10,22 @@ import org.junit.Test
 
 class CheckInLogicTest {
 
+    private val zone = java.time.ZoneId.of("Europe/Madrid")
+    private val now = java.time.LocalDateTime.of(2026, 11, 22, 18, 45, 10)
+
+    private fun local(date: java.util.Date) = java.time.LocalDateTime.ofInstant(date.toInstant(), zone)
+
+    @Test
+    fun defaultCheckInIsNowForToday() {
+        assertEquals(now, local(defaultCheckInDateTime(now.toLocalDate(), now, zone)))
+    }
+
+    @Test
+    fun defaultCheckInKeepsTimeOfDayOnAnotherDay() {
+        val past = java.time.LocalDate.of(2026, 11, 19)
+        assertEquals(past.atTime(18, 45, 10), local(defaultCheckInDateTime(past, now, zone)))
+    }
+
     @Test
     fun requiredFieldsPerType() {
         assertEquals(

@@ -13,6 +13,8 @@ import com.offlinelabs.nutcracker.data.SettingsManager
 import com.offlinelabs.nutcracker.ui.screens.dashboard.DashboardScreen
 import com.offlinelabs.nutcracker.ui.screens.settings.SettingsScreen
 import com.offlinelabs.nutcracker.ui.screens.analytics.AnalyticsScreen
+import com.offlinelabs.nutcracker.ui.screens.analytics.AnalyticsSection
+import com.offlinelabs.nutcracker.ui.screens.dashboard.DASHBOARD_PAGE_HOME
 import com.offlinelabs.nutcracker.ui.screens.help.HelpScreen
 import com.offlinelabs.nutcracker.ui.screens.terms.TermsOfUseDialog
 import com.offlinelabs.nutcracker.ui.theme.FoodLogTheme
@@ -54,6 +56,10 @@ fun AppNavigation(settingsManager: SettingsManager) {
     // Saveable so rotation or a language change (activity recreation) keeps the user on the same screen
     var currentScreen by rememberSaveable { mutableStateOf("dashboard") }
     var shouldShowTutorial by rememberSaveable { mutableStateOf(false) }
+    // Dashboard tab and day survive a trip to analytics/settings/help (the dashboard leaves composition)
+    var dashboardPage by rememberSaveable { mutableIntStateOf(DASHBOARD_PAGE_HOME) }
+    var dashboardEpochDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    var analyticsSection by rememberSaveable { mutableStateOf(AnalyticsSection.NUTRITION) }
     
     // Check if user has agreed to terms - use state to track changes
     var hasAgreedToTerms by remember { mutableStateOf(settingsManager.hasAgreedToTerms()) }
@@ -79,7 +85,14 @@ fun AppNavigation(settingsManager: SettingsManager) {
     when (currentScreen) {
         "dashboard" -> DashboardScreen(
             onNavigateToSettings = { currentScreen = "settings" },
-            onNavigateToAnalytics = { currentScreen = "analytics" },
+            onNavigateToAnalytics = { fromExerciseTab ->
+                analyticsSection = if (fromExerciseTab) AnalyticsSection.EXERCISE else AnalyticsSection.NUTRITION
+                currentScreen = "analytics"
+            },
+            initialPage = dashboardPage,
+            initialDate = dashboardEpochDay?.let { java.time.LocalDate.ofEpochDay(it) },
+            onPageChanged = { dashboardPage = it },
+            onDateChanged = { dashboardEpochDay = it.toEpochDay() },
             onNavigateToHelp = { currentScreen = "help" },
             isDarkTheme = settingsManager.isDarkTheme(LocalContext.current),
             settingsManager = settingsManager,
@@ -94,12 +107,15 @@ fun AppNavigation(settingsManager: SettingsManager) {
         )
         "analytics" -> AnalyticsScreen(
             onNavigateBack = { currentScreen = "dashboard" },
+            initialSection = analyticsSection,
             isDarkTheme = settingsManager.isDarkTheme(context)
         )
         "help" -> HelpScreen(
             onNavigateBack = { currentScreen = "dashboard" },
             isDarkTheme = settingsManager.isDarkTheme(context),
             onReplayTutorial = { 
+                // The tutorial spotlights Home elements
+                dashboardPage = DASHBOARD_PAGE_HOME
                 currentScreen = "dashboard"
                 shouldShowTutorial = true
             }
