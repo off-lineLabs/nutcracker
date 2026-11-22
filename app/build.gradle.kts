@@ -73,6 +73,8 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    // Drag-to-reorder for the custom order of the Food/Exercise lists
+    implementation(libs.reorderable)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)

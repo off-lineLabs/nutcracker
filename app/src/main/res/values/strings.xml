@@ -744,4 +744,21 @@
     <string name="muscle_groups_label">Muscle groups</string>
     <string name="muscle_other">Other…</string>
     <string name="muscle_custom_label">Muscle group</string>
+    <string name="sort_chip_format">Sort: %1$s</string>
+    <string name="group_chip_format">Group: %1$s</string>
+    <string name="sort_custom">Custom</string>
+    <string name="sort_alphabetical">Alphabetical</string>
+    <string name="sort_added_date">Date added</string>
+    <string name="sort_last_checked_in">Last checked in</string>
+    <string name="group_none">None</string>
+    <string name="group_nutri_score">Nutri-Score</string>
+    <string name="group_routine">Routine</string>
+    <string name="group_muscle">Muscle group</string>
+    <string name="group_exercise_type">Exercise type</string>
+    <string name="group_nutri_grade">Nutri-Score %1$s</string>
+    <string name="group_no_nutri_score">No Nutri-Score</string>
+    <string name="group_no_routine">No routine</string>
+    <string name="group_no_muscle">No muscle group</string>
+    <string name="reorder_hint">Hold and drag an item to reorder</string>
+    <string name="reorder_handle_description">Reorder %1$s</string>
 </resources>

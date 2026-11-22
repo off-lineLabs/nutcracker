@@ -671,4 +671,21 @@
     <string name="muscle_groups_label">Grupos musculares</string>
     <string name="muscle_other">Otro…</string>
     <string name="muscle_custom_label">Grupo muscular</string>
+    <string name="sort_chip_format">Ordenar: %1$s</string>
+    <string name="group_chip_format">Agrupar: %1$s</string>
+    <string name="sort_custom">Personalizado</string>
+    <string name="sort_alphabetical">Alfabético</string>
+    <string name="sort_added_date">Fecha de creación</string>
+    <string name="sort_last_checked_in">Último registro</string>
+    <string name="group_none">Ninguno</string>
+    <string name="group_nutri_score">Nutri-Score</string>
+    <string name="group_routine">Rutina</string>
+    <string name="group_muscle">Grupo muscular</string>
+    <string name="group_exercise_type">Tipo de ejercicio</string>
+    <string name="group_nutri_grade">Nutri-Score %1$s</string>
+    <string name="group_no_nutri_score">Sin Nutri-Score</string>
+    <string name="group_no_routine">Sin rutina</string>
+    <string name="group_no_muscle">Sin grupo muscular</string>
+    <string name="reorder_hint">Mantén pulsado un elemento y arrástralo para reordenar</string>
+    <string name="reorder_handle_description">Reordenar %1$s</string>
 </resources>

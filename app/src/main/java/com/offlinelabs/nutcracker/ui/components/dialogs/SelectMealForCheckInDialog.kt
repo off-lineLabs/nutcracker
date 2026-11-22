@@ -22,6 +22,13 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.LayoutCoordinates
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.ui.components.items.MealItem
+import com.offlinelabs.nutcracker.data.ListGroup
+import com.offlinelabs.nutcracker.ui.components.lists.DraggableListRow
+import com.offlinelabs.nutcracker.ui.components.lists.ListGroupHeader
+import com.offlinelabs.nutcracker.ui.components.lists.groupTitleText
+import com.offlinelabs.nutcracker.ui.components.lists.rememberGroupedReorderState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import com.offlinelabs.nutcracker.ui.theme.brandAccentShade
 
 /**
@@ -38,7 +45,15 @@ fun MealPickerContent(
     onScanBarcode: () -> Unit = {},
     onSelectRecipe: () -> Unit = {},
     modifier: Modifier = Modifier,
-    registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null
+    registerElementCoordinates: ((String, Offset, androidx.compose.ui.geometry.Size) -> Unit)? = null,
+    /** [meals] sorted and grouped for display; defaults to one ungrouped group in the given order. */
+    groups: List<ListGroup<Meal>> = listOf(ListGroup("all", null, meals)),
+    /** True in custom order: rows can be dragged within their group. */
+    reorderEnabled: Boolean = false,
+    /** New order of the dragged group's meal ids, called when a row is dropped. */
+    onReorder: (List<Long>) -> Unit = {},
+    /** Sort/group controls shown above the list. */
+    arrangementBar: @Composable () -> Unit = {}
 ) {
     // Only the id is saved so the details dialog survives rotation; the meal is looked up again.
     var selectedMealId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -60,7 +75,14 @@ fun MealPickerContent(
         )
     }
 
+    val reorder = rememberGroupedReorderState(groups, prefix = "meal") { it.id }
+    val lazyListState = rememberLazyListState()
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        reorder.move(from.key, to.key)
+    }
+
     LazyColumn(
+        state = lazyListState,
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp),
@@ -152,12 +174,27 @@ fun MealPickerContent(
                 )
             }
         } else {
-            item(key = "meals_spacer") { Spacer(modifier = Modifier.height(8.dp)) }
-            items(meals, key = { it.id }) { meal ->
-                MealItem(
-                    meal = meal,
-                    onMealClick = { selectedMealId = meal.id }
-                )
+            item(key = "arrangement_bar") {
+                Box(modifier = Modifier.padding(top = 8.dp)) { arrangementBar() }
+            }
+            reorder.groups.forEach { group ->
+                group.title?.let { title ->
+                    item(key = "meal_header_${group.key}") { ListGroupHeader(groupTitleText(title)) }
+                }
+                items(group.items, key = { reorder.itemKey(group.key, it) }) { meal ->
+                    DraggableListRow(
+                        state = reorderableState,
+                        key = reorder.itemKey(group.key, meal),
+                        enabled = reorderEnabled,
+                        handleDescription = stringResource(R.string.reorder_handle_description, meal.name),
+                        onDragStopped = { onReorder(reorder.groupOrder(group.key)) }
+                    ) {
+                        MealItem(
+                            meal = meal,
+                            onMealClick = { selectedMealId = meal.id }
+                        )
+                    }
+                }
             }
         }
     }

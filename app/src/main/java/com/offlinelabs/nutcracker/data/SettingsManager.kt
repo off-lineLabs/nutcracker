@@ -39,7 +39,32 @@ class SettingsManager(context: Context) {
         private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
         private const val KEY_GOAL_LINK_MODE = "goal_link_mode"
         private const val KEY_LAST_SELECTED_GYM_ID = "last_selected_gym_id"
+        private const val KEY_MEAL_LIST_SORT = "meal_list_sort"
+        private const val KEY_MEAL_LIST_GROUPING = "meal_list_grouping"
+        private const val KEY_EXERCISE_LIST_SORT = "exercise_list_sort"
+        private const val KEY_EXERCISE_LIST_GROUPING = "exercise_list_grouping"
     }
+
+    private inline fun <reified E : Enum<E>> enumPref(key: String, default: E): E =
+        enumValues<E>().firstOrNull { it.name == prefs.getString(key, null) } ?: default
+
+    private fun putEnumPref(key: String, value: Enum<*>) = prefs.edit().putString(key, value.name).apply()
+
+    /** Order and grouping of the Food tab list (alphabetical, ungrouped until changed). */
+    var mealListSort: ListSort
+        get() = enumPref(KEY_MEAL_LIST_SORT, ListSort.ALPHABETICAL)
+        set(value) = putEnumPref(KEY_MEAL_LIST_SORT, value)
+    var mealListGrouping: MealGrouping
+        get() = enumPref(KEY_MEAL_LIST_GROUPING, MealGrouping.NONE)
+        set(value) = putEnumPref(KEY_MEAL_LIST_GROUPING, value)
+
+    /** Order and grouping of the Exercise tab list (alphabetical, ungrouped until changed). */
+    var exerciseListSort: ListSort
+        get() = enumPref(KEY_EXERCISE_LIST_SORT, ListSort.ALPHABETICAL)
+        set(value) = putEnumPref(KEY_EXERCISE_LIST_SORT, value)
+    var exerciseListGrouping: ExerciseGrouping
+        get() = enumPref(KEY_EXERCISE_LIST_GROUPING, ExerciseGrouping.NONE)
+        set(value) = putEnumPref(KEY_EXERCISE_LIST_GROUPING, value)
 
     /** Last gym picked in the Exercise tab dropdown; null means "All gyms". */
     var lastSelectedGymId: Long?
