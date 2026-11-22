@@ -2,16 +2,21 @@ package com.offlinelabs.nutcracker.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import com.offlinelabs.nutcracker.data.model.Exercise
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerciseDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /**
+     * Insert or update; returns the new row id, or -1 when an existing row was updated.
+     * @Upsert rather than REPLACE: REPLACE deletes the row first, which would cascade-delete its
+     * routine memberships.
+     */
+    @Upsert
     suspend fun upsertExercise(exercise: Exercise): Long
 
     @Update
@@ -34,6 +39,23 @@ interface ExerciseDao {
 
     @Query("DELETE FROM exercises")
     suspend fun deleteAllExercises()
+
+    /** Sort order that puts a new exercise at the end of the custom order. */
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM exercises")
+    suspend fun nextSortOrder(): Int
+
+    @Query("UPDATE exercises SET sortOrder = :sortOrder WHERE id = :exerciseId")
+    suspend fun setSortOrder(exerciseId: Long, sortOrder: Int)
+
+    /** Stores the custom order: each id gets its index in [orderedIds]. */
+    @Transaction
+    suspend fun applySortOrder(orderedIds: List<Long>) {
+        orderedIds.forEachIndexed { index, id -> setSortOrder(id, index) }
+    }
+
+    /** Latest log per exercise. */
+    @Query("SELECT exerciseId AS id, MAX(logDateTime) AS lastCheckIn FROM exercise_logs GROUP BY exerciseId")
+    fun getLastCheckIns(): Flow<List<LastCheckIn>>
 
     /** One-shot list of every exercise including hidden ones (used by export and import). */
     @Query("SELECT * FROM exercises ORDER BY id ASC")

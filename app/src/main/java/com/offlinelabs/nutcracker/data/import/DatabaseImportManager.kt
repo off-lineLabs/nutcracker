@@ -34,6 +34,8 @@ class DatabaseImportManager(
         private const val MEAL_CHECK_INS_TSV = "meal_check_ins.tsv"
         private const val GYMS_TSV = "gyms.tsv"
         private const val EXERCISES_TSV = "exercises.tsv"
+        private const val ROUTINES_TSV = "routines.tsv"
+        private const val ROUTINE_EXERCISES_TSV = "routine_exercises.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
         private const val PILLS_TSV = "pills.tsv"
         private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
@@ -49,6 +51,8 @@ class DatabaseImportManager(
             MEALS_TSV,
             GYMS_TSV,
             EXERCISES_TSV,
+            ROUTINES_TSV,
+            ROUTINE_EXERCISES_TSV,
             PILLS_TSV,
             TAGS_TSV,
             USER_GOALS_TSV,
@@ -61,6 +65,9 @@ class DatabaseImportManager(
             EXERCISE_TAGS_TSV
         )
         
+        /** Tables added in 2.0; older backups lack them, which is not worth a warning. */
+        private val OPTIONAL_TABLES = setOf(GYMS_TSV, ROUTINES_TSV, ROUTINE_EXERCISES_TSV)
+
         const val AUTO_BACKUP_FILENAME = "auto-before-restore.zip"
         
         // Date formats for parsing
@@ -111,11 +118,15 @@ class DatabaseImportManager(
         val tablesImported = mutableListOf<String>()
         
         try {
-            // Validate source file
-            val documentFile = DocumentFile.fromSingleUri(context, sourceUri)
-                ?: return@withContext Result.failure(Exception("Invalid source URI"))
-            
-            if (!documentFile.exists()) {
+            // Validate source file (DocumentFile only understands content:// URIs)
+            val exists = if (sourceUri.scheme == android.content.ContentResolver.SCHEME_FILE) {
+                sourceUri.path?.let { File(it).exists() } == true
+            } else {
+                val documentFile = DocumentFile.fromSingleUri(context, sourceUri)
+                    ?: return@withContext Result.failure(Exception("Invalid source URI"))
+                documentFile.exists()
+            }
+            if (!exists) {
                 return@withContext Result.failure(Exception("Source file does not exist"))
             }
             
@@ -200,7 +211,7 @@ class DatabaseImportManager(
                             recordsImported = tableResult.recordsImported,
                             isComplete = false
                         )
-                    } else if (tableName != GYMS_TSV) { // gyms.tsv is absent in backups before 2.0
+                    } else if (tableName !in OPTIONAL_TABLES) {
                         warnings.add(ImportWarning(
                             tableName = tableName,
                             rowNumber = 0,
@@ -329,6 +340,8 @@ class DatabaseImportManager(
             MEAL_CHECK_INS_TSV -> importMealCheckIns(tsvData)
             GYMS_TSV -> importGyms(tsvData)
             EXERCISES_TSV -> importExercises(tsvData)
+            ROUTINES_TSV -> importRoutines(tsvData)
+            ROUTINE_EXERCISES_TSV -> importRoutineExercises(tsvData)
             EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
             PILLS_TSV -> importPills(tsvData)
             PILL_CHECK_INS_TSV -> importPillCheckIns(tsvData)
@@ -383,6 +396,8 @@ class DatabaseImportManager(
     private suspend fun wipeAllTables() {
         database.mealTagDao().deleteAllMealTags()
         database.exerciseTagDao().deleteAllExerciseTags()
+        database.routineDao().deleteAllRoutineExercises()
+        database.routineDao().deleteAllRoutines()
         database.recipeIngredientDao().deleteAllIngredients()
         database.mealCheckInDao().deleteAllCheckIns()
         database.exerciseLogDao().deleteAllLogs()
@@ -493,7 +508,8 @@ class DatabaseImportManager(
                             quantity = row.getValue("quantity").takeIf { !it.isNullOrBlank() },
                             servingSize = row.getValue("servingSize").takeIf { !it.isNullOrBlank() },
                             barcode = row.getValue("barcode").takeIf { !it.isNullOrBlank() },
-                            source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual"
+                            source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual",
+                            sortOrder = row.getIntValue("sortOrder") ?: 0 // absent before 2.0
                         )
                         
                         val mealKey = ImportMergeKeys.mealKey(
@@ -1063,7 +1079,8 @@ class DatabaseImportManager(
                             isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
                             gymId = ImportMergeKeys.resolveGymId(row.getValue("gymId")) {
                                 idMappingManager.getNewId("gyms", it)
-                            }
+                            },
+                            sortOrder = row.getIntValue("sortOrder") ?: 0 // absent before 2.0
                         )
                         
                         val oldId = row.getValue("id")?.toLongOrNull()
@@ -1114,6 +1131,113 @@ class DatabaseImportManager(
         }
     }
     
+    /** Routines; MERGE reuses an existing routine with the same name (case-insensitive). */
+    private suspend fun importRoutines(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            val existing = HashMap<String, Long>()
+            if (mode == ImportMode.MERGE) {
+                database.routineDao().getAllRoutinesIncludingHiddenSync().forEach { r ->
+                    existing.putIfAbsent(r.name.trim().lowercase(Locale.ROOT), r.id)
+                }
+            }
+            rows.forEach { row ->
+                val name = row.getValueOrEmpty("name").trim()
+                if (name.isEmpty()) {
+                    skipped++
+                    return@forEach
+                }
+                try {
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    val key = name.lowercase(Locale.ROOT)
+                    val newId = existing[key]?.also { skipped++ } ?: database.routineDao().upsertRoutine(
+                        Routine(
+                            name = name,
+                            sortOrder = row.getIntValue("sortOrder") ?: 0,
+                            isVisible = row.getBooleanValue("isVisible") ?: true
+                        )
+                    ).also {
+                        if (mode == ImportMode.MERGE) existing[key] = it
+                        imported++
+                    }
+                    if (oldId != null) {
+                        idMappings[oldId.toString()] = newId
+                        idMappingManager.addMapping("routines", oldId.toString(), newId)
+                    }
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "routines",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert routine: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "routines",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList(),
+                idMappings = idMappings
+            )
+        }
+    }
+
+    /** Routine memberships, remapped to the imported routine and exercise ids; duplicates are ignored. */
+    private suspend fun importRoutineExercises(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val routineId = row.getLongValue("routineId")?.let { idMappingManager.getNewId("routines", it.toString()) }
+                    val exerciseId = row.getLongValue("exerciseId")?.let { idMappingManager.getNewId("exercises", it.toString()) }
+                    if (routineId == null || exerciseId == null) {
+                        skipped++
+                        return@forEach
+                    }
+                    val rowId = database.routineDao().insertRoutineExercise(
+                        RoutineExercise(routineId, exerciseId, row.getIntValue("position") ?: 0)
+                    )
+                    if (rowId == -1L) skipped++ else imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "routine_exercises",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert routine exercise: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "routine_exercises",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
+            )
+        }
+    }
+
     private suspend fun importExerciseLogs(tsvData: String): TableImportResult {
         val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()

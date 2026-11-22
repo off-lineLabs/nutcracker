@@ -36,7 +36,8 @@ class GymRepositoryTest {
             .build()
         repo = OfflineFoodLogRepository(
             db.mealDao(), db.userGoalDao(), db.mealCheckInDao(), db.exerciseDao(), db.exerciseLogDao(),
-            db.pillDao(), db.pillCheckInDao(), db.recipeDao(), db.recipeIngredientDao(), db.gymDao()
+            db.pillDao(), db.pillCheckInDao(), db.recipeDao(), db.recipeIngredientDao(), db.gymDao(),
+            db.routineDao()
         )
     }
 

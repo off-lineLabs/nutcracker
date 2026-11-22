@@ -30,6 +30,9 @@ import com.offlinelabs.nutcracker.data.model.Tag
 import com.offlinelabs.nutcracker.data.model.MealTag
 import com.offlinelabs.nutcracker.data.model.ExerciseTag
 import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.data.model.RoutineExercise
+import com.offlinelabs.nutcracker.data.dao.RoutineDao
 import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
@@ -48,9 +51,11 @@ import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
         ExerciseTag::class,
         Recipe::class,
         RecipeIngredient::class,
-        Gym::class
+        Gym::class,
+        Routine::class,
+        RoutineExercise::class
     ], 
-    version = 20, 
+    version = 21, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -69,6 +74,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
     abstract fun recipeIngredientDao(): RecipeIngredientDao
     abstract fun gymDao(): GymDao
+    abstract fun routineDao(): RoutineDao
 
     companion object {
         @Volatile
@@ -85,7 +91,8 @@ abstract class AppDatabase : RoomDatabase() {
                     .addMigrations(
                         DatabaseMigrations.MIGRATION_17_18,
                         DatabaseMigrations.MIGRATION_18_19,
-                        DatabaseMigrations.MIGRATION_19_20
+                        DatabaseMigrations.MIGRATION_19_20,
+                        DatabaseMigrations.MIGRATION_20_21
                         // Add more migrations here as needed
                         // IMPORTANT: When incrementing database version, you MUST create a proper migration
                         // in DatabaseMigrations.kt. Never use fallbackToDestructiveMigration() in production.

@@ -1,5 +1,6 @@
 package com.offlinelabs.nutcracker.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -39,7 +40,10 @@ data class Exercise(
     val notes: String? = null, // Optional notes
     val imagePaths: List<String> = emptyList(), // Local paths to exercise images
     val isVisible: Boolean = true, // Soft delete field - true means visible in My Exercises
-    val gymId: Long? = null // Gym this exercise belongs to; null means shared across gyms
+    val gymId: Long? = null, // Gym this exercise belongs to; null means shared across gyms
+    /** Position in the user's custom order (ascending; ties fall back to name). */
+    @ColumnInfo(defaultValue = "0")
+    val sortOrder: Int = 0
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

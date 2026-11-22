@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.offlinelabs.nutcracker.data.model.Meal
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,23 @@ interface MealDao {
 
     @Query("DELETE FROM meals")
     suspend fun deleteAllMeals() // Useful for clearing all meals if needed
+
+    /** Sort order that puts a new meal at the end of the custom order. */
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM meals")
+    suspend fun nextSortOrder(): Int
+
+    @Query("UPDATE meals SET sortOrder = :sortOrder WHERE id = :mealId")
+    suspend fun setSortOrder(mealId: Long, sortOrder: Int)
+
+    /** Stores the custom order: each id gets its index in [orderedIds]. */
+    @Transaction
+    suspend fun applySortOrder(orderedIds: List<Long>) {
+        orderedIds.forEachIndexed { index, id -> setSortOrder(id, index) }
+    }
+
+    /** Latest check-in per meal. */
+    @Query("SELECT mealId AS id, MAX(checkInDateTime) AS lastCheckIn FROM meal_check_ins GROUP BY mealId")
+    fun getLastCheckIns(): Flow<List<LastCheckIn>>
 
     /** One-shot list of every meal including hidden ones (used by export and import). */
     @Query("SELECT * FROM meals ORDER BY id ASC")

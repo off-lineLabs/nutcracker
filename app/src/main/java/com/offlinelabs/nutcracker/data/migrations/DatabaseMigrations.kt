@@ -107,5 +107,34 @@ object DatabaseMigrations {
         }
     }
 
+    // Migration from version 20 to 21 - Custom sort order for meals/exercises; routines (many-to-many)
+    val MIGRATION_20_21 = object : Migration(20, 21) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // All rows start at 0, so the custom order begins as alphabetical (name breaks ties)
+            db.execSQL("ALTER TABLE meals ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE exercises ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS routines (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    sortOrder INTEGER NOT NULL,
+                    isVisible INTEGER NOT NULL
+                )
+            """)
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS routine_exercises (
+                    routineId INTEGER NOT NULL,
+                    exerciseId INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    PRIMARY KEY(routineId, exerciseId),
+                    FOREIGN KEY(routineId) REFERENCES routines(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+                    FOREIGN KEY(exerciseId) REFERENCES exercises(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_routine_exercises_exerciseId ON routine_exercises(exerciseId)")
+        }
+    }
+
     // Add more migrations here as needed
 }

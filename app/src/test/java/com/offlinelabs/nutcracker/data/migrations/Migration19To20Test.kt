@@ -43,36 +43,20 @@ class Migration19To20Test {
         context.deleteDatabase(dbName)
     }
 
-    /** CREATE statements (tables first, then indices) of the current schema, minus the gym additions. */
-    private fun v19Statements(): List<String> {
-        val statements = mutableListOf<Pair<Int, String>>()
-        val current = Room.databaseBuilder(context, AppDatabase::class.java, dbName).build()
-        try {
-            val sqlite = current.openHelper.writableDatabase
-            sqlite.query("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE sql IS NOT NULL").use { c ->
-                while (c.moveToNext()) {
-                    val type = c.getString(0)
-                    val name = c.getString(1)
-                    val table = c.getString(2)
-                    var sql = c.getString(3)
-                    if (table == "gyms" || table == "room_master_table" || name.startsWith("sqlite_") ||
-                        name == "android_metadata"
-                    ) continue
-                    if (name == "index_exercises_gymId") continue
-                    if (type == "table" && table == "exercises") {
-                        sql = sql
-                            .replace(Regex(",\\s*`gymId` INTEGER"), "")
-                            .replace(Regex(",\\s*FOREIGN KEY\\(`gymId`\\)[^)]*\\)[^,)]*?ON DELETE SET NULL"), "")
-                        assertFalse("gymId must be stripped from the v19 exercises table", sql.contains("gymId"))
-                    }
-                    statements += (if (type == "table") 0 else 1) to sql
-                }
-            }
-        } finally {
-            current.close()
-            context.deleteDatabase(dbName)
+    /** CREATE statements of the current schema, minus the gym (v20) and v21 additions. */
+    private fun v19Statements(): List<String> = OldSchemaBuilder.statements(
+        context, dbName,
+        skipTables = setOf("gyms") + OldSchemaBuilder.V21_TABLES,
+        skipIndices = setOf("index_exercises_gymId") + OldSchemaBuilder.V21_INDICES
+    ) { table, sql ->
+        when (table) {
+            "meals" -> OldSchemaBuilder.stripSortOrder(sql)
+            "exercises" -> OldSchemaBuilder.stripSortOrder(sql)
+                .replace(Regex(",\\s*`gymId` INTEGER"), "")
+                .replace(Regex(",\\s*FOREIGN KEY\\(`gymId`\\)[^)]*\\)[^,)]*?ON DELETE SET NULL"), "")
+                .also { assertFalse("gymId must be stripped from the v19 exercises table", it.contains("gymId")) }
+            else -> sql
         }
-        return statements.sortedBy { it.first }.map { it.second }
     }
 
     private fun createV19WithData() {
@@ -107,7 +91,8 @@ class Migration19To20Test {
             .addMigrations(
                 DatabaseMigrations.MIGRATION_17_18,
                 DatabaseMigrations.MIGRATION_18_19,
-                DatabaseMigrations.MIGRATION_19_20
+                DatabaseMigrations.MIGRATION_19_20,
+                DatabaseMigrations.MIGRATION_20_21
             )
             .allowMainThreadQueries()
             .build()

@@ -1,5 +1,6 @@
 package com.offlinelabs.nutcracker.data.model // Assuming this is your model package
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
@@ -41,7 +42,10 @@ data class Meal(
     val quantity: String? = null, // Product quantity
     val servingSize: String? = null, // Original serving size from Open Food Facts
     val barcode: String? = null, // Barcode if scanned
-    val source: String = "manual" // Source: "manual", "search", "barcode"
+    val source: String = "manual", // Source: "manual", "search", "barcode"
+    /** Position in the user's custom order (ascending; ties fall back to name). */
+    @ColumnInfo(defaultValue = "0")
+    val sortOrder: Int = 0
 )
 
 /**

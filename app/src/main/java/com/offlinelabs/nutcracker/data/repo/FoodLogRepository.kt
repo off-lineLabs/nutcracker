@@ -8,6 +8,10 @@ import com.offlinelabs.nutcracker.data.dao.ExerciseLogDao
 import com.offlinelabs.nutcracker.data.dao.PillDao
 import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
 import com.offlinelabs.nutcracker.data.dao.GymDao
+import com.offlinelabs.nutcracker.data.dao.LastCheckIn
+import com.offlinelabs.nutcracker.data.dao.RoutineDao
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.data.model.RoutineExercise
 import com.offlinelabs.nutcracker.data.dao.RecipeDao
 import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
@@ -79,6 +83,18 @@ interface FoodLogRepository {
      * Logs and tags are not copied; image files are duplicated.
      */
     suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?): Long
+
+    // List ordering
+    /** Latest check-in per meal / exercise, for "last checked in" sorting. */
+    fun getMealLastCheckIns(): Flow<List<LastCheckIn>>
+    fun getExerciseLastCheckIns(): Flow<List<LastCheckIn>>
+    /** Saves the custom order: each id gets its index in [orderedIds]. */
+    suspend fun applyMealSortOrder(orderedIds: List<Long>)
+    suspend fun applyExerciseSortOrder(orderedIds: List<Long>)
+
+    // Routines (no management UI yet; used for grouping)
+    fun getVisibleRoutines(): Flow<List<Routine>>
+    fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>>
 
     // ExerciseLog operations
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
@@ -156,6 +172,7 @@ class OfflineFoodLogRepository(
     private val recipeDao: RecipeDao,
     private val recipeIngredientDao: RecipeIngredientDao,
     private val gymDao: GymDao,
+    private val routineDao: RoutineDao,
     private val exerciseImageService: ExerciseImageService? = null,
     private val imageDownloadService: ImageDownloadService? = null
 ) : FoodLogRepository {
@@ -163,7 +180,10 @@ class OfflineFoodLogRepository(
     // Meal operations
     override fun getAllMeals(): Flow<List<Meal>> = mealDao.getAllMeals()
     override fun getMealById(mealId: Long): Flow<Meal?> = mealDao.getMealById(mealId)
-    override suspend fun insertMeal(meal: Meal): Long = mealDao.insertMeal(meal)
+    // New visible meals go to the end of the custom order
+    override suspend fun insertMeal(meal: Meal): Long = mealDao.insertMeal(
+        if (meal.id == 0L && meal.isVisible) meal.copy(sortOrder = mealDao.nextSortOrder()) else meal
+    )
     override suspend fun updateMeal(meal: Meal) = mealDao.updateMeal(meal)
     override suspend fun deleteMeal(meal: Meal) {
         // Delete the associated image if it exists
@@ -196,7 +216,9 @@ class OfflineFoodLogRepository(
         exercise.imagePaths.forEachIndexed { index, path ->
             com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "    imagePath $index: $path")
         }
-        val id = exerciseDao.upsertExercise(exercise)
+        // New exercises go to the end of the custom order; @Upsert returns -1 when it updated
+        val toSave = if (exercise.id == 0L) exercise.copy(sortOrder = exerciseDao.nextSortOrder()) else exercise
+        val id = exerciseDao.upsertExercise(toSave).let { if (it == -1L) exercise.id else it }
         com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "insertExercise returned ID: $id")
         return id
     }
@@ -229,19 +251,30 @@ class OfflineFoodLogRepository(
     }
     override suspend fun deleteGym(gymId: Long, removeExercises: Boolean) = gymDao.deleteGym(gymId, removeExercises)
     override suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?): Long {
+        val sortOrder = exerciseDao.nextSortOrder()
         val newId = exerciseDao.upsertExercise(
-            exercise.copy(id = 0, gymId = targetGymId, isVisible = true, imagePaths = emptyList())
+            exercise.copy(id = 0, gymId = targetGymId, isVisible = true, imagePaths = emptyList(), sortOrder = sortOrder)
         )
         if (exercise.imagePaths.isNotEmpty() && exerciseImageService != null) {
             val copiedPaths = exerciseImageService.copyImages(exercise.imagePaths, newId.toString())
             if (copiedPaths.isNotEmpty()) {
                 exerciseDao.updateExercise(
-                    exercise.copy(id = newId, gymId = targetGymId, isVisible = true, imagePaths = copiedPaths)
+                    exercise.copy(id = newId, gymId = targetGymId, isVisible = true, imagePaths = copiedPaths, sortOrder = sortOrder)
                 )
             }
         }
         return newId
     }
+
+    // List ordering
+    override fun getMealLastCheckIns(): Flow<List<LastCheckIn>> = mealDao.getLastCheckIns()
+    override fun getExerciseLastCheckIns(): Flow<List<LastCheckIn>> = exerciseDao.getLastCheckIns()
+    override suspend fun applyMealSortOrder(orderedIds: List<Long>) = mealDao.applySortOrder(orderedIds)
+    override suspend fun applyExerciseSortOrder(orderedIds: List<Long>) = exerciseDao.applySortOrder(orderedIds)
+
+    // Routines
+    override fun getVisibleRoutines(): Flow<List<Routine>> = routineDao.getVisibleRoutines()
+    override fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>> = routineDao.getVisibleRoutineExercises()
 
     // ExerciseLog operations
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
