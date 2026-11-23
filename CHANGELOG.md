@@ -21,7 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Routines: plan workouts like “Leg day” at a gym, with that gym’s and shared exercises in your own order. Group the Exercise list by routine to follow it
 - Meal types: tag foods as Breakfast, Lunch, Dinner, Snack or your own types, and group the Food list by them
 - Synced copies: when copying an exercise to another gym you can keep the copies in sync, so changing one updates the other. Stop syncing any time from the edit screen
-- Quick check-in from the Exercise tab: set the weight (or minutes, or reps) on the small wheel, which starts at your heaviest logged weight, and tick the box; untick to remove that day's check-in. Swipe an exercise left to edit or delete it
+- Quick check-in from the Exercise tab: set the weight (starting at your heaviest logged weight) and the reps (starting at your last check-in) on the small wheels, or the minutes / reps for cardio and bodyweight, and tick the box; untick to remove that day's check-in. Swipe an exercise left to edit or delete it
+- Quick check-in from the Food tab: set the portion on the wheel (starting at your last portion, with the kcal shown as you scroll) and tick the box. Swipe a food left to edit or delete it
+- Checking in under a routine or meal type remembers it: an exercise in two routines, or a food in Breakfast and Snack, is only ticked where you checked it in
+- Add an exercise to routines from its add/edit form
+- Settings: choose the hand you scroll with, and the number wheels and check-in boxes move to the other side so scrolling doesn't change them
 - Choose muscle groups when adding or editing an exercise by searching the exercise database's list (shown in your language) or typing your own
 - Backups now include your list order, routines, meal types and synced copies
 
@@ -35,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Analytics opens on the Exercise section when you come from the Exercise tab, and going back returns you to the same tab and day
 - Picking a gym for an exercise uses a dropdown, and Copy to another gym opens a sheet listing each gym with its unit
 - All gyms in the Exercise tab now lists every exercise, grouped by gym by default
+- The Food and Exercise lists use the full screen width, with one compact row per item instead of cards
+- Adding exercises to a routine opens a dialog that no longer closes when you pull down while scrolling
 
 ### Fixed
 - The meal details dialog stays open when the phone is rotated
