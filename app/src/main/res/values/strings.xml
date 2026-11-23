@@ -829,4 +829,8 @@
         <item quantity="one">%1$d exercise</item>
         <item quantity="other">%1$d exercises</item>
     </plurals>
+    <string name="settings_scroll_hand_title">Scrolling hand</string>
+    <string name="settings_scroll_hand_explanation">Which thumb do you scroll the food and exercise lists with? The number wheels and check-in boxes go on the other side, so scrolling doesn’t change them by accident.</string>
+    <string name="settings_scroll_hand_right">Right hand (controls on the left)</string>
+    <string name="settings_scroll_hand_left">Left hand (controls on the right)</string>
 </resources>

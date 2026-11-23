@@ -25,6 +25,18 @@ enum class GoalLinkMode {
     MACROS_TO_KCAL
 }
 
+/**
+ * The thumb the user scrolls the Food and Exercise lists with. The rows' controls (wheels and
+ * check-in box) go on the other side so scrolling doesn't nudge them.
+ */
+enum class ScrollHand {
+    /** Scrolls with the right thumb: controls on the left. Default (most people are right-handed). */
+    RIGHT,
+
+    /** Scrolls with the left thumb: controls on the right. */
+    LEFT
+}
+
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     
@@ -45,6 +57,7 @@ class SettingsManager(context: Context) {
         private const val KEY_EXERCISE_LIST_GROUPING = "exercise_list_grouping"
         private const val KEY_MEAL_LIST_DESCENDING = "meal_list_descending"
         private const val KEY_EXERCISE_LIST_DESCENDING = "exercise_list_descending"
+        private const val KEY_SCROLL_HAND = "scroll_hand"
     }
 
     private inline fun <reified E : Enum<E>> enumPref(key: String, default: E): E =
@@ -74,6 +87,15 @@ class SettingsManager(context: Context) {
     var exerciseListDescending: Boolean
         get() = prefs.getBoolean(KEY_EXERCISE_LIST_DESCENDING, exerciseListSort.defaultDescending)
         set(value) = prefs.edit().putBoolean(KEY_EXERCISE_LIST_DESCENDING, value).apply()
+
+    /** Which thumb scrolls the lists (observable, so the lists follow a change right away). */
+    var scrollHand by mutableStateOf(enumPref(KEY_SCROLL_HAND, ScrollHand.RIGHT))
+        private set
+
+    fun updateScrollHand(hand: ScrollHand) {
+        scrollHand = hand
+        putEnumPref(KEY_SCROLL_HAND, hand)
+    }
 
     /** Last gym picked in the Exercise tab dropdown; null means "All gyms". */
     var lastSelectedGymId: Long?

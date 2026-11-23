@@ -757,4 +757,8 @@
         <item quantity="many">%1$d ejercicios</item>
         <item quantity="other">%1$d ejercicios</item>
     </plurals>
+    <string name="settings_scroll_hand_title">Mano para desplazarte</string>
+    <string name="settings_scroll_hand_explanation">¿Con qué pulgar desplazas las listas de comida y ejercicio? Las ruedas de números y las casillas de registro van al otro lado, para no cambiarlas sin querer al desplazarte.</string>
+    <string name="settings_scroll_hand_right">Mano derecha (controles a la izquierda)</string>
+    <string name="settings_scroll_hand_left">Mano izquierda (controles a la derecha)</string>
 </resources>
