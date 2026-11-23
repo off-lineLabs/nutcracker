@@ -104,6 +104,11 @@ interface FoodLogRepository {
     fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>>
     /** Saves a routine's exercise order: each exercise gets its index in [exerciseIds]. */
     suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>)
+    /**
+     * Puts [exerciseId] in exactly [routineIds] among [offered] (the routines its form showed):
+     * appended to newly chosen routines, removed from unchosen ones; other routines are untouched.
+     */
+    suspend fun setExerciseRoutines(exerciseId: Long, routineIds: Set<Long>, offered: Set<Long>)
     /** Inserts or updates [routine] with exactly [exerciseIds] in that order; returns its id. */
     suspend fun saveRoutine(routine: Routine, exerciseIds: List<Long>): Long
     /** Soft-deletes a routine (its exercises are untouched). */
@@ -352,6 +357,8 @@ class OfflineFoodLogRepository(
     override fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>> = routineDao.getVisibleRoutineExercises()
     override suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>) =
         routineDao.applyExerciseOrder(routineId, exerciseIds)
+    override suspend fun setExerciseRoutines(exerciseId: Long, routineIds: Set<Long>, offered: Set<Long>) =
+        routineDao.setRoutinesForExercise(exerciseId, routineIds, offered)
     override suspend fun saveRoutine(routine: Routine, exerciseIds: List<Long>): Long {
         val toSave = if (routine.id == 0L) routine.copy(sortOrder = routineDao.nextRoutineSortOrder()) else routine
         val id = routineDao.upsertRoutine(toSave).let { if (it == -1L) routine.id else it }

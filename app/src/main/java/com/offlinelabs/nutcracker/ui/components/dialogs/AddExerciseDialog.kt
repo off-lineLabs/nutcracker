@@ -42,6 +42,9 @@ import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
 import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.ui.components.routine.routinesForGym
+import androidx.compose.material.icons.filled.Check
 import com.offlinelabs.nutcracker.ui.components.gym.GymPickerField
 import com.offlinelabs.nutcracker.ui.components.gym.GymPickerOption
 import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
@@ -71,6 +74,11 @@ fun AddExerciseDialog(
     defaultGymId: Long? = null,
     /** Muscle choices besides the selected ones (exercise database + muscles already in use). */
     muscleChoices: List<String> = emptyList(),
+    /** Visible routines; the form offers those of its gym (all of them for a shared exercise). */
+    routines: List<Routine> = emptyList(),
+    /** Routines picked in the form (hoisted, so every save path can store them). */
+    selectedRoutineIds: Set<Long> = emptySet(),
+    onSelectedRoutineIdsChange: (Set<Long>) -> Unit = {},
     /** Gyms of the copies this exercise is synced with (e.g. "Basic Fit · Uni"); null when not synced. */
     syncedWith: String? = null,
     /** Stops syncing this exercise (applied right away). */
@@ -143,6 +151,11 @@ fun AddExerciseDialog(
             input = input,
             onInputChange = { new ->
                 if (new.name != input.name) nameTouched = true
+                // Another gym offers other routines: keep only the picks still offered
+                if (new.gymId != input.gymId) {
+                    val offered = routinesForGym(routines, new.gymId).map { it.id }.toSet()
+                    onSelectedRoutineIdsChange(selectedRoutineIds intersect offered)
+                }
                 input = new
             },
             showNameError = nameTouched,
@@ -150,6 +163,18 @@ fun AddExerciseDialog(
             gymOptions = gymPickerOptions(gyms),
             muscleChoices = muscleChoices
         )
+        val offeredRoutines = routinesForGym(routines, input.gymId)
+        if (offeredRoutines.isNotEmpty()) {
+            RoutinePicker(
+                routines = offeredRoutines,
+                gyms = gyms,
+                // A shared exercise lists routines of several gyms: name the gym
+                showGym = input.gymId == null && offeredRoutines.map { it.gymId }.distinct().size > 1,
+                selected = selectedRoutineIds,
+                onSelectedChange = onSelectedRoutineIdsChange,
+                colors = FormDefaults.colors()
+            )
+        }
         if (syncedWith != null && onUnsync != null && !unsynced) {
             SyncedWithRow(syncedWith, FormDefaults.colors(), onClick = { confirmUnsync = true })
         }
@@ -171,6 +196,51 @@ fun AddExerciseDialog(
                 TextButton(onClick = { confirmUnsync = false }) { Text(stringResource(R.string.cancel), color = colors.accent) }
             }
         )
+    }
+}
+
+/** Chips of the routines the exercise can join; tapping one adds or removes it. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun RoutinePicker(
+    routines: List<Routine>,
+    gyms: List<Gym>,
+    showGym: Boolean,
+    selected: Set<Long>,
+    onSelectedChange: (Set<Long>) -> Unit,
+    colors: FormColors
+) {
+    val gymsById = remember(gyms) { gyms.associateBy { it.id } }
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Text(
+            text = stringResource(R.string.routines_button),
+            style = MaterialTheme.typography.labelLarge,
+            color = colors.contentSecondary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        )
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            routines.forEach { routine ->
+                val isSelected = routine.id in selected
+                val gymName = if (showGym) gymsById[routine.gymId]?.let { com.offlinelabs.nutcracker.data.gymLabel(it.name, it.unit) } else null
+                androidx.compose.material3.FilterChip(
+                    selected = isSelected,
+                    onClick = { onSelectedChange(if (isSelected) selected - routine.id else selected + routine.id) },
+                    label = { Text(if (gymName != null) "${routine.name} · $gymName" else routine.name) },
+                    leadingIcon = if (isSelected) {
+                        { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    } else {
+                        null
+                    },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = colors.accent,
+                        selectedLabelColor = colors.onAccent,
+                        selectedLeadingIconColor = colors.onAccent
+                    )
+                )
+            }
+        }
     }
 }
 

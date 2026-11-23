@@ -60,6 +60,26 @@ interface RoutineDao {
         exerciseIds.distinct().forEachIndexed { index, id -> insertRoutineExercise(RoutineExercise(routineId, id, index)) }
     }
 
+    @Query("SELECT routineId FROM routine_exercises WHERE exerciseId = :exerciseId")
+    suspend fun getRoutineIdsForExercise(exerciseId: Long): List<Long>
+
+    @Query("SELECT COALESCE(MAX(position), -1) + 1 FROM routine_exercises WHERE routineId = :routineId")
+    suspend fun nextExercisePosition(routineId: Long): Int
+
+    /**
+     * Puts [exerciseId] in exactly [routineIds] among the routines of [scope] (the ones the exercise
+     * form offered): it's added at the end of newly chosen routines and removed from unchosen ones.
+     * Routines outside [scope] are left alone.
+     */
+    @Transaction
+    suspend fun setRoutinesForExercise(exerciseId: Long, routineIds: Set<Long>, scope: Set<Long>) {
+        val current = getRoutineIdsForExercise(exerciseId).toSet()
+        (current intersect scope).minus(routineIds).forEach { deleteRoutineExercise(it, exerciseId) }
+        (routineIds intersect scope).minus(current).forEach {
+            insertRoutineExercise(RoutineExercise(it, exerciseId, nextExercisePosition(it)))
+        }
+    }
+
     /** Drops [exerciseId] from routines of gyms other than [gymId] (after it moved to [gymId]). */
     @Query("""
         DELETE FROM routine_exercises WHERE exerciseId = :exerciseId

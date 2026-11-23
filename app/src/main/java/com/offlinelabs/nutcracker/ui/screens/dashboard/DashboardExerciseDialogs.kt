@@ -2,6 +2,8 @@ package com.offlinelabs.nutcracker.ui.screens.dashboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -116,6 +118,15 @@ private fun DashboardState.AddExerciseDialogHost() {
     val sharedGymLabel = stringResource(R.string.gym_all_gyms_shared)
     // The quick buttons of an import from the exercise database (new exercises only)
     val importing = external != null && edited == null
+    // Routines picked in the form; an edited exercise starts with the ones it's in
+    var chosenRoutineIds by remember(edited?.id) {
+        mutableStateOf(edited?.let { e -> routineMemberships.filter { it.exerciseId == e.id }.map { it.routineId }.toSet() } ?: emptySet())
+    }
+
+    /** Stores the form's routine picks for [exerciseId], among the routines offered for [gymId]. */
+    suspend fun saveRoutines(exerciseId: Long, gymId: Long?, picked: Set<Long>) {
+        foodLogRepository.setExerciseRoutines(exerciseId, picked, routinesForGym(routines, gymId).map { it.id }.toSet())
+    }
 
     fun close() {
         showAddExerciseDialog = false
@@ -125,9 +136,12 @@ private fun DashboardState.AddExerciseDialogHost() {
 
     /** Saves the imported exercise ([visible] false: only for this check-in) and optionally checks it in with its defaults. */
     fun saveImported(exercise: Exercise, visible: Boolean, checkIn: Boolean, successMessage: String, errorMessageRes: Int) {
+        val picked = chosenRoutineIds
         coroutineScope.launch {
             try {
                 val exerciseId = insertExerciseWithExternalData(exercise.copy(isVisible = visible), external, keepFormMusclesAndVisibility = true)
+                // A check-in-only (hidden) exercise isn't listed, so it joins no routine
+                if (visible) saveRoutines(exerciseId, exercise.gymId, picked)
                 if (checkIn) {
                     val quick = quickCheckIn(exercise, quickWheelStart(exercise))
                     foodLogRepository.insertExerciseLog(
@@ -172,16 +186,22 @@ private fun DashboardState.AddExerciseDialogHost() {
             }?.distinct()?.joinToString(", ")
         },
         onUnsync = edited?.let { { coroutineScope.launch { foodLogRepository.unsyncExercise(it.id) } } },
+        routines = routines,
+        selectedRoutineIds = chosenRoutineIds,
+        onSelectedRoutineIdsChange = { chosenRoutineIds = it },
         onDismiss = { close() },
         onAddExercise = { newExercise ->
+            val picked = chosenRoutineIds
             coroutineScope.launch {
                 try {
                     if (edited != null) {
                         // Keep the existing image paths
                         foodLogRepository.updateExercise(newExercise.copy(id = edited.id, imagePaths = edited.imagePaths))
+                        saveRoutines(edited.id, newExercise.gymId, picked)
                         snackbarHostState.showSnackbar(message = context.getString(R.string.exercise_updated_success))
                     } else {
-                        insertExerciseWithExternalData(newExercise, external, keepFormMusclesAndVisibility = false)
+                        val newId = insertExerciseWithExternalData(newExercise, external, keepFormMusclesAndVisibility = false)
+                        saveRoutines(newId, newExercise.gymId, picked)
                         snackbarHostState.showSnackbar(message = context.getString(R.string.exercise_added_success))
                     }
                 } catch (e: Exception) {
