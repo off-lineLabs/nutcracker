@@ -319,7 +319,14 @@ private fun ExerciseMultiPickerSheet(
         val q = foldForSearch(query)
         candidates.filter { q.isEmpty() || foldForSearch(it.name).contains(q) }
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    // A dialog rather than a bottom sheet: pulling down at the list's top while scrolling used to
+    // drag the sheet closed and lose the picks. Cancel/Add, Back or a tap outside close it.
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+      Surface(
+        shape = RoundedCornerShape(28.dp),
+        color = colors.container,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+      ) {
         SheetContent {
             Text(
                 text = stringResource(R.string.routine_add_exercises),
@@ -382,11 +389,12 @@ private fun ExerciseMultiPickerSheet(
                 ) { Text(stringResource(R.string.routine_pick_add_format, picked.size)) }
             }
         }
+      }
     }
 }
 
 @Composable
 private fun SheetContent(content: @Composable ColumnScope.() -> Unit) {
-    val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.8f).dp
-    Column(modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).navigationBarsPadding(), content = content)
+    val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.85f).dp
+    Column(modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(top = 24.dp, bottom = 4.dp), content = content)
 }
