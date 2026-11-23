@@ -53,8 +53,16 @@ sealed interface GroupTitle {
 /**
  * One group of a list. [key] is stable and unique within the list (used for item keys).
  * [routineId] is set for routine groups, whose order is the routine's own exercise order.
+ * [mealCategoryId] is set for meal type groups. Check-ins made from a routine / meal type group
+ * remember it; such a group shows its own check-ins (and those without one) as done.
  */
-data class ListGroup<T>(val key: String, val title: GroupTitle?, val items: List<T>, val routineId: Long? = null)
+data class ListGroup<T>(
+    val key: String,
+    val title: GroupTitle?,
+    val items: List<T>,
+    val routineId: Long? = null,
+    val mealCategoryId: Long? = null
+)
 
 /** What sorting needs to know about an item. */
 private class SortFields(val id: Long, val name: String, val sortOrder: Int, val lastCheckIn: String?)
@@ -122,7 +130,7 @@ fun groupMeals(
         categories.mapNotNull { c ->
             meals.filter { c.id in categoriesByMeal[it.id].orEmpty() }
                 .takeIf { it.isNotEmpty() }
-                ?.let { ListGroup("mealtype_${c.id}", GroupTitle.MealType(c.name, c.defaultKey), it) }
+                ?.let { ListGroup("mealtype_${c.id}", GroupTitle.MealType(c.name, c.defaultKey), it, mealCategoryId = c.id) }
         } + listOfNotNull(
             meals.filter { categoriesByMeal[it.id].isNullOrEmpty() }
                 .takeIf { it.isNotEmpty() }

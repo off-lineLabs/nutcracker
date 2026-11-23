@@ -130,6 +130,10 @@ internal class DashboardState(
     var dailyExerciseLogs by mutableStateOf(emptyList<DailyExerciseEntry>())
     /** Heaviest logged weight per exercise: one query for the whole Exercise tab. */
     var exerciseMaxWeights by mutableStateOf<Map<Long, Double>>(emptyMap())
+    /** Reps of each exercise's last check-in (where a strength row's reps wheel starts). */
+    var exerciseLastReps by mutableStateOf<Map<Long, Int>>(emptyMap())
+    /** Serving multiplier of each food's last check-in (where its portion wheel starts). */
+    var mealLastServings by mutableStateOf<Map<Long, Double>>(emptyMap())
     var refreshCheckIns by mutableIntStateOf(0)
     var dailyTotalsConsumed by mutableStateOf<DailyTotals?>(null)
     var foodCalories by mutableDoubleStateOf(0.0)
@@ -207,6 +211,11 @@ internal class DashboardState(
      * current time), since the Food/Exercise tabs have no date of their own.
      */
     fun newCheckInDateTime(): java.util.Date = defaultCheckInDateTime(selectedDate)
+
+    /** The rows' wheels and check-in box go on the left when the user scrolls with the right thumb. */
+    val controlsFirst: Boolean
+        get() = (settingsManager?.scrollHand ?: com.offlinelabs.nutcracker.data.ScrollHand.RIGHT) ==
+            com.offlinelabs.nutcracker.data.ScrollHand.RIGHT
 
     // ----- Exercise tab gym dropdown -----
     // [selectedGymId] (null = All gyms) is restored from settings and survives rotation;
@@ -529,6 +538,8 @@ internal fun DashboardState.CollectDashboardData(
         launch { foodLogRepository.getAllRecipes().collectLatest { recipes = it } }
         launch { foodLogRepository.getAllExercises().collectLatest { exercises = it } }
         launch { foodLogRepository.getMaxWeights().collectLatest { exerciseMaxWeights = it } }
+        launch { foodLogRepository.getLastReps().collectLatest { exerciseLastReps = it } }
+        launch { foodLogRepository.getLastServings().collectLatest { mealLastServings = it } }
         launch {
             foodLogRepository.getMealLastCheckIns().collectLatest { rows ->
                 mealLastCheckIns = rows.mapNotNull { r -> r.lastCheckIn?.let { r.id to it } }.toMap()

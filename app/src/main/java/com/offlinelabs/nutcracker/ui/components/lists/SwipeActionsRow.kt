@@ -21,6 +21,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
@@ -44,6 +47,12 @@ fun SwipeActionsRow(
     onOpenChange: (Boolean) -> Unit,
     actionsWidth: Dp,
     modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(12.dp),
+    /**
+     * Painted behind [content] while it's moved away from rest, so the panel doesn't show through
+     * a transparent row. At rest the panel is hidden and the content keeps its own background.
+     */
+    slidingBackground: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
     actions: @Composable RowScope.() -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -54,10 +63,13 @@ fun SwipeActionsRow(
 
     LaunchedEffect(open, maxPx) { offset.animateTo(if (open) -maxPx else 0f) }
 
-    Box(modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
-        // Revealed panel, pinned to the right edge behind the content
+    Box(modifier = modifier.fillMaxWidth().clip(shape)) {
+        // Revealed panel, pinned to the right edge behind the content; hidden while the row is at
+        // rest (read in the draw phase, so sliding doesn't recompose)
         Row(
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = if (offset.value < 0f) 1f else 0f },
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -66,6 +78,9 @@ fun SwipeActionsRow(
         Box(
             modifier = Modifier
                 .offset { IntOffset(offset.value.roundToInt(), 0) }
+                .drawBehind {
+                    if (offset.value < 0f && slidingBackground.isSpecified) drawRect(slidingBackground)
+                }
                 .pointerInput(maxPx) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)

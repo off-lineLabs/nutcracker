@@ -49,15 +49,17 @@ interface MealCheckInDao {
     @Query("DELETE FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date")
     suspend fun deleteCheckInsForMealOnDate(mealId: Long, date: String)
 
-    @Query("SELECT * FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND mealCategoryId = :categoryId")
+    // A check-in without a meal type counts for every meal type group, so it goes too
+    @Query("SELECT * FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND (mealCategoryId = :categoryId OR mealCategoryId IS NULL)")
     suspend fun getCheckInsForMealInCategoryOnDate(mealId: Long, date: String, categoryId: Long): List<MealCheckIn>
 
-    @Query("DELETE FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND mealCategoryId = :categoryId")
+    @Query("DELETE FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND (mealCategoryId = :categoryId OR mealCategoryId IS NULL)")
     suspend fun deleteCheckInsForMealInCategoryOnDate(mealId: Long, date: String, categoryId: Long)
 
     /**
-     * Removes [mealId]'s check-ins of [date] and returns them (for undo): only those checked in
-     * under the meal type [categoryId] when given, otherwise all of them.
+     * Removes [mealId]'s check-ins of [date] and returns them (for undo). With [categoryId]: those
+     * checked in under that meal type plus those without one (they show in every meal type
+     * group); otherwise all of them.
      */
     @Transaction
     suspend fun removeCheckInsForMealOnDate(mealId: Long, date: String, categoryId: Long?): List<MealCheckIn> {

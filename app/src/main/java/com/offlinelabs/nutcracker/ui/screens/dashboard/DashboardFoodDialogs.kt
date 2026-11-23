@@ -381,27 +381,6 @@ private fun DashboardState.EditMealDefinitionDialogHost(meal: Meal) {
                 }
             }
         },
-        onDelete = {
-            pendingDelete = PendingDelete(
-                title = context.getString(R.string.confirm_delete_meal_title),
-                message = context.getString(R.string.confirm_delete_meal_message, meal.name)
-            ) {
-                coroutineScope.launch {
-                    try {
-                        foodLogRepository.deleteMeal(meal)
-                        snackbarHostState.showSnackbar(message = context.getString(R.string.meal_deleted_success))
-                    } catch (e: Exception) {
-                        AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
-                            "mealId" to meal.id.toString(),
-                            "mealName" to meal.name
-                        ))
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.failed_to_delete_meal_with_reason, e.message.orEmpty())
-                        )
-                    }
-                }
-                openEditMealDefinition(null)
-            }
-        }
+        onDelete = { confirmDeleteMeal(meal) { openEditMealDefinition(null) } }
     )
 }

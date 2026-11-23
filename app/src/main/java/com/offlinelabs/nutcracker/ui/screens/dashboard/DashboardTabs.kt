@@ -25,6 +25,8 @@ import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.Meal
+import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.ui.components.dialogs.ExercisePickerContent
 import com.offlinelabs.nutcracker.ui.components.dialogs.MealPickerContent
 import com.offlinelabs.nutcracker.ui.components.dialogs.quickCheckIn
@@ -62,7 +64,14 @@ internal fun DashboardState.FoodTab() {
                 groupingLabel = { mealGroupingLabel(it) },
                 onGroupingChange = { changeMealGrouping(it) }
             )
-        }
+        },
+        controlsFirst = controlsFirst,
+        checkedInIds = remember(dailyMealCheckIns) { dailyMealCheckIns.map { it.mealId }.toSet() },
+        checkedInCategoryKeys = remember(dailyMealCheckIns) { dailyMealCheckIns.map { it.mealId to it.mealCategoryId }.toSet() },
+        lastServings = mealLastServings,
+        onQuickCheckIn = { meal, multiplier, categoryId -> quickCheckInMeal(meal, multiplier, categoryId) },
+        onRemoveCheckIns = { meal, categoryId -> removeMealDayCheckIns(meal, categoryId) },
+        onDeleteMeal = { confirmDeleteMeal(it) }
     )
 }
 
@@ -104,10 +113,13 @@ internal fun DashboardState.ExerciseTab() {
             selectedExerciseForEdit = exercise
             showAddExerciseDialog = true
         },
+        controlsFirst = controlsFirst,
         checkedInIds = remember(dailyExerciseLogs) { dailyExerciseLogs.map { it.exerciseId }.toSet() },
+        checkedInRoutineKeys = remember(dailyExerciseLogs) { dailyExerciseLogs.map { it.exerciseId to it.routineId }.toSet() },
         maxWeights = exerciseMaxWeights,
-        onQuickCheckIn = { exercise, value -> quickCheckInExercise(exercise, value) },
-        onRemoveCheckIns = { removeDayCheckIns(it) },
+        lastReps = exerciseLastReps,
+        onQuickCheckIn = { exercise, value, reps, routineId -> quickCheckInExercise(exercise, value, reps, routineId) },
+        onRemoveCheckIns = { exercise, routineId -> removeDayCheckIns(exercise, routineId) },
         onDeleteExercise = { confirmDeleteExercise(it) }
     )
 }
@@ -136,11 +148,14 @@ private fun DashboardState.ExerciseTabHeader() {
     }
 }
 
-/** Quick check-in from the row: the wheel's value plus the exercise's defaults, on the day shown. */
-private fun DashboardState.quickCheckInExercise(exercise: Exercise, value: Double) {
+/**
+ * Quick check-in from the row: the wheels' values plus the exercise's defaults, on the day shown,
+ * remembering the routine group it was ticked in (if any).
+ */
+private fun DashboardState.quickCheckInExercise(exercise: Exercise, value: Double, reps: Int, routineId: Long?) {
     coroutineScope.launch {
         try {
-            val quick = quickCheckIn(exercise, value)
+            val quick = quickCheckIn(exercise, value, reps)
             foodLogRepository.insertExerciseLog(
                 ExerciseLog.create(
                     exerciseId = exercise.id,
@@ -149,7 +164,8 @@ private fun DashboardState.quickCheckInExercise(exercise: Exercise, value: Doubl
                     sets = quick.sets,
                     caloriesBurned = quick.caloriesBurned,
                     notes = null,
-                    customDateTime = newCheckInDateTime()
+                    customDateTime = newCheckInDateTime(),
+                    routineId = routineId
                 )
             )
             showCheckInLoggedSnackbar(context.getString(R.string.exercise_check_in_completed_success))
@@ -160,10 +176,13 @@ private fun DashboardState.quickCheckInExercise(exercise: Exercise, value: Doubl
     }
 }
 
-/** Unticking removes all of that day's check-ins of the exercise, with Undo. */
-private fun DashboardState.removeDayCheckIns(exercise: Exercise) {
+/**
+ * Unticking removes that day's check-ins of the exercise, with Undo: in a routine group the ones
+ * made under that routine (and those without one, which show there too), elsewhere all of them.
+ */
+private fun DashboardState.removeDayCheckIns(exercise: Exercise, routineId: Long?) {
     coroutineScope.launch {
-        val removed = foodLogRepository.removeExerciseCheckIns(exercise.id, selectedDateString)
+        val removed = foodLogRepository.removeExerciseCheckIns(exercise.id, selectedDateString, routineId)
         if (removed.isNotEmpty()) {
             val result = snackbarHostState.showSnackbar(
                 message = context.getString(R.string.quick_check_ins_removed),
@@ -172,6 +191,68 @@ private fun DashboardState.removeDayCheckIns(exercise: Exercise) {
             )
             if (result == SnackbarResult.ActionPerformed) foodLogRepository.restoreExerciseLogs(removed)
         }
+    }
+}
+
+/** Quick check-in of a food from its row: the portion wheel, on the day shown, under the group's meal type. */
+private fun DashboardState.quickCheckInMeal(meal: Meal, servingMultiplier: Double, mealCategoryId: Long?) {
+    coroutineScope.launch {
+        try {
+            foodLogRepository.insertMealCheckIn(
+                MealCheckIn.create(
+                    mealId = meal.id,
+                    servingSize = servingMultiplier,
+                    customDateTime = newCheckInDateTime(),
+                    mealCategoryId = mealCategoryId
+                )
+            )
+            showCheckInLoggedSnackbar(context.getString(R.string.check_in_completed_success))
+        } catch (e: Exception) {
+            AppLogger.exception("DashboardScreen", "Quick meal check-in failed", e)
+            snackbarHostState.showSnackbar(message = context.getString(R.string.check_in_completed_error))
+        }
+    }
+}
+
+/**
+ * Unticking a food removes that day's check-ins of it, with Undo: in a meal type group that type's
+ * (and those without a type, which show there too), elsewhere all of them.
+ */
+private fun DashboardState.removeMealDayCheckIns(meal: Meal, mealCategoryId: Long?) {
+    coroutineScope.launch {
+        val removed = foodLogRepository.removeMealCheckIns(meal.id, selectedDateString, mealCategoryId)
+        if (removed.isNotEmpty()) {
+            val result = snackbarHostState.showSnackbar(
+                message = context.getString(R.string.quick_check_ins_removed),
+                actionLabel = context.getString(R.string.undo),
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) foodLogRepository.restoreMealCheckIns(removed)
+        }
+    }
+}
+
+/** Asks before deleting [meal] (from the row's swipe actions or its edit form). */
+internal fun DashboardState.confirmDeleteMeal(meal: Meal, onDeleted: () -> Unit = {}) {
+    pendingDelete = PendingDelete(
+        title = context.getString(R.string.confirm_delete_meal_title),
+        message = context.getString(R.string.confirm_delete_meal_message, meal.name)
+    ) {
+        coroutineScope.launch {
+            try {
+                foodLogRepository.deleteMeal(meal)
+                snackbarHostState.showSnackbar(message = context.getString(R.string.meal_deleted_success))
+            } catch (e: Exception) {
+                AppLogger.exception("DashboardScreen", "Failed to delete meal", e, mapOf(
+                    "mealId" to meal.id.toString(),
+                    "mealName" to meal.name
+                ))
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.failed_to_delete_meal_with_reason, e.message.orEmpty())
+                )
+            }
+        }
+        onDeleted()
     }
 }
 

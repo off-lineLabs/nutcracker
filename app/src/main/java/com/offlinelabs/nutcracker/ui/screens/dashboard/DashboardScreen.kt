@@ -128,17 +128,19 @@ private fun DashboardState.DashboardScaffold(
                 modifier = Modifier.fillMaxSize(),
                 userScrollEnabled = !tutorialState.isActive
             ) { page ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
-                        .background(color = innerContainerBackgroundColor.copy(alpha = 0.8f), shape = RoundedCornerShape(24.dp))
-                        .clip(RoundedCornerShape(24.dp))
-                ) {
-                    when (page) {
-                        DASHBOARD_PAGE_FOOD -> FoodTab()
-                        DASHBOARD_PAGE_EXERCISE -> ExerciseTab()
-                        else -> HomeTab()
+                when (page) {
+                    // The lists sit directly on the page, using the full width
+                    DASHBOARD_PAGE_FOOD -> FoodTab()
+                    DASHBOARD_PAGE_EXERCISE -> ExerciseTab()
+                    // Home keeps its card
+                    else -> Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                            .background(color = innerContainerBackgroundColor.copy(alpha = 0.8f), shape = RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(24.dp))
+                    ) {
+                        HomeTab()
                     }
                 }
             }

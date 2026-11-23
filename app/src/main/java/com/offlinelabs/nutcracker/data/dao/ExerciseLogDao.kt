@@ -36,15 +36,17 @@ interface ExerciseLogDao {
     @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date")
     suspend fun deleteLogsForExerciseOnDate(exerciseId: Long, date: String)
 
-    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND routineId = :routineId")
+    // A log without a routine counts for every routine group, so it goes too
+    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND (routineId = :routineId OR routineId IS NULL)")
     suspend fun getLogsForExerciseInRoutineOnDate(exerciseId: Long, date: String, routineId: Long): List<ExerciseLog>
 
-    @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND routineId = :routineId")
+    @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND (routineId = :routineId OR routineId IS NULL)")
     suspend fun deleteLogsForExerciseInRoutineOnDate(exerciseId: Long, date: String, routineId: Long)
 
     /**
-     * Removes [exerciseId]'s logs of [date] and returns them (for undo): only those checked in
-     * under [routineId] when given, otherwise all of them.
+     * Removes [exerciseId]'s logs of [date] and returns them (for undo). With [routineId]: those
+     * checked in under that routine plus those without a routine (they show in every routine
+     * group); otherwise all of them.
      */
     @Transaction
     suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String, routineId: Long?): List<ExerciseLog> {

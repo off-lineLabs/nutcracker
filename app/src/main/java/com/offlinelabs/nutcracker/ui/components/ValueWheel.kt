@@ -55,7 +55,8 @@ fun ValueWheel(
     onValueChange: (Double) -> Unit,
     unit: String,
     contentDescription: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    width: androidx.compose.ui.unit.Dp = 60.dp
 ) {
     val startIndex = remember(values) { values.indices.minByOrNull { abs(values[it] - value) } ?: 0 }
     // With one item of padding above and below, the first visible item is the centred one
@@ -91,7 +92,7 @@ fun ValueWheel(
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
-                .size(width = 60.dp, height = WheelItemHeight * 3)
+                .size(width = width, height = WheelItemHeight * 3)
                 .semantics { this.contentDescription = contentDescription }
         ) {
             Box {
