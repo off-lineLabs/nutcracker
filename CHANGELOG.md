@@ -17,9 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gym names show on exercise check-ins on Home and in the exercise details
 - Backups now include your gyms
 - A new Help entry explaining gyms
-- Sort the Food and Exercise lists by your own order, name, date added or last check-in, and group them (Food by Nutri-Score; Exercise by muscle group or exercise type). In your own order, hold an item and drag it to move it. Your choices are remembered
-- Choose muscle groups when adding or editing an exercise, from the exercise database's list or by typing your own
-- Backups now include your list order
+- Sort the Food and Exercise lists by your own order, name, date added or last check-in, ascending or descending, and group them (Food by meal type or NOVA; Exercise by gym, routine, muscle group or exercise type). In your own order, hold an item and drag it to move it. Your choices are remembered
+- Routines: plan workouts like “Leg day” at a gym, with that gym’s and shared exercises in your own order. Group the Exercise list by routine to follow it
+- Meal types: tag foods as Breakfast, Lunch, Dinner, Snack or your own types, and group the Food list by them
+- Synced copies: when copying an exercise to another gym you can keep the copies in sync, so changing one updates the other. Stop syncing any time from the edit screen
+- Choose muscle groups when adding or editing an exercise by searching the exercise database's list (shown in your language) or typing your own
+- Backups now include your list order, routines, meal types and synced copies
 
 ### Changed
 - The two buttons on the home screen are replaced by a tab bar with Food, Home and Exercise. Swipe between tabs or tap them
@@ -30,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logging from the Food or Exercise tab uses the day shown at the top, so you can fill in a past day without changing the date in each check-in
 - Analytics opens on the Exercise section when you come from the Exercise tab, and going back returns you to the same tab and day
 - Picking a gym for an exercise uses a dropdown, and Copy to another gym opens a sheet listing each gym with its unit
+- All gyms in the Exercise tab now lists every exercise, grouped by gym by default
 
 ### Fixed
 - The meal details dialog stays open when the phone is rotated

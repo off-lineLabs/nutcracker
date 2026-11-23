@@ -123,6 +123,15 @@ fun MusclePicker(
                 contentPadding = PaddingValues(vertical = 4.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                items(suggestions, key = { it }) { muscle ->
+                    SuggestionChip(
+                        onClick = { add(muscle) },
+                        label = { Text(muscleLabel(muscle)) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(labelColor = colors.content),
+                        border = SuggestionChipDefaults.suggestionChipBorder(enabled = true, borderColor = colors.fieldBorder)
+                    )
+                }
+                // After the matches, so a listed muscle is the first choice
                 customToAdd?.let { custom ->
                     item(key = "custom") {
                         AssistChip(
@@ -136,14 +145,6 @@ fun MusclePicker(
                             border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = colors.accent)
                         )
                     }
-                }
-                items(suggestions, key = { it }) { muscle ->
-                    SuggestionChip(
-                        onClick = { add(muscle) },
-                        label = { Text(muscleLabel(muscle)) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(labelColor = colors.content),
-                        border = SuggestionChipDefaults.suggestionChipBorder(enabled = true, borderColor = colors.fieldBorder)
-                    )
                 }
             }
         }
