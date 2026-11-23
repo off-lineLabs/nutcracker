@@ -803,6 +803,14 @@
     <string name="sync_stop_message">From now on, changes to this exercise won’t update %1$s, and the other way round.</string>
     <string name="sync_stop">Stop syncing</string>
     <string name="routines_button">Routines</string>
+    <string name="quick_wheel_description">%1$s: %2$s %3$s. Swipe up or down to change</string>
+    <string name="quick_check_in">Check in %1$s</string>
+    <string name="quick_remove_check_in">Remove this day’s check-ins of %1$s</string>
+    <string name="quick_check_ins_removed">Check-in removed</string>
+    <string name="swipe_actions_hint">Swipe an exercise left to edit or delete it</string>
+    <string name="routine_group_empty">No exercises yet. Add some from Routines.</string>
+    <string name="routine_saved_other_gym">%1$s was saved at %2$s</string>
+    <string name="routine_show_gym">Show</string>
     <string name="routines_title">Routines</string>
     <string name="routine_new">New routine</string>
     <string name="routine_edit_title">Edit routine</string>

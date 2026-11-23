@@ -173,6 +173,21 @@ class ListArrangementTest {
     }
 
     @Test
+    fun routineGroups_followListSortOutsideCustom_andKeepEmptyRoutines() {
+        // List already sorted Z→A by the caller; routine positions say Bench then Squat
+        val sorted = listOf(ex(2, "Squat"), ex(1, "Bench"))
+        val routines = listOf(Routine(id = 10, name = "Day 1", gymId = 1), Routine(id = 11, name = "Day 2", gymId = 1))
+        val links = listOf(RoutineExercise(10, 1, 0), RoutineExercise(10, 2, 1))
+        val byList = groupExercises(sorted, ExerciseGrouping.ROUTINE, routines, links, routineOrder = false)
+        assertEquals(listOf(2L, 1L), byList[0].items.map { it.id })
+        val byRoutine = groupExercises(sorted, ExerciseGrouping.ROUTINE, routines, links, routineOrder = true)
+        assertEquals(listOf(1L, 2L), byRoutine[0].items.map { it.id })
+        // The empty "Day 2" stays visible so a new routine shows up
+        assertEquals(listOf("routine_10", "routine_11"), byRoutine.map { it.key })
+        assertEquals(emptyList<Long>(), byRoutine[1].items.map { it.id })
+    }
+
+    @Test
     fun reorderWithinGroup_keepsOtherItemsInPlace() {
         // Group {b, d} reordered to [d, b] inside a, b, c, d, e
         assertEquals(listOf("a", "d", "c", "b", "e"), reorderWithinGroup(listOf("a", "b", "c", "d", "e"), listOf("d", "b")))

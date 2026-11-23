@@ -28,6 +28,12 @@ import com.offlinelabs.nutcracker.ui.components.ExerciseImageIcon
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 import com.offlinelabs.nutcracker.ui.theme.brandSecondaryShade
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.offlinelabs.nutcracker.ui.components.ValueWheel
+import com.offlinelabs.nutcracker.ui.components.formatWheelValue
+import com.offlinelabs.nutcracker.ui.components.lists.SwipeActionsRow
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -65,7 +71,15 @@ fun ExercisePickerContent(
     /** New order of a dragged group's exercise ids, called with the group key when a row is dropped. */
     onReorder: (groupKey: String, ids: List<Long>) -> Unit = { _, _ -> },
     /** Sort/group controls shown above the list. */
-    arrangementBar: @Composable () -> Unit = {}
+    arrangementBar: @Composable () -> Unit = {},
+    /** Exercises with a check-in on the day shown (their checkbox is ticked). */
+    checkedInIds: Set<Long> = emptySet(),
+    /** Checks the exercise in with the row wheel's value (weight, minutes or reps). */
+    onQuickCheckIn: (Exercise, Double) -> Unit = { _, _ -> },
+    /** Removes the exercise's check-ins of the day shown. */
+    onRemoveCheckIns: (Exercise) -> Unit = {},
+    /** Delete from the row's swipe panel (the caller confirms). */
+    onDeleteExercise: (Exercise) -> Unit = {}
 ) {
     var dialogState by remember { mutableStateOf(DialogState.MAIN) }
     var searchQuery by remember { mutableStateOf("") }
@@ -133,7 +147,11 @@ fun ExercisePickerContent(
         groups = groups,
         canReorder = canReorder,
         onReorder = onReorder,
-        arrangementBar = arrangementBar
+        arrangementBar = arrangementBar,
+        checkedInIds = checkedInIds,
+        onQuickCheckIn = onQuickCheckIn,
+        onRemoveCheckIns = onRemoveCheckIns,
+        onDeleteExercise = onDeleteExercise
     )
 
     when (dialogState) {
@@ -203,9 +221,17 @@ private fun MainExerciseSelectionContent(
     groups: List<ListGroup<Exercise>>,
     canReorder: (ListGroup<Exercise>) -> Boolean,
     onReorder: (groupKey: String, ids: List<Long>) -> Unit,
-    arrangementBar: @Composable () -> Unit
+    arrangementBar: @Composable () -> Unit,
+    checkedInIds: Set<Long>,
+    onQuickCheckIn: (Exercise, Double) -> Unit,
+    onRemoveCheckIns: (Exercise) -> Unit,
+    onDeleteExercise: (Exercise) -> Unit
 ) {
     val reorder = rememberGroupedReorderState(groups, prefix = "exercise") { it.id }
+    // Only one row's swipe panel is open at a time
+    var openRowKey by remember { mutableStateOf<String?>(null) }
+    // Wheel values survive rows scrolling out of view (reset when the tab leaves composition)
+    val wheelValues = remember { mutableStateMapOf<Long, Double>() }
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
         reorder.move(from.key, to.key) // moves across groups are ignored
@@ -267,7 +293,15 @@ private fun MainExerciseSelectionContent(
             }
         } else {
             item(key = "arrangement_bar") {
-                Box(modifier = Modifier.padding(top = 8.dp)) { arrangementBar() }
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    arrangementBar()
+                    Text(
+                        text = stringResource(R.string.swipe_actions_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
             }
             if (emptyHint != null) {
                 item(key = "empty_hint") {
@@ -279,20 +313,51 @@ private fun MainExerciseSelectionContent(
                 }
             }
             reorder.groups.forEach { group ->
-                if (group.items.isEmpty()) return@forEach
+                // An empty routine still shows (with a hint), so a newly created one is visible
+                if (group.items.isEmpty() && group.routineId == null) return@forEach
                 group.title?.let { title ->
                     item(key = "exercise_header_${group.key}") { ListGroupHeader(groupTitleText(title)) }
                 }
+                if (group.items.isEmpty()) {
+                    item(key = "exercise_empty_${group.key}") {
+                        Text(
+                            text = stringResource(R.string.routine_group_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
                 val draggable = canReorder(group)
                 items(group.items, key = { reorder.itemKey(group.key, it) }) { exercise ->
+                    val rowKey = reorder.itemKey(group.key, exercise)
                     DraggableListRow(
                         state = reorderableState,
-                        key = reorder.itemKey(group.key, exercise),
+                        key = rowKey,
                         enabled = draggable,
                         handleDescription = stringResource(R.string.reorder_handle_description, exercise.name),
-                        onDragStopped = { onReorder(group.key, reorder.groupOrder(group.key)) }
-                    ) {
-                        ExerciseListCard(exercise, foodLogRepository, onSelectExercise, onEditExercise)
+                        onDragStopped = { onReorder(group.key, reorder.groupOrder(group.key)) },
+                        // The handle lives in the swipe panel instead of beside the card
+                        showHandle = false
+                    ) { handleModifier ->
+                        ExerciseRow(
+                            exercise = exercise,
+                            foodLogRepository = foodLogRepository,
+                            open = openRowKey == rowKey,
+                            onOpenChange = { open -> openRowKey = if (open) rowKey else openRowKey.takeIf { it != rowKey } },
+                            draggable = draggable,
+                            handleModifier = handleModifier,
+                            wheelValue = wheelValues[exercise.id] ?: quickWheelStart(exercise),
+                            onWheelChange = { wheelValues[exercise.id] = it },
+                            checkedIn = exercise.id in checkedInIds,
+                            onCheckedChange = { checked ->
+                                if (checked) onQuickCheckIn(exercise, wheelValues[exercise.id] ?: quickWheelStart(exercise))
+                                else onRemoveCheckIns(exercise)
+                            },
+                            onClick = { onSelectExercise(exercise) },
+                            onEdit = { openRowKey = null; onEditExercise(exercise) },
+                            onDelete = { openRowKey = null; onDeleteExercise(exercise) }
+                        )
                     }
                 }
             }
@@ -300,64 +365,133 @@ private fun MainExerciseSelectionContent(
     }
 }
 
+private val SwipeActionWidth = 64.dp
+
+/**
+ * One exercise: tap opens its details; swipe left reveals Edit and Delete (plus the drag handle in
+ * custom order). The wheel sets the weight (minutes for cardio, reps for bodyweight) and the
+ * checkbox checks the exercise in with it, or removes the day's check-ins when unticked.
+ */
 @Composable
-private fun ExerciseListCard(
+private fun ExerciseRow(
     exercise: Exercise,
     foodLogRepository: FoodLogRepository?,
-    onSelectExercise: (Exercise) -> Unit,
-    onEditExercise: (Exercise) -> Unit
+    open: Boolean,
+    onOpenChange: (Boolean) -> Unit,
+    draggable: Boolean,
+    handleModifier: Modifier,
+    wheelValue: Double,
+    onWheelChange: (Double) -> Unit,
+    checkedIn: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelectExercise(exercise) },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
-                                val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
-                                val contrastingTextColor = getContrastingTextColor(cardBackgroundColor)
-                                
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp, horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    ExerciseImageIcon(
-                                        exercise = exercise,
-                                        size = 48.dp,
-                                        showShadow = true
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = exercise.name,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium,
-                                            color = contrastingTextColor
-                                        )
-                                        MaxWeightDisplay(
-                                            exerciseId = exercise.id,
-                                            foodLogRepository = foodLogRepository,
-                                            textColor = contrastingTextColor
-                                        )
-                                    }
-                                    
-                                    // Edit button with pencil icon on the right
-                                    IconButton(
-                                        onClick = { onEditExercise(exercise) },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Edit,
-                                            contentDescription = stringResource(R.string.edit_exercise),
-                                            tint = contrastingTextColor.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val textColor = getContrastingTextColor(cardColor)
+    val accent = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors().accent
+    val onAccent = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors().onAccent
+    val type = remember(exercise.category) { com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper.getExerciseType(exercise.category) }
+    val unit = stringResource(
+        when (type) {
+            com.offlinelabs.nutcracker.data.model.ExerciseType.STRENGTH -> R.string.kg_unit
+            com.offlinelabs.nutcracker.data.model.ExerciseType.CARDIO -> R.string.min_unit
+            com.offlinelabs.nutcracker.data.model.ExerciseType.BODYWEIGHT -> R.string.reps_unit
+        }
+    )
+    val wheelSteps = remember(exercise.id, exercise.defaultWeight, exercise.defaultReps, type) {
+        quickWheelValues(quickWheelStart(exercise), if (type == com.offlinelabs.nutcracker.data.model.ExerciseType.STRENGTH) 300 else 200)
+    }
+    val actionCount = if (draggable) 3 else 2
+
+    SwipeActionsRow(
+        open = open,
+        onOpenChange = onOpenChange,
+        actionsWidth = SwipeActionWidth * actionCount,
+        actions = {
+            if (draggable) {
+                SwipeAction(
+                    icon = Icons.Filled.DragIndicator,
+                    label = stringResource(R.string.reorder_handle_description, exercise.name),
+                    background = MaterialTheme.colorScheme.outline,
+                    content = MaterialTheme.colorScheme.surface,
+                    modifier = handleModifier,
+                    onClick = {}
+                )
+            }
+            SwipeAction(Icons.Filled.Edit, stringResource(R.string.edit), accent, onAccent, onClick = onEdit)
+            SwipeAction(Icons.Filled.Delete, stringResource(R.string.delete), MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.onError, onClick = onDelete)
+        }
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                // While open, a tap closes the row instead of opening the details
+                .clickable { if (open) onOpenChange(false) else onClick() },
+            colors = CardDefaults.cardColors(containerColor = cardColor)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ExerciseImageIcon(exercise = exercise, size = 44.dp, showShadow = true)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = textColor,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    MaxWeightDisplay(exerciseId = exercise.id, foodLogRepository = foodLogRepository, textColor = textColor)
+                }
+                ValueWheel(
+                    values = wheelSteps,
+                    value = wheelValue,
+                    onValueChange = onWheelChange,
+                    unit = unit,
+                    contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, formatWheelValue(wheelValue), unit)
+                )
+                val checkLabel = stringResource(
+                    if (checkedIn) R.string.quick_remove_check_in else R.string.quick_check_in,
+                    exercise.name
+                )
+                Checkbox(
+                    checked = checkedIn,
+                    onCheckedChange = onCheckedChange,
+                    colors = CheckboxDefaults.colors(checkedColor = accent, checkmarkColor = onAccent, uncheckedColor = textColor.copy(alpha = 0.7f)),
+                    modifier = Modifier.semantics { contentDescription = checkLabel }
+                )
+            }
+        }
+    }
+}
+
+/** One button of the swipe panel: an icon on a coloured square. */
+@Composable
+private fun SwipeAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    background: androidx.compose.ui.graphics.Color,
+    content: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .width(SwipeActionWidth)
+            .fillMaxHeight()
+            .background(background)
+            .clickable(onClick = onClick)
+    ) {
+        Icon(icon, contentDescription = label, tint = content)
+    }
 }
 
 @Composable

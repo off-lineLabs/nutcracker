@@ -25,7 +25,9 @@ import sh.calvin.reorderable.ReorderableLazyListState
 
 /**
  * A list row that can be dragged within a reorderable LazyColumn when [enabled]: long-press
- * anywhere on it, or drag the handle icon straight away. [onDragStopped] fires when it is dropped.
+ * anywhere on it, or drag a handle straight away. With [showHandle] the handle icon is drawn on
+ * the right; otherwise the row places it itself using the `handleModifier` passed to [content]
+ * (e.g. inside a swipe-revealed panel). [onDragStopped] fires when the row is dropped.
  */
 @Composable
 fun LazyItemScope.DraggableListRow(
@@ -34,11 +36,20 @@ fun LazyItemScope.DraggableListRow(
     enabled: Boolean,
     handleDescription: String,
     onDragStopped: () -> Unit,
-    content: @Composable () -> Unit
+    showHandle: Boolean = true,
+    content: @Composable (handleModifier: Modifier) -> Unit
 ) {
     ReorderableItem(state, key = key, enabled = enabled) { isDragging ->
         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "dragElevation")
         val haptics = LocalHapticFeedback.current
+        val handleModifier = if (enabled) {
+            Modifier.draggableHandle(
+                onDragStarted = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                onDragStopped = { onDragStopped() }
+            )
+        } else {
+            Modifier
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -55,8 +66,8 @@ fun LazyItemScope.DraggableListRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(1f)) { content() }
-            if (enabled) {
+            Box(modifier = Modifier.weight(1f)) { content(handleModifier) }
+            if (enabled && showHandle) {
                 Icon(
                     imageVector = Icons.Filled.DragIndicator,
                     contentDescription = handleDescription,
@@ -64,10 +75,7 @@ fun LazyItemScope.DraggableListRow(
                     // Slim handle (the whole row also drags on long-press, so it needn't be a big target)
                     modifier = Modifier
                         .padding(start = 2.dp)
-                        .draggableHandle(
-                            onDragStarted = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
-                            onDragStopped = { onDragStopped() }
-                        )
+                        .then(handleModifier)
                         .padding(vertical = 12.dp)
                         .size(width = 16.dp, height = 20.dp)
                 )

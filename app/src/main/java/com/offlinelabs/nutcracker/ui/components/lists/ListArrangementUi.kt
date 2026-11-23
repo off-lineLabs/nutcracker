@@ -13,14 +13,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -100,9 +99,9 @@ fun groupTitleText(title: GroupTitle): String = when (title) {
 }
 
 /**
- * One row with two compact controls: Sort (with an up/down direction toggle) and Group (hidden
- * when [groupings] has a single entry). Each shows a small label above the selected value and
- * opens a menu. In custom order a hint explains how to reorder.
+ * One row: Sort, a square up/down direction toggle (only for sorts with a direction) and Group
+ * (hidden when [groupings] has a single entry). Sort and Group show a small label above the value
+ * and open a menu when tapped. In custom order a hint explains how to reorder.
  */
 @Composable
 fun <G> ListArrangementBar(
@@ -125,23 +124,30 @@ fun <G> ListArrangementBar(
                 selected = sort,
                 optionLabel = { sortLabel(it) },
                 onSelect = onSortChange,
-                modifier = Modifier.weight(1f),
-                trailing = if (sort.hasDirection) {
-                    {
-                        IconButton(onClick = { onDescendingChange(!descending) }, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                imageVector = if (descending) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
-                                contentDescription = stringResource(
-                                    if (descending) R.string.sort_descending else R.string.sort_ascending
-                                ),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                } else {
-                    null
-                }
+                modifier = Modifier.weight(1f)
             )
+            if (sort.hasDirection) {
+                // Its own square button, so it's not confused with a dropdown and the value keeps its width
+                Surface(
+                    onClick = { onDescendingChange(!descending) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (descending) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                            contentDescription = stringResource(
+                                if (descending) R.string.sort_descending else R.string.sort_ascending
+                            ),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
             if (groupings.size > 1) {
                 MenuField(
                     label = stringResource(R.string.group_label),
@@ -173,8 +179,7 @@ private fun <T> MenuField(
     selected: T,
     optionLabel: @Composable (T) -> String,
     onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier,
-    trailing: (@Composable () -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
@@ -186,7 +191,7 @@ private fun <T> MenuField(
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
         ) {
             Row(
-                modifier = Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -211,13 +216,6 @@ private fun <T> MenuField(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                trailing?.invoke()
-                Icon(
-                    Icons.Filled.ArrowDropDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
             }
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

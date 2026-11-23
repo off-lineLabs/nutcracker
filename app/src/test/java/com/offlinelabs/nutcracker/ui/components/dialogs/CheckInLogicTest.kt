@@ -16,6 +16,33 @@ class CheckInLogicTest {
     private fun local(date: java.util.Date) = java.time.LocalDateTime.ofInstant(date.toInstant(), zone)
 
     @Test
+    fun quickCheckIn_strengthUsesWheelWeightAndDefaults() {
+        val bench = com.offlinelabs.nutcracker.data.model.Exercise(
+            name = "Bench", category = "strength", defaultWeight = 40.0, defaultReps = 8, defaultSets = 3, kcalBurnedPerUnit = 10.0
+        )
+        assertEquals(40.0, quickWheelStart(bench), 0.0)
+        assertEquals(QuickCheckIn(weight = 45.0, reps = 8, sets = 3, caloriesBurned = 30.0), quickCheckIn(bench, 45.0))
+    }
+
+    @Test
+    fun quickCheckIn_cardioMinutes_bodyweightReps() {
+        val run = com.offlinelabs.nutcracker.data.model.Exercise(name = "Run", category = "cardio", defaultReps = 30, kcalBurnedPerUnit = 8.0)
+        assertEquals(30.0, quickWheelStart(run), 0.0)
+        assertEquals(QuickCheckIn(0.0, 25, 1, 200.0), quickCheckIn(run, 25.0))
+        val stretch = com.offlinelabs.nutcracker.data.model.Exercise(name = "Stretch", category = "stretching", defaultReps = 10, kcalBurnedPerUnit = 0.5)
+        assertEquals(QuickCheckIn(0.0, 12, 1, 6.0), quickCheckIn(stretch, 12.0))
+    }
+
+    @Test
+    fun quickWheelValues_stepByOneKeepingTheFraction() {
+        val values = quickWheelValues(42.5, 300)
+        assertEquals(301, values.size)
+        assertEquals(0.5, values.first(), 0.0)
+        assertTrue(42.5 in values)
+        assertEquals(listOf(0.0, 1.0, 2.0), quickWheelValues(1.0, 2))
+    }
+
+    @Test
     fun defaultCheckInIsNowForToday() {
         assertEquals(now, local(defaultCheckInDateTime(now.toLocalDate(), now, zone)))
     }

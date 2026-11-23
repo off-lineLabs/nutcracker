@@ -29,6 +29,20 @@ interface ExerciseLogDao {
     @Query("DELETE FROM exercise_logs WHERE logDate = :date")
     suspend fun deleteLogsByDate(date: String)
 
+    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date")
+    suspend fun getLogsForExerciseOnDate(exerciseId: Long, date: String): List<ExerciseLog>
+
+    @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date")
+    suspend fun deleteLogsForExerciseOnDate(exerciseId: Long, date: String)
+
+    /** Removes [exerciseId]'s logs of [date] and returns them (for undo). */
+    @Transaction
+    suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String): List<ExerciseLog> {
+        val logs = getLogsForExerciseOnDate(exerciseId, date)
+        deleteLogsForExerciseOnDate(exerciseId, date)
+        return logs
+    }
+
     @Query("DELETE FROM exercise_logs")
     suspend fun deleteAllLogs()
 

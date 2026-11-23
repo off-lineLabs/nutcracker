@@ -147,11 +147,13 @@ fun exercisesForGym(exercises: List<Exercise>, selectedGymId: Long?): List<Exerc
  * Groups already-sorted [exercises] (see [exercisesForGym]).
  * - GYM: with a gym selected, its exercises (untitled) then "Shared"; with All gyms, one group per
  *   gym in [gyms] order, then "Shared" (exercises of an unlisted gym count as shared).
- * - ROUTINE: one group per routine in [routines] order, items in the routine's own order; an
- *   exercise appears in every routine it belongs to; "no routine" last.
+ * - ROUTINE: one group per routine in [routines] order, including routines with no exercise yet
+ *   (so a new routine is visible); items follow the routine's own order when [routineOrder] (custom
+ *   sort), otherwise the list's sort. An exercise appears in every routine it belongs to;
+ *   "no routine" last.
  * - MUSCLE: an exercise appears under every primary muscle; alphabetical; "no muscle group" last.
  * - TYPE: in [ExerciseType] order.
- * Empty groups are dropped.
+ * Other empty groups are dropped.
  */
 fun groupExercises(
     exercises: List<Exercise>,
@@ -159,7 +161,8 @@ fun groupExercises(
     routines: List<Routine> = emptyList(),
     memberships: List<RoutineExercise> = emptyList(),
     gyms: List<Gym> = emptyList(),
-    selectedGymId: Long? = null
+    selectedGymId: Long? = null,
+    routineOrder: Boolean = true
 ): List<ListGroup<Exercise>> = when (grouping) {
     ExerciseGrouping.NONE -> listOf(ListGroup("all", null, exercises))
     ExerciseGrouping.GYM -> {
@@ -191,15 +194,16 @@ fun groupExercises(
         val byId = exercises.associateBy { it.id }
         val routineIds = routines.map { it.id }.toSet()
         val inSomeRoutine = memberships.filter { it.routineId in routineIds }.map { it.exerciseId }.toSet()
-        routines.mapNotNull { r ->
-            memberships.filter { it.routineId == r.id }
-                .sortedBy { it.position }
-                .mapNotNull { byId[it.exerciseId] }
-                .takeIf { it.isNotEmpty() }
-                ?.let {
-                    val gym = gyms.firstOrNull { g -> g.id == r.gymId }?.takeIf { selectedGymId == null }
-                    ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name, gym?.let { g -> GroupTitle.GymName(g.name, g.unit) }), it, routineId = r.id)
-                }
+        routines.map { r ->
+            val links = memberships.filter { it.routineId == r.id }
+            val items = if (routineOrder) {
+                links.sortedBy { it.position }.mapNotNull { byId[it.exerciseId] }
+            } else {
+                val ids = links.map { it.exerciseId }.toSet()
+                exercises.filter { it.id in ids }
+            }
+            val gym = gyms.firstOrNull { g -> g.id == r.gymId }?.takeIf { selectedGymId == null }
+            ListGroup("routine_${r.id}", GroupTitle.RoutineName(r.name, gym?.let { g -> GroupTitle.GymName(g.name, g.unit) }), items, routineId = r.id)
         } + listOfNotNull(
             exercises.filter { it.id !in inSomeRoutine }
                 .takeIf { it.isNotEmpty() }

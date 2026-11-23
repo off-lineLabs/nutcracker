@@ -730,6 +730,14 @@
     <string name="sync_stop_message">A partir de agora, as mudanças neste exercício não vão atualizar %1$s, nem o contrário.</string>
     <string name="sync_stop">Parar de sincronizar</string>
     <string name="routines_button">Rotinas</string>
+    <string name="quick_wheel_description">%1$s: %2$s %3$s. Deslize para cima ou para baixo para mudar</string>
+    <string name="quick_check_in">Registrar %1$s</string>
+    <string name="quick_remove_check_in">Remover os registros de %1$s deste dia</string>
+    <string name="quick_check_ins_removed">Registro removido</string>
+    <string name="swipe_actions_hint">Deslize um exercício para a esquerda para editar ou excluir</string>
+    <string name="routine_group_empty">Ainda não há exercícios. Adicione em Rotinas.</string>
+    <string name="routine_saved_other_gym">%1$s foi salva em %2$s</string>
+    <string name="routine_show_gym">Ver</string>
     <string name="routines_title">Rotinas</string>
     <string name="routine_new">Nova rotina</string>
     <string name="routine_edit_title">Editar rotina</string>

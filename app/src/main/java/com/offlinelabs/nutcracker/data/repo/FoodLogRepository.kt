@@ -124,6 +124,10 @@ interface FoodLogRepository {
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
     suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
+    /** Removes every log of [exerciseId] on [date] (yyyy-MM-dd) and returns them, so they can be restored. */
+    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String): List<ExerciseLog>
+    /** Puts back logs removed by [removeExerciseCheckIns] (same ids). */
+    suspend fun restoreExerciseLogs(logs: List<ExerciseLog>)
     fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>>
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
     fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?>
@@ -358,6 +362,11 @@ class OfflineFoodLogRepository(
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
     override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
+    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String): List<ExerciseLog> =
+        exerciseLogDao.removeLogsForExerciseOnDate(exerciseId, date)
+    override suspend fun restoreExerciseLogs(logs: List<ExerciseLog>) {
+        logs.forEach { exerciseLogDao.insertExerciseLog(it) }
+    }
     override fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>> = exerciseLogDao.getDailyExerciseSummary(date)
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)

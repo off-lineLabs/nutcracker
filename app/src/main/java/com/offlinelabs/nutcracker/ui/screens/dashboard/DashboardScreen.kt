@@ -116,6 +116,7 @@ import com.offlinelabs.nutcracker.ui.components.gym.selectedGymOrNull
 import com.offlinelabs.nutcracker.ui.components.dialogs.SetGoalDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedCheckInDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.defaultCheckInDateTime
+import com.offlinelabs.nutcracker.ui.components.dialogs.quickCheckIn
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedExerciseDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.UnifiedMealDetailsDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.EditMealDialog
@@ -674,7 +675,9 @@ fun DashboardScreen(
     ) {
         groupExercises(
             sortExercises(listedExercises, exerciseSort, exerciseLastCheckIns, nameComparator, exerciseDescending),
-            effectiveExerciseGrouping, listedRoutines, routineMemberships, gyms, selectedGymForList
+            effectiveExerciseGrouping, listedRoutines, routineMemberships, gyms, selectedGymForList,
+            // A routine keeps its own order in custom sort; any other sort applies inside it too
+            routineOrder = exerciseSort == ListSort.CUSTOM
         )
     }
 
@@ -1291,8 +1294,8 @@ fun DashboardScreen(
                   ExercisePickerContent(
                     exercises = listedExercises,
                     groups = exerciseGroups,
-                    // Routine groups always follow (and edit) the routine's own order
-                    canReorder = { group -> group.routineId != null || exerciseSort == ListSort.CUSTOM },
+                    // In custom order rows drag; inside a routine group that edits the routine's own order
+                    canReorder = { exerciseSort == ListSort.CUSTOM },
                     onReorder = ::saveExerciseOrder,
                     arrangementBar = {
                         ListArrangementBar(
@@ -1351,6 +1354,62 @@ fun DashboardScreen(
                     onEditExercise = { exercise ->
                         selectedExerciseForEdit = exercise
                         showAddExerciseDialog = true
+                    },
+                    checkedInIds = remember(dailyExerciseLogs) { dailyExerciseLogs.map { it.exerciseId }.toSet() },
+                    // Quick check-in from the row: the wheel's value plus the exercise's defaults, on the day shown
+                    onQuickCheckIn = { exercise, value ->
+                        coroutineScope.launch {
+                            try {
+                                val quick = quickCheckIn(exercise, value)
+                                foodLogRepository.insertExerciseLog(
+                                    ExerciseLog.create(
+                                        exerciseId = exercise.id,
+                                        weight = quick.weight,
+                                        reps = quick.reps,
+                                        sets = quick.sets,
+                                        caloriesBurned = quick.caloriesBurned,
+                                        notes = null,
+                                        customDateTime = newCheckInDateTime()
+                                    )
+                                )
+                                showCheckInLoggedSnackbar(exerciseCheckInCompletedSuccess)
+                            } catch (e: Exception) {
+                                AppLogger.exception("DashboardScreen", "Quick check-in failed", e)
+                                snackbarHostState.showSnackbar(message = failedToCompleteExerciseCheckIn)
+                            }
+                        }
+                    },
+                    // Unticking removes all of that day's check-ins of the exercise, with Undo
+                    onRemoveCheckIns = { exercise ->
+                        coroutineScope.launch {
+                            val removed = foodLogRepository.removeExerciseCheckIns(exercise.id, selectedDateString)
+                            if (removed.isNotEmpty()) {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.quick_check_ins_removed),
+                                    actionLabel = context.getString(R.string.undo),
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) foodLogRepository.restoreExerciseLogs(removed)
+                            }
+                        }
+                    },
+                    onDeleteExercise = { exercise ->
+                        pendingDelete = PendingDelete(
+                            title = context.getString(R.string.confirm_delete_exercise_title),
+                            message = context.getString(R.string.confirm_delete_exercise_message, exercise.name)
+                        ) {
+                            coroutineScope.launch {
+                                try {
+                                    foodLogRepository.deleteExercise(exercise)
+                                    snackbarHostState.showSnackbar(message = exerciseDeletedSuccess)
+                                } catch (e: Exception) {
+                                    AppLogger.exception("DashboardScreen", "Failed to delete exercise", e)
+                                    snackbarHostState.showSnackbar(
+                                        message = context.getString(R.string.failed_to_delete_exercise_with_reason, e.message.orEmpty())
+                                    )
+                                }
+                            }
+                        }
                     }
                   )
                 }
@@ -1816,7 +1875,19 @@ fun DashboardScreen(
                 onDismiss = { editingRoutineId = null },
                 onSave = { toSave, exerciseIds ->
                     editingRoutineId = null
-                    coroutineScope.launch { foodLogRepository.saveRoutine(toSave, exerciseIds) }
+                    coroutineScope.launch {
+                        foodLogRepository.saveRoutine(toSave, exerciseIds)
+                        // Saved at a gym that isn't shown: say where it went and offer to switch
+                        if (selectedGymForList != null && toSave.gymId != selectedGymForList) {
+                            val gymName = gyms.firstOrNull { it.id == toSave.gymId }?.let { gymLabel(it.name, it.unit) }.orEmpty()
+                            val result = snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.routine_saved_other_gym, toSave.name, gymName),
+                                actionLabel = context.getString(R.string.routine_show_gym),
+                                duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.ActionPerformed) selectGym(toSave.gymId)
+                        }
+                    }
                 },
                 onDelete = routine?.let { r ->
                     {

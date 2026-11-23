@@ -21,6 +21,42 @@ fun defaultCheckInDateTime(
 ): java.util.Date =
     java.util.Date.from(selectedDate.atTime(now.toLocalTime()).atZone(zone).toInstant())
 
+/** Values of a quick check-in from the exercise list (weight in kg; reps hold minutes for cardio). */
+data class QuickCheckIn(val weight: Double, val reps: Int, val sets: Int, val caloriesBurned: Double)
+
+/**
+ * What the list row's wheel adjusts: the weight for strength, the minutes for cardio and the reps
+ * for bodyweight; it starts at the exercise's default.
+ */
+fun quickWheelStart(exercise: com.offlinelabs.nutcracker.data.model.Exercise): Double =
+    when (com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+        ExerciseType.STRENGTH -> exercise.defaultWeight
+        ExerciseType.CARDIO, ExerciseType.BODYWEIGHT -> exercise.defaultReps.toDouble()
+    }.coerceAtLeast(0.0)
+
+/**
+ * Wheel values in 1-unit steps from 0 to [max], keeping the fraction of [start] (42.5 kg gives
+ * 0.5, 1.5 … 42.5 …). Whole units only (no fraction) for minutes and reps.
+ */
+fun quickWheelValues(start: Double, max: Int): List<Double> {
+    val fraction = start - kotlin.math.floor(start)
+    return (0..max).map { it + fraction }
+}
+
+/**
+ * A quick check-in with the wheel's [value] and the exercise's defaults for the rest. Strength:
+ * value = weight, default reps and sets, kcal per set. Cardio: value = minutes, one set, kcal per
+ * minute. Bodyweight: value = reps, one set, kcal per rep.
+ */
+fun quickCheckIn(exercise: com.offlinelabs.nutcracker.data.model.Exercise, value: Double): QuickCheckIn {
+    val kcal = exercise.kcalBurnedPerUnit ?: 0.0
+    return when (com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper.getExerciseType(exercise.category)) {
+        ExerciseType.STRENGTH -> QuickCheckIn(value, exercise.defaultReps, exercise.defaultSets, exercise.defaultSets * kcal)
+        ExerciseType.CARDIO -> value.toInt().let { minutes -> QuickCheckIn(0.0, minutes, 1, minutes * kcal) }
+        ExerciseType.BODYWEIGHT -> value.toInt().let { reps -> QuickCheckIn(0.0, reps, 1, reps * kcal) }
+    }
+}
+
 /** Smallest serving multiplier the meal check-in accepts (the thumbwheel's lower bound). */
 const val MIN_SERVING_MULTIPLIER = 0.1
 
