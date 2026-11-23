@@ -7,6 +7,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.export.DatabaseExportManager
 import com.offlinelabs.nutcracker.data.model.Exercise
+import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.MealCategory
 import com.offlinelabs.nutcracker.data.model.MealCategoryDefaults
@@ -18,6 +20,7 @@ import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -73,6 +76,18 @@ class RoutineBackupRoundTripTest {
         source.routineDao().insertRoutineExercise(RoutineExercise(push, benchId, 0))
         source.routineDao().insertRoutineExercise(RoutineExercise(full, benchId, 1))
         source.routineDao().insertRoutineExercise(RoutineExercise(full, squatId, 0))
+        // Check-ins remember the routine / meal type they were ticked under (v23)
+        source.exerciseLogDao().insertExerciseLog(
+            ExerciseLog(exerciseId = benchId, logDate = "2026-11-23", logDateTime = "2026-11-23 10:00:00",
+                weight = 40.0, reps = 8, sets = 3, caloriesBurned = 30.0, routineId = push)
+        )
+        source.exerciseLogDao().insertExerciseLog(
+            ExerciseLog(exerciseId = squatId, logDate = "2026-11-23", logDateTime = "2026-11-23 10:05:00",
+                weight = 60.0, reps = 5, sets = 5, caloriesBurned = 30.0)
+        )
+        source.mealCheckInDao().insertMealCheckIn(
+            MealCheckIn(mealId = oatsId, checkInDate = "2026-11-23", checkInDateTime = "2026-11-23 08:00:00", mealCategoryId = preWorkout)
+        )
 
         assertTrue(DatabaseExportManager(context, source).exportToFile(zip).isSuccess)
         val result = DatabaseImportManager(context, target).importDatabase(Uri.fromFile(zip), ImportMode.REPLACE)
@@ -108,5 +123,10 @@ class RoutineBackupRoundTripTest {
             ),
             links
         )
+
+        val logs = target.exerciseLogDao().getAllExerciseLogsSync().associateBy { it.exerciseId }
+        assertEquals(routines.getValue("Push day").id, logs.getValue(exercises.getValue("Bench").id).routineId)
+        assertNull(logs.getValue(exercises.getValue("Squat").id).routineId)
+        assertEquals(categories.getValue("Pre-workout").id, target.mealCheckInDao().getAllMealCheckInsSync().single().mealCategoryId)
     }
 }

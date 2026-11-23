@@ -80,7 +80,8 @@ class Migration20To21Test {
 
         val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
             .addMigrations(
-                DatabaseMigrations.MIGRATION_19_20, DatabaseMigrations.MIGRATION_20_21, DatabaseMigrations.MIGRATION_21_22
+                DatabaseMigrations.MIGRATION_19_20, DatabaseMigrations.MIGRATION_20_21, DatabaseMigrations.MIGRATION_21_22,
+                DatabaseMigrations.MIGRATION_22_23
             )
             .allowMainThreadQueries()
             .build()

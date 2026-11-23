@@ -191,5 +191,15 @@ object DatabaseMigrations {
         }
     }
 
+    // Migration from version 22 to 23 - A check-in remembers the routine / meal type it was ticked under
+    val MIGRATION_22_23 = object : Migration(22, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Existing check-ins get no context (null): they tick the exercise/food in every grouping
+            // except routine / meal type groups, which only show check-ins made under them
+            db.execSQL("ALTER TABLE exercise_logs ADD COLUMN routineId INTEGER")
+            db.execSQL("ALTER TABLE meal_check_ins ADD COLUMN mealCategoryId INTEGER")
+        }
+    }
+
     // Add more migrations here as needed
 }

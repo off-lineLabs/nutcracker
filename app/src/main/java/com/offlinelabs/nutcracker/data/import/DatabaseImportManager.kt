@@ -896,7 +896,10 @@ class DatabaseImportManager(
                             checkInDate = row.getValueOrEmpty("checkInDate"),
                             checkInDateTime = dateTime,
                             servingSize = row.getDoubleValue("servingSize") ?: 1.0,
-                            notes = notes
+                            notes = notes,
+                            // Older backups have no meal type; a type that wasn't imported is dropped
+                            mealCategoryId = row.getLongValue("mealCategoryId")
+                                ?.let { idMappingManager.getNewId("meal_categories", it.toString()) }
                         )
                         
                         val newId = database.mealCheckInDao().insertMealCheckIn(checkIn)
@@ -1415,7 +1418,10 @@ class DatabaseImportManager(
                             reps = row.getIntValue("reps") ?: 0,
                             sets = row.getIntValue("sets") ?: 0,
                             caloriesBurned = row.getDoubleValue("caloriesBurned") ?: 0.0,
-                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
+                            // Older backups have no routine; a routine that wasn't imported is dropped
+                            routineId = row.getLongValue("routineId")
+                                ?.let { idMappingManager.getNewId("routines", it.toString()) }
                         )
                         
                         val newId = database.exerciseLogDao().insertExerciseLog(exerciseLog)

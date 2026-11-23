@@ -3,6 +3,7 @@ package com.offlinelabs.nutcracker.data.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.MapColumn
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
@@ -42,6 +43,39 @@ interface MealCheckInDao {
     @Query("SELECT * FROM meal_check_ins WHERE mealId <= 0 ORDER BY id ASC")
     suspend fun getCheckInsWithInvalidMeal(): List<MealCheckIn>
 
+    @Query("SELECT * FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date")
+    suspend fun getCheckInsForMealOnDate(mealId: Long, date: String): List<MealCheckIn>
+
+    @Query("DELETE FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date")
+    suspend fun deleteCheckInsForMealOnDate(mealId: Long, date: String)
+
+    @Query("SELECT * FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND mealCategoryId = :categoryId")
+    suspend fun getCheckInsForMealInCategoryOnDate(mealId: Long, date: String, categoryId: Long): List<MealCheckIn>
+
+    @Query("DELETE FROM meal_check_ins WHERE mealId = :mealId AND checkInDate = :date AND mealCategoryId = :categoryId")
+    suspend fun deleteCheckInsForMealInCategoryOnDate(mealId: Long, date: String, categoryId: Long)
+
+    /**
+     * Removes [mealId]'s check-ins of [date] and returns them (for undo): only those checked in
+     * under the meal type [categoryId] when given, otherwise all of them.
+     */
+    @Transaction
+    suspend fun removeCheckInsForMealOnDate(mealId: Long, date: String, categoryId: Long?): List<MealCheckIn> {
+        return if (categoryId == null) {
+            getCheckInsForMealOnDate(mealId, date).also { deleteCheckInsForMealOnDate(mealId, date) }
+        } else {
+            getCheckInsForMealInCategoryOnDate(mealId, date, categoryId)
+                .also { deleteCheckInsForMealInCategoryOnDate(mealId, date, categoryId) }
+        }
+    }
+
+    /** Serving multiplier of each meal's most recent check-in (where the row's portion wheel starts). */
+    @Query("""
+        SELECT c.mealId AS mealId, c.servingSize AS servingSize FROM meal_check_ins c
+        WHERE c.id = (SELECT id FROM meal_check_ins WHERE mealId = c.mealId ORDER BY checkInDateTime DESC, id DESC LIMIT 1)
+    """)
+    fun getLastServings(): Flow<Map<@MapColumn(columnName = "mealId") Long, @MapColumn(columnName = "servingSize") Double>>
+
     // Complex query to get daily calorie consumption with meal details
     @Transaction
     @Query("""
@@ -52,6 +86,7 @@ interface MealCheckInDao {
             mci.checkInDateTime,
             mci.servingSize,
             mci.notes,
+            mci.mealCategoryId,
             m.name as mealName,
             m.brand as mealBrand,
             m.calories as mealCalories,
@@ -187,7 +222,8 @@ data class DailyNutritionEntry(
     val totalCholesterol: Double?,
     val totalVitaminC: Double?,
     val totalCalcium: Double?,
-    val totalIron: Double?
+    val totalIron: Double?,
+    val mealCategoryId: Long? = null // Meal type it was checked in under, if any
 )
 
 // Data class for daily nutrient totals

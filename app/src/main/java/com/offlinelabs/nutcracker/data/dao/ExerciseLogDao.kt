@@ -36,13 +36,32 @@ interface ExerciseLogDao {
     @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date")
     suspend fun deleteLogsForExerciseOnDate(exerciseId: Long, date: String)
 
-    /** Removes [exerciseId]'s logs of [date] and returns them (for undo). */
+    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND routineId = :routineId")
+    suspend fun getLogsForExerciseInRoutineOnDate(exerciseId: Long, date: String, routineId: Long): List<ExerciseLog>
+
+    @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND logDate = :date AND routineId = :routineId")
+    suspend fun deleteLogsForExerciseInRoutineOnDate(exerciseId: Long, date: String, routineId: Long)
+
+    /**
+     * Removes [exerciseId]'s logs of [date] and returns them (for undo): only those checked in
+     * under [routineId] when given, otherwise all of them.
+     */
     @Transaction
-    suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String): List<ExerciseLog> {
-        val logs = getLogsForExerciseOnDate(exerciseId, date)
-        deleteLogsForExerciseOnDate(exerciseId, date)
-        return logs
+    suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String, routineId: Long?): List<ExerciseLog> {
+        return if (routineId == null) {
+            getLogsForExerciseOnDate(exerciseId, date).also { deleteLogsForExerciseOnDate(exerciseId, date) }
+        } else {
+            getLogsForExerciseInRoutineOnDate(exerciseId, date, routineId)
+                .also { deleteLogsForExerciseInRoutineOnDate(exerciseId, date, routineId) }
+        }
     }
+
+    /** Reps of each exercise's most recent log (where the row's reps wheel starts). */
+    @Query("""
+        SELECT el.exerciseId AS exerciseId, el.reps AS reps FROM exercise_logs el
+        WHERE el.id = (SELECT id FROM exercise_logs WHERE exerciseId = el.exerciseId ORDER BY logDateTime DESC, id DESC LIMIT 1)
+    """)
+    fun getLastReps(): Flow<Map<@MapColumn(columnName = "exerciseId") Long, @MapColumn(columnName = "reps") Int>>
 
     @Query("DELETE FROM exercise_logs")
     suspend fun deleteAllLogs()
@@ -86,6 +105,7 @@ interface ExerciseLogDao {
             el.sets,
             el.caloriesBurned,
             el.notes,
+            el.routineId,
             e.name as exerciseName,
             e.category as exerciseType,
             g.name as gymName,
@@ -179,5 +199,6 @@ data class DailyExerciseEntry(
     val exerciseName: String,
     val exerciseType: String,
     val gymName: String? = null, // Name of the exercise's gym (hidden gyms included); null when shared
-    val gymUnit: String? = null
+    val gymUnit: String? = null,
+    val routineId: Long? = null // Routine it was checked in under, if any
 )

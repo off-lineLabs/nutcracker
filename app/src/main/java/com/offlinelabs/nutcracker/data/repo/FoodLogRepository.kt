@@ -124,10 +124,24 @@ interface FoodLogRepository {
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
     suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
-    /** Removes every log of [exerciseId] on [date] (yyyy-MM-dd) and returns them, so they can be restored. */
-    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String): List<ExerciseLog>
+    /**
+     * Removes the logs of [exerciseId] on [date] (yyyy-MM-dd) and returns them, so they can be
+     * restored: only those checked in under [routineId] when given, otherwise all of them.
+     */
+    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long? = null): List<ExerciseLog>
     /** Puts back logs removed by [removeExerciseCheckIns] (same ids). */
     suspend fun restoreExerciseLogs(logs: List<ExerciseLog>)
+    /** Reps of each exercise's most recent log; exercises never logged are absent. */
+    fun getLastReps(): Flow<Map<Long, Int>>
+    /**
+     * Removes the check-ins of [mealId] on [date] and returns them, so they can be restored: only
+     * those checked in under the meal type [categoryId] when given, otherwise all of them.
+     */
+    suspend fun removeMealCheckIns(mealId: Long, date: String, categoryId: Long? = null): List<MealCheckIn>
+    /** Puts back check-ins removed by [removeMealCheckIns] (same ids). */
+    suspend fun restoreMealCheckIns(checkIns: List<MealCheckIn>)
+    /** Serving multiplier of each meal's most recent check-in; meals never checked in are absent. */
+    fun getLastServings(): Flow<Map<Long, Double>>
     fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>>
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
     fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?>
@@ -364,11 +378,18 @@ class OfflineFoodLogRepository(
     override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
     override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
-    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String): List<ExerciseLog> =
-        exerciseLogDao.removeLogsForExerciseOnDate(exerciseId, date)
+    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long?): List<ExerciseLog> =
+        exerciseLogDao.removeLogsForExerciseOnDate(exerciseId, date, routineId)
     override suspend fun restoreExerciseLogs(logs: List<ExerciseLog>) {
         logs.forEach { exerciseLogDao.insertExerciseLog(it) }
     }
+    override fun getLastReps(): Flow<Map<Long, Int>> = exerciseLogDao.getLastReps()
+    override suspend fun removeMealCheckIns(mealId: Long, date: String, categoryId: Long?): List<MealCheckIn> =
+        mealCheckInDao.removeCheckInsForMealOnDate(mealId, date, categoryId)
+    override suspend fun restoreMealCheckIns(checkIns: List<MealCheckIn>) {
+        checkIns.forEach { mealCheckInDao.insertMealCheckIn(it) }
+    }
+    override fun getLastServings(): Flow<Map<Long, Double>> = mealCheckInDao.getLastServings()
     override fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>> = exerciseLogDao.getDailyExerciseSummary(date)
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)

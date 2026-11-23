@@ -31,6 +31,20 @@ object OldSchemaBuilder {
             .replace(Regex(",\\s*FOREIGN KEY\\(`gymId`\\)[^)]*\\)[^,)]*?ON DELETE CASCADE"), "")
             .also { assertFalse("gymId must be stripped from v21 routines", it.contains("gymId")) }
 
+    /**
+     * Strips the v23 check-in context columns: `routineId` from exercise_logs and `mealCategoryId`
+     * from meal_check_ins. Every older schema lacks them, so [statements] applies this by default.
+     */
+    fun stripCheckInContext(table: String, sql: String): String = when (table) {
+        "exercise_logs" -> sql.replace(Regex(",\\s*`routineId` INTEGER"), "").also {
+            assertFalse("routineId must be stripped from exercise_logs", it.contains("routineId"))
+        }
+        "meal_check_ins" -> sql.replace(Regex(",\\s*`mealCategoryId` INTEGER"), "").also {
+            assertFalse("mealCategoryId must be stripped from meal_check_ins", it.contains("mealCategoryId"))
+        }
+        else -> sql
+    }
+
     /** Strips the v21 `sortOrder` column from the meals/exercises CREATE statement. */
     fun stripSortOrder(sql: String): String =
         sql.replace(Regex(",\\s*`sortOrder` INTEGER NOT NULL DEFAULT 0"), "").also {
@@ -42,6 +56,8 @@ object OldSchemaBuilder {
         dbName: String,
         skipTables: Set<String>,
         skipIndices: Set<String>,
+        /** Keep the v23 check-in context columns (for a v23+ schema); older schemas strip them. */
+        keepCheckInContext: Boolean = false,
         transformTable: (table: String, sql: String) -> String
     ): List<String> {
         val statements = mutableListOf<Pair<Int, String>>()
@@ -57,7 +73,12 @@ object OldSchemaBuilder {
                     if (table in skipTables || table == "room_master_table" || name.startsWith("sqlite_") ||
                         name == "android_metadata" || name in skipIndices
                     ) continue
-                    statements += if (type == "table") 0 to transformTable(table, sql) else 1 to sql
+                    statements += if (type == "table") {
+                        val old = if (keepCheckInContext) sql else stripCheckInContext(table, sql)
+                        0 to transformTable(table, old)
+                    } else {
+                        1 to sql
+                    }
                 }
             }
         } finally {

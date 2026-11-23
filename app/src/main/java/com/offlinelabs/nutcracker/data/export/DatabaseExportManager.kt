@@ -210,10 +210,11 @@ class DatabaseExportManager(
         val checkInsList = checkIns.first() // Get the current value from Flow
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\tmealId\tcheckInDate\tcheckInDateTime\tservingSize\tnotes")
+        // mealCategoryId (2.0) is the trailing column; older backups don't have it
+        tsv.appendLine("id\tmealId\tcheckInDate\tcheckInDateTime\tservingSize\tnotes\tmealCategoryId")
         
         checkInsList.forEach { checkIn: MealCheckIn ->
-            tsv.appendLine("${checkIn.id}\t${checkIn.mealId}\t${checkIn.checkInDate}\t${checkIn.checkInDateTime}\t${checkIn.servingSize}\t${escapeTsv(checkIn.notes ?: "")}")
+            tsv.appendLine("${checkIn.id}\t${checkIn.mealId}\t${checkIn.checkInDate}\t${checkIn.checkInDateTime}\t${checkIn.servingSize}\t${escapeTsv(checkIn.notes ?: "")}\t${checkIn.mealCategoryId ?: ""}")
         }
         
         tsv.toString()
@@ -293,10 +294,11 @@ class DatabaseExportManager(
         val logsList = logs.first() // Get the current value from Flow
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\texerciseId\tlogDate\tlogDateTime\tweight\treps\tsets\tcaloriesBurned\tnotes")
+        // routineId (2.0) is the trailing column; older backups don't have it
+        tsv.appendLine("id\texerciseId\tlogDate\tlogDateTime\tweight\treps\tsets\tcaloriesBurned\tnotes\troutineId")
         
         logsList.forEach { log: ExerciseLog ->
-            tsv.appendLine("${log.id}\t${log.exerciseId}\t${log.logDate}\t${log.logDateTime}\t${log.weight}\t${log.reps}\t${log.sets}\t${log.caloriesBurned}\t${escapeTsv(log.notes ?: "")}")
+            tsv.appendLine("${log.id}\t${log.exerciseId}\t${log.logDate}\t${log.logDateTime}\t${log.weight}\t${log.reps}\t${log.sets}\t${log.caloriesBurned}\t${escapeTsv(log.notes ?: "")}\t${log.routineId ?: ""}")
         }
         
         tsv.toString()
