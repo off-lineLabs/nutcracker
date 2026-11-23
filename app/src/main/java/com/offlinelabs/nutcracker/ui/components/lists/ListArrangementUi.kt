@@ -1,6 +1,9 @@
 package com.offlinelabs.nutcracker.ui.components.lists
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -99,9 +101,9 @@ fun groupTitleText(title: GroupTitle): String = when (title) {
 }
 
 /**
- * One row: Sort, a small up/down direction toggle (only for sorts with a direction) and Group
- * (hidden when [groupings] has a single entry). Sort and Group show a small label above the value
- * and open a menu when tapped.
+ * One row: Sort and Group (hidden when [groupings] has a single entry), each with a small label
+ * above the value, opening a menu when tapped. For sorts with a direction, Sort's leading icon is
+ * an up/down arrow that flips the direction when tapped.
  */
 @Composable
 fun <G> ListArrangementBar(
@@ -124,29 +126,31 @@ fun <G> ListArrangementBar(
                 selected = sort,
                 optionLabel = { sortLabel(it) },
                 onSelect = onSortChange,
-                modifier = Modifier.weight(1f)
-            )
-            if (sort.hasDirection) {
-                // A bare icon between the fields: discreet, and not mistaken for a dropdown
-                Surface(
-                    onClick = { onDescendingChange(!descending) },
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(width = 32.dp, height = 48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (descending) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
-                            contentDescription = stringResource(
-                                if (descending) R.string.sort_descending else R.string.sort_ascending
-                            ),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
+                modifier = Modifier.weight(1f),
+                // The direction lives in the field's icon: tap the arrow to flip it, the rest opens the menu
+                leading = if (sort.hasDirection) {
+                    {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .clickable { onDescendingChange(!descending) }
+                        ) {
+                            Icon(
+                                imageVector = if (descending) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                                contentDescription = stringResource(
+                                    if (descending) R.string.sort_descending else R.string.sort_ascending
+                                ),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
+                } else {
+                    null
                 }
-            }
+            )
             if (groupings.size > 1) {
                 MenuField(
                     label = stringResource(R.string.group_label),
@@ -170,7 +174,9 @@ private fun <T> MenuField(
     selected: T,
     optionLabel: @Composable (T) -> String,
     onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Replaces [icon] (32dp wide), e.g. with its own tap target. */
+    leading: (@Composable () -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
@@ -182,16 +188,20 @@ private fun <T> MenuField(
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
         ) {
             Row(
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = if (leading != null) 3.dp else 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-                Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                if (leading != null) {
+                    leading()
+                } else {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f).padding(start = if (leading != null) 3.dp else 8.dp)) {
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelSmall,
