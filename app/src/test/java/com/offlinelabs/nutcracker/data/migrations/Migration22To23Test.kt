@@ -75,7 +75,7 @@ class Migration22To23Test {
         createV22WithData()
 
         val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(DatabaseMigrations.MIGRATION_22_23)
+            .addMigrations(DatabaseMigrations.MIGRATION_22_23, DatabaseMigrations.MIGRATION_23_24)
             .allowMainThreadQueries()
             .build()
         try {

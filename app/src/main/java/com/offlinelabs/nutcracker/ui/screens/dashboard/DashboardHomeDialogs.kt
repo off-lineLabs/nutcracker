@@ -316,7 +316,9 @@ private fun DashboardState.EditMealCheckInDialogHost(checkIn: DailyNutritionEntr
         checkInDate = checkIn.checkInDate,
         checkInDateTime = checkIn.checkInDateTime,
         servingSize = checkIn.servingSize,
-        notes = checkIn.notes
+        notes = checkIn.notes,
+        // Kept through an edit, so the meal type group still shows it
+        mealCategoryId = checkIn.mealCategoryId
     )
     UnifiedCheckInDialog<CheckInData.Meal>(
         onDismiss = { showEditMealDialog = null },
@@ -386,7 +388,9 @@ private fun DashboardState.EditExerciseLogDialogHost(exerciseEntry: DailyExercis
         reps = exerciseEntry.reps,
         sets = exerciseEntry.sets,
         caloriesBurned = exerciseEntry.caloriesBurned,
-        notes = exerciseEntry.notes
+        notes = exerciseEntry.notes,
+        // Kept through an edit, so the routine group still shows it
+        routineId = exerciseEntry.routineId
     )
     UnifiedCheckInDialog<CheckInData.Exercise>(
         exercise = foundExercise,
@@ -415,6 +419,8 @@ private fun DashboardState.EditExerciseLogDialogHost(exerciseEntry: DailyExercis
             ) {
                 coroutineScope.launch {
                     try {
+                        // Its sets go with it (cascade); keep them for undo
+                        val sets = foodLogRepository.getSetsForLog(existingExerciseLog.id)
                         foodLogRepository.deleteExerciseLog(existingExerciseLog)
                         val result = snackbarHostState.showSnackbar(
                             message = context.getString(R.string.exercise_deleted_success),
@@ -422,8 +428,8 @@ private fun DashboardState.EditExerciseLogDialogHost(exerciseEntry: DailyExercis
                             duration = SnackbarDuration.Long
                         )
                         if (result == SnackbarResult.ActionPerformed) {
-                            // REPLACE restores the same row (same id) with identical values
-                            foodLogRepository.insertExerciseLog(existingExerciseLog)
+                            // Restores the same row (same id) with identical values and sets
+                            foodLogRepository.insertExerciseLogWithSets(existingExerciseLog, sets)
                         }
                     } catch (e: Exception) {
                         AppLogger.exception("DashboardScreen", "Failed to delete exercise", e, mapOf(

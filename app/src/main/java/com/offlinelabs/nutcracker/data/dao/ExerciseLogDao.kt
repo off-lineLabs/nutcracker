@@ -7,7 +7,12 @@ import androidx.room.MapColumn
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
+import com.offlinelabs.nutcracker.data.model.LoggedSession
+import com.offlinelabs.nutcracker.data.model.summarizeStrengthSets
+import com.offlinelabs.nutcracker.data.model.uniformSets
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -15,8 +20,105 @@ interface ExerciseLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /** A real UPDATE: REPLACE would delete the row first and cascade-delete its sets. */
+    @Update
     suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
+
+    @Query("SELECT * FROM exercise_logs WHERE id = :id")
+    suspend fun getLogById(id: Long): ExerciseLog?
+
+    @Query("DELETE FROM exercise_logs WHERE id = :id")
+    suspend fun deleteLogById(id: Long)
+
+    // ----- Sets -----
+
+    @Insert
+    suspend fun insertSets(sets: List<ExerciseSet>)
+
+    @Query("SELECT * FROM exercise_sets WHERE logId = :logId ORDER BY setIndex")
+    suspend fun getSetsForLog(logId: Long): List<ExerciseSet>
+
+    @Query("SELECT * FROM exercise_sets WHERE logId IN (:logIds) ORDER BY logId, setIndex")
+    suspend fun getSetsForLogs(logIds: List<Long>): List<ExerciseSet>
+
+    /** Sets of the logs of [date] (the Exercise tab's set lists and Home). */
+    @Query("""
+        SELECT s.* FROM exercise_sets s INNER JOIN exercise_logs l ON s.logId = l.id
+        WHERE l.logDate = :date ORDER BY s.logId, s.setIndex
+    """)
+    fun getSetsForDate(date: String): Flow<List<ExerciseSet>>
+
+    @Query("SELECT * FROM exercise_sets ORDER BY id ASC")
+    suspend fun getAllSetsSync(): List<ExerciseSet>
+
+    @Query("DELETE FROM exercise_sets WHERE logId = :logId AND setIndex = :setIndex")
+    suspend fun deleteSet(logId: Long, setIndex: Int)
+
+    @Query("DELETE FROM exercise_sets WHERE logId = :logId")
+    suspend fun deleteSetsOfLog(logId: Long)
+
+    @Query("SELECT l.* FROM exercise_logs l WHERE NOT EXISTS (SELECT 1 FROM exercise_sets s WHERE s.logId = l.id)")
+    suspend fun getLogsWithoutSets(): List<ExerciseLog>
+
+    /** Inserts [log] with [sets] (their logId is set to the new log's); returns the log id. */
+    @Transaction
+    suspend fun insertLogWithSets(log: ExerciseLog, sets: List<ExerciseSet>): Long {
+        val id = insertExerciseLog(log)
+        insertSets(sets.map { it.copy(id = 0, logId = id) })
+        return id
+    }
+
+    /** Inserts [log] with identical sets of its weight and reps (a check-in made in one go). */
+    @Transaction
+    suspend fun insertLogWithUniformSets(log: ExerciseLog): Long = insertLogWithSets(log, uniformSets(log))
+
+    /**
+     * Updates [log]. When its weight, reps or set count changed (the check-in dialog edits them
+     * for all sets) its sets become identical copies; otherwise (time, notes) they're kept.
+     */
+    @Transaction
+    suspend fun updateLogKeepingSets(log: ExerciseLog) {
+        val old = getLogById(log.id)
+        updateExerciseLog(log)
+        if (old == null || old.weight != log.weight || old.reps != log.reps || old.sets != log.sets) {
+            deleteSetsOfLog(log.id)
+            insertSets(uniformSets(log))
+        }
+    }
+
+    /** Gives every log without sets identical ones (after importing a backup made before sets). */
+    @Transaction
+    suspend fun backfillMissingSets() {
+        getLogsWithoutSets().forEach { insertSets(uniformSets(it)) }
+    }
+
+    /**
+     * Ticks [sets] of a strength exercise: added to the session log [sessionLogId] (replacing sets
+     * with the same index), or to a new log made from [newLog] when there's none. The log's summary
+     * follows its sets. Returns the log id.
+     */
+    @Transaction
+    suspend fun checkInSets(sessionLogId: Long?, newLog: ExerciseLog, sets: List<ExerciseSet>, kcalPerSet: Double): Long {
+        val logId = sessionLogId?.takeIf { getLogById(it) != null } ?: insertExerciseLog(newLog)
+        sets.forEach { deleteSet(logId, it.setIndex) }
+        insertSets(sets.map { it.copy(id = 0, logId = logId) })
+        refreshSummary(logId, kcalPerSet)
+        return logId
+    }
+
+    /** Unticks set [setIndex] of log [logId]; the log goes when it has no set left. */
+    @Transaction
+    suspend fun uncheckSet(logId: Long, setIndex: Int, kcalPerSet: Double) {
+        deleteSet(logId, setIndex)
+        if (getSetsForLog(logId).isEmpty()) deleteLogById(logId) else refreshSummary(logId, kcalPerSet)
+    }
+
+    /** Recomputes log [logId]'s summary (count, heaviest weight, last reps, kcal) from its sets. */
+    @Transaction
+    suspend fun refreshSummary(logId: Long, kcalPerSet: Double) {
+        val log = getLogById(logId) ?: return
+        updateExerciseLog(summarizeStrengthSets(log, getSetsForLog(logId), kcalPerSet))
+    }
 
     @Delete
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
@@ -44,18 +146,24 @@ interface ExerciseLogDao {
     suspend fun deleteLogsForExerciseInRoutineOnDate(exerciseId: Long, date: String, routineId: Long)
 
     /**
-     * Removes [exerciseId]'s logs of [date] and returns them (for undo). With [routineId]: those
-     * checked in under that routine plus those without a routine (they show in every routine
-     * group); otherwise all of them.
+     * Removes [exerciseId]'s logs of [date] with their sets and returns them (for undo). With
+     * [routineId]: those checked in under that routine plus those without a routine (they show in
+     * every routine group); otherwise all of them.
      */
     @Transaction
-    suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String, routineId: Long?): List<ExerciseLog> {
-        return if (routineId == null) {
-            getLogsForExerciseOnDate(exerciseId, date).also { deleteLogsForExerciseOnDate(exerciseId, date) }
+    suspend fun removeLogsForExerciseOnDate(exerciseId: Long, date: String, routineId: Long?): List<LoggedSession> {
+        val logs = if (routineId == null) {
+            getLogsForExerciseOnDate(exerciseId, date)
         } else {
             getLogsForExerciseInRoutineOnDate(exerciseId, date, routineId)
-                .also { deleteLogsForExerciseInRoutineOnDate(exerciseId, date, routineId) }
         }
+        val setsByLog = getSetsForLogs(logs.map { it.id }).groupBy { it.logId }
+        if (routineId == null) {
+            deleteLogsForExerciseOnDate(exerciseId, date)
+        } else {
+            deleteLogsForExerciseInRoutineOnDate(exerciseId, date, routineId)
+        }
+        return logs.map { LoggedSession(it, setsByLog[it.id].orEmpty()) }
     }
 
     /** Reps of each exercise's most recent log (where the row's reps wheel starts). */

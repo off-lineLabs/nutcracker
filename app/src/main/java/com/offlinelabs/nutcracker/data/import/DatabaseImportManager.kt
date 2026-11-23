@@ -39,6 +39,7 @@ class DatabaseImportManager(
         private const val MEAL_CATEGORIES_TSV = "meal_categories.tsv"
         private const val MEAL_CATEGORY_MEALS_TSV = "meal_category_meals.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
+        private const val EXERCISE_SETS_TSV = "exercise_sets.tsv"
         private const val PILLS_TSV = "pills.tsv"
         private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
         private const val TAGS_TSV = "tags.tsv"
@@ -64,6 +65,7 @@ class DatabaseImportManager(
             RECIPE_INGREDIENTS_TSV,
             MEAL_CHECK_INS_TSV,
             EXERCISE_LOGS_TSV,
+            EXERCISE_SETS_TSV,
             PILL_CHECK_INS_TSV,
             MEAL_TAGS_TSV,
             EXERCISE_TAGS_TSV
@@ -71,7 +73,8 @@ class DatabaseImportManager(
         
         /** Tables added in 2.0; older backups lack them, which is not worth a warning. */
         private val OPTIONAL_TABLES = setOf(
-            GYMS_TSV, ROUTINES_TSV, ROUTINE_EXERCISES_TSV, MEAL_CATEGORIES_TSV, MEAL_CATEGORY_MEALS_TSV
+            GYMS_TSV, ROUTINES_TSV, ROUTINE_EXERCISES_TSV, MEAL_CATEGORIES_TSV, MEAL_CATEGORY_MEALS_TSV,
+            EXERCISE_SETS_TSV
         )
 
         const val AUTO_BACKUP_FILENAME = "auto-before-restore.zip"
@@ -227,6 +230,10 @@ class DatabaseImportManager(
                     }
                 }
                 
+                // Check-ins from a backup made before sets (or whose sets weren't imported) get
+                // identical sets of their weight and reps
+                database.exerciseLogDao().backfillMissingSets()
+
                 // Drop placeholder meal copies that no check-in ended up using
                 placeholderCopyIds.forEach { database.mealDao().deleteMealIfUnreferenced(it) }
 
@@ -356,6 +363,7 @@ class DatabaseImportManager(
             MEAL_CATEGORIES_TSV -> importMealCategories(tsvData)
             MEAL_CATEGORY_MEALS_TSV -> importMealCategoryMeals(tsvData)
             EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
+            EXERCISE_SETS_TSV -> importExerciseSets(tsvData)
             PILLS_TSV -> importPills(tsvData)
             PILL_CHECK_INS_TSV -> importPillCheckIns(tsvData)
             TAGS_TSV -> importTags(tsvData)
@@ -1424,10 +1432,12 @@ class DatabaseImportManager(
                                 ?.let { idMappingManager.getNewId("routines", it.toString()) }
                         )
                         
+                        // Without sets for now: the backup's sets follow, the rest are filled in at the end
                         val newId = database.exerciseLogDao().insertExerciseLog(exerciseLog)
                         val oldId = row.getValue("id")?.toLongOrNull()
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
+                            idMappingManager.addMapping("exercise_logs", oldId.toString(), newId)
                         }
                         imported++
                     } catch (e: Exception) {
@@ -1454,6 +1464,58 @@ class DatabaseImportManager(
                 errors = errors,
                 warnings = warnings,
                 idMappings = idMappings
+            )
+        }
+    }
+
+    /**
+     * Imports the sets of the check-ins imported just before (2.0 backups). Sets of check-ins that
+     * weren't imported (e.g. duplicates skipped in a merge) are skipped.
+     */
+    private suspend fun importExerciseSets(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        return database.withTransaction {
+            val sets = rows.mapNotNull { row ->
+                val logId = row.getLongValue("logId")?.let { idMappingManager.getNewId("exercise_logs", it.toString()) }
+                val setIndex = row.getIntValue("setIndex")
+                if (logId == null || setIndex == null) {
+                    skipped++
+                    null
+                } else {
+                    com.offlinelabs.nutcracker.data.model.ExerciseSet(
+                        logId = logId,
+                        setIndex = setIndex,
+                        weight = row.getDoubleValue("weight") ?: 0.0,
+                        reps = row.getIntValue("reps") ?: 0,
+                        completedAt = row.getValue("completedAt").takeIf { !it.isNullOrBlank() }
+                    )
+                }
+            }
+            try {
+                database.exerciseLogDao().insertSets(sets)
+                imported = sets.size
+            } catch (e: Exception) {
+                errors.add(ImportError(
+                    tableName = "exercise_sets",
+                    rowNumber = 0,
+                    fieldName = null,
+                    errorMessage = "Failed to insert exercise sets: ${e.message}",
+                    severity = ErrorSeverity.ERROR
+                ))
+                failed = sets.size
+            }
+            TableImportResult(
+                tableName = "exercise_sets",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
             )
         }
     }

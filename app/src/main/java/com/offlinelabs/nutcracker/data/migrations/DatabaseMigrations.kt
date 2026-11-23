@@ -201,5 +201,31 @@ object DatabaseMigrations {
         }
     }
 
+    // Migration from version 23 to 24 - The sets of each exercise check-in
+    val MIGRATION_23_24 = object : Migration(23, 24) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `exercise_sets` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `logId` INTEGER NOT NULL,
+                    `setIndex` INTEGER NOT NULL,
+                    `weight` REAL NOT NULL,
+                    `reps` INTEGER NOT NULL,
+                    `completedAt` TEXT,
+                    FOREIGN KEY(`logId`) REFERENCES `exercise_logs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_logId` ON `exercise_sets` (`logId`)")
+            // Each existing check-in gets its sets as identical copies of its weight and reps (at
+            // least one), done at its time, so nothing changes on screen
+            db.execSQL("""
+                INSERT INTO exercise_sets (logId, setIndex, weight, reps, completedAt)
+                WITH RECURSIVE n(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM n WHERE i < 99)
+                SELECT l.id, n.i, l.weight, l.reps, l.logDateTime
+                FROM exercise_logs l JOIN n ON n.i < MAX(l.sets, 1)
+            """)
+        }
+    }
+
     // Add more migrations here as needed
 }

@@ -53,7 +53,7 @@ class CheckInContextDaoTest {
         logs.insertExerciseLog(log(bench, null, "10:10:00", reps = 5))
 
         val removed = logs.removeLogsForExerciseOnDate(bench, day, 1)
-        assertEquals(setOf(1L, null), removed.map { it.routineId }.toSet())
+        assertEquals(setOf(1L, null), removed.map { it.log.routineId }.toSet())
         assertEquals(listOf(2L), logs.getAllExerciseLogsSync().map { it.routineId })
 
         // Without a routine everything of the day goes

@@ -28,6 +28,8 @@ import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
+import com.offlinelabs.nutcracker.data.model.LoggedSession
 import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
 import com.offlinelabs.nutcracker.data.model.Gym
@@ -126,16 +128,31 @@ interface FoodLogRepository {
     suspend fun setMealCategories(mealId: Long, categoryIds: List<Long>)
 
     // ExerciseLog operations
+    /** Inserts a check-in made in one go: its sets are identical copies of its weight and reps. */
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
+    /** Inserts a check-in with its own [sets] (e.g. put back by undo). */
+    suspend fun insertExerciseLogWithSets(exerciseLog: ExerciseLog, sets: List<ExerciseSet>): Long
+    /** Updates a check-in; changing its weight, reps or sets makes its sets identical again. */
     suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
+    suspend fun getSetsForLog(logId: Long): List<ExerciseSet>
+    /** Sets of the check-ins of [date]. */
+    fun getSetsForDate(date: String): Flow<List<ExerciseSet>>
     /**
-     * Removes the logs of [exerciseId] on [date] (yyyy-MM-dd) and returns them, so they can be
-     * restored: only those checked in under [routineId] when given, otherwise all of them.
+     * Ticks [sets] of a strength exercise into the session [sessionLogId], or a new check-in made
+     * from [newLog]; the check-in's summary and kcal ([kcalPerSet] each) follow its sets.
      */
-    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long? = null): List<ExerciseLog>
-    /** Puts back logs removed by [removeExerciseCheckIns] (same ids). */
-    suspend fun restoreExerciseLogs(logs: List<ExerciseLog>)
+    suspend fun checkInSets(sessionLogId: Long?, newLog: ExerciseLog, sets: List<ExerciseSet>, kcalPerSet: Double): Long
+    /** Unticks one set; a check-in left without sets is removed. */
+    suspend fun uncheckSet(logId: Long, setIndex: Int, kcalPerSet: Double)
+    /**
+     * Removes the logs of [exerciseId] on [date] (yyyy-MM-dd) with their sets and returns them, so
+     * they can be restored: with [routineId] those of that routine and those without one,
+     * otherwise all of them.
+     */
+    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long? = null): List<LoggedSession>
+    /** Puts back check-ins removed by [removeExerciseCheckIns] (same ids, same sets). */
+    suspend fun restoreExerciseLogs(sessions: List<LoggedSession>)
     /** Reps of each exercise's most recent log; exercises never logged are absent. */
     fun getLastReps(): Flow<Map<Long, Int>>
     /**
@@ -382,13 +399,21 @@ class OfflineFoodLogRepository(
         mealCategoryDao.setCategoriesForMeal(mealId, categoryIds)
 
     // ExerciseLog operations
-    override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
-    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
+    override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertLogWithUniformSets(exerciseLog)
+    override suspend fun insertExerciseLogWithSets(exerciseLog: ExerciseLog, sets: List<ExerciseSet>): Long =
+        if (sets.isEmpty()) exerciseLogDao.insertLogWithUniformSets(exerciseLog) else exerciseLogDao.insertLogWithSets(exerciseLog, sets)
+    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateLogKeepingSets(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
-    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long?): List<ExerciseLog> =
+    override suspend fun getSetsForLog(logId: Long): List<ExerciseSet> = exerciseLogDao.getSetsForLog(logId)
+    override fun getSetsForDate(date: String): Flow<List<ExerciseSet>> = exerciseLogDao.getSetsForDate(date)
+    override suspend fun checkInSets(sessionLogId: Long?, newLog: ExerciseLog, sets: List<ExerciseSet>, kcalPerSet: Double): Long =
+        exerciseLogDao.checkInSets(sessionLogId, newLog, sets, kcalPerSet)
+    override suspend fun uncheckSet(logId: Long, setIndex: Int, kcalPerSet: Double) =
+        exerciseLogDao.uncheckSet(logId, setIndex, kcalPerSet)
+    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long?): List<LoggedSession> =
         exerciseLogDao.removeLogsForExerciseOnDate(exerciseId, date, routineId)
-    override suspend fun restoreExerciseLogs(logs: List<ExerciseLog>) {
-        logs.forEach { exerciseLogDao.insertExerciseLog(it) }
+    override suspend fun restoreExerciseLogs(sessions: List<LoggedSession>) {
+        sessions.forEach { insertExerciseLogWithSets(it.log, it.sets) }
     }
     override fun getLastReps(): Flow<Map<Long, Int>> = exerciseLogDao.getLastReps()
     override suspend fun removeMealCheckIns(mealId: Long, date: String, categoryId: Long?): List<MealCheckIn> =

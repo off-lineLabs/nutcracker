@@ -8,6 +8,7 @@ import com.offlinelabs.nutcracker.data.AppDatabase
 import com.offlinelabs.nutcracker.data.export.DatabaseExportManager
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.MealCategory
@@ -77,9 +78,14 @@ class RoutineBackupRoundTripTest {
         source.routineDao().insertRoutineExercise(RoutineExercise(full, benchId, 1))
         source.routineDao().insertRoutineExercise(RoutineExercise(full, squatId, 0))
         // Check-ins remember the routine / meal type they were ticked under (v23)
-        source.exerciseLogDao().insertExerciseLog(
+        // A pyramid: its own sets survive the round trip
+        source.exerciseLogDao().insertLogWithSets(
             ExerciseLog(exerciseId = benchId, logDate = "2026-11-23", logDateTime = "2026-11-23 10:00:00",
-                weight = 40.0, reps = 8, sets = 3, caloriesBurned = 30.0, routineId = push)
+                weight = 45.0, reps = 6, sets = 2, caloriesBurned = 30.0, routineId = push),
+            listOf(
+                ExerciseSet(logId = 0, setIndex = 0, weight = 40.0, reps = 8, completedAt = "2026-11-23 10:00:00"),
+                ExerciseSet(logId = 0, setIndex = 1, weight = 45.0, reps = 6, completedAt = "2026-11-23 10:03:00")
+            )
         )
         source.exerciseLogDao().insertExerciseLog(
             ExerciseLog(exerciseId = squatId, logDate = "2026-11-23", logDateTime = "2026-11-23 10:05:00",
@@ -127,6 +133,11 @@ class RoutineBackupRoundTripTest {
         val logs = target.exerciseLogDao().getAllExerciseLogsSync().associateBy { it.exerciseId }
         assertEquals(routines.getValue("Push day").id, logs.getValue(exercises.getValue("Bench").id).routineId)
         assertNull(logs.getValue(exercises.getValue("Squat").id).routineId)
+        val benchSets = target.exerciseLogDao().getSetsForLog(logs.getValue(exercises.getValue("Bench").id).id)
+        assertEquals(listOf(40.0 to 8, 45.0 to 6), benchSets.map { it.weight to it.reps })
+        assertEquals("2026-11-23 10:03:00", benchSets.last().completedAt)
+        // The squat log was stored without sets: the import fills in identical ones
+        assertEquals(5, target.exerciseLogDao().getSetsForLog(logs.getValue(exercises.getValue("Squat").id).id).size)
         assertEquals(categories.getValue("Pre-workout").id, target.mealCheckInDao().getAllMealCheckInsSync().single().mealCategoryId)
     }
 }

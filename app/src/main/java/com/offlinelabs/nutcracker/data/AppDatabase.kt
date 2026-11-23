@@ -59,9 +59,10 @@ import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
         Routine::class,
         RoutineExercise::class,
         MealCategory::class,
-        MealCategoryMeal::class
+        MealCategoryMeal::class,
+        com.offlinelabs.nutcracker.data.model.ExerciseSet::class
     ], 
-    version = 23, 
+    version = 24, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -101,7 +102,8 @@ abstract class AppDatabase : RoomDatabase() {
                         DatabaseMigrations.MIGRATION_19_20,
                         DatabaseMigrations.MIGRATION_20_21,
                         DatabaseMigrations.MIGRATION_21_22,
-                        DatabaseMigrations.MIGRATION_22_23
+                        DatabaseMigrations.MIGRATION_22_23,
+                        DatabaseMigrations.MIGRATION_23_24
                         // Add more migrations here as needed
                         // IMPORTANT: When incrementing database version, you MUST create a proper migration
                         // in DatabaseMigrations.kt. Never use fallbackToDestructiveMigration() in production.

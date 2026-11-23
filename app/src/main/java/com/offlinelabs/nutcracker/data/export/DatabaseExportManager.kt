@@ -38,6 +38,7 @@ class DatabaseExportManager(
         private const val MEAL_CATEGORIES_TSV = "meal_categories.tsv"
         private const val MEAL_CATEGORY_MEALS_TSV = "meal_category_meals.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
+        private const val EXERCISE_SETS_TSV = "exercise_sets.tsv"
         private const val PILLS_TSV = "pills.tsv"
         private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
         private const val TAGS_TSV = "tags.tsv"
@@ -100,6 +101,7 @@ class DatabaseExportManager(
             exportTableToTsv(zipOut, MEAL_CATEGORIES_TSV) { exportMealCategories() }
             exportTableToTsv(zipOut, MEAL_CATEGORY_MEALS_TSV) { exportMealCategoryMeals() }
             exportTableToTsv(zipOut, EXERCISE_LOGS_TSV) { exportExerciseLogs() }
+            exportTableToTsv(zipOut, EXERCISE_SETS_TSV) { exportExerciseSets() }
             exportTableToTsv(zipOut, PILLS_TSV) { exportPills() }
             exportTableToTsv(zipOut, PILL_CHECK_INS_TSV) { exportPillCheckIns() }
             exportTableToTsv(zipOut, TAGS_TSV) { exportTags() }
@@ -289,6 +291,16 @@ class DatabaseExportManager(
     /**
      * Export exercise logs table to TSV
      */
+    /** Export the sets of the exercise check-ins (2.0) to TSV. */
+    private suspend fun exportExerciseSets(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tlogId\tsetIndex\tweight\treps\tcompletedAt")
+        database.exerciseLogDao().getAllSetsSync().forEach { s ->
+            tsv.appendLine("${s.id}\t${s.logId}\t${s.setIndex}\t${s.weight}\t${s.reps}\t${s.completedAt ?: ""}")
+        }
+        tsv.toString()
+    }
+
     private suspend fun exportExerciseLogs(): String = withContext(Dispatchers.IO) {
         val logs = database.exerciseLogDao().getAllExerciseLogs()
         val logsList = logs.first() // Get the current value from Flow
@@ -470,6 +482,7 @@ class DatabaseExportManager(
         tsv.appendLine("meal_categories\tMeal categories (breakfast, lunch...)")
         tsv.appendLine("meal_category_meals\tFood-category relationships")
         tsv.appendLine("exercise_logs\tExercise performance records")
+        tsv.appendLine("exercise_sets\tSets of each exercise check-in")
         tsv.appendLine("pills\tMedication definitions")
         tsv.appendLine("pill_check_ins\tMedication consumption records")
         tsv.appendLine("tags\tTag definitions for meals and exercises")

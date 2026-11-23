@@ -58,6 +58,8 @@ object OldSchemaBuilder {
         skipIndices: Set<String>,
         /** Keep the v23 check-in context columns (for a v23+ schema); older schemas strip them. */
         keepCheckInContext: Boolean = false,
+        /** Keep the v24 exercise_sets table (for a v24+ schema); older schemas skip it. */
+        keepExerciseSets: Boolean = false,
         transformTable: (table: String, sql: String) -> String
     ): List<String> {
         val statements = mutableListOf<Pair<Int, String>>()
@@ -71,7 +73,8 @@ object OldSchemaBuilder {
                     val table = c.getString(2)
                     val sql = c.getString(3)
                     if (table in skipTables || table == "room_master_table" || name.startsWith("sqlite_") ||
-                        name == "android_metadata" || name in skipIndices
+                        name == "android_metadata" || name in skipIndices ||
+                        (!keepExerciseSets && table == "exercise_sets")
                     ) continue
                     statements += if (type == "table") {
                         val old = if (keepCheckInContext) sql else stripCheckInContext(table, sql)
