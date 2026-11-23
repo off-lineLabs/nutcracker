@@ -645,7 +645,6 @@
     <string name="gym_menu_add">Añadir gimnasio…</string>
     <string name="gym_menu_manage">Gestionar gimnasios…</string>
     <string name="gym_shared_section">Compartidos</string>
-    <string name="gym_empty_at_gym">Aún no hay ejercicios en este gimnasio</string>
     <string name="gym_form_add_title">Añadir gimnasio</string>
     <string name="gym_form_edit_title">Editar gimnasio</string>
     <string name="gym_name_label">Nombre</string>
@@ -706,7 +705,6 @@
     <string name="group_no_nova">Sin NOVA</string>
     <string name="group_no_routine">Sin rutina</string>
     <string name="group_no_muscle">Sin grupo muscular</string>
-    <string name="reorder_hint">Mantén pulsado un elemento y arrástralo para reordenar</string>
     <string name="reorder_handle_description">Reordenar %1$s</string>
     <string name="group_meal_type">Tipo de comida</string>
     <string name="group_no_meal_type">Sin tipo de comida</string>
@@ -734,7 +732,6 @@
     <string name="quick_check_in">Registrar %1$s</string>
     <string name="quick_remove_check_in">Quitar los registros de %1$s de este día</string>
     <string name="quick_check_ins_removed">Registro eliminado</string>
-    <string name="swipe_actions_hint">Desliza un ejercicio a la izquierda para editarlo o eliminarlo</string>
     <string name="routine_group_empty">Aún no hay ejercicios. Añádelos desde Rutinas.</string>
     <string name="routine_saved_other_gym">%1$s se guardó en %2$s</string>
     <string name="routine_show_gym">Ver</string>

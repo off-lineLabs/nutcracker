@@ -99,9 +99,9 @@ fun groupTitleText(title: GroupTitle): String = when (title) {
 }
 
 /**
- * One row: Sort, a square up/down direction toggle (only for sorts with a direction) and Group
+ * One row: Sort, a small up/down direction toggle (only for sorts with a direction) and Group
  * (hidden when [groupings] has a single entry). Sort and Group show a small label above the value
- * and open a menu when tapped. In custom order a hint explains how to reorder.
+ * and open a menu when tapped.
  */
 @Composable
 fun <G> ListArrangementBar(
@@ -116,7 +116,7 @@ fun <G> ListArrangementBar(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             MenuField(
                 label = stringResource(R.string.sort_label),
                 icon = Icons.AutoMirrored.Filled.Sort,
@@ -127,14 +127,13 @@ fun <G> ListArrangementBar(
                 modifier = Modifier.weight(1f)
             )
             if (sort.hasDirection) {
-                // Its own square button, so it's not confused with a dropdown and the value keeps its width
+                // A bare icon between the fields: discreet, and not mistaken for a dropdown
                 Surface(
                     onClick = { onDescendingChange(!descending) },
                     shape = RoundedCornerShape(12.dp),
                     color = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.onSurface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(width = 32.dp, height = 48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -142,7 +141,7 @@ fun <G> ListArrangementBar(
                             contentDescription = stringResource(
                                 if (descending) R.string.sort_descending else R.string.sort_ascending
                             ),
-                            tint = MaterialTheme.colorScheme.onSurface,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -159,14 +158,6 @@ fun <G> ListArrangementBar(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
-        if (sort == ListSort.CUSTOM) {
-            Text(
-                text = stringResource(R.string.reorder_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-            )
         }
     }
 }

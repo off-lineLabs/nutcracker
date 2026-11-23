@@ -84,7 +84,6 @@ import com.offlinelabs.nutcracker.ui.components.dialogs.AddExerciseDialog
 import com.offlinelabs.nutcracker.ui.components.dialogs.ExercisePickerContent
 import com.offlinelabs.nutcracker.data.GymSelection
 import com.offlinelabs.nutcracker.data.model.Gym
-import com.offlinelabs.nutcracker.data.partitionExercisesForSelection
 import com.offlinelabs.nutcracker.data.ExerciseGrouping
 import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
@@ -105,10 +104,8 @@ import com.offlinelabs.nutcracker.ui.components.lists.exerciseGroupingLabel
 import com.offlinelabs.nutcracker.ui.components.lists.mealGroupingLabel
 import kotlinx.coroutines.flow.map
 import com.offlinelabs.nutcracker.data.resolveGymSelection
-import com.offlinelabs.nutcracker.ui.components.gym.ExerciseListHint
 import com.offlinelabs.nutcracker.ui.components.gym.GymDialogsHost
 import com.offlinelabs.nutcracker.ui.components.gym.GymDropdown
-import com.offlinelabs.nutcracker.ui.components.gym.exerciseListHint
 import com.offlinelabs.nutcracker.ui.components.gym.gymsIncludingCurrent
 import com.offlinelabs.nutcracker.data.gymLabel
 import com.offlinelabs.nutcracker.ui.components.gym.rememberGymDialogsState
@@ -458,6 +455,9 @@ fun DashboardScreen(
     var userGoal by remember { mutableStateOf(UserGoal.default()) }
     var dailyMealCheckIns by remember { mutableStateOf(emptyList<DailyNutritionEntry>()) }
     var dailyExerciseLogs by remember { mutableStateOf(emptyList<DailyExerciseEntry>()) }
+    // Heaviest logged weight per exercise: one query for the whole Exercise tab
+    val exerciseMaxWeights by remember(foodLogRepository) { foodLogRepository.getMaxWeights() }
+        .collectAsState(initial = emptyMap())
     var refreshCheckIns by remember { mutableStateOf(0) }
     var dailyTotalsConsumed by remember { mutableStateOf<DailyTotals?>(null) }
     var consumedCalories by remember { mutableDoubleStateOf(0.0) }
@@ -1289,8 +1289,6 @@ fun DashboardScreen(
                     }
                 )
                 2 -> {
-                  val partitioned = partitionExercisesForSelection(exercises, gymSelection)
-                  val listHint = exerciseListHint(gymSelection, partitioned, exercises.size)
                   ExercisePickerContent(
                     exercises = listedExercises,
                     groups = exerciseGroups,
@@ -1313,10 +1311,6 @@ fun DashboardScreen(
                             groupingLabel = { exerciseGroupingLabel(it) },
                             onGroupingChange = { exerciseGrouping = it; settingsManager?.exerciseListGrouping = it }
                         )
-                    },
-                    emptyHint = when (listHint) {
-                        ExerciseListHint.GYM_EMPTY -> stringResource(R.string.gym_empty_at_gym)
-                        else -> null
                     },
                     header = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1356,6 +1350,7 @@ fun DashboardScreen(
                         showAddExerciseDialog = true
                     },
                     checkedInIds = remember(dailyExerciseLogs) { dailyExerciseLogs.map { it.exerciseId }.toSet() },
+                    maxWeights = exerciseMaxWeights,
                     // Quick check-in from the row: the wheel's value plus the exercise's defaults, on the day shown
                     onQuickCheckIn = { exercise, value ->
                         coroutineScope.launch {

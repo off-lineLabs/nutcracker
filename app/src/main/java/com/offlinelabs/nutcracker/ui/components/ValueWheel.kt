@@ -63,6 +63,8 @@ fun ValueWheel(
     val fling = rememberSnapFlingBehavior(listState, snapPosition = SnapPosition.Center)
     val haptics = LocalHapticFeedback.current
     val currentOnChange by rememberUpdatedState(onValueChange)
+    // The latest value: comparing with the one from launch time would miss a scroll back to it
+    val currentValue by rememberUpdatedState(value)
     val centredIndex by remember {
         derivedStateOf {
             val info = listState.layoutInfo
@@ -79,7 +81,7 @@ fun ValueWheel(
     }
     LaunchedEffect(listState, values) {
         snapshotFlow { listState.isScrollInProgress }.distinctUntilChanged().collect { scrolling ->
-            if (!scrolling) values.getOrNull(centredIndex)?.let { if (it != value) currentOnChange(it) }
+            if (!scrolling) values.getOrNull(centredIndex)?.let { if (it != currentValue) currentOnChange(it) }
         }
     }
 

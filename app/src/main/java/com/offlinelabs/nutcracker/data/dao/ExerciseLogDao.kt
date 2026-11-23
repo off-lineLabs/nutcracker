@@ -3,6 +3,7 @@ package com.offlinelabs.nutcracker.data.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.MapColumn
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
@@ -67,6 +68,10 @@ interface ExerciseLogDao {
         WHERE exerciseId = :exerciseId
     """)
     fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?>
+
+    /** Heaviest logged weight per exercise, in one query for the whole list (exercises without logs are absent). */
+    @Query("SELECT exerciseId, MAX(weight) AS maxWeight FROM exercise_logs GROUP BY exerciseId")
+    fun getMaxWeights(): Flow<Map<@MapColumn(columnName = "exerciseId") Long, @MapColumn(columnName = "maxWeight") Double>>
 
     // Complex query to get daily exercise summary with exercise details
     @Transaction

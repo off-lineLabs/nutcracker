@@ -26,11 +26,12 @@ data class QuickCheckIn(val weight: Double, val reps: Int, val sets: Int, val ca
 
 /**
  * What the list row's wheel adjusts: the weight for strength, the minutes for cardio and the reps
- * for bodyweight; it starts at the exercise's default.
+ * for bodyweight. Strength starts at the heaviest logged weight ([maxWeight]), or the default
+ * weight before the first log; the others start at the default reps (minutes).
  */
-fun quickWheelStart(exercise: com.offlinelabs.nutcracker.data.model.Exercise): Double =
+fun quickWheelStart(exercise: com.offlinelabs.nutcracker.data.model.Exercise, maxWeight: Double? = null): Double =
     when (com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper.getExerciseType(exercise.category)) {
-        ExerciseType.STRENGTH -> exercise.defaultWeight
+        ExerciseType.STRENGTH -> maxWeight?.takeIf { it > 0.0 } ?: exercise.defaultWeight
         ExerciseType.CARDIO, ExerciseType.BODYWEIGHT -> exercise.defaultReps.toDouble()
     }.coerceAtLeast(0.0)
 

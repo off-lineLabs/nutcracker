@@ -74,6 +74,8 @@ fun ExercisePickerContent(
     arrangementBar: @Composable () -> Unit = {},
     /** Exercises with a check-in on the day shown (their checkbox is ticked). */
     checkedInIds: Set<Long> = emptySet(),
+    /** Heaviest logged weight per exercise id (shown on the row and where the weight wheel starts). */
+    maxWeights: Map<Long, Double> = emptyMap(),
     /** Checks the exercise in with the row wheel's value (weight, minutes or reps). */
     onQuickCheckIn: (Exercise, Double) -> Unit = { _, _ -> },
     /** Removes the exercise's check-ins of the day shown. */
@@ -136,7 +138,6 @@ fun ExercisePickerContent(
     
     MainExerciseSelectionContent(
         exercises = exercises,
-        foodLogRepository = foodLogRepository,
         onAddExercise = onAddExercise,
         onSelectExercise = onSelectExercise,
         onEditExercise = onEditExercise,
@@ -149,6 +150,7 @@ fun ExercisePickerContent(
         onReorder = onReorder,
         arrangementBar = arrangementBar,
         checkedInIds = checkedInIds,
+        maxWeights = maxWeights,
         onQuickCheckIn = onQuickCheckIn,
         onRemoveCheckIns = onRemoveCheckIns,
         onDeleteExercise = onDeleteExercise
@@ -210,7 +212,6 @@ enum class DialogState {
 @Composable
 private fun MainExerciseSelectionContent(
     exercises: List<Exercise>,
-    foodLogRepository: FoodLogRepository? = null,
     onAddExercise: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
     onEditExercise: (Exercise) -> Unit,
@@ -223,6 +224,7 @@ private fun MainExerciseSelectionContent(
     onReorder: (groupKey: String, ids: List<Long>) -> Unit,
     arrangementBar: @Composable () -> Unit,
     checkedInIds: Set<Long>,
+    maxWeights: Map<Long, Double>,
     onQuickCheckIn: (Exercise, Double) -> Unit,
     onRemoveCheckIns: (Exercise) -> Unit,
     onDeleteExercise: (Exercise) -> Unit
@@ -295,12 +297,6 @@ private fun MainExerciseSelectionContent(
             item(key = "arrangement_bar") {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     arrangementBar()
-                    Text(
-                        text = stringResource(R.string.swipe_actions_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
                 }
             }
             if (emptyHint != null) {
@@ -340,18 +336,19 @@ private fun MainExerciseSelectionContent(
                         // The handle lives in the swipe panel instead of beside the card
                         showHandle = false
                     ) { handleModifier ->
+                        val maxWeight = maxWeights[exercise.id]
                         ExerciseRow(
                             exercise = exercise,
-                            foodLogRepository = foodLogRepository,
+                            maxWeight = maxWeight,
                             open = openRowKey == rowKey,
                             onOpenChange = { open -> openRowKey = if (open) rowKey else openRowKey.takeIf { it != rowKey } },
                             draggable = draggable,
                             handleModifier = handleModifier,
-                            wheelValue = wheelValues[exercise.id] ?: quickWheelStart(exercise),
+                            wheelValue = wheelValues[exercise.id] ?: quickWheelStart(exercise, maxWeight),
                             onWheelChange = { wheelValues[exercise.id] = it },
                             checkedIn = exercise.id in checkedInIds,
                             onCheckedChange = { checked ->
-                                if (checked) onQuickCheckIn(exercise, wheelValues[exercise.id] ?: quickWheelStart(exercise))
+                                if (checked) onQuickCheckIn(exercise, wheelValues[exercise.id] ?: quickWheelStart(exercise, maxWeight))
                                 else onRemoveCheckIns(exercise)
                             },
                             onClick = { onSelectExercise(exercise) },
@@ -375,7 +372,7 @@ private val SwipeActionWidth = 64.dp
 @Composable
 private fun ExerciseRow(
     exercise: Exercise,
-    foodLogRepository: FoodLogRepository?,
+    maxWeight: Double?,
     open: Boolean,
     onOpenChange: (Boolean) -> Unit,
     draggable: Boolean,
@@ -400,8 +397,10 @@ private fun ExerciseRow(
             com.offlinelabs.nutcracker.data.model.ExerciseType.BODYWEIGHT -> R.string.reps_unit
         }
     )
-    val wheelSteps = remember(exercise.id, exercise.defaultWeight, exercise.defaultReps, type) {
-        quickWheelValues(quickWheelStart(exercise), if (type == com.offlinelabs.nutcracker.data.model.ExerciseType.STRENGTH) 300 else 200)
+    val wheelStart = quickWheelStart(exercise, maxWeight)
+    // The steps keep the start's fraction (42.5 kg gives …41.5, 42.5, 43.5…)
+    val wheelSteps = remember(wheelStart, type) {
+        quickWheelValues(wheelStart, if (type == com.offlinelabs.nutcracker.data.model.ExerciseType.STRENGTH) 300 else 200)
     }
     val actionCount = if (draggable) 3 else 2
 
@@ -448,15 +447,22 @@ private fun ExerciseRow(
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
-                    MaxWeightDisplay(exerciseId = exercise.id, foodLogRepository = foodLogRepository, textColor = textColor)
+                    Text(
+                        text = stringResource(R.string.max_weight_display, (maxWeight ?: 0.0).toString()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textColor.copy(alpha = 0.7f)
+                    )
                 }
-                ValueWheel(
-                    values = wheelSteps,
-                    value = wheelValue,
-                    onValueChange = onWheelChange,
-                    unit = unit,
-                    contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, formatWheelValue(wheelValue), unit)
-                )
+                // Re-created when the start moves (the max weight loads or grows), so it scrolls there
+                key(wheelSteps) {
+                    ValueWheel(
+                        values = wheelSteps,
+                        value = wheelValue,
+                        onValueChange = onWheelChange,
+                        unit = unit,
+                        contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, formatWheelValue(wheelValue), unit)
+                    )
+                }
                 val checkLabel = stringResource(
                     if (checkedIn) R.string.quick_remove_check_in else R.string.quick_check_in,
                     exercise.name
@@ -494,23 +500,3 @@ private fun SwipeAction(
     }
 }
 
-@Composable
-private fun MaxWeightDisplay(
-    exerciseId: Long,
-    foodLogRepository: FoodLogRepository? = null,
-    textColor: androidx.compose.ui.graphics.Color
-) {
-    var maxWeight by remember { mutableStateOf(0.0) }
-    
-    LaunchedEffect(exerciseId, foodLogRepository) {
-        foodLogRepository?.getMaxWeightForExercise(exerciseId)?.collect { weight ->
-            maxWeight = weight ?: 0.0
-        }
-    }
-    
-    Text(
-        text = stringResource(R.string.max_weight_display, maxWeight.toString()),
-        style = MaterialTheme.typography.bodySmall,
-        color = textColor.copy(alpha = 0.7f)
-    )
-}

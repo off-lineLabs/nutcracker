@@ -21,6 +21,9 @@ class CheckInLogicTest {
             name = "Bench", category = "strength", defaultWeight = 40.0, defaultReps = 8, defaultSets = 3, kcalBurnedPerUnit = 10.0
         )
         assertEquals(40.0, quickWheelStart(bench), 0.0)
+        // The wheel starts at the heaviest logged weight once there is one
+        assertEquals(52.5, quickWheelStart(bench, maxWeight = 52.5), 0.0)
+        assertEquals(40.0, quickWheelStart(bench, maxWeight = 0.0), 0.0)
         assertEquals(QuickCheckIn(weight = 45.0, reps = 8, sets = 3, caloriesBurned = 30.0), quickCheckIn(bench, 45.0))
     }
 
@@ -28,6 +31,8 @@ class CheckInLogicTest {
     fun quickCheckIn_cardioMinutes_bodyweightReps() {
         val run = com.offlinelabs.nutcracker.data.model.Exercise(name = "Run", category = "cardio", defaultReps = 30, kcalBurnedPerUnit = 8.0)
         assertEquals(30.0, quickWheelStart(run), 0.0)
+        // Max weight only matters for strength
+        assertEquals(30.0, quickWheelStart(run, maxWeight = 80.0), 0.0)
         assertEquals(QuickCheckIn(0.0, 25, 1, 200.0), quickCheckIn(run, 25.0))
         val stretch = com.offlinelabs.nutcracker.data.model.Exercise(name = "Stretch", category = "stretching", defaultReps = 10, kcalBurnedPerUnit = 0.5)
         assertEquals(QuickCheckIn(0.0, 12, 1, 6.0), quickCheckIn(stretch, 12.0))

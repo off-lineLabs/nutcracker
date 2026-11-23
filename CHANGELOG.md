@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Routines: plan workouts like “Leg day” at a gym, with that gym’s and shared exercises in your own order. Group the Exercise list by routine to follow it
 - Meal types: tag foods as Breakfast, Lunch, Dinner, Snack or your own types, and group the Food list by them
 - Synced copies: when copying an exercise to another gym you can keep the copies in sync, so changing one updates the other. Stop syncing any time from the edit screen
-- Quick check-in from the Exercise tab: set the weight (or minutes, or reps) on the small wheel and tick the box; untick to remove that day's check-in. Swipe an exercise left to edit or delete it
+- Quick check-in from the Exercise tab: set the weight (or minutes, or reps) on the small wheel, which starts at your heaviest logged weight, and tick the box; untick to remove that day's check-in. Swipe an exercise left to edit or delete it
 - Choose muscle groups when adding or editing an exercise by searching the exercise database's list (shown in your language) or typing your own
 - Backups now include your list order, routines, meal types and synced copies
 

@@ -132,6 +132,8 @@ interface FoodLogRepository {
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
     fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?>
     fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?>
+    /** Heaviest logged weight per exercise id; exercises never logged are absent. */
+    fun getMaxWeights(): Flow<Map<Long, Double>>
     fun getDailyExerciseCalories(date: String): Flow<Double>
 
     // Pill operations
@@ -371,6 +373,7 @@ class OfflineFoodLogRepository(
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
+    override fun getMaxWeights(): Flow<Map<Long, Double>> = exerciseLogDao.getMaxWeights()
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
     override fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>> =
         mealCheckInDao.getDailyFoodTotalsInRange(startDate, endDate)
