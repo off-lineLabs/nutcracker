@@ -767,4 +767,27 @@
     <string name="hide_sets">Ocultar as séries de %1$s</string>
     <string name="set_check_in">Registrar a série %1$d de %2$s</string>
     <string name="set_remove">Remover a série %1$d de %2$s</string>
+    <string name="faq_section_general">Geral</string>
+    <string name="faq_quick_food_q">Como registro um alimento rapidamente?</string>
+    <string name="faq_quick_food_a">Na aba Comida, cada alimento tem uma caixa de porção e uma caixa de registro. Ajuste a porção (ela começa na quantidade que você registrou da última vez e mostra as calorias) e marque a caixa: o alimento é registrado no dia mostrado no topo. Desmarque para remover o registro desse dia; Desfazer traz de volta.</string>
+    <string name="faq_meal_types_q">O que são tipos de refeição?</string>
+    <string name="faq_meal_types_a">Marque os alimentos como Café da manhã, Almoço, Jantar, Lanche ou seus próprios tipos ao adicionar ou editar, e agrupe a lista de Comida por tipo. Um alimento pode estar em vários tipos. Ao marcar um alimento dentro de um tipo, isso fica guardado: uma banana marcada no Café da manhã continua desmarcada no Lanche.</string>
+    <string name="faq_food_swipe_q">Como edito ou excluo um alimento da lista?</string>
+    <string name="faq_food_swipe_a">Deslize o alimento para a direita para ver Editar e Excluir (e a alça de arrastar na sua ordem personalizada). Deslizar para a esquerda muda de página, como sempre.</string>
+    <string name="faq_quick_exercise_q">Como registro um exercício rapidamente?</string>
+    <string name="faq_quick_exercise_a">Na aba Exercício, cada exercício tem caixas de números e uma caixa de registro. Nos de força, ajuste o peso (começa no seu maior peso registrado) e as repetições (começam no seu último registro); cardio tem minutos e peso corporal tem repetições. Marque a caixa para registrar todas as séries de uma vez no dia mostrado no topo; desmarque para remover o registro desse dia, com Desfazer.</string>
+    <string name="faq_sets_q">Posso registrar cada série separadamente?</string>
+    <string name="faq_sets_a">Sim. Toque na seta de um exercício de força para abrir as séries. Cada série tem seu próprio peso e repetições; mudar uma também muda as seguintes. Toque no círculo de uma série ao terminá-la, ou em Adicionar série para mais uma. A caixa do exercício mostra um traço enquanto só algumas séries estão feitas, e o Início lista as séries diferentes, como 40×8 · 45×6 · 50×6 kg.</string>
+    <string name="faq_routines_q">O que são rotinas?</string>
+    <string name="faq_routines_a">Uma rotina é um treino como “Dia de perna” em uma academia, com os exercícios na sua ordem. Crie com o botão Rotinas na aba Exercício, ou adicione um exercício a rotinas pelo formulário de edição dele. Agrupe a lista por rotina para seguir o treino. Marcar um exercício dentro de uma rotina conta só para essa rotina.</string>
+    <string name="faq_synced_copies_q">O que são cópias sincronizadas?</string>
+    <string name="faq_synced_copies_a">Ao copiar um exercício para outra academia, você pode manter as cópias sincronizadas: mudar os valores padrão, os músculos ou as notas de uma atualiza a outra. Cada uma mantém seu próprio histórico. Para parar de sincronizar, toque em “Sincronizado com…” no formulário de edição do exercício.</string>
+    <string name="faq_exercise_swipe_q">Como edito ou excluo um exercício da lista?</string>
+    <string name="faq_exercise_swipe_a">Deslize o exercício para a esquerda para ver Editar e Excluir (e a alça de arrastar na sua ordem personalizada). Toque no exercício para ver os detalhes e o histórico.</string>
+    <string name="faq_fine_control_q">Como mudo os números ou registro com mais detalhes?</string>
+    <string name="faq_fine_control_a">As caixas de números só mostram o valor escolhido, então rolar a lista não as altera. Toque em uma caixa para abrir a roda, gire e ela fecha sozinha (ou toque fora). Para controle total, toque no próprio alimento ou exercício: os detalhes abrem, e Registrar permite digitar valores exatos, escolher data e hora e adicionar notas.</string>
+    <string name="faq_sort_group_q">Como ordeno e agrupo as listas?</string>
+    <string name="faq_sort_group_a">Acima das listas de Comida e Exercício, escolha como ordenar (sua ordem, nome, data de inclusão ou último registro) e como agrupar. Toque na seta da caixa Ordenar para inverter o sentido. Na sua ordem personalizada, deslize um item e segure a alça para movê-lo.</string>
+    <string name="faq_scroll_hand_q">Por que as caixas de números ficam à esquerda?</string>
+    <string name="faq_scroll_hand_a">Para que o polegar com que você rola a tela não as altere sem querer. Se você rola com a mão esquerda, vá em Configurações, Mão para rolar, e escolha Mão esquerda para movê-las para a direita.</string>
 </resources>

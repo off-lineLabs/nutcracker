@@ -767,4 +767,27 @@
     <string name="hide_sets">Ocultar las series de %1$s</string>
     <string name="set_check_in">Registrar la serie %1$d de %2$s</string>
     <string name="set_remove">Quitar la serie %1$d de %2$s</string>
+    <string name="faq_section_general">General</string>
+    <string name="faq_quick_food_q">¿Cómo registro una comida rápidamente?</string>
+    <string name="faq_quick_food_a">En la pestaña Comida, cada alimento tiene una casilla de ración y una casilla de registro. Ajusta la ración (empieza en la cantidad que registraste la última vez y muestra sus calorías) y marca la casilla: el alimento se registra en el día que se muestra arriba. Desmárcala para quitar el registro de ese día; Deshacer lo recupera.</string>
+    <string name="faq_meal_types_q">¿Qué son los tipos de comida?</string>
+    <string name="faq_meal_types_a">Etiqueta los alimentos como Desayuno, Almuerzo, Cena, Merienda o tus propios tipos al añadirlos o editarlos, y agrupa la lista de Comida por tipo. Un alimento puede estar en varios tipos. Al marcarlo dentro de un tipo se recuerda: un plátano marcado en Desayuno sigue sin marcar en Merienda.</string>
+    <string name="faq_food_swipe_q">¿Cómo edito o elimino un alimento de la lista?</string>
+    <string name="faq_food_swipe_a">Desliza el alimento hacia la derecha para ver Editar y Eliminar (y el asa para arrastrar en tu orden personalizado). Deslizar hacia la izquierda cambia de página, como siempre.</string>
+    <string name="faq_quick_exercise_q">¿Cómo registro un ejercicio rápidamente?</string>
+    <string name="faq_quick_exercise_a">En la pestaña Ejercicio, cada ejercicio tiene casillas de números y una casilla de registro. En los de fuerza, ajusta el peso (empieza en tu peso máximo registrado) y las repeticiones (empiezan en tu último registro); el cardio tiene minutos y el peso corporal, repeticiones. Marca la casilla para registrar todas las series a la vez en el día que se muestra arriba; desmárcala para quitar el registro de ese día, con Deshacer.</string>
+    <string name="faq_sets_q">¿Puedo registrar cada serie por separado?</string>
+    <string name="faq_sets_a">Sí. Toca la flecha de un ejercicio de fuerza para abrir sus series. Cada serie tiene su propio peso y repeticiones; al cambiar una también cambian las siguientes. Toca el círculo de una serie al terminarla, o Añadir serie para una más. La casilla del ejercicio muestra un guion mientras solo hay algunas series hechas, e Inicio muestra las series distintas, como 40×8 · 45×6 · 50×6 kg.</string>
+    <string name="faq_routines_q">¿Qué son las rutinas?</string>
+    <string name="faq_routines_a">Una rutina es un entrenamiento como «Día de pierna» en un gimnasio, con sus ejercicios en tu orden. Créalas con el botón Rutinas de la pestaña Ejercicio, o añade un ejercicio a rutinas desde su formulario de edición. Agrupa la lista por rutina para seguirla. Marcar un ejercicio dentro de una rutina solo cuenta para esa rutina.</string>
+    <string name="faq_synced_copies_q">¿Qué son las copias sincronizadas?</string>
+    <string name="faq_synced_copies_a">Al copiar un ejercicio a otro gimnasio puedes mantener las copias sincronizadas: cambiar los valores por defecto, los músculos o las notas de una actualiza la otra. Cada una conserva su propio historial. Para dejar de sincronizar, toca «Sincronizado con…» en el formulario de edición del ejercicio.</string>
+    <string name="faq_exercise_swipe_q">¿Cómo edito o elimino un ejercicio de la lista?</string>
+    <string name="faq_exercise_swipe_a">Desliza el ejercicio hacia la izquierda para ver Editar y Eliminar (y el asa para arrastrar en tu orden personalizado). Toca el ejercicio para ver sus detalles e historial.</string>
+    <string name="faq_fine_control_q">¿Cómo cambio los números o registro con más detalle?</string>
+    <string name="faq_fine_control_a">Las casillas de números solo muestran el valor elegido, así que desplazar la lista no las cambia. Toca una casilla para abrir su rueda, gírala y se cierra sola (o toca fuera). Para tener control total, toca el alimento o el ejercicio: se abren sus detalles y Registrar te deja escribir valores exactos, elegir la fecha y la hora y añadir notas.</string>
+    <string name="faq_sort_group_q">¿Cómo ordeno y agrupo las listas?</string>
+    <string name="faq_sort_group_a">Encima de las listas de Comida y Ejercicio elige cómo ordenarlas (tu orden, nombre, fecha de alta o último registro) y cómo agruparlas. Toca la flecha de la casilla Ordenar para invertir el sentido. En tu orden personalizado, desliza un elemento y mantén pulsada el asa para moverlo.</string>
+    <string name="faq_scroll_hand_q">¿Por qué las casillas de números están a la izquierda?</string>
+    <string name="faq_scroll_hand_a">Para que el pulgar con el que te desplazas no las cambie sin querer. Si te desplazas con la mano izquierda, ve a Ajustes, Mano para desplazarte, y elige Mano izquierda para moverlas a la derecha.</string>
 </resources>

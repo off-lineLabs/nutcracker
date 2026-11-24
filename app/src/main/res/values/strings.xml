@@ -839,4 +839,27 @@
     <string name="hide_sets">Hide the sets of %1$s</string>
     <string name="set_check_in">Check in set %1$d of %2$s</string>
     <string name="set_remove">Remove set %1$d of %2$s</string>
+    <string name="faq_section_general">General</string>
+    <string name="faq_quick_food_q">How do I check in a food quickly?</string>
+    <string name="faq_quick_food_a">In the Food tab, each food has a portion box and a check-in box. Set the portion (it starts at the amount you logged last time and shows its calories) and tick the box: the food is logged on the day shown at the top. Untick it to remove that day’s check-in; Undo brings it back.</string>
+    <string name="faq_meal_types_q">What are meal types?</string>
+    <string name="faq_meal_types_a">Tag foods as Breakfast, Lunch, Dinner, Snack or your own types when adding or editing them, then group the Food list by meal type. A food can be in several types. Ticking a food under a meal type remembers it, so a banana ticked under Breakfast stays unticked under Snack.</string>
+    <string name="faq_food_swipe_q">How do I edit or delete a food from the list?</string>
+    <string name="faq_food_swipe_a">Swipe the food to the right to show Edit and Delete (and the drag handle in your own order). Swiping to the left changes the page, as usual.</string>
+    <string name="faq_quick_exercise_q">How do I check in an exercise quickly?</string>
+    <string name="faq_quick_exercise_a">In the Exercise tab, each exercise has number boxes and a check-in box. For strength exercises, set the weight (it starts at your heaviest logged weight) and the reps (they start at your last check-in); cardio has minutes and bodyweight has reps. Tick the box to log all the sets at once on the day shown at the top; untick it to remove that day’s check-in, with Undo.</string>
+    <string name="faq_sets_q">Can I log each set separately?</string>
+    <string name="faq_sets_a">Yes. Tap the arrow on a strength exercise to open its sets. Each set has its own weight and reps; changing one also changes the sets after it. Tap a set’s circle when you finish it, or Add set for an extra one. The exercise’s box shows a dash while only some sets are done, and Home lists sets that differ, like 40×8 · 45×6 · 50×6 kg.</string>
+    <string name="faq_routines_q">What are routines?</string>
+    <string name="faq_routines_a">A routine is a workout like “Leg day” at one gym, with its exercises in your order. Create them with the Routines button in the Exercise tab, or add an exercise to routines from its edit form. Group the list by routine to follow it. Ticking an exercise inside a routine counts for that routine only.</string>
+    <string name="faq_synced_copies_q">What are synced copies?</string>
+    <string name="faq_synced_copies_a">When you copy an exercise to another gym, you can keep the copies in sync: changing the defaults, muscles or notes of one updates the other. Each keeps its own history. To stop syncing, tap “Synced with …” in the exercise’s edit form.</string>
+    <string name="faq_exercise_swipe_q">How do I edit or delete an exercise from the list?</string>
+    <string name="faq_exercise_swipe_a">Swipe the exercise to the left to show Edit and Delete (and the drag handle in your own order). Tap the exercise to see its details and history.</string>
+    <string name="faq_fine_control_q">How do I change the numbers, or log with more detail?</string>
+    <string name="faq_fine_control_a">The number boxes only show the chosen value, so scrolling the list can’t change them. Tap a box to open its wheel, turn it, and it closes by itself (or tap outside). For full control, tap the food or exercise itself: its details open, and Check in lets you type exact values, pick the date and time and add notes.</string>
+    <string name="faq_sort_group_q">How do I sort and group the lists?</string>
+    <string name="faq_sort_group_a">Above the Food and Exercise lists, choose how to sort (your own order, name, date added or last check-in) and how to group them. Tap the arrow in the Sort box to flip the direction. In your own order, swipe an item and hold the drag handle to move it.</string>
+    <string name="faq_scroll_hand_q">Why are the number boxes on the left?</string>
+    <string name="faq_scroll_hand_a">So your scrolling thumb doesn’t change them by accident. If you scroll with your left hand, go to Settings, Scrolling hand, and choose Left hand to move them to the right.</string>
 </resources>

@@ -113,6 +113,8 @@ fun AppNavigation(settingsManager: SettingsManager) {
         "help" -> HelpScreen(
             onNavigateBack = { currentScreen = "dashboard" },
             isDarkTheme = settingsManager.isDarkTheme(context),
+            // The tab Help was opened from lists its questions first
+            focusPage = dashboardPage,
             onReplayTutorial = { 
                 // The tutorial spotlights Home elements
                 dashboardPage = DASHBOARD_PAGE_HOME
