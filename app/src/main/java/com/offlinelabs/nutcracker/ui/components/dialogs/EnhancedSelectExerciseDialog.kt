@@ -33,7 +33,13 @@ import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.offlinelabs.nutcracker.ui.components.ValueWheel
+import com.offlinelabs.nutcracker.ui.components.ValuePicker
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import com.offlinelabs.nutcracker.ui.components.formatWheelValue
 import com.offlinelabs.nutcracker.ui.components.lists.QuickCheckRow
 import com.offlinelabs.nutcracker.ui.components.lists.QuickControls
@@ -459,7 +465,13 @@ private fun MainExerciseSelectionContent(
                                 onEdit = { openRowKey = null; onEditExercise(exercise) },
                                 onDelete = { openRowKey = null; onDeleteExercise(exercise) }
                             )
-                            if (expanded) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = expanded,
+                                enter = androidx.compose.animation.expandVertically(
+                                    androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)
+                                ) + androidx.compose.animation.fadeIn(),
+                                exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+                            ) {
                                 SetList(
                                     exerciseName = exercise.name,
                                     controlsFirst = controlsFirst,
@@ -482,10 +494,15 @@ private fun MainExerciseSelectionContent(
     }
 }
 
+private val SetRowHeight = 52.dp
+private val SetBadgeSize = 32.dp
+private val SetRailWidth = 48.dp
+
 /**
- * The sets of a strength row, under it: done sets show their values, the others compact weight
- * and reps wheels (a change carries over to the following sets), each with its own box, and
- * "Add set" at the end.
+ * The sets of a strength row, as a stepper in a soft panel under it: a numbered circle per set on
+ * a thin line (tap it to tick the set: it fills with a check, and the line between done sets
+ * takes the accent colour), the set's weight × reps (boxes that open a wheel; a change carries
+ * over to the following sets) or, once done, its values and tick time, and "Add set" at the end.
  */
 @Composable
 private fun SetList(
@@ -504,86 +521,190 @@ private fun SetList(
     val kg = stringResource(R.string.kg_unit)
     val repsUnit = stringResource(R.string.reps_unit)
     val repsSteps = remember { (1..MAX_QUICK_REPS).map { it.toDouble() } }
-    val wheelsWidth = 56.dp + 6.dp + 48.dp
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+    val formColors = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors()
+    val rail = MaterialTheme.colorScheme.outlineVariant
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 8.dp, bottom = 10.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(vertical = 6.dp)
+    ) {
         for (i in 0 until planned) {
             val doneSet = done[i]
+            val badge: @Composable () -> Unit = {
+                SetStepBadge(
+                    number = i + 1,
+                    done = doneSet != null,
+                    lineAbove = if (i == 0) null else if (doneSet != null && done[i - 1] != null) formColors.accent else rail,
+                    // The rail continues to the next set, or to "Add set"
+                    lineBelow = if (doneSet != null && done[i + 1] != null) formColors.accent else rail,
+                    label = stringResource(if (doneSet != null) R.string.set_remove else R.string.set_check_in, i + 1, exerciseName),
+                    onClick = { if (doneSet != null) onUntick(i) else onTick(i) }
+                )
+            }
+            val values: @Composable RowScope.() -> Unit = {
+                if (doneSet != null) {
+                    Text(
+                        text = "${formatWheelValue(doneSet.weight)} $kg × ${doneSet.reps}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    val set = plannedSet(i)
+                    ValuePicker(
+                        values = weightSteps,
+                        value = set.weight,
+                        onValueChange = { onWeightChange(i, it) },
+                        unit = kg,
+                        inlineUnit = true,
+                        contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, formatWheelValue(set.weight), kg),
+                        width = 72.dp,
+                        height = 36.dp
+                    )
+                    Text("×", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    ValuePicker(
+                        values = repsSteps,
+                        value = set.reps.toDouble(),
+                        onValueChange = { onRepsChange(i, it.toInt()) },
+                        unit = null,
+                        inlineUnit = true,
+                        contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, set.reps.toString(), repsUnit),
+                        width = 44.dp,
+                        height = 36.dp
+                    )
+                }
+            }
+            // When the set was ticked (completedAt is "yyyy-MM-dd HH:mm:ss")
+            val time: @Composable RowScope.() -> Unit = {
+                Text(
+                    text = doneSet?.completedAt?.takeIf { it.length >= 16 }?.substring(11, 16).orEmpty(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier = Modifier.fillMaxWidth().height(SetRowHeight),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                val controls: @Composable RowScope.() -> Unit = {
-                    QuickControls(
-                        controlsFirst = controlsFirst,
-                        state = ToggleableState(doneSet != null),
-                        onClick = { if (doneSet != null) onUntick(i) else onTick(i) },
-                        checkLabel = stringResource(if (doneSet != null) R.string.set_remove else R.string.set_check_in, i + 1, exerciseName)
-                    ) {
-                        if (doneSet != null) {
-                            Text(
-                                text = "${formatWheelValue(doneSet.weight)} $kg × ${doneSet.reps}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.width(wheelsWidth)
-                            )
-                        } else {
-                            val set = plannedSet(i)
-                            // Re-created when a change carries over from an earlier set
-                            key(set.weight) {
-                                ValueWheel(
-                                    values = weightSteps,
-                                    value = set.weight,
-                                    onValueChange = { onWeightChange(i, it) },
-                                    unit = null,
-                                    contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, formatWheelValue(set.weight), kg),
-                                    width = 56.dp,
-                                    itemHeight = 20.dp
-                                )
-                            }
-                            key(set.reps) {
-                                ValueWheel(
-                                    values = repsSteps,
-                                    value = set.reps.toDouble(),
-                                    onValueChange = { onRepsChange(i, it.toInt()) },
-                                    unit = null,
-                                    contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, set.reps.toString(), repsUnit),
-                                    width = 48.dp,
-                                    itemHeight = 20.dp
-                                )
-                            }
-                        }
-                    }
-                }
-                val label: @Composable RowScope.() -> Unit = {
-                    Text(
-                        text = stringResource(R.string.set_number, i + 1),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
-                    )
-                }
                 if (controlsFirst) {
-                    controls()
-                    label()
+                    badge()
+                    values()
+                    Spacer(Modifier.weight(1f))
+                    time()
                 } else {
-                    label()
-                    controls()
+                    time()
+                    Spacer(Modifier.weight(1f))
+                    values()
+                    badge()
                 }
             }
         }
-        TextButton(
-            onClick = onAddSet,
-            modifier = Modifier.align(if (controlsFirst) Alignment.Start else Alignment.End).padding(horizontal = 8.dp),
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors().accent
-            )
+        // "Add set": a dashed circle closing the rail
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(SetRowHeight)
+                .clickable(onClick = onAddSet),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = if (controlsFirst) Arrangement.Start else Arrangement.End
         ) {
-            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(4.dp))
-            Text(stringResource(R.string.add_set))
+            val addBadge: @Composable () -> Unit = {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .width(SetRailWidth)
+                        .fillMaxHeight()
+                        .drawBehind {
+                            val x = size.width / 2
+                            val radius = SetBadgeSize.toPx() / 2
+                            drawLine(rail, Offset(x, 0f), Offset(x, size.height / 2 - radius), strokeWidth = 2.dp.toPx())
+                            drawCircle(
+                                color = formColors.accent,
+                                radius = radius,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 1.5.dp.toPx(),
+                                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                                )
+                            )
+                        }
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, tint = formColors.accent, modifier = Modifier.size(18.dp))
+                }
+            }
+            val addLabel: @Composable () -> Unit = {
+                Text(
+                    text = stringResource(R.string.add_set),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = formColors.accent,
+                    modifier = Modifier.padding(horizontal = 6.dp)
+                )
+            }
+            if (controlsFirst) {
+                addBadge()
+                addLabel()
+            } else {
+                addLabel()
+                addBadge()
+            }
+        }
+    }
+}
+
+/**
+ * A set's circle on the stepper rail: its number, or a check once done (filled with the accent
+ * colour). [lineAbove] / [lineBelow] are the colours of the rail segments (null: none).
+ */
+@Composable
+private fun SetStepBadge(
+    number: Int,
+    done: Boolean,
+    lineAbove: androidx.compose.ui.graphics.Color?,
+    lineBelow: androidx.compose.ui.graphics.Color?,
+    label: String,
+    onClick: () -> Unit
+) {
+    val formColors = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors()
+    val fill by androidx.compose.animation.animateColorAsState(
+        targetValue = if (done) formColors.accent else androidx.compose.ui.graphics.Color.Transparent,
+        label = "setBadge"
+    )
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .width(SetRailWidth)
+            .fillMaxHeight()
+            .drawBehind {
+                val x = size.width / 2
+                val radius = SetBadgeSize.toPx() / 2
+                val stroke = 2.dp.toPx()
+                lineAbove?.let { drawLine(it, Offset(x, 0f), Offset(x, size.height / 2 - radius), strokeWidth = stroke) }
+                lineBelow?.let { drawLine(it, Offset(x, size.height / 2 + radius), Offset(x, size.height), strokeWidth = stroke) }
+            }
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(SetBadgeSize)
+                .clip(CircleShape)
+                .background(fill)
+                .border(1.5.dp, if (done) formColors.accent else MaterialTheme.colorScheme.outline, CircleShape)
+                .clickable(onClick = onClick)
+                .semantics { contentDescription = label }
+        ) {
+            if (done) {
+                Icon(Icons.Filled.Check, contentDescription = null, tint = formColors.onAccent, modifier = Modifier.size(18.dp))
+            } else {
+                Text(
+                    text = number.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
@@ -665,28 +786,24 @@ private fun ExerciseRow(
                 onClick = onTickClick,
                 checkLabel = stringResource(if (tick == ToggleableState.On) R.string.quick_remove_check_in else R.string.quick_check_in, exercise.name)
             ) {
-                // Re-created when the start moves (the max weight loads or grows), so it scrolls there
-                key(wheelSteps) {
-                    ValueWheel(
-                        values = wheelSteps,
-                        value = wheelValue,
-                        onValueChange = onWheelChange,
-                        unit = unit,
-                        contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, formatWheelValue(wheelValue), unit),
-                        width = 56.dp
-                    )
-                }
+                // Only the chosen values show; a tap opens the wheel
+                ValuePicker(
+                    values = wheelSteps,
+                    value = wheelValue,
+                    onValueChange = onWheelChange,
+                    unit = unit,
+                    contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, formatWheelValue(wheelValue), unit),
+                    width = 56.dp
+                )
                 if (isStrength) {
-                    key(repsStart) {
-                        ValueWheel(
-                            values = repsSteps,
-                            value = repsValue.toDouble(),
-                            onValueChange = { onRepsChange(it.toInt()) },
-                            unit = repsUnit,
-                            contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, repsValue.toString(), repsUnit),
-                            width = 48.dp
-                        )
-                    }
+                    ValuePicker(
+                        values = repsSteps,
+                        value = repsValue.toDouble(),
+                        onValueChange = { onRepsChange(it.toInt()) },
+                        unit = repsUnit,
+                        contentDescription = stringResource(R.string.quick_wheel_description, exercise.name, repsValue.toString(), repsUnit),
+                        width = 48.dp
+                    )
                 }
             }
         }
@@ -710,11 +827,16 @@ private fun ExerciseRow(
                     modifier = Modifier.padding(start = 8.dp).weight(1f)
                 )
                 if (expandable) {
+                    val rotation by androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = if (expanded) 180f else 0f,
+                        label = "chevron"
+                    )
                     IconButton(onClick = onToggleExpanded, modifier = Modifier.size(36.dp)) {
                         Icon(
-                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            imageVector = Icons.Filled.ExpandMore,
                             contentDescription = stringResource(if (expanded) R.string.hide_sets else R.string.show_sets, exercise.name),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.graphicsLayer { rotationZ = rotation }
                         )
                     }
                 }

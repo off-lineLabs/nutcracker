@@ -35,7 +35,7 @@ import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.ListGroup
 import com.offlinelabs.nutcracker.data.model.Meal
-import com.offlinelabs.nutcracker.ui.components.ValueWheel
+import com.offlinelabs.nutcracker.ui.components.ValuePicker
 import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
 import com.offlinelabs.nutcracker.ui.components.formatWheelValue
 import com.offlinelabs.nutcracker.ui.components.lists.DraggableListRow
@@ -305,17 +305,15 @@ private fun MealRow(
                 onCheckedChange = onCheckedChange,
                 checkLabel = stringResource(if (checkedIn) R.string.quick_remove_check_in else R.string.quick_check_in, meal.name)
             ) {
-                // Re-created when the start moves (the last portion loads), so it scrolls there
-                key(steps) {
-                    ValueWheel(
-                        values = steps,
-                        value = portion,
-                        onValueChange = onPortionChange,
-                        unit = unit,
-                        contentDescription = stringResource(R.string.quick_wheel_description, meal.name, formatWheelValue(portion), unit),
-                        width = 60.dp
-                    )
-                }
+                // Only the chosen portion shows; a tap opens the wheel
+                ValuePicker(
+                    values = steps,
+                    value = portion,
+                    onValueChange = onPortionChange,
+                    unit = unit,
+                    contentDescription = stringResource(R.string.quick_wheel_description, meal.name, formatWheelValue(portion), unit),
+                    width = 60.dp
+                )
             }
         }
     ) {
