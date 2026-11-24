@@ -36,7 +36,8 @@ val SwipeActionWidth = 64.dp
  * A full-width row of the Food / Exercise tab: [content] (image, name, details) and [controls]
  * (number wheels and the check-in box). With [controlsFirst] the controls go on the left, away
  * from a right thumb scrolling the list. Tap opens the item; swipe left reveals [actions]
- * ([actionCount] buttons of [SwipeActionWidth]). Rows are separated by a hairline.
+ * ([actionCount] buttons of [SwipeActionWidth]), or swipe right with [revealFromLeft] (the Food
+ * tab, whose swipe left turns the page). Rows are separated by a hairline.
  */
 @Composable
 fun QuickCheckRow(
@@ -46,6 +47,7 @@ fun QuickCheckRow(
     actionCount: Int,
     actions: @Composable RowScope.() -> Unit,
     onClick: () -> Unit,
+    revealFromLeft: Boolean = false,
     controls: @Composable RowScope.() -> Unit,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -57,6 +59,7 @@ fun QuickCheckRow(
         shape = RectangleShape,
         // Transparent at rest (the row sits on the page); opaque only while sliding over the buttons
         slidingBackground = appSurfaceColor(),
+        revealFromLeft = revealFromLeft,
         actions = actions
     ) {
         Row(

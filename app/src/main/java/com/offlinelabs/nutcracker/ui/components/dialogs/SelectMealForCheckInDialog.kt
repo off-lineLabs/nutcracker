@@ -283,6 +283,8 @@ private fun MealRow(
         open = open,
         onOpenChange = onOpenChange,
         actionCount = if (draggable) 3 else 2,
+        // Food is the first page: a swipe left turns to Home, so the actions open with a swipe right
+        revealFromLeft = true,
         actions = {
             if (draggable) {
                 SwipeAction(
