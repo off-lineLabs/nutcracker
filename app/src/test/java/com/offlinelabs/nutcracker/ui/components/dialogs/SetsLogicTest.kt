@@ -26,6 +26,10 @@ class SetsLogicTest {
         assertEquals(1, plannedSetCount(0, emptyList(), 0))
         assertEquals(5, plannedSetCount(3, listOf(0, 4), 0))
         assertEquals(4, plannedSetCount(3, listOf(0), 1))
+        // Regression: an added set, then all four done, is all done (it used to plan a fifth,
+        // and ticking the row's box kept adding sets)
+        assertEquals(4, plannedSetCount(3, listOf(0, 1, 2, 3), 1))
+        assertEquals(SetsTick.ALL, setsTick(4, plannedSetCount(3, listOf(0, 1, 2, 3), 1)))
     }
 
     @Test

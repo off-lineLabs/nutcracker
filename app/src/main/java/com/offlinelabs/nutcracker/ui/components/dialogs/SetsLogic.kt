@@ -20,11 +20,13 @@ fun sessionLog(dayLogs: List<DayLog>, exerciseId: Long, routineId: Long?): DayLo
         .maxWithOrNull(compareBy({ it.logDateTime }, { it.logId }))
 
 /**
- * How many set rows to show: the exercise's default sets (at least one), or more when sets past
- * it are already done, plus the ones added with "+ set".
+ * How many set rows to show: the exercise's default sets (at least one) plus the ones added with
+ * "+ set", or more when sets past that are already done. Added sets extend the plan, not the done
+ * sets: counting them on top of the done ones made a fully done session look partly done, so the
+ * row's box kept logging one more set.
  */
 fun plannedSetCount(defaultSets: Int, doneIndices: Collection<Int>, added: Int): Int =
-    maxOf(defaultSets.coerceAtLeast(1), (doneIndices.maxOrNull() ?: -1) + 1) + added
+    maxOf(defaultSets.coerceAtLeast(1) + added, (doneIndices.maxOrNull() ?: -1) + 1)
 
 /**
  * A set's value before it's done: the latest change at or before [index] carries over to the
