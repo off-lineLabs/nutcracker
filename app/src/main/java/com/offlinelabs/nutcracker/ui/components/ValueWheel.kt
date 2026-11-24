@@ -209,6 +209,14 @@ fun ValueWheel(
             if (!scrolling) values.getOrNull(centredIndex)?.let { if (it != currentValue) currentOnChange(it) }
         }
     }
+    // Closed while still moving (e.g. a tap outside the floating wheel mid-fling): keep the value
+    // shown in the centre, which the "stopped" report above would never deliver
+    val currentValues by rememberUpdatedState(values)
+    androidx.compose.runtime.DisposableEffect(listState) {
+        onDispose {
+            currentValues.getOrNull(centredIndex)?.let { if (it != currentValue) currentOnChange(it) }
+        }
+    }
 
     val half = visibleItems / 2
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
