@@ -10,6 +10,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncDisabled
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -31,6 +41,13 @@ import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseType
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.ui.components.routine.routinesForGym
+import androidx.compose.material.icons.filled.Check
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerField
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerOption
+import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
 import com.offlinelabs.nutcracker.data.model.toInternalExercise
 import com.offlinelabs.nutcracker.ui.components.form.FormColors
 import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
@@ -51,6 +68,21 @@ import java.util.Locale
 fun AddExerciseDialog(
     externalExercise: ExternalExercise? = null,
     existingExercise: Exercise? = null,
+    /** Gyms offered by the picker (visible ones, plus the exercise's own gym when editing). */
+    gyms: List<Gym> = emptyList(),
+    /** Gym preselected for a new exercise (null = shared). Ignored when editing. */
+    defaultGymId: Long? = null,
+    /** Muscle choices besides the selected ones (exercise database + muscles already in use). */
+    muscleChoices: List<String> = emptyList(),
+    /** Visible routines; the form offers those of its gym (all of them for a shared exercise). */
+    routines: List<Routine> = emptyList(),
+    /** Routines picked in the form (hoisted, so every save path can store them). */
+    selectedRoutineIds: Set<Long> = emptySet(),
+    onSelectedRoutineIdsChange: (Set<Long>) -> Unit = {},
+    /** Gyms of the copies this exercise is synced with (e.g. "Basic Fit · Uni"); null when not synced. */
+    syncedWith: String? = null,
+    /** Stops syncing this exercise (applied right away). */
+    onUnsync: (() -> Unit)? = null,
     onDismiss: () -> Unit,
     onAddExercise: (Exercise) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -64,13 +96,16 @@ fun AddExerciseDialog(
         mutableStateOf(
             when {
                 existingExercise != null -> exerciseFormFrom(existingExercise, locale)
-                externalExercise != null -> exerciseFormFrom(externalExercise, locale)
-                else -> ExerciseFormInput()
+                externalExercise != null -> exerciseFormFrom(externalExercise, locale, gymId = defaultGymId)
+                else -> ExerciseFormInput(gymId = defaultGymId)
             }
         )
     }
     // Show "required" for the name only once the user has typed in it (or cleared it).
     var nameTouched by remember(externalExercise, existingExercise) { mutableStateOf(false) }
+    // Set once the user stops syncing here, so saving doesn't re-join the old sync group
+    var unsynced by remember(existingExercise) { mutableStateOf(false) }
+    var confirmUnsync by remember { mutableStateOf(false) }
 
     val errors = exerciseFormErrors(input)
     val valid = errors.isEmpty()
@@ -79,7 +114,8 @@ fun AddExerciseDialog(
     // Edit keeps everything the form doesn't show; import starts from the external exercise.
     fun createExercise(): Exercise {
         val base = existingExercise ?: externalExercise?.toInternalExercise() ?: Exercise(name = "")
-        return applyExerciseForm(base, input)
+        val form = applyExerciseForm(base, input)
+        return if (unsynced) form.copy(syncGroupId = null) else form
     }
 
     val showThreeButtons = externalExercise != null && existingExercise == null &&
@@ -115,11 +151,115 @@ fun AddExerciseDialog(
             input = input,
             onInputChange = { new ->
                 if (new.name != input.name) nameTouched = true
+                // Another gym offers other routines: keep only the picks still offered
+                if (new.gymId != input.gymId) {
+                    val offered = routinesForGym(routines, new.gymId).map { it.id }.toSet()
+                    onSelectedRoutineIdsChange(selectedRoutineIds intersect offered)
+                }
                 input = new
             },
             showNameError = nameTouched,
-            colors = FormDefaults.colors()
+            colors = FormDefaults.colors(),
+            gymOptions = gymPickerOptions(gyms),
+            muscleChoices = muscleChoices
         )
+        val offeredRoutines = routinesForGym(routines, input.gymId)
+        if (offeredRoutines.isNotEmpty()) {
+            RoutinePicker(
+                routines = offeredRoutines,
+                gyms = gyms,
+                // A shared exercise lists routines of several gyms: name the gym
+                showGym = input.gymId == null && offeredRoutines.map { it.gymId }.distinct().size > 1,
+                selected = selectedRoutineIds,
+                onSelectedChange = onSelectedRoutineIdsChange,
+                colors = FormDefaults.colors()
+            )
+        }
+        if (syncedWith != null && onUnsync != null && !unsynced) {
+            SyncedWithRow(syncedWith, FormDefaults.colors(), onClick = { confirmUnsync = true })
+        }
+    }
+
+    if (confirmUnsync && syncedWith != null && onUnsync != null) {
+        val colors = FormDefaults.colors()
+        AlertDialog(
+            onDismissRequest = { confirmUnsync = false },
+            icon = { Icon(Icons.Filled.SyncDisabled, contentDescription = null) },
+            title = { Text(stringResource(R.string.sync_stop_title)) },
+            text = { Text(stringResource(R.string.sync_stop_message, syncedWith)) },
+            confirmButton = {
+                TextButton(onClick = { confirmUnsync = false; unsynced = true; onUnsync() }) {
+                    Text(stringResource(R.string.sync_stop), color = colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmUnsync = false }) { Text(stringResource(R.string.cancel), color = colors.accent) }
+            }
+        )
+    }
+}
+
+/** Chips of the routines the exercise can join; tapping one adds or removes it. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun RoutinePicker(
+    routines: List<Routine>,
+    gyms: List<Gym>,
+    showGym: Boolean,
+    selected: Set<Long>,
+    onSelectedChange: (Set<Long>) -> Unit,
+    colors: FormColors
+) {
+    val gymsById = remember(gyms) { gyms.associateBy { it.id } }
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Text(
+            text = stringResource(R.string.routines_button),
+            style = MaterialTheme.typography.labelLarge,
+            color = colors.contentSecondary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        )
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            routines.forEach { routine ->
+                val isSelected = routine.id in selected
+                val gymName = if (showGym) gymsById[routine.gymId]?.let { com.offlinelabs.nutcracker.data.gymLabel(it.name, it.unit) } else null
+                androidx.compose.material3.FilterChip(
+                    selected = isSelected,
+                    onClick = { onSelectedChange(if (isSelected) selected - routine.id else selected + routine.id) },
+                    label = { Text(if (gymName != null) "${routine.name} · $gymName" else routine.name) },
+                    leadingIcon = if (isSelected) {
+                        { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    } else {
+                        null
+                    },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = colors.accent,
+                        selectedLabelColor = colors.onAccent,
+                        selectedLeadingIconColor = colors.onAccent
+                    )
+                )
+            }
+        }
+    }
+}
+
+/** "Synced with …" note at the bottom of the form; tapping it offers to stop syncing. */
+@Composable
+private fun SyncedWithRow(syncedWith: String, colors: FormColors, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = colors.section,
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+    ) {
+        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Sync, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
+            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+                Text(stringResource(R.string.sync_synced_with, syncedWith), style = MaterialTheme.typography.bodyMedium, color = colors.content)
+                Text(stringResource(R.string.sync_tap_to_stop), style = MaterialTheme.typography.bodySmall, color = colors.contentSecondary)
+            }
+        }
     }
 }
 
@@ -128,7 +268,9 @@ private fun ExerciseFormBody(
     input: ExerciseFormInput,
     onInputChange: (ExerciseFormInput) -> Unit,
     showNameError: Boolean,
-    colors: FormColors
+    colors: FormColors,
+    gymOptions: List<GymPickerOption>? = null,
+    muscleChoices: List<String> = emptyList()
 ) {
     val nameError = if (showNameError) {
         validateExerciseFormField(ExerciseFormField.NAME, input)?.messageRes
@@ -146,6 +288,24 @@ private fun ExerciseFormBody(
     ExerciseTypeSelector(
         selected = input.type,
         onSelected = { onInputChange(input.copy(type = it)) },
+        colors = colors
+    )
+
+    if (gymOptions != null) {
+        Spacer(Modifier.height(12.dp))
+        GymPickerField(
+            options = gymOptions,
+            selectedGymId = input.gymId,
+            onSelected = { onInputChange(input.copy(gymId = it)) },
+            colors = colors
+        )
+    }
+
+    Spacer(Modifier.height(12.dp))
+    MusclePicker(
+        options = muscleOptions(muscleChoices, emptyList(), input.primaryMuscles),
+        selected = input.primaryMuscles,
+        onSelectedChange = { onInputChange(input.copy(primaryMuscles = it)) },
         colors = colors
     )
 

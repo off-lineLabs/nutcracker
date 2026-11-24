@@ -32,8 +32,14 @@ class DatabaseImportManager(
         private const val MEALS_TSV = "meals.tsv"
         private const val USER_GOALS_TSV = "user_goals.tsv"
         private const val MEAL_CHECK_INS_TSV = "meal_check_ins.tsv"
+        private const val GYMS_TSV = "gyms.tsv"
         private const val EXERCISES_TSV = "exercises.tsv"
+        private const val ROUTINES_TSV = "routines.tsv"
+        private const val ROUTINE_EXERCISES_TSV = "routine_exercises.tsv"
+        private const val MEAL_CATEGORIES_TSV = "meal_categories.tsv"
+        private const val MEAL_CATEGORY_MEALS_TSV = "meal_category_meals.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
+        private const val EXERCISE_SETS_TSV = "exercise_sets.tsv"
         private const val PILLS_TSV = "pills.tsv"
         private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
         private const val TAGS_TSV = "tags.tsv"
@@ -46,7 +52,12 @@ class DatabaseImportManager(
         // Import order to maintain referential integrity
         private val IMPORT_ORDER = listOf(
             MEALS_TSV,
+            GYMS_TSV,
             EXERCISES_TSV,
+            ROUTINES_TSV,
+            ROUTINE_EXERCISES_TSV,
+            MEAL_CATEGORIES_TSV,
+            MEAL_CATEGORY_MEALS_TSV,
             PILLS_TSV,
             TAGS_TSV,
             USER_GOALS_TSV,
@@ -54,11 +65,18 @@ class DatabaseImportManager(
             RECIPE_INGREDIENTS_TSV,
             MEAL_CHECK_INS_TSV,
             EXERCISE_LOGS_TSV,
+            EXERCISE_SETS_TSV,
             PILL_CHECK_INS_TSV,
             MEAL_TAGS_TSV,
             EXERCISE_TAGS_TSV
         )
         
+        /** Tables added in 2.0; older backups lack them, which is not worth a warning. */
+        private val OPTIONAL_TABLES = setOf(
+            GYMS_TSV, ROUTINES_TSV, ROUTINE_EXERCISES_TSV, MEAL_CATEGORIES_TSV, MEAL_CATEGORY_MEALS_TSV,
+            EXERCISE_SETS_TSV
+        )
+
         const val AUTO_BACKUP_FILENAME = "auto-before-restore.zip"
         
         // Date formats for parsing
@@ -109,11 +127,15 @@ class DatabaseImportManager(
         val tablesImported = mutableListOf<String>()
         
         try {
-            // Validate source file
-            val documentFile = DocumentFile.fromSingleUri(context, sourceUri)
-                ?: return@withContext Result.failure(Exception("Invalid source URI"))
-            
-            if (!documentFile.exists()) {
+            // Validate source file (DocumentFile only understands content:// URIs)
+            val exists = if (sourceUri.scheme == android.content.ContentResolver.SCHEME_FILE) {
+                sourceUri.path?.let { File(it).exists() } == true
+            } else {
+                val documentFile = DocumentFile.fromSingleUri(context, sourceUri)
+                    ?: return@withContext Result.failure(Exception("Invalid source URI"))
+                documentFile.exists()
+            }
+            if (!exists) {
                 return@withContext Result.failure(Exception("Source file does not exist"))
             }
             
@@ -198,7 +220,7 @@ class DatabaseImportManager(
                             recordsImported = tableResult.recordsImported,
                             isComplete = false
                         )
-                    } else {
+                    } else if (tableName !in OPTIONAL_TABLES) {
                         warnings.add(ImportWarning(
                             tableName = tableName,
                             rowNumber = 0,
@@ -208,8 +230,17 @@ class DatabaseImportManager(
                     }
                 }
                 
+                // Check-ins from a backup made before sets (or whose sets weren't imported) get
+                // identical sets of their weight and reps
+                database.exerciseLogDao().backfillMissingSets()
+
                 // Drop placeholder meal copies that no check-in ended up using
                 placeholderCopyIds.forEach { database.mealDao().deleteMealIfUnreferenced(it) }
+
+                // A restore from a backup made before meal categories leaves none: bring back the defaults
+                if (database.mealCategoryDao().getAllCategoriesSync().isEmpty()) {
+                    MealCategoryDefaults.all.forEach { database.mealCategoryDao().upsertCategory(it) }
+                }
             }
             
             val endTime = System.currentTimeMillis()
@@ -325,8 +356,14 @@ class DatabaseImportManager(
             RECIPES_TSV -> importRecipes(tsvData)
             RECIPE_INGREDIENTS_TSV -> importRecipeIngredients(tsvData)
             MEAL_CHECK_INS_TSV -> importMealCheckIns(tsvData)
+            GYMS_TSV -> importGyms(tsvData)
             EXERCISES_TSV -> importExercises(tsvData)
+            ROUTINES_TSV -> importRoutines(tsvData)
+            ROUTINE_EXERCISES_TSV -> importRoutineExercises(tsvData)
+            MEAL_CATEGORIES_TSV -> importMealCategories(tsvData)
+            MEAL_CATEGORY_MEALS_TSV -> importMealCategoryMeals(tsvData)
             EXERCISE_LOGS_TSV -> importExerciseLogs(tsvData)
+            EXERCISE_SETS_TSV -> importExerciseSets(tsvData)
             PILLS_TSV -> importPills(tsvData)
             PILL_CHECK_INS_TSV -> importPillCheckIns(tsvData)
             TAGS_TSV -> importTags(tsvData)
@@ -380,6 +417,10 @@ class DatabaseImportManager(
     private suspend fun wipeAllTables() {
         database.mealTagDao().deleteAllMealTags()
         database.exerciseTagDao().deleteAllExerciseTags()
+        database.routineDao().deleteAllRoutineExercises()
+        database.routineDao().deleteAllRoutines()
+        database.mealCategoryDao().deleteAllLinks()
+        database.mealCategoryDao().deleteAllCategories()
         database.recipeIngredientDao().deleteAllIngredients()
         database.mealCheckInDao().deleteAllCheckIns()
         database.exerciseLogDao().deleteAllLogs()
@@ -387,6 +428,7 @@ class DatabaseImportManager(
         database.recipeDao().deleteAllRecipes()
         database.mealDao().deleteAllMeals()
         database.exerciseDao().deleteAllExercises()
+        database.gymDao().deleteAllGyms()
         database.pillDao().deleteAllPills()
         database.tagDao().deleteAllTags()
         database.userGoalDao().deleteAllUserGoals()
@@ -489,7 +531,8 @@ class DatabaseImportManager(
                             quantity = row.getValue("quantity").takeIf { !it.isNullOrBlank() },
                             servingSize = row.getValue("servingSize").takeIf { !it.isNullOrBlank() },
                             barcode = row.getValue("barcode").takeIf { !it.isNullOrBlank() },
-                            source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual"
+                            source = row.getValue("source").takeIf { !it.isNullOrBlank() } ?: "manual",
+                            sortOrder = row.getIntValue("sortOrder") ?: 0 // absent before 2.0
                         )
                         
                         val mealKey = ImportMergeKeys.mealKey(
@@ -861,7 +904,10 @@ class DatabaseImportManager(
                             checkInDate = row.getValueOrEmpty("checkInDate"),
                             checkInDateTime = dateTime,
                             servingSize = row.getDoubleValue("servingSize") ?: 1.0,
-                            notes = notes
+                            notes = notes,
+                            // Older backups have no meal type; a type that wasn't imported is dropped
+                            mealCategoryId = row.getLongValue("mealCategoryId")
+                                ?.let { idMappingManager.getNewId("meal_categories", it.toString()) }
                         )
                         
                         val newId = database.mealCheckInDao().insertMealCheckIn(checkIn)
@@ -905,7 +951,7 @@ class DatabaseImportManager(
     
     private suspend fun existingExerciseKeysById(): Map<Long, ImportMergeKeys.ExerciseKey> =
         database.exerciseDao().getAllExercisesIncludingHiddenSync().associate { e ->
-            e.id to ImportMergeKeys.exerciseKey(e.name, e.category)
+            e.id to ImportMergeKeys.exerciseKey(e.name, e.category, e.gymId)
         }
     
     private suspend fun existingTagKeysById(): Map<Long, ImportMergeKeys.TagKey> =
@@ -925,6 +971,91 @@ class DatabaseImportManager(
         return database.mealDao().insertMeal(source.copy(id = 0, isVisible = false))
     }
     
+    private suspend fun importGyms(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            // MERGE: reuse an existing gym with the same name and unit (case-insensitive)
+            val existing = HashMap<ImportMergeKeys.GymKey, Long>()
+            if (mode == ImportMode.MERGE) {
+                database.gymDao().getAllGymsIncludingHiddenSync().forEach { g ->
+                    existing.putIfAbsent(ImportMergeKeys.gymKey(g.name, g.unit), g.id)
+                }
+            }
+
+            rows.forEach { row ->
+                val validation = ImportValidators.validateGymData(row)
+                errors.addAll(validation.errors)
+                if (!validation.isValid) {
+                    skipped++
+                    return@forEach
+                }
+                try {
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    val name = row.getValueOrEmpty("name").trim()
+                    val unit = row.getValue("unit")?.trim().takeIf { !it.isNullOrEmpty() }
+                    val key = ImportMergeKeys.gymKey(name, unit)
+                    val matchedId = existing[key]
+                    if (matchedId != null) {
+                        // A visible imported gym that matches a deleted (hidden) one revives it;
+                        // otherwise its exercises would attach to a gym the dropdown never lists
+                        if (row.getBooleanValue("isVisible") != false) {
+                            database.gymDao().getGymById(matchedId)
+                                ?.takeIf { !it.isVisible }
+                                ?.let { database.gymDao().upsertGym(it.copy(isVisible = true)) }
+                        }
+                        if (oldId != null) {
+                            idMappings[oldId.toString()] = matchedId
+                            idMappingManager.addMapping("gyms", oldId.toString(), matchedId)
+                        }
+                        skipped++
+                        return@forEach
+                    }
+                    val gym = Gym(
+                        id = 0,
+                        name = name,
+                        unit = unit,
+                        mapsPlaceId = row.getValue("mapsPlaceId").takeIf { !it.isNullOrBlank() },
+                        mapsProvider = row.getValue("mapsProvider").takeIf { !it.isNullOrBlank() },
+                        isVisible = row.getBooleanValue("isVisible") ?: true
+                    )
+                    val newId = database.gymDao().upsertGym(gym)
+                    if (mode == ImportMode.MERGE) existing[key] = newId
+                    if (oldId != null) {
+                        idMappings[oldId.toString()] = newId
+                        idMappingManager.addMapping("gyms", oldId.toString(), newId)
+                    }
+                    imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "gyms",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert gym: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+
+            TableImportResult(
+                tableName = "gyms",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList(),
+                idMappings = idMappings
+            )
+        }
+    }
+
     private suspend fun importExercises(tsvData: String): TableImportResult {
         val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
@@ -938,7 +1069,7 @@ class DatabaseImportManager(
             val existingIds = ImportMergeKeys.ExistingIdQueues(
                 if (mode == ImportMode.MERGE) {
                     database.exerciseDao().getAllExercisesIncludingHiddenSync().map { e ->
-                        ImportMergeKeys.exerciseKey(e.name, e.category) to e.id
+                        ImportMergeKeys.exerciseKey(e.name, e.category, e.gymId) to e.id
                     }
                 } else emptyList()
             )
@@ -971,11 +1102,17 @@ class DatabaseImportManager(
                             instructions = parseMuscleList(row.getValue("instructions")),
                             notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
                             imagePaths = newImagePaths,
-                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true
+                            isVisible = row.getValue("isVisible")?.toBoolean() ?: true,
+                            gymId = ImportMergeKeys.resolveGymId(row.getValue("gymId")) {
+                                idMappingManager.getNewId("gyms", it)
+                            },
+                            sortOrder = row.getIntValue("sortOrder") ?: 0, // absent before 2.0
+                            // UUIDs are global, so the sync group survives the import as is
+                            syncGroupId = row.getValue("syncGroupId").takeIf { !it.isNullOrBlank() }
                         )
                         
                         val oldId = row.getValue("id")?.toLongOrNull()
-                        val exerciseKey = ImportMergeKeys.exerciseKey(exercise.name, exercise.category)
+                        val exerciseKey = ImportMergeKeys.exerciseKey(exercise.name, exercise.category, exercise.gymId)
                         if (oldId != null) backupExerciseKeys[oldId] = exerciseKey
                         val matchedId = existingIds.take(exerciseKey)
                         if (matchedId != null) {
@@ -1022,6 +1159,223 @@ class DatabaseImportManager(
         }
     }
     
+    /**
+     * Routines, remapped to the imported gym (rows whose gym is unknown, e.g. from a pre-gym backup,
+     * are skipped). MERGE reuses an existing routine with the same name at the same gym.
+     */
+    private suspend fun importRoutines(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        val idMappings = mutableMapOf<String, Long>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            val existing = HashMap<String, Long>()
+            if (mode == ImportMode.MERGE) {
+                database.routineDao().getAllRoutinesIncludingHiddenSync().forEach { r ->
+                    existing.putIfAbsent("${r.gymId}|${r.name.trim().lowercase(Locale.ROOT)}", r.id)
+                }
+            }
+            rows.forEach { row ->
+                val name = row.getValueOrEmpty("name").trim()
+                val gymId = row.getValue("gymId")?.takeIf { it.isNotBlank() }?.let { idMappingManager.getNewId("gyms", it) }
+                if (name.isEmpty() || gymId == null) {
+                    skipped++
+                    return@forEach
+                }
+                try {
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    val key = "$gymId|${name.lowercase(Locale.ROOT)}"
+                    val newId = existing[key]?.also { skipped++ } ?: database.routineDao().upsertRoutine(
+                        Routine(
+                            name = name,
+                            gymId = gymId,
+                            sortOrder = row.getIntValue("sortOrder") ?: 0,
+                            isVisible = row.getBooleanValue("isVisible") ?: true
+                        )
+                    ).also {
+                        if (mode == ImportMode.MERGE) existing[key] = it
+                        imported++
+                    }
+                    if (oldId != null) {
+                        idMappings[oldId.toString()] = newId
+                        idMappingManager.addMapping("routines", oldId.toString(), newId)
+                    }
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "routines",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert routine: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "routines",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList(),
+                idMappings = idMappings
+            )
+        }
+    }
+
+    /** Routine memberships, remapped to the imported routine and exercise ids; duplicates are ignored. */
+    private suspend fun importRoutineExercises(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val routineId = row.getLongValue("routineId")?.let { idMappingManager.getNewId("routines", it.toString()) }
+                    val exerciseId = row.getLongValue("exerciseId")?.let { idMappingManager.getNewId("exercises", it.toString()) }
+                    if (routineId == null || exerciseId == null) {
+                        skipped++
+                        return@forEach
+                    }
+                    val rowId = database.routineDao().insertRoutineExercise(
+                        RoutineExercise(routineId, exerciseId, row.getIntValue("position") ?: 0)
+                    )
+                    if (rowId == -1L) skipped++ else imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "routine_exercises",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert routine exercise: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "routine_exercises",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
+            )
+        }
+    }
+
+    /**
+     * Meal categories. MERGE reuses an existing one: built-ins by their defaultKey, others by name
+     * (case-insensitive).
+     */
+    private suspend fun importMealCategories(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            val existing = HashMap<String, Long>()
+            if (mode == ImportMode.MERGE) {
+                database.mealCategoryDao().getAllCategoriesSync().forEach { c ->
+                    existing.putIfAbsent(c.defaultKey?.let { "key|$it" } ?: "name|${c.name.trim().lowercase(Locale.ROOT)}", c.id)
+                }
+            }
+            rows.forEach { row ->
+                val name = row.getValueOrEmpty("name").trim()
+                val defaultKey = row.getValue("defaultKey")?.trim()?.takeIf { it.isNotEmpty() }
+                if (name.isEmpty() && defaultKey == null) {
+                    skipped++
+                    return@forEach
+                }
+                try {
+                    val oldId = row.getValue("id")?.toLongOrNull()
+                    val key = defaultKey?.let { "key|$it" } ?: "name|${name.lowercase(Locale.ROOT)}"
+                    val newId = existing[key]?.also { skipped++ } ?: database.mealCategoryDao().upsertCategory(
+                        MealCategory(
+                            name = name.ifEmpty { defaultKey.orEmpty() },
+                            defaultKey = defaultKey,
+                            sortOrder = row.getIntValue("sortOrder") ?: 0,
+                            isVisible = row.getBooleanValue("isVisible") ?: true
+                        )
+                    ).also {
+                        existing[key] = it
+                        imported++
+                    }
+                    if (oldId != null) idMappingManager.addMapping("meal_categories", oldId.toString(), newId)
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "meal_categories",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert meal category: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "meal_categories",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
+            )
+        }
+    }
+
+    /** Food-category memberships, remapped to the imported ids; duplicates are ignored. */
+    private suspend fun importMealCategoryMeals(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+
+        return database.withTransaction {
+            rows.forEach { row ->
+                try {
+                    val categoryId = row.getLongValue("categoryId")?.let { idMappingManager.getNewId("meal_categories", it.toString()) }
+                    val mealId = row.getLongValue("mealId")?.let { idMappingManager.getNewId("meals", it.toString()) }
+                    if (categoryId == null || mealId == null) {
+                        skipped++
+                        return@forEach
+                    }
+                    val rowId = database.mealCategoryDao().insertLink(MealCategoryMeal(categoryId, mealId))
+                    if (rowId == -1L) skipped++ else imported++
+                } catch (e: Exception) {
+                    errors.add(ImportError(
+                        tableName = "meal_category_meals",
+                        rowNumber = row.rowNumber,
+                        fieldName = null,
+                        errorMessage = "Failed to insert meal category link: ${e.message}",
+                        severity = ErrorSeverity.ERROR
+                    ))
+                    failed++
+                }
+            }
+            TableImportResult(
+                tableName = "meal_category_meals",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
+            )
+        }
+    }
+
     private suspend fun importExerciseLogs(tsvData: String): TableImportResult {
         val rows = parseCsvData(tsvData)
         val errors = mutableListOf<ImportError>()
@@ -1072,13 +1426,18 @@ class DatabaseImportManager(
                             reps = row.getIntValue("reps") ?: 0,
                             sets = row.getIntValue("sets") ?: 0,
                             caloriesBurned = row.getDoubleValue("caloriesBurned") ?: 0.0,
-                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() }
+                            notes = row.getValue("notes").takeIf { !it.isNullOrBlank() },
+                            // Older backups have no routine; a routine that wasn't imported is dropped
+                            routineId = row.getLongValue("routineId")
+                                ?.let { idMappingManager.getNewId("routines", it.toString()) }
                         )
                         
+                        // Without sets for now: the backup's sets follow, the rest are filled in at the end
                         val newId = database.exerciseLogDao().insertExerciseLog(exerciseLog)
                         val oldId = row.getValue("id")?.toLongOrNull()
                         if (oldId != null) {
                             idMappings[oldId.toString()] = newId
+                            idMappingManager.addMapping("exercise_logs", oldId.toString(), newId)
                         }
                         imported++
                     } catch (e: Exception) {
@@ -1105,6 +1464,58 @@ class DatabaseImportManager(
                 errors = errors,
                 warnings = warnings,
                 idMappings = idMappings
+            )
+        }
+    }
+
+    /**
+     * Imports the sets of the check-ins imported just before (2.0 backups). Sets of check-ins that
+     * weren't imported (e.g. duplicates skipped in a merge) are skipped.
+     */
+    private suspend fun importExerciseSets(tsvData: String): TableImportResult {
+        val rows = parseCsvData(tsvData)
+        val errors = mutableListOf<ImportError>()
+        var imported = 0
+        var skipped = 0
+        var failed = 0
+        return database.withTransaction {
+            val sets = rows.mapNotNull { row ->
+                val logId = row.getLongValue("logId")?.let { idMappingManager.getNewId("exercise_logs", it.toString()) }
+                val setIndex = row.getIntValue("setIndex")
+                if (logId == null || setIndex == null) {
+                    skipped++
+                    null
+                } else {
+                    com.offlinelabs.nutcracker.data.model.ExerciseSet(
+                        logId = logId,
+                        setIndex = setIndex,
+                        weight = row.getDoubleValue("weight") ?: 0.0,
+                        reps = row.getIntValue("reps") ?: 0,
+                        completedAt = row.getValue("completedAt").takeIf { !it.isNullOrBlank() }
+                    )
+                }
+            }
+            try {
+                database.exerciseLogDao().insertSets(sets)
+                imported = sets.size
+            } catch (e: Exception) {
+                errors.add(ImportError(
+                    tableName = "exercise_sets",
+                    rowNumber = 0,
+                    fieldName = null,
+                    errorMessage = "Failed to insert exercise sets: ${e.message}",
+                    severity = ErrorSeverity.ERROR
+                ))
+                failed = sets.size
+            }
+            TableImportResult(
+                tableName = "exercise_sets",
+                recordsProcessed = rows.size,
+                recordsImported = imported,
+                recordsSkipped = skipped,
+                recordsFailed = failed,
+                errors = errors,
+                warnings = emptyList()
             )
         }
     }

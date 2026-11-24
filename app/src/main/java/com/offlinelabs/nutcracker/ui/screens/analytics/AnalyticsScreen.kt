@@ -82,13 +82,15 @@ enum class TimePeriod {
 @Composable
 fun AnalyticsScreen(
     onNavigateBack: () -> Unit,
-    @Suppress("UNUSED_PARAMETER") isDarkTheme: Boolean
+    @Suppress("UNUSED_PARAMETER") isDarkTheme: Boolean,
+    /** Section shown on open, e.g. Exercise when coming from the dashboard's Exercise tab. */
+    initialSection: AnalyticsSection = AnalyticsSection.NUTRITION
 ) {
     // Animation state for the circular reveal effect
     var isVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    var currentSection by rememberSaveable { mutableStateOf(AnalyticsSection.NUTRITION) }
+    var currentSection by rememberSaveable { mutableStateOf(initialSection) }
     var currentTimePeriod by rememberSaveable { mutableStateOf(TimePeriod.DAYS) }
 
     // Nutrition state lives at screen level: the content below is stateless (previewable) and the

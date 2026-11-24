@@ -11,6 +11,52 @@ import org.junit.Test
 import java.util.Locale
 
 class ExerciseFormLogicTest {
+
+    @Test
+    fun muscleOptions_mergesNormalizesAndSorts() {
+        assertEquals(
+            listOf("biceps", "chest", "rear delts"),
+            muscleOptions(listOf("chest", "biceps"), listOf(" Chest ", "Rear  Delts"), listOf("", "biceps"))
+        )
+    }
+
+    private val ptNames = mapOf("glutes" to "Glúteos", "chest" to "Peito", "lower back" to "Lombar")
+    private val ptLabel: (String) -> String = { ptNames[it] ?: it }
+
+    @Test
+    fun muscleSuggestions_matchTranslatedNameIgnoringAccents_prefixFirst() {
+        val options = listOf("chest", "glutes", "lower back")
+        assertEquals(listOf("glutes"), muscleSuggestions(options, emptyList(), "glute", ptLabel)) // key match
+        assertEquals(listOf("glutes"), muscleSuggestions(options, emptyList(), "GLUTEOS", ptLabel)) // accentless label
+        // "l" starts "Lombar" (first) and is inside "Glúteos"; "Peito" has no l
+        assertEquals(listOf("lower back", "glutes"), muscleSuggestions(options, emptyList(), "l", ptLabel))
+        assertEquals(listOf("glutes", "lower back"), muscleSuggestions(options, listOf("chest"), "", ptLabel))
+    }
+
+    @Test
+    fun resolveTypedMuscle_prefersKnownKey_elseCustom() {
+        val options = listOf("chest", "glutes")
+        assertEquals("glutes", resolveTypedMuscle(options, " glúteos ", ptLabel))
+        assertEquals("rear delts", resolveTypedMuscle(options, "Rear  Delts", ptLabel))
+        assertNull(resolveTypedMuscle(options, "  ", ptLabel))
+    }
+
+    @Test
+    fun toggleMuscle_addsNormalizedAndRemoves() {
+        assertEquals(listOf("chest", "lower back"), toggleMuscle(listOf("chest"), " Lower Back"))
+        assertEquals(emptyList<String>(), toggleMuscle(listOf("chest"), "CHEST"))
+        assertEquals(listOf("chest"), toggleMuscle(listOf("chest"), "  "))
+    }
+
+    @Test
+    fun primaryMusclesSurviveEditRoundTrip() {
+        val existing = Exercise(id = 4, name = "Bench", primaryMuscles = listOf("Chest", "triceps"), sortOrder = 7)
+        val input = exerciseFormFrom(existing, Locale.US)
+        assertEquals(listOf("chest", "triceps"), input.primaryMuscles)
+        val saved = applyExerciseForm(existing, input.copy(primaryMuscles = toggleMuscle(input.primaryMuscles, "shoulders")))
+        assertEquals(listOf("chest", "triceps", "shoulders"), saved.primaryMuscles)
+        assertEquals(7, saved.sortOrder) // edits keep the custom position
+    }
     private val pt = Locale.forLanguageTag("pt-BR")
 
     private fun strength(
@@ -168,5 +214,35 @@ class ExerciseFormLogicTest {
             category = "strength"
         )
         assertEquals(existing, applyExerciseForm(existing, exerciseFormFrom(existing, pt)))
+    }
+
+    @Test
+    fun editKeepsGymIdWhenOtherFieldsChange() {
+        val existing = Exercise(name = "Leg press", category = "strength", gymId = 7L)
+        val form = exerciseFormFrom(existing, pt)
+        assertEquals(7L, form.gymId)
+        val saved = applyExerciseForm(existing, form.copy(name = "Leg press 2", weight = "80"))
+        assertEquals(7L, saved.gymId)
+        assertEquals(existing.copy(name = "Leg press 2", defaultWeight = 80.0), saved)
+    }
+
+    @Test
+    fun editCanMoveExerciseToAnotherGymOrToShared() {
+        val existing = Exercise(name = "Leg press", category = "strength", gymId = 7L)
+        val form = exerciseFormFrom(existing, pt)
+        assertEquals(9L, applyExerciseForm(existing, form.copy(gymId = 9L)).gymId)
+        assertNull(applyExerciseForm(existing, form.copy(gymId = null)).gymId)
+    }
+
+    @Test
+    fun newExerciseCarriesPresetGymId() {
+        assertEquals(3L, applyExerciseForm(Exercise(name = ""), ExerciseFormInput(name = "Curl", gymId = 3L)).gymId)
+        assertNull(applyExerciseForm(Exercise(name = ""), ExerciseFormInput(name = "Curl")).gymId)
+    }
+
+    @Test
+    fun importPresetsGymId() {
+        assertEquals(4L, exerciseFormFrom(external("strength"), pt, gymId = 4L).gymId)
+        assertNull(exerciseFormFrom(external("strength"), pt).gymId)
     }
 }

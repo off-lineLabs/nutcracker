@@ -14,6 +14,7 @@ import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
 import com.offlinelabs.nutcracker.data.dao.TagDao
 import com.offlinelabs.nutcracker.data.dao.MealTagDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseTagDao
+import com.offlinelabs.nutcracker.data.dao.GymDao
 import com.offlinelabs.nutcracker.data.dao.RecipeDao
 import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.model.Meal
@@ -28,6 +29,14 @@ import com.offlinelabs.nutcracker.data.model.DateTimeTypeConverters
 import com.offlinelabs.nutcracker.data.model.Tag
 import com.offlinelabs.nutcracker.data.model.MealTag
 import com.offlinelabs.nutcracker.data.model.ExerciseTag
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.data.model.RoutineExercise
+import com.offlinelabs.nutcracker.data.dao.RoutineDao
+import com.offlinelabs.nutcracker.data.dao.MealCategoryDao
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.data.model.MealCategoryDefaults
+import com.offlinelabs.nutcracker.data.model.MealCategoryMeal
 import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
@@ -45,9 +54,15 @@ import com.offlinelabs.nutcracker.data.migrations.DatabaseMigrations
         MealTag::class,
         ExerciseTag::class,
         Recipe::class,
-        RecipeIngredient::class
+        RecipeIngredient::class,
+        Gym::class,
+        Routine::class,
+        RoutineExercise::class,
+        MealCategory::class,
+        MealCategoryMeal::class,
+        com.offlinelabs.nutcracker.data.model.ExerciseSet::class
     ], 
-    version = 19, 
+    version = 24, 
     exportSchema = false
 )
 @androidx.room.TypeConverters(ExerciseTypeConverters::class, DateTimeTypeConverters::class)
@@ -65,6 +80,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseTagDao(): ExerciseTagDao
     abstract fun recipeDao(): RecipeDao
     abstract fun recipeIngredientDao(): RecipeIngredientDao
+    abstract fun gymDao(): GymDao
+    abstract fun routineDao(): RoutineDao
+    abstract fun mealCategoryDao(): MealCategoryDao
 
     companion object {
         @Volatile
@@ -80,11 +98,22 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     .addMigrations(
                         DatabaseMigrations.MIGRATION_17_18,
-                        DatabaseMigrations.MIGRATION_18_19
+                        DatabaseMigrations.MIGRATION_18_19,
+                        DatabaseMigrations.MIGRATION_19_20,
+                        DatabaseMigrations.MIGRATION_20_21,
+                        DatabaseMigrations.MIGRATION_21_22,
+                        DatabaseMigrations.MIGRATION_22_23,
+                        DatabaseMigrations.MIGRATION_23_24
                         // Add more migrations here as needed
                         // IMPORTANT: When incrementing database version, you MUST create a proper migration
                         // in DatabaseMigrations.kt. Never use fallbackToDestructiveMigration() in production.
                     )
+                    // A fresh install starts with Breakfast, Lunch, Dinner and Snack (upgrades get them in MIGRATION_21_22)
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                            MealCategoryDefaults.insertStatements().forEach { db.execSQL(it) }
+                        }
+                    })
                     .build()
                     INSTANCE = instance
                     instance

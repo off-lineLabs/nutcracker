@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-24
+
+### Added
+- Gyms: the same machine can weigh differently at different gyms, so you can now keep separate exercises per gym. Create a gym with a name and an optional unit or location, edit it, or delete it
+- Deleting a gym asks whether to keep its exercises as shared or remove them too
+- A gym dropdown at the top of the Exercise tab: pick a gym to see its exercises followed by a Shared section, or choose All gyms to see the shared exercises. Your selection is remembered
+- Assign an exercise to a gym, move it to another gym, or copy it to another gym (a copy starts with no history)
+- Gym names show on exercise check-ins on Home and in the exercise details
+- Backups now include your gyms
+- A new Help entry explaining gyms
+- Sort the Food and Exercise lists by your own order, name, date added or last check-in, ascending or descending, and group them (Food by meal type or NOVA; Exercise by gym, routine, muscle group or exercise type). In your own order, hold an item and drag it to move it. Your choices are remembered
+- Routines: plan workouts like “Leg day” at a gym, with that gym’s and shared exercises in your own order. Group the Exercise list by routine to follow it
+- Meal types: tag foods as Breakfast, Lunch, Dinner, Snack or your own types, and group the Food list by them
+- Synced copies: when copying an exercise to another gym you can keep the copies in sync, so changing one updates the other. Stop syncing any time from the edit screen
+- Quick check-in from the Exercise tab: set the weight (starting at your heaviest logged weight) and the reps (starting at your last check-in), or the minutes / reps for cardio and bodyweight, and tick the box. The number boxes only show the chosen value; tap one to open its wheel, which closes itself once you stop turning it; untick to remove that day's check-in. Swipe an exercise left to edit or delete it
+- Quick check-in from the Food tab: set the portion on the wheel (starting at your last portion, with the kcal shown as you scroll) and tick the box. Swipe a food left to edit or delete it
+- Checking in under a routine or meal type remembers it: an exercise in two routines, or a food in Breakfast and Snack, is only ticked where you checked it in
+- Add an exercise to routines from its add/edit form
+- Sets: open a strength exercise's sets, shown as steps you tick one by one (each with its own weight and reps, changing one carries over to the next sets, and the time each was done), or add an extra set. The row's box shows when only some sets are done, and Home lists sets that differ, like "40×8 · 45×6 · 50×6 kg"
+- Settings: choose the hand you scroll with, and the number wheels and check-in boxes move to the other side so scrolling doesn't change them
+- Choose muscle groups when adding or editing an exercise by searching the exercise database's list (shown in your language) or typing your own
+- Backups now include your list order, routines, meal types and synced copies
+
+### Changed
+- The two buttons on the home screen are replaced by a tab bar with Food, Home and Exercise. Swipe between tabs or tap them
+- The Food tab shows the meal picker directly (search, add, barcode scan, food database and recipes) and the Exercise tab shows your exercise list, both full height under the same header
+- After logging from the Food or Exercise tab you stay on that tab and a "Logged · View" message appears; View takes you to Home
+- Back from the Food or Exercise tab returns to Home
+- The tutorial and Help now describe the tabs instead of the buttons
+- Logging from the Food or Exercise tab uses the day shown at the top, so you can fill in a past day without changing the date in each check-in
+- Analytics opens on the Exercise section when you come from the Exercise tab, and going back returns you to the same tab and day
+- Picking a gym for an exercise uses a dropdown, and Copy to another gym opens a sheet listing each gym with its unit
+- All gyms in the Exercise tab now lists every exercise, grouped by gym by default
+- The Food and Exercise lists use the full screen width, with one compact row per item instead of cards
+- Adding exercises to a routine opens a dialog that no longer closes when you pull down while scrolling
+- Help is grouped into Food, Exercise and General, with the questions of the tab you opened it from first, and new questions about quick check-ins, sets, routines, meal types, synced copies, swiping to edit or delete, the number boxes, sorting and the scrolling hand
+
+### Fixed
+- The meal details dialog stays open when the phone is rotated
+- The Copy to another gym button was hard to read in dark mode
+
 ## [1.4.0] - 2026-11-22
 
 ### Added

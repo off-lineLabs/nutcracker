@@ -10,6 +10,109 @@ import org.junit.Test
 
 class CheckInLogicTest {
 
+    private val zone = java.time.ZoneId.of("Europe/Madrid")
+    private val now = java.time.LocalDateTime.of(2026, 11, 22, 18, 45, 10)
+
+    private fun local(date: java.util.Date) = java.time.LocalDateTime.ofInstant(date.toInstant(), zone)
+
+    @Test
+    fun quickCheckIn_strengthUsesWheelWeightAndDefaults() {
+        val bench = com.offlinelabs.nutcracker.data.model.Exercise(
+            name = "Bench", category = "strength", defaultWeight = 40.0, defaultReps = 8, defaultSets = 3, kcalBurnedPerUnit = 10.0
+        )
+        assertEquals(40.0, quickWheelStart(bench), 0.0)
+        // The wheel starts at the heaviest logged weight once there is one
+        assertEquals(52.5, quickWheelStart(bench, maxWeight = 52.5), 0.0)
+        assertEquals(40.0, quickWheelStart(bench, maxWeight = 0.0), 0.0)
+        assertEquals(QuickCheckIn(weight = 45.0, reps = 8, sets = 3, caloriesBurned = 30.0), quickCheckIn(bench, 45.0))
+    }
+
+    @Test
+    fun quickCheckIn_cardioMinutes_bodyweightReps() {
+        val run = com.offlinelabs.nutcracker.data.model.Exercise(name = "Run", category = "cardio", defaultReps = 30, kcalBurnedPerUnit = 8.0)
+        assertEquals(30.0, quickWheelStart(run), 0.0)
+        // Max weight only matters for strength
+        assertEquals(30.0, quickWheelStart(run, maxWeight = 80.0), 0.0)
+        assertEquals(QuickCheckIn(0.0, 25, 1, 200.0), quickCheckIn(run, 25.0))
+        val stretch = com.offlinelabs.nutcracker.data.model.Exercise(name = "Stretch", category = "stretching", defaultReps = 10, kcalBurnedPerUnit = 0.5)
+        assertEquals(QuickCheckIn(0.0, 12, 1, 6.0), quickCheckIn(stretch, 12.0))
+    }
+
+    @Test
+    fun quickCheckIn_strengthTakesTheRepsWheel() {
+        val bench = com.offlinelabs.nutcracker.data.model.Exercise(
+            name = "Bench", category = "strength", defaultWeight = 40.0, defaultReps = 8, defaultSets = 3, kcalBurnedPerUnit = 10.0
+        )
+        assertEquals(QuickCheckIn(weight = 45.0, reps = 12, sets = 3, caloriesBurned = 30.0), quickCheckIn(bench, 45.0, reps = 12))
+        // The reps wheel starts at the last check-in's reps, else the default
+        assertEquals(6, quickRepsStart(bench, lastReps = 6))
+        assertEquals(8, quickRepsStart(bench, lastReps = null))
+        assertEquals(8, quickRepsStart(bench, lastReps = 0))
+        assertEquals(MAX_QUICK_REPS, quickRepsStart(bench, lastReps = 500))
+        // Cardio ignores the reps argument (its wheel is the minutes)
+        val run = com.offlinelabs.nutcracker.data.model.Exercise(name = "Run", category = "cardio", defaultReps = 30, kcalBurnedPerUnit = 8.0)
+        assertEquals(QuickCheckIn(0.0, 25, 1, 200.0), quickCheckIn(run, 25.0, reps = 99))
+    }
+
+    private fun food(serving: Double, unit: com.offlinelabs.nutcracker.data.model.ServingSizeUnit) =
+        com.offlinelabs.nutcracker.data.model.Meal(
+            name = "Food", calories = 100, carbohydrates_g = 0.0, protein_g = 0.0, fat_g = 0.0, fiber_g = 0.0,
+            sodium_mg = 0.0, servingSize_value = serving, servingSize_unit = unit
+        )
+
+    @Test
+    fun portionWheel_startsAtLastAmountInTheFoodsUnit() {
+        val banana = food(100.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.GRAMS)
+        assertEquals(100.0, portionWheelStart(banana, lastMultiplier = null), 0.0)
+        assertEquals(150.0, portionWheelStart(banana, lastMultiplier = 1.5), 0.0)
+        // Grams are whole numbers
+        assertEquals(133.0, portionWheelStart(banana, lastMultiplier = 1.3333), 0.0)
+        assertEquals(1.5, portionMultiplier(150.0, banana), 1e-9)
+        val egg = food(1.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.PIECES)
+        assertEquals(2.0, portionWheelStart(egg, lastMultiplier = 2.0), 0.0)
+        // A food without a serving size counts the amount itself
+        val noServing = food(0.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.SERVINGS)
+        assertEquals(1.0, portionWheelStart(noServing, lastMultiplier = null), 0.0)
+        assertEquals(2.5, portionMultiplier(2.5, noServing), 1e-9)
+    }
+
+    @Test
+    fun portionWheelValues_stepsByUnit_keepTheStart_andStayAboveZero() {
+        val grams = portionWheelValues(125.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.GRAMS)
+        assertEquals(5.0, grams.first(), 0.0)
+        assertTrue(125.0 in grams)
+        assertEquals(10.0, grams[1] - grams[0], 1e-9)
+        assertTrue(grams.last() >= 500.0)
+        val round = portionWheelValues(100.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.GRAMS)
+        assertEquals(10.0, round.first(), 0.0)
+        assertTrue(100.0 in round)
+        val pieces = portionWheelValues(2.0, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.PIECES)
+        assertEquals(listOf(0.5, 1.0, 1.5, 2.0), pieces.take(4))
+        val litres = portionWheelValues(0.3, com.offlinelabs.nutcracker.data.model.ServingSizeUnit.LITERS)
+        assertEquals(0.1, litres.first(), 1e-9)
+        assertTrue(litres.any { kotlin.math.abs(it - 0.3) < 1e-9 })
+    }
+
+    @Test
+    fun quickWheelValues_stepByOneKeepingTheFraction() {
+        val values = quickWheelValues(42.5, 300)
+        assertEquals(301, values.size)
+        assertEquals(0.5, values.first(), 0.0)
+        assertTrue(42.5 in values)
+        assertEquals(listOf(0.0, 1.0, 2.0), quickWheelValues(1.0, 2))
+    }
+
+    @Test
+    fun defaultCheckInIsNowForToday() {
+        assertEquals(now, local(defaultCheckInDateTime(now.toLocalDate(), now, zone)))
+    }
+
+    @Test
+    fun defaultCheckInKeepsTimeOfDayOnAnotherDay() {
+        val past = java.time.LocalDate.of(2026, 11, 19)
+        assertEquals(past.atTime(18, 45, 10), local(defaultCheckInDateTime(past, now, zone)))
+    }
+
     @Test
     fun requiredFieldsPerType() {
         assertEquals(

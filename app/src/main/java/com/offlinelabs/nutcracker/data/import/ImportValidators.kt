@@ -241,6 +241,33 @@ object ImportValidators {
     }
     
     /**
+     * Validate gym data from TSV row (name required, isVisible must parse when present)
+     */
+    fun validateGymData(row: CsvRow): ValidationResult {
+        val errors = mutableListOf<ImportError>()
+        if (row.getValueOrEmpty("name").isBlank()) {
+            errors.add(ImportError(
+                tableName = "gyms",
+                rowNumber = row.rowNumber,
+                fieldName = "name",
+                errorMessage = "Gym name is required",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        val visible = row.getValue("isVisible")
+        if (!visible.isNullOrEmpty() && visible.toBooleanStrictOrNull() == null) {
+            errors.add(ImportError(
+                tableName = "gyms",
+                rowNumber = row.rowNumber,
+                fieldName = "isVisible",
+                errorMessage = "isVisible must be true or false",
+                severity = ErrorSeverity.ERROR
+            ))
+        }
+        return ValidationResult(isValid = errors.isEmpty(), errors = errors, warnings = emptyList())
+    }
+
+    /**
      * Validate exercise data from TSV row
      */
     fun validateExerciseData(row: CsvRow): ValidationResult {

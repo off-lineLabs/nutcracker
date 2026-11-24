@@ -165,6 +165,18 @@ fun fabMealColor(): Color {
     return if (isDarkTheme()) FabMeal else FabMealLight
 }
 
+/** Neutral grey indicator pill for the selected Home tab in the dashboard bottom bar. */
+@Composable
+fun tabHomeColor(): Color {
+    return if (isDarkTheme()) Color(0xFF5A6068) else Color(0xFFCBD0D6)
+}
+
+/** Black or white, whichever has the higher WCAG contrast ratio on [background]. */
+fun onTabPillColor(background: Color): Color {
+    // Crossover where white and black contrast equally is a relative luminance of ~0.179.
+    return if (background.luminance() > 0.179f) Color.Black else Color.White
+}
+
 @Composable
 fun exerciseItemBackgroundColor(): Color {
     return if (isDarkTheme()) ExerciseItemBackground else ExerciseItemBackgroundLight

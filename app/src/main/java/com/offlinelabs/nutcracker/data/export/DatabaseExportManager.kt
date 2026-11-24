@@ -31,8 +31,14 @@ class DatabaseExportManager(
         private const val MEALS_TSV = "meals.tsv"
         private const val USER_GOALS_TSV = "user_goals.tsv"
         private const val MEAL_CHECK_INS_TSV = "meal_check_ins.tsv"
+        private const val GYMS_TSV = "gyms.tsv"
         private const val EXERCISES_TSV = "exercises.tsv"
+        private const val ROUTINES_TSV = "routines.tsv"
+        private const val ROUTINE_EXERCISES_TSV = "routine_exercises.tsv"
+        private const val MEAL_CATEGORIES_TSV = "meal_categories.tsv"
+        private const val MEAL_CATEGORY_MEALS_TSV = "meal_category_meals.tsv"
         private const val EXERCISE_LOGS_TSV = "exercise_logs.tsv"
+        private const val EXERCISE_SETS_TSV = "exercise_sets.tsv"
         private const val PILLS_TSV = "pills.tsv"
         private const val PILL_CHECK_INS_TSV = "pill_check_ins.tsv"
         private const val TAGS_TSV = "tags.tsv"
@@ -88,8 +94,14 @@ class DatabaseExportManager(
             exportTableToTsv(zipOut, RECIPES_TSV) { exportRecipes() }
             exportTableToTsv(zipOut, RECIPE_INGREDIENTS_TSV) { exportRecipeIngredients() }
             exportTableToTsv(zipOut, MEAL_CHECK_INS_TSV) { exportMealCheckIns() }
+            exportTableToTsv(zipOut, GYMS_TSV) { exportGyms() }
             exportTableToTsv(zipOut, EXERCISES_TSV) { exportExercises() }
+            exportTableToTsv(zipOut, ROUTINES_TSV) { exportRoutines() }
+            exportTableToTsv(zipOut, ROUTINE_EXERCISES_TSV) { exportRoutineExercises() }
+            exportTableToTsv(zipOut, MEAL_CATEGORIES_TSV) { exportMealCategories() }
+            exportTableToTsv(zipOut, MEAL_CATEGORY_MEALS_TSV) { exportMealCategoryMeals() }
             exportTableToTsv(zipOut, EXERCISE_LOGS_TSV) { exportExerciseLogs() }
+            exportTableToTsv(zipOut, EXERCISE_SETS_TSV) { exportExerciseSets() }
             exportTableToTsv(zipOut, PILLS_TSV) { exportPills() }
             exportTableToTsv(zipOut, PILL_CHECK_INS_TSV) { exportPillCheckIns() }
             exportTableToTsv(zipOut, TAGS_TSV) { exportTags() }
@@ -133,10 +145,10 @@ class DatabaseExportManager(
         val mealsList = database.mealDao().getAllMealsIncludingHiddenSync()
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\tname\tbrand\tcalories\tcarbohydrates_g\tprotein_g\tfat_g\tfiber_g\tsodium_mg\tservingSize_value\tservingSize_unit\tnotes\tisVisible\tsaturatedFat_g\tsugars_g\tcholesterol_mg\tvitaminC_mg\tcalcium_mg\tiron_mg\timageUrl\tlocalImagePath\tnovaClassification\tgreenScore\tnutriscore\tingredients\tquantity\tservingSize\tbarcode\tsource")
+        tsv.appendLine("id\tname\tbrand\tcalories\tcarbohydrates_g\tprotein_g\tfat_g\tfiber_g\tsodium_mg\tservingSize_value\tservingSize_unit\tnotes\tisVisible\tsaturatedFat_g\tsugars_g\tcholesterol_mg\tvitaminC_mg\tcalcium_mg\tiron_mg\timageUrl\tlocalImagePath\tnovaClassification\tgreenScore\tnutriscore\tingredients\tquantity\tservingSize\tbarcode\tsource\tsortOrder")
         
         mealsList.forEach { meal: Meal ->
-            tsv.appendLine("${meal.id}\t${escapeTsv(meal.name)}\t${escapeTsv(meal.brand ?: "")}\t${meal.calories}\t${meal.carbohydrates_g}\t${meal.protein_g}\t${meal.fat_g}\t${meal.fiber_g}\t${meal.sodium_mg}\t${meal.servingSize_value}\t${meal.servingSize_unit.abbreviation}\t${escapeTsv(meal.notes ?: "")}\t${meal.isVisible}\t${meal.saturatedFat_g ?: ""}\t${meal.sugars_g ?: ""}\t${meal.cholesterol_mg ?: ""}\t${meal.vitaminC_mg ?: ""}\t${meal.calcium_mg ?: ""}\t${meal.iron_mg ?: ""}\t${escapeTsv(meal.imageUrl ?: "")}\t${escapeTsv(meal.localImagePath ?: "")}\t${meal.novaClassification?.group ?: ""}\t${meal.greenScore?.grade ?: ""}\t${meal.nutriscore?.grade ?: ""}\t${escapeTsv(meal.ingredients ?: "")}\t${escapeTsv(meal.quantity ?: "")}\t${escapeTsv(meal.servingSize ?: "")}\t${escapeTsv(meal.barcode ?: "")}\t${meal.source}")
+            tsv.appendLine("${meal.id}\t${escapeTsv(meal.name)}\t${escapeTsv(meal.brand ?: "")}\t${meal.calories}\t${meal.carbohydrates_g}\t${meal.protein_g}\t${meal.fat_g}\t${meal.fiber_g}\t${meal.sodium_mg}\t${meal.servingSize_value}\t${meal.servingSize_unit.abbreviation}\t${escapeTsv(meal.notes ?: "")}\t${meal.isVisible}\t${meal.saturatedFat_g ?: ""}\t${meal.sugars_g ?: ""}\t${meal.cholesterol_mg ?: ""}\t${meal.vitaminC_mg ?: ""}\t${meal.calcium_mg ?: ""}\t${meal.iron_mg ?: ""}\t${escapeTsv(meal.imageUrl ?: "")}\t${escapeTsv(meal.localImagePath ?: "")}\t${meal.novaClassification?.group ?: ""}\t${meal.greenScore?.grade ?: ""}\t${meal.nutriscore?.grade ?: ""}\t${escapeTsv(meal.ingredients ?: "")}\t${escapeTsv(meal.quantity ?: "")}\t${escapeTsv(meal.servingSize ?: "")}\t${escapeTsv(meal.barcode ?: "")}\t${meal.source}\t${meal.sortOrder}")
         }
         
         tsv.toString()
@@ -200,15 +212,28 @@ class DatabaseExportManager(
         val checkInsList = checkIns.first() // Get the current value from Flow
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\tmealId\tcheckInDate\tcheckInDateTime\tservingSize\tnotes")
+        // mealCategoryId (2.0) is the trailing column; older backups don't have it
+        tsv.appendLine("id\tmealId\tcheckInDate\tcheckInDateTime\tservingSize\tnotes\tmealCategoryId")
         
         checkInsList.forEach { checkIn: MealCheckIn ->
-            tsv.appendLine("${checkIn.id}\t${checkIn.mealId}\t${checkIn.checkInDate}\t${checkIn.checkInDateTime}\t${checkIn.servingSize}\t${escapeTsv(checkIn.notes ?: "")}")
+            tsv.appendLine("${checkIn.id}\t${checkIn.mealId}\t${checkIn.checkInDate}\t${checkIn.checkInDateTime}\t${checkIn.servingSize}\t${escapeTsv(checkIn.notes ?: "")}\t${checkIn.mealCategoryId ?: ""}")
         }
         
         tsv.toString()
     }
     
+    /**
+     * Export gyms table to TSV (hidden gyms included)
+     */
+    private suspend fun exportGyms(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tname\tunit\tmapsPlaceId\tmapsProvider\tisVisible")
+        database.gymDao().getAllGymsIncludingHiddenSync().forEach { gym ->
+            tsv.appendLine("${gym.id}\t${escapeTsv(gym.name)}\t${escapeTsv(gym.unit ?: "")}\t${escapeTsv(gym.mapsPlaceId ?: "")}\t${escapeTsv(gym.mapsProvider ?: "")}\t${gym.isVisible}")
+        }
+        tsv.toString()
+    }
+
     /**
      * Export exercises table to CSV
      */
@@ -216,27 +241,76 @@ class DatabaseExportManager(
         val exercisesList = database.exerciseDao().getAllExercisesIncludingHiddenSync()
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\tname\tkcalBurnedPerUnit\tdefaultWeight\tdefaultReps\tdefaultSets\tcategory\tequipment\tprimaryMuscles\tsecondaryMuscles\tforce\tlevel\tmechanic\tinstructions\tnotes\timagePaths\tisVisible")
+        tsv.appendLine("id\tname\tkcalBurnedPerUnit\tdefaultWeight\tdefaultReps\tdefaultSets\tcategory\tequipment\tprimaryMuscles\tsecondaryMuscles\tforce\tlevel\tmechanic\tinstructions\tnotes\timagePaths\tisVisible\tgymId\tsortOrder\tsyncGroupId")
         
         exercisesList.forEach { exercise: Exercise ->
-            tsv.appendLine("${exercise.id}\t${escapeTsv(exercise.name)}\t${exercise.kcalBurnedPerUnit}\t${exercise.defaultWeight}\t${exercise.defaultReps}\t${exercise.defaultSets}\t${exercise.category}\t${escapeTsv(exercise.equipment ?: "")}\t${exercise.primaryMuscles.joinToString(";")}\t${exercise.secondaryMuscles.joinToString(";")}\t${escapeTsv(exercise.force ?: "")}\t${escapeTsv(exercise.level ?: "")}\t${escapeTsv(exercise.mechanic ?: "")}\t${exercise.instructions.joinToString(";")}\t${escapeTsv(exercise.notes ?: "")}\t${exercise.imagePaths.joinToString(";")}\t${exercise.isVisible}")
+            tsv.appendLine("${exercise.id}\t${escapeTsv(exercise.name)}\t${exercise.kcalBurnedPerUnit}\t${exercise.defaultWeight}\t${exercise.defaultReps}\t${exercise.defaultSets}\t${exercise.category}\t${escapeTsv(exercise.equipment ?: "")}\t${exercise.primaryMuscles.joinToString(";")}\t${exercise.secondaryMuscles.joinToString(";")}\t${escapeTsv(exercise.force ?: "")}\t${escapeTsv(exercise.level ?: "")}\t${escapeTsv(exercise.mechanic ?: "")}\t${exercise.instructions.joinToString(";")}\t${escapeTsv(exercise.notes ?: "")}\t${exercise.imagePaths.joinToString(";")}\t${exercise.isVisible}\t${exercise.gymId ?: ""}\t${exercise.sortOrder}\t${exercise.syncGroupId ?: ""}")
         }
         
         tsv.toString()
     }
     
+    /** Export routines table to TSV (hidden routines included). */
+    private suspend fun exportRoutines(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tname\tgymId\tsortOrder\tisVisible")
+        database.routineDao().getAllRoutinesIncludingHiddenSync().forEach { routine ->
+            tsv.appendLine("${routine.id}\t${escapeTsv(routine.name)}\t${routine.gymId}\t${routine.sortOrder}\t${routine.isVisible}")
+        }
+        tsv.toString()
+    }
+
+    /** Export meal categories (hidden included). defaultKey marks the built-in, translated ones. */
+    private suspend fun exportMealCategories(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tname\tdefaultKey\tsortOrder\tisVisible")
+        database.mealCategoryDao().getAllCategoriesSync().forEach { c ->
+            tsv.appendLine("${c.id}\t${escapeTsv(c.name)}\t${c.defaultKey ?: ""}\t${c.sortOrder}\t${c.isVisible}")
+        }
+        tsv.toString()
+    }
+
+    /** Export food-category memberships. */
+    private suspend fun exportMealCategoryMeals(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("categoryId\tmealId")
+        database.mealCategoryDao().getAllLinksSync().forEach { l -> tsv.appendLine("${l.categoryId}\t${l.mealId}") }
+        tsv.toString()
+    }
+
+    /** Export routine-exercise memberships to TSV. */
+    private suspend fun exportRoutineExercises(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("routineId\texerciseId\tposition")
+        database.routineDao().getAllRoutineExercisesSync().forEach { re ->
+            tsv.appendLine("${re.routineId}\t${re.exerciseId}\t${re.position}")
+        }
+        tsv.toString()
+    }
+
     /**
      * Export exercise logs table to TSV
      */
+    /** Export the sets of the exercise check-ins (2.0) to TSV. */
+    private suspend fun exportExerciseSets(): String = withContext(Dispatchers.IO) {
+        val tsv = StringBuilder()
+        tsv.appendLine("id\tlogId\tsetIndex\tweight\treps\tcompletedAt")
+        database.exerciseLogDao().getAllSetsSync().forEach { s ->
+            tsv.appendLine("${s.id}\t${s.logId}\t${s.setIndex}\t${s.weight}\t${s.reps}\t${s.completedAt ?: ""}")
+        }
+        tsv.toString()
+    }
+
     private suspend fun exportExerciseLogs(): String = withContext(Dispatchers.IO) {
         val logs = database.exerciseLogDao().getAllExerciseLogs()
         val logsList = logs.first() // Get the current value from Flow
         
         val tsv = StringBuilder()
-        tsv.appendLine("id\texerciseId\tlogDate\tlogDateTime\tweight\treps\tsets\tcaloriesBurned\tnotes")
+        // routineId (2.0) is the trailing column; older backups don't have it
+        tsv.appendLine("id\texerciseId\tlogDate\tlogDateTime\tweight\treps\tsets\tcaloriesBurned\tnotes\troutineId")
         
         logsList.forEach { log: ExerciseLog ->
-            tsv.appendLine("${log.id}\t${log.exerciseId}\t${log.logDate}\t${log.logDateTime}\t${log.weight}\t${log.reps}\t${log.sets}\t${log.caloriesBurned}\t${escapeTsv(log.notes ?: "")}")
+            tsv.appendLine("${log.id}\t${log.exerciseId}\t${log.logDate}\t${log.logDateTime}\t${log.weight}\t${log.reps}\t${log.sets}\t${log.caloriesBurned}\t${escapeTsv(log.notes ?: "")}\t${log.routineId ?: ""}")
         }
         
         tsv.toString()
@@ -393,7 +467,7 @@ class DatabaseExportManager(
     private suspend fun exportMetadata(): String {
         val tsv = StringBuilder()
         tsv.appendLine("export_type\texport_date\tapp_version\tdatabase_version\ttable_count")
-        tsv.appendLine("full_export\t${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(Date())}\t1.0\t18\t12")
+        tsv.appendLine("full_export\t${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(Date())}\t1.0\t22\t17")
         tsv.appendLine("")
         tsv.appendLine("table_name\tdescription")
         tsv.appendLine("meals\tFood items with nutritional information")
@@ -401,8 +475,14 @@ class DatabaseExportManager(
         tsv.appendLine("recipes\tRecipe definitions")
         tsv.appendLine("recipe_ingredients\tRecipe-meal ingredient relationships")
         tsv.appendLine("meal_check_ins\tMeal consumption records")
+        tsv.appendLine("gyms\tGym definitions (exercises reference them by gymId)")
         tsv.appendLine("exercises\tExercise definitions")
+        tsv.appendLine("routines\tWorkout routine definitions")
+        tsv.appendLine("routine_exercises\tRoutine-exercise relationships")
+        tsv.appendLine("meal_categories\tMeal categories (breakfast, lunch...)")
+        tsv.appendLine("meal_category_meals\tFood-category relationships")
         tsv.appendLine("exercise_logs\tExercise performance records")
+        tsv.appendLine("exercise_sets\tSets of each exercise check-in")
         tsv.appendLine("pills\tMedication definitions")
         tsv.appendLine("pill_check_ins\tMedication consumption records")
         tsv.appendLine("tags\tTag definitions for meals and exercises")

@@ -1,5 +1,7 @@
 package com.offlinelabs.nutcracker.data.import
 
+import java.util.Locale
+
 /**
  * How a backup is applied to the current database.
  * MERGE skips rows that already exist; REPLACE wipes everything first (after an automatic backup).
@@ -23,7 +25,10 @@ object ImportMergeKeys {
         val isVisible: Boolean
     )
 
-    data class ExerciseKey(val name: String, val category: String)
+    /** [gymId] is the id in the target database (null = shared), so the same name at two gyms differs. */
+    data class ExerciseKey(val name: String, val category: String, val gymId: Long? = null)
+    /** Case-insensitive; blank unit equals no unit. */
+    data class GymKey(val name: String, val unit: String)
     data class RecipeKey(val name: String, val createdDate: String)
     data class TagKey(val name: String, val type: String)
     // Child rows are keyed by their parent's natural key (not its id), so identical parents
@@ -60,7 +65,21 @@ object ImportMergeKeys {
         isVisible: Boolean
     ) = MealKey(name.trim(), brand?.trim().orEmpty(), calories, servingSizeValue, servingSizeUnit.trim(), isVisible)
 
-    fun exerciseKey(name: String, category: String) = ExerciseKey(name.trim(), category.trim())
+    fun exerciseKey(name: String, category: String, gymId: Long? = null) =
+        ExerciseKey(name.trim(), category.trim(), gymId)
+
+    fun gymKey(name: String, unit: String?) =
+        GymKey(name.trim().lowercase(Locale.ROOT), unit?.trim().orEmpty().lowercase(Locale.ROOT))
+
+    /**
+     * Maps a backup exercise's raw gymId column to the new gym id. A missing column, an empty value,
+     * a non-numeric value or an id absent from the gym mapping all mean shared (null).
+     */
+    fun resolveGymId(rawGymId: String?, lookup: (String) -> Long?): Long? {
+        val raw = rawGymId?.trim()
+        if (raw.isNullOrEmpty() || raw.toLongOrNull() == null) return null
+        return lookup(raw)
+    }
 
     fun recipeKey(name: String, createdDate: String) = RecipeKey(name.trim(), createdDate.trim())
 
