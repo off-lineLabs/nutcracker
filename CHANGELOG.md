@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-11-24
 
 ### Added
 - Gyms: the same machine can weigh differently at different gyms, so you can now keep separate exercises per gym. Create a gym with a name and an optional unit or location, edit it, or delete it
@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All gyms in the Exercise tab now lists every exercise, grouped by gym by default
 - The Food and Exercise lists use the full screen width, with one compact row per item instead of cards
 - Adding exercises to a routine opens a dialog that no longer closes when you pull down while scrolling
+- Help is grouped into Food, Exercise and General, with the questions of the tab you opened it from first, and new questions about quick check-ins, sets, routines, meal types, synced copies, swiping to edit or delete, the number boxes, sorting and the scrolling hand
 
 ### Fixed
 - The meal details dialog stays open when the phone is rotated
