@@ -92,6 +92,15 @@ class ExternalExerciseService {
         )
     }
     
+    /**
+     * Primary muscles of the exercise database: the distinct values of the downloaded JSON when it
+     * has been fetched in this session, otherwise (offline) the bundled list of those values.
+     */
+    fun getKnownMuscles(): List<String> {
+        val fromJson = cachedExercises.orEmpty().flatMap { it.primaryMuscles }
+        return (getAvailableMuscles() + fromJson).distinct()
+    }
+
     fun getAvailableCategories(): List<String> {
         return listOf(
             "strength", "stretching", "strongman", "plyometrics", 

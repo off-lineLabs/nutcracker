@@ -1,11 +1,25 @@
 package com.offlinelabs.nutcracker.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
-@Entity(tableName = "exercises")
+@Entity(
+    tableName = "exercises",
+    foreignKeys = [
+        ForeignKey(
+            entity = Gym::class,
+            parentColumns = ["id"],
+            childColumns = ["gymId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [Index("gymId"), Index("syncGroupId")]
+)
 @TypeConverters(ExerciseTypeConverters::class)
 data class Exercise(
     @PrimaryKey(autoGenerate = true)
@@ -25,7 +39,16 @@ data class Exercise(
     val instructions: List<String> = emptyList(), // Exercise instructions
     val notes: String? = null, // Optional notes
     val imagePaths: List<String> = emptyList(), // Local paths to exercise images
-    val isVisible: Boolean = true // Soft delete field - true means visible in My Exercises
+    val isVisible: Boolean = true, // Soft delete field - true means visible in My Exercises
+    val gymId: Long? = null, // Gym this exercise belongs to; null means shared across gyms
+    /** Position in the user's custom order (ascending; ties fall back to name). */
+    @ColumnInfo(defaultValue = "0")
+    val sortOrder: Int = 0,
+    /**
+     * Copies at other gyms that stay in sync share this id (a UUID); saving one updates the others'
+     * settings. Null when not synced.
+     */
+    val syncGroupId: String? = null
 )
 
 // UI Exercise Types for user interface (mapped from database categories)

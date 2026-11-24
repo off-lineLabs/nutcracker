@@ -7,6 +7,15 @@ import com.offlinelabs.nutcracker.data.dao.ExerciseDao
 import com.offlinelabs.nutcracker.data.dao.ExerciseLogDao
 import com.offlinelabs.nutcracker.data.dao.PillDao
 import com.offlinelabs.nutcracker.data.dao.PillCheckInDao
+import com.offlinelabs.nutcracker.data.dao.GymDao
+import com.offlinelabs.nutcracker.data.dao.LastCheckIn
+import com.offlinelabs.nutcracker.data.dao.RoutineDao
+import com.offlinelabs.nutcracker.data.dao.MealCategoryDao
+import com.offlinelabs.nutcracker.data.model.MealCategory
+import com.offlinelabs.nutcracker.data.model.MealCategoryMeal
+import com.offlinelabs.nutcracker.data.applySyncedFields
+import com.offlinelabs.nutcracker.data.model.Routine
+import com.offlinelabs.nutcracker.data.model.RoutineExercise
 import com.offlinelabs.nutcracker.data.dao.RecipeDao
 import com.offlinelabs.nutcracker.data.dao.RecipeIngredientDao
 import com.offlinelabs.nutcracker.data.dao.DailyTotals
@@ -19,8 +28,11 @@ import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.data.model.UserGoal
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
+import com.offlinelabs.nutcracker.data.model.LoggedSession
 import com.offlinelabs.nutcracker.data.model.Pill
 import com.offlinelabs.nutcracker.data.model.PillCheckIn
+import com.offlinelabs.nutcracker.data.model.Gym
 import com.offlinelabs.nutcracker.data.model.Recipe
 import com.offlinelabs.nutcracker.data.model.RecipeIngredient
 import com.offlinelabs.nutcracker.data.model.ServingSizeUnit
@@ -62,14 +74,102 @@ interface FoodLogRepository {
     suspend fun deleteExercise(exercise: Exercise)
     suspend fun deleteAllExercises()
 
+    // Gym operations
+    fun getVisibleGyms(): Flow<List<Gym>>
+    suspend fun getGymById(id: Long): Gym?
+    /** Inserts or updates the gym and returns its id. */
+    suspend fun upsertGym(gym: Gym): Long
+    /**
+     * Soft-deletes the gym. [removeExercises] false: its exercises become shared;
+     * true: they are hidden (gym id kept, logs stay).
+     */
+    suspend fun deleteGym(gymId: Long, removeExercises: Boolean)
+    /**
+     * Inserts a visible copy of [exercise] in [targetGymId] (null = shared) and returns the new id.
+     * Logs and tags are not copied; image files are duplicated. With [sync], the copy joins the
+     * original's sync group (created if needed), so later edits to either update the other.
+     */
+    suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?, sync: Boolean = false): Long
+    /** Stops syncing [exerciseId]; a group left with a single exercise is dissolved. */
+    suspend fun unsyncExercise(exerciseId: Long)
+
+    // List ordering
+    /** Latest check-in per meal / exercise, for "last checked in" sorting. */
+    fun getMealLastCheckIns(): Flow<List<LastCheckIn>>
+    fun getExerciseLastCheckIns(): Flow<List<LastCheckIn>>
+    /** Saves the custom order: each id gets its index in [orderedIds]. */
+    suspend fun applyMealSortOrder(orderedIds: List<Long>)
+    suspend fun applyExerciseSortOrder(orderedIds: List<Long>)
+
+    // Routines (no management UI yet; used for grouping)
+    fun getVisibleRoutines(): Flow<List<Routine>>
+    fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>>
+    /** Saves a routine's exercise order: each exercise gets its index in [exerciseIds]. */
+    suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>)
+    /**
+     * Puts [exerciseId] in exactly [routineIds] among [offered] (the routines its form showed):
+     * appended to newly chosen routines, removed from unchosen ones; other routines are untouched.
+     */
+    suspend fun setExerciseRoutines(exerciseId: Long, routineIds: Set<Long>, offered: Set<Long>)
+    /** Inserts or updates [routine] with exactly [exerciseIds] in that order; returns its id. */
+    suspend fun saveRoutine(routine: Routine, exerciseIds: List<Long>): Long
+    /** Soft-deletes a routine (its exercises are untouched). */
+    suspend fun deleteRoutine(routineId: Long)
+    suspend fun applyRoutineOrder(routineIds: List<Long>)
+
+    // Meal categories (Breakfast, Lunch...)
+    fun getVisibleMealCategories(): Flow<List<MealCategory>>
+    fun getVisibleMealCategoryLinks(): Flow<List<MealCategoryMeal>>
+    /** Inserts (at the end of the order) or updates a category; returns its id. */
+    suspend fun upsertMealCategory(category: MealCategory): Long
+    suspend fun deleteMealCategory(categoryId: Long)
+    suspend fun applyMealCategoryOrder(categoryIds: List<Long>)
+    suspend fun getMealCategoryIds(mealId: Long): List<Long>
+    suspend fun setMealCategories(mealId: Long, categoryIds: List<Long>)
+
     // ExerciseLog operations
+    /** Inserts a check-in made in one go: its sets are identical copies of its weight and reps. */
     suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long
+    /** Inserts a check-in with its own [sets] (e.g. put back by undo). */
+    suspend fun insertExerciseLogWithSets(exerciseLog: ExerciseLog, sets: List<ExerciseSet>): Long
+    /** Updates a check-in; changing its weight, reps or sets makes its sets identical again. */
     suspend fun updateExerciseLog(exerciseLog: ExerciseLog)
     suspend fun deleteExerciseLog(exerciseLog: ExerciseLog)
+    suspend fun getSetsForLog(logId: Long): List<ExerciseSet>
+    /** Sets of the check-ins of [date]. */
+    fun getSetsForDate(date: String): Flow<List<ExerciseSet>>
+    /**
+     * Ticks [sets] of a strength exercise into the session [sessionLogId], or a new check-in made
+     * from [newLog]; the check-in's summary and kcal ([kcalPerSet] each) follow its sets.
+     */
+    suspend fun checkInSets(sessionLogId: Long?, newLog: ExerciseLog, sets: List<ExerciseSet>, kcalPerSet: Double): Long
+    /** Unticks one set; a check-in left without sets is removed. */
+    suspend fun uncheckSet(logId: Long, setIndex: Int, kcalPerSet: Double)
+    /**
+     * Removes the logs of [exerciseId] on [date] (yyyy-MM-dd) with their sets and returns them, so
+     * they can be restored: with [routineId] those of that routine and those without one,
+     * otherwise all of them.
+     */
+    suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long? = null): List<LoggedSession>
+    /** Puts back check-ins removed by [removeExerciseCheckIns] (same ids, same sets). */
+    suspend fun restoreExerciseLogs(sessions: List<LoggedSession>)
+    /** Reps of each exercise's most recent log; exercises never logged are absent. */
+    fun getLastReps(): Flow<Map<Long, Int>>
+    /**
+     * Removes the check-ins of [mealId] on [date] and returns them, so they can be restored: only
+     * those checked in under the meal type [categoryId] when given, otherwise all of them.
+     */
+    suspend fun removeMealCheckIns(mealId: Long, date: String, categoryId: Long? = null): List<MealCheckIn>
+    /** Puts back check-ins removed by [removeMealCheckIns] (same ids). */
+    suspend fun restoreMealCheckIns(checkIns: List<MealCheckIn>)
+    /** Serving multiplier of each meal's most recent check-in; meals never checked in are absent. */
+    fun getLastServings(): Flow<Map<Long, Double>>
     fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>>
     fun getRecentExerciseLogs(limit: Int = 10): Flow<List<ExerciseLog>>
     fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?>
     fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?>
+    /** Heaviest logged weight per exercise id; exercises never logged are absent. */
+    fun getMaxWeights(): Flow<Map<Long, Double>>
     fun getDailyExerciseCalories(date: String): Flow<Double>
 
     // Pill operations
@@ -137,6 +237,9 @@ class OfflineFoodLogRepository(
     private val pillCheckInDao: PillCheckInDao,
     private val recipeDao: RecipeDao,
     private val recipeIngredientDao: RecipeIngredientDao,
+    private val gymDao: GymDao,
+    private val routineDao: RoutineDao,
+    private val mealCategoryDao: MealCategoryDao,
     private val exerciseImageService: ExerciseImageService? = null,
     private val imageDownloadService: ImageDownloadService? = null
 ) : FoodLogRepository {
@@ -144,7 +247,10 @@ class OfflineFoodLogRepository(
     // Meal operations
     override fun getAllMeals(): Flow<List<Meal>> = mealDao.getAllMeals()
     override fun getMealById(mealId: Long): Flow<Meal?> = mealDao.getMealById(mealId)
-    override suspend fun insertMeal(meal: Meal): Long = mealDao.insertMeal(meal)
+    // New visible meals go to the end of the custom order
+    override suspend fun insertMeal(meal: Meal): Long = mealDao.insertMeal(
+        if (meal.id == 0L && meal.isVisible) meal.copy(sortOrder = mealDao.nextSortOrder()) else meal
+    ).let { if (it == -1L) meal.id else it } // @Upsert returns -1 when it updated
     override suspend fun updateMeal(meal: Meal) = mealDao.updateMeal(meal)
     override suspend fun deleteMeal(meal: Meal) {
         // Delete the associated image if it exists
@@ -177,7 +283,9 @@ class OfflineFoodLogRepository(
         exercise.imagePaths.forEachIndexed { index, path ->
             com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "    imagePath $index: $path")
         }
-        val id = exerciseDao.upsertExercise(exercise)
+        // New exercises go to the end of the custom order; @Upsert returns -1 when it updated
+        val toSave = if (exercise.id == 0L) exercise.copy(sortOrder = exerciseDao.nextSortOrder()) else exercise
+        val id = exerciseDao.upsertExercise(toSave).let { if (it == -1L) exercise.id else it }
         com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "insertExercise returned ID: $id")
         return id
     }
@@ -190,6 +298,14 @@ class OfflineFoodLogRepository(
             com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "    imagePath $index: $path")
         }
         exerciseDao.updateExercise(exercise)
+        // An exercise moved to a gym can't stay in another gym's routines
+        exercise.gymId?.let { routineDao.removeExerciseFromOtherGyms(exercise.id, it) }
+        // Synced copies at other gyms take the same settings
+        exercise.syncGroupId?.let { group ->
+            exerciseDao.getSyncPartners(group, exercise.id).forEach { partner ->
+                exerciseDao.updateExercise(applySyncedFields(partner, exercise))
+            }
+        }
         com.offlinelabs.nutcracker.util.logger.AppLogger.i("FoodLogRepository", "updateExercise completed")
     }
     override suspend fun deleteExercise(exercise: Exercise) {
@@ -198,17 +314,119 @@ class OfflineFoodLogRepository(
             exerciseImageService?.deleteImage(imagePath)
         }
         exerciseDao.hideExercise(exercise.id)
+        // A deleted exercise leaves its sync group
+        if (exercise.syncGroupId != null) unsyncExercise(exercise.id)
     }
     override suspend fun deleteAllExercises() = exerciseDao.deleteAllExercises()
 
+    // Gym operations
+    override fun getVisibleGyms(): Flow<List<Gym>> = gymDao.getVisibleGyms()
+    override suspend fun getGymById(id: Long): Gym? = gymDao.getGymById(id)
+    override suspend fun upsertGym(gym: Gym): Long {
+        val rowId = gymDao.upsertGym(gym)
+        return if (rowId == -1L) gym.id else rowId // @Upsert returns -1 when it updated
+    }
+    override suspend fun deleteGym(gymId: Long, removeExercises: Boolean) = gymDao.deleteGym(gymId, removeExercises)
+    override suspend fun copyExerciseToGym(exercise: Exercise, targetGymId: Long?, sync: Boolean): Long {
+        val sortOrder = exerciseDao.nextSortOrder()
+        val syncGroupId = if (sync) {
+            exercise.syncGroupId ?: java.util.UUID.randomUUID().toString().also {
+                exerciseDao.setSyncGroup(exercise.id, it)
+            }
+        } else {
+            null
+        }
+        val newId = exerciseDao.upsertExercise(
+            exercise.copy(
+                id = 0, gymId = targetGymId, isVisible = true, imagePaths = emptyList(),
+                sortOrder = sortOrder, syncGroupId = syncGroupId
+            )
+        )
+        if (exercise.imagePaths.isNotEmpty() && exerciseImageService != null) {
+            val copiedPaths = exerciseImageService.copyImages(exercise.imagePaths, newId.toString())
+            if (copiedPaths.isNotEmpty()) {
+                exerciseDao.updateExercise(
+                    exercise.copy(
+                        id = newId, gymId = targetGymId, isVisible = true, imagePaths = copiedPaths,
+                        sortOrder = sortOrder, syncGroupId = syncGroupId
+                    )
+                )
+            }
+        }
+        return newId
+    }
+
+    override suspend fun unsyncExercise(exerciseId: Long) {
+        val exercise = exerciseDao.getExerciseByIdSync(exerciseId) ?: return
+        val group = exercise.syncGroupId ?: return
+        exerciseDao.setSyncGroup(exerciseId, null)
+        if (exerciseDao.countVisibleInSyncGroup(group) <= 1) exerciseDao.clearSyncGroup(group)
+    }
+
+    // List ordering
+    override fun getMealLastCheckIns(): Flow<List<LastCheckIn>> = mealDao.getLastCheckIns()
+    override fun getExerciseLastCheckIns(): Flow<List<LastCheckIn>> = exerciseDao.getLastCheckIns()
+    override suspend fun applyMealSortOrder(orderedIds: List<Long>) = mealDao.applySortOrder(orderedIds)
+    override suspend fun applyExerciseSortOrder(orderedIds: List<Long>) = exerciseDao.applySortOrder(orderedIds)
+
+    // Routines
+    override fun getVisibleRoutines(): Flow<List<Routine>> = routineDao.getVisibleRoutines()
+    override fun getVisibleRoutineExercises(): Flow<List<RoutineExercise>> = routineDao.getVisibleRoutineExercises()
+    override suspend fun applyRoutineExerciseOrder(routineId: Long, exerciseIds: List<Long>) =
+        routineDao.applyExerciseOrder(routineId, exerciseIds)
+    override suspend fun setExerciseRoutines(exerciseId: Long, routineIds: Set<Long>, offered: Set<Long>) =
+        routineDao.setRoutinesForExercise(exerciseId, routineIds, offered)
+    override suspend fun saveRoutine(routine: Routine, exerciseIds: List<Long>): Long {
+        val toSave = if (routine.id == 0L) routine.copy(sortOrder = routineDao.nextRoutineSortOrder()) else routine
+        val id = routineDao.upsertRoutine(toSave).let { if (it == -1L) routine.id else it }
+        routineDao.setExercisesForRoutine(id, exerciseIds)
+        return id
+    }
+    override suspend fun deleteRoutine(routineId: Long) = routineDao.hideRoutine(routineId)
+    override suspend fun applyRoutineOrder(routineIds: List<Long>) = routineDao.applyRoutineOrder(routineIds)
+
+    // Meal categories
+    override fun getVisibleMealCategories(): Flow<List<MealCategory>> = mealCategoryDao.getVisibleCategories()
+    override fun getVisibleMealCategoryLinks(): Flow<List<MealCategoryMeal>> = mealCategoryDao.getVisibleLinks()
+    override suspend fun upsertMealCategory(category: MealCategory): Long {
+        val toSave = if (category.id == 0L) category.copy(sortOrder = mealCategoryDao.nextSortOrder()) else category
+        return mealCategoryDao.upsertCategory(toSave).let { if (it == -1L) category.id else it }
+    }
+    override suspend fun deleteMealCategory(categoryId: Long) = mealCategoryDao.hideCategory(categoryId)
+    override suspend fun applyMealCategoryOrder(categoryIds: List<Long>) = mealCategoryDao.applyOrder(categoryIds)
+    override suspend fun getMealCategoryIds(mealId: Long): List<Long> = mealCategoryDao.getCategoryIdsForMeal(mealId)
+    override suspend fun setMealCategories(mealId: Long, categoryIds: List<Long>) =
+        mealCategoryDao.setCategoriesForMeal(mealId, categoryIds)
+
     // ExerciseLog operations
-    override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertExerciseLog(exerciseLog)
-    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateExerciseLog(exerciseLog)
+    override suspend fun insertExerciseLog(exerciseLog: ExerciseLog): Long = exerciseLogDao.insertLogWithUniformSets(exerciseLog)
+    override suspend fun insertExerciseLogWithSets(exerciseLog: ExerciseLog, sets: List<ExerciseSet>): Long =
+        if (sets.isEmpty()) exerciseLogDao.insertLogWithUniformSets(exerciseLog) else exerciseLogDao.insertLogWithSets(exerciseLog, sets)
+    override suspend fun updateExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.updateLogKeepingSets(exerciseLog)
     override suspend fun deleteExerciseLog(exerciseLog: ExerciseLog) = exerciseLogDao.deleteExerciseLog(exerciseLog)
+    override suspend fun getSetsForLog(logId: Long): List<ExerciseSet> = exerciseLogDao.getSetsForLog(logId)
+    override fun getSetsForDate(date: String): Flow<List<ExerciseSet>> = exerciseLogDao.getSetsForDate(date)
+    override suspend fun checkInSets(sessionLogId: Long?, newLog: ExerciseLog, sets: List<ExerciseSet>, kcalPerSet: Double): Long =
+        exerciseLogDao.checkInSets(sessionLogId, newLog, sets, kcalPerSet)
+    override suspend fun uncheckSet(logId: Long, setIndex: Int, kcalPerSet: Double) =
+        exerciseLogDao.uncheckSet(logId, setIndex, kcalPerSet)
+    override suspend fun removeExerciseCheckIns(exerciseId: Long, date: String, routineId: Long?): List<LoggedSession> =
+        exerciseLogDao.removeLogsForExerciseOnDate(exerciseId, date, routineId)
+    override suspend fun restoreExerciseLogs(sessions: List<LoggedSession>) {
+        sessions.forEach { insertExerciseLogWithSets(it.log, it.sets) }
+    }
+    override fun getLastReps(): Flow<Map<Long, Int>> = exerciseLogDao.getLastReps()
+    override suspend fun removeMealCheckIns(mealId: Long, date: String, categoryId: Long?): List<MealCheckIn> =
+        mealCheckInDao.removeCheckInsForMealOnDate(mealId, date, categoryId)
+    override suspend fun restoreMealCheckIns(checkIns: List<MealCheckIn>) {
+        checkIns.forEach { mealCheckInDao.insertMealCheckIn(it) }
+    }
+    override fun getLastServings(): Flow<Map<Long, Double>> = mealCheckInDao.getLastServings()
     override fun getExerciseLogsByDate(date: String): Flow<List<DailyExerciseEntry>> = exerciseLogDao.getDailyExerciseSummary(date)
     override fun getRecentExerciseLogs(limit: Int): Flow<List<ExerciseLog>> = exerciseLogDao.getRecentLogs(limit)
     override fun getLastLogForExercise(exerciseId: Long): Flow<ExerciseLog?> = exerciseLogDao.getLastLogForExercise(exerciseId)
     override fun getMaxWeightForExercise(exerciseId: Long): Flow<Double?> = exerciseLogDao.getMaxWeightForExercise(exerciseId)
+    override fun getMaxWeights(): Flow<Map<Long, Double>> = exerciseLogDao.getMaxWeights()
     override fun getDailyExerciseCalories(date: String): Flow<Double> = exerciseLogDao.getDailyExerciseCalories(date)
     override fun getDailyFoodTotalsInRange(startDate: String, endDate: String): Flow<List<DailyFoodTotalsRow>> =
         mealCheckInDao.getDailyFoodTotalsInRange(startDate, endDate)

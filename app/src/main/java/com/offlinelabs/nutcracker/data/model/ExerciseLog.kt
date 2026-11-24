@@ -30,7 +30,13 @@ data class ExerciseLog(
     val reps: Int,
     val sets: Int,
     val caloriesBurned: Double,
-    val notes: String? = null
+    val notes: String? = null,
+    /**
+     * The routine the exercise was checked in under (from a routine group of the Exercise tab), or
+     * null. A routine group only shows its own check-ins as done. No foreign key: routines are only
+     * hidden, never deleted.
+     */
+    val routineId: Long? = null
 ) {
     companion object {
         fun create(
@@ -40,7 +46,8 @@ data class ExerciseLog(
             sets: Int,
             caloriesBurned: Double,
             notes: String? = null,
-            customDateTime: Date? = null // Optional custom timestamp
+            customDateTime: Date? = null, // Optional custom timestamp
+            routineId: Long? = null
         ): ExerciseLog {
             val dateTime = customDateTime ?: Date() // Use custom or current time
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
@@ -54,7 +61,8 @@ data class ExerciseLog(
                 reps = reps,
                 sets = sets,
                 caloriesBurned = caloriesBurned,
-                notes = notes
+                notes = notes,
+                routineId = routineId
             )
         }
     }

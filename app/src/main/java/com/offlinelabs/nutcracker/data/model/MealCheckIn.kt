@@ -27,14 +27,21 @@ data class MealCheckIn(
     val checkInDate: String, // Date in YYYY-MM-DD format for easy filtering
     val checkInDateTime: String, // Full timestamp for display
     val servingSize: Double = 1.0, // Multiplier for the meal's serving size
-    val notes: String? = null
+    val notes: String? = null,
+    /**
+     * The meal type (Breakfast, Snack...) the food was checked in under (from a meal type group of
+     * the Food tab), or null. A meal type group only shows its own check-ins as done. No foreign
+     * key: meal types are only hidden, never deleted.
+     */
+    val mealCategoryId: Long? = null
 ) {
     companion object {
         fun create(
             mealId: Long, 
             servingSize: Double = 1.0, 
             notes: String? = null,
-            customDateTime: Date? = null // Optional custom timestamp
+            customDateTime: Date? = null, // Optional custom timestamp
+            mealCategoryId: Long? = null
         ): MealCheckIn {
             val dateTime = customDateTime ?: Date() // Use custom or current time
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
@@ -45,7 +52,8 @@ data class MealCheckIn(
                 checkInDate = dateFormatter.format(dateTime),
                 checkInDateTime = dateTimeFormatter.format(dateTime),
                 servingSize = servingSize,
-                notes = notes
+                notes = notes,
+                mealCategoryId = mealCategoryId
             )
         }
     }

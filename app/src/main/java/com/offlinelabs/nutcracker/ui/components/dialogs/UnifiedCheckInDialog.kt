@@ -69,6 +69,8 @@ fun <T : CheckInData> UnifiedCheckInDialog(
     onCheckIn: (T) -> Unit,
     onDelete: (() -> Unit)? = null,
     isEditMode: Boolean = false,
+    /** Initial date/time of a new check-in (ignored when editing); null means now. */
+    defaultDateTime: Date? = null,
     
     // Exercise-specific parameters
     exercise: Exercise? = null,
@@ -93,6 +95,7 @@ fun <T : CheckInData> UnifiedCheckInDialog(
             maxWeight = maxWeight,
             existingExerciseLog = existingExerciseLog,
             isEditMode = isEditMode,
+            defaultDateTime = defaultDateTime,
             onDismiss = onDismiss,
             onCheckIn = { exerciseLog -> 
                 @Suppress("UNCHECKED_CAST")
@@ -105,6 +108,7 @@ fun <T : CheckInData> UnifiedCheckInDialog(
             meal = meal!!,
             existingMealCheckIn = existingMealCheckIn,
             isEditMode = isEditMode,
+            defaultDateTime = defaultDateTime,
             onDismiss = onDismiss,
             onCheckIn = { mealCheckIn -> 
                 @Suppress("UNCHECKED_CAST")
@@ -130,6 +134,7 @@ private fun ExerciseCheckInContent(
     maxWeight: Double?,
     existingExerciseLog: ExerciseLog?,
     isEditMode: Boolean,
+    defaultDateTime: Date?,
     onDismiss: () -> Unit,
     onCheckIn: (ExerciseLog) -> Unit,
     onDelete: (() -> Unit)? = null
@@ -141,7 +146,9 @@ private fun ExerciseCheckInContent(
     var reps by remember { mutableStateOf((editing?.reps ?: lastLog?.reps ?: exercise.defaultReps).toString()) }
     var sets by remember { mutableStateOf((editing?.sets ?: lastLog?.sets ?: exercise.defaultSets).toString()) }
     var notes by remember { mutableStateOf(editing?.notes ?: "") }
-    var selectedDateTime by remember { mutableStateOf(parseStoredDateTime(editing?.logDateTime)) }
+    var selectedDateTime by remember {
+        mutableStateOf(editing?.let { parseStoredDateTime(it.logDateTime) } ?: defaultDateTime ?: Date())
+    }
     var dateTimeValid by remember { mutableStateOf(true) }
 
     val exerciseType = remember(exercise) { ExerciseCategoryMapper.getExerciseType(exercise.category) }
@@ -340,6 +347,7 @@ private fun MealCheckInContent(
     meal: Meal,
     existingMealCheckIn: MealCheckIn?,
     isEditMode: Boolean,
+    defaultDateTime: Date?,
     onDismiss: () -> Unit,
     onCheckIn: (MealCheckIn) -> Unit,
     onDelete: (() -> Unit)? = null
@@ -347,7 +355,9 @@ private fun MealCheckInContent(
     val editing = if (isEditMode) existingMealCheckIn else null
     var servingSize by remember { mutableDoubleStateOf(editing?.servingSize ?: 1.0) }
     var notes by remember { mutableStateOf(visibleCheckInNotes(editing?.notes)) }
-    var selectedDateTime by remember { mutableStateOf(parseStoredDateTime(editing?.checkInDateTime)) }
+    var selectedDateTime by remember {
+        mutableStateOf(editing?.let { parseStoredDateTime(it.checkInDateTime) } ?: defaultDateTime ?: Date())
+    }
     var dateTimeValid by remember { mutableStateOf(true) }
 
     val baseServing = meal.servingSize_value

@@ -29,8 +29,66 @@ data class ExerciseFormInput(
     val minutes: String = "",
     /** Bodyweight reps. */
     val bodyweightReps: String = "",
-    val notes: String = ""
+    val notes: String = "",
+    /** Gym the exercise belongs to; null means shared (All gyms). */
+    val gymId: Long? = null,
+    /** Primary muscle groups, normalized with [normalizeMuscle]. */
+    val primaryMuscles: List<String> = emptyList()
 )
+
+/** Muscle names are stored trimmed, lower-case and with single spaces, like the exercise database. */
+fun normalizeMuscle(raw: String): String = raw.trim().replace(Regex("\\s+"), " ").lowercase(Locale.ROOT)
+
+/**
+ * Muscle choices for the form: the exercise database's muscles ([known]), every muscle already used
+ * by the user's exercises ([used], so custom entries come back) and the current [selected] ones;
+ * normalized, without blanks or duplicates, alphabetical.
+ */
+fun muscleOptions(known: List<String>, used: List<String>, selected: List<String>): List<String> =
+    (known + used + selected).map(::normalizeMuscle).filter { it.isNotEmpty() }.distinct().sorted()
+
+/** Lower-case text without accents, so "glúteos" matches "Gluteos". */
+fun foldForSearch(text: String): String =
+    java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .lowercase(Locale.ROOT)
+        .trim()
+
+/**
+ * Suggestions for the muscle search: [options] not yet [selected] whose key or translated [label]
+ * contains [query] (case- and accent-insensitive), matches starting with the query first, then
+ * alphabetical by label. A blank query suggests every unselected option.
+ */
+fun muscleSuggestions(
+    options: List<String>,
+    selected: List<String>,
+    query: String,
+    label: (String) -> String
+): List<String> {
+    val q = foldForSearch(query)
+    return options.filter { it !in selected }
+        .map { it to foldForSearch(label(it)) }
+        .filter { (key, shown) -> q.isEmpty() || shown.contains(q) || foldForSearch(key).contains(q) }
+        .sortedWith(compareBy<Pair<String, String>> { (_, shown) -> if (q.isNotEmpty() && shown.startsWith(q)) 0 else 1 }.thenBy { it.second })
+        .map { it.first }
+}
+
+/**
+ * The muscle to store for typed [query]: an option whose key or [label] equals it (ignoring case
+ * and accents), otherwise the typed text itself as a custom muscle; null when blank.
+ */
+fun resolveTypedMuscle(options: List<String>, query: String, label: (String) -> String): String? {
+    val q = foldForSearch(query)
+    if (q.isEmpty()) return null
+    return options.firstOrNull { foldForSearch(it) == q || foldForSearch(label(it)) == q } ?: normalizeMuscle(query)
+}
+
+/** [muscles] with [muscle] added (normalized, ignored if blank or present) or removed if present. */
+fun toggleMuscle(muscles: List<String>, muscle: String): List<String> {
+    val m = normalizeMuscle(muscle)
+    if (m.isEmpty()) return muscles
+    return if (m in muscles) muscles - m else muscles + m
+}
 
 /** Fields that can be invalid. */
 enum class ExerciseFormField { NAME, KCAL, WEIGHT, REPS, SETS, MINUTES, BODYWEIGHT_REPS }
@@ -89,7 +147,9 @@ fun applyExerciseForm(base: Exercise, input: ExerciseFormInput): Exercise = base
         ExerciseType.STRENGTH -> wholeOrZero(input.sets)
         ExerciseType.CARDIO, ExerciseType.BODYWEIGHT -> 1
     },
-    notes = input.notes.takeIf { it.isNotBlank() }
+    notes = input.notes.takeIf { it.isNotBlank() },
+    gymId = input.gymId,
+    primaryMuscles = input.primaryMuscles
 )
 
 private fun whole(value: Int): String = value.toString()
@@ -106,15 +166,23 @@ fun exerciseFormFrom(existing: Exercise, locale: Locale = Locale.getDefault()): 
         sets = if (type == ExerciseType.STRENGTH) whole(existing.defaultSets) else "",
         minutes = if (type == ExerciseType.CARDIO) whole(existing.defaultReps) else "",
         bodyweightReps = if (type == ExerciseType.BODYWEIGHT) whole(existing.defaultReps) else "",
-        notes = existing.notes ?: ""
+        notes = existing.notes ?: "",
+        gymId = existing.gymId,
+        primaryMuscles = existing.primaryMuscles.map(::normalizeMuscle).filter { it.isNotEmpty() }.distinct()
     )
 }
 
 /** Initial form contents when importing [external], with the suggested defaults per type. */
-fun exerciseFormFrom(external: ExternalExercise, locale: Locale = Locale.getDefault()): ExerciseFormInput {
+fun exerciseFormFrom(
+    external: ExternalExercise,
+    locale: Locale = Locale.getDefault(),
+    gymId: Long? = null
+): ExerciseFormInput {
     val type = ExerciseCategoryMapper.getExerciseType(external.category)
     val base = ExerciseFormInput(
         name = external.name,
+        gymId = gymId,
+        primaryMuscles = external.primaryMuscles.map(::normalizeMuscle).filter { it.isNotEmpty() }.distinct(),
         type = type,
         kcal = formatDecimal(getDefaultKcalPerUnit(external), locale)
     )

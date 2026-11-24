@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
@@ -190,6 +191,33 @@ fun SettingsScreen(
                         }
                     }
                     
+                    // Scrolling hand: which side of the Food/Exercise rows the wheels and check-in box go
+                    item {
+                        SettingsSection(
+                            title = stringResource(R.string.settings_scroll_hand_title),
+                            icon = Icons.Filled.TouchApp
+                        ) {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.settings_scroll_hand_explanation),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = appTextSecondaryColor(),
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                ThemeOption(
+                                    title = stringResource(R.string.settings_scroll_hand_right),
+                                    isSelected = settingsManager.scrollHand == com.offlinelabs.nutcracker.data.ScrollHand.RIGHT,
+                                    onClick = { settingsManager.updateScrollHand(com.offlinelabs.nutcracker.data.ScrollHand.RIGHT) }
+                                )
+                                ThemeOption(
+                                    title = stringResource(R.string.settings_scroll_hand_left),
+                                    isSelected = settingsManager.scrollHand == com.offlinelabs.nutcracker.data.ScrollHand.LEFT,
+                                    onClick = { settingsManager.updateScrollHand(com.offlinelabs.nutcracker.data.ScrollHand.LEFT) }
+                                )
+                            }
+                        }
+                    }
+
                     // Language Section
                     item {
                         SettingsSection(

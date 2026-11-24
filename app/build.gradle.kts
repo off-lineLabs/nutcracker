@@ -61,6 +61,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true // Robolectric
+    }
     buildFeatures {
         compose = true
         // generateLocaleConfig is not a valid buildFeatures property. Locale config is handled automatically by AGP 8.2+.
@@ -70,6 +73,8 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    // Drag-to-reorder for the custom order of the Food/Exercise lists
+    implementation(libs.reorderable)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
@@ -114,6 +119,8 @@ dependencies {
     // implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric) // Room migration and DAO tests
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

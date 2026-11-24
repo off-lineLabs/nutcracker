@@ -29,15 +29,32 @@ import androidx.core.content.ContextCompat
 import android.content.Intent
 import android.net.Uri
 import com.offlinelabs.nutcracker.R
+import androidx.compose.foundation.lazy.items
 import com.offlinelabs.nutcracker.ui.theme.appBackgroundColor
 import com.offlinelabs.nutcracker.ui.theme.appTextPrimaryColor
 import com.offlinelabs.nutcracker.ui.theme.appTextSecondaryColor
 import com.offlinelabs.nutcracker.ui.theme.getContrastingTextColor
 
+/** What a question is about; Help lists the section of the tab it was opened from first. */
+enum class FaqSection { FOOD, EXERCISE, GENERAL }
+
 data class FAQItem(
     val question: String,
-    val answer: String
+    val answer: String,
+    val section: FaqSection = FaqSection.GENERAL
 )
+
+/**
+ * The order of the sections: Food first when Help was opened from the Food tab, Exercise first
+ * from the Exercise tab, General first from Home.
+ */
+fun faqSectionOrder(focusPage: Int): List<FaqSection> = when (focusPage) {
+    com.offlinelabs.nutcracker.ui.screens.dashboard.DASHBOARD_PAGE_FOOD ->
+        listOf(FaqSection.FOOD, FaqSection.EXERCISE, FaqSection.GENERAL)
+    com.offlinelabs.nutcracker.ui.screens.dashboard.DASHBOARD_PAGE_EXERCISE ->
+        listOf(FaqSection.EXERCISE, FaqSection.FOOD, FaqSection.GENERAL)
+    else -> listOf(FaqSection.GENERAL, FaqSection.FOOD, FaqSection.EXERCISE)
+}
 
 @Composable
 fun createClickableText(
@@ -108,15 +125,61 @@ fun createClickableText(
 fun HelpScreen(
     onNavigateBack: () -> Unit,
     isDarkTheme: Boolean,
-    onReplayTutorial: () -> Unit = {}
+    onReplayTutorial: () -> Unit = {},
+    /** The dashboard tab Help was opened from: its questions come first. */
+    focusPage: Int = com.offlinelabs.nutcracker.ui.screens.dashboard.DASHBOARD_PAGE_HOME
 ) {
     val context = LocalContext.current
-    val faqItems = listOf(
-        // Basic Usage
+    val allFaqItems = listOf(
+        // Food
         FAQItem(
             question = stringResource(R.string.faq_how_add_meal),
-            answer = stringResource(R.string.faq_answer_add_meal)
+            answer = stringResource(R.string.faq_answer_add_meal),
+            section = FaqSection.FOOD
         ),
+        FAQItem(stringResource(R.string.faq_quick_food_q), stringResource(R.string.faq_quick_food_a), FaqSection.FOOD),
+        FAQItem(stringResource(R.string.faq_meal_types_q), stringResource(R.string.faq_meal_types_a), FaqSection.FOOD),
+        FAQItem(stringResource(R.string.faq_food_swipe_q), stringResource(R.string.faq_food_swipe_a), FaqSection.FOOD),
+        FAQItem(
+            question = stringResource(R.string.faq_how_scan_barcode),
+            answer = stringResource(R.string.faq_answer_scan_barcode),
+            section = FaqSection.FOOD
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_what_food_source),
+            answer = stringResource(R.string.faq_answer_food_source),
+            section = FaqSection.FOOD
+        ),
+        FAQItem(
+            question = stringResource(R.string.faq_what_tef_bonus),
+            answer = stringResource(R.string.faq_answer_tef_bonus),
+            section = FaqSection.FOOD
+        ),
+        // Exercise
+        FAQItem(
+            question = stringResource(R.string.faq_how_add_exercise),
+            answer = stringResource(R.string.faq_answer_add_exercise),
+            section = FaqSection.EXERCISE
+        ),
+        FAQItem(stringResource(R.string.faq_quick_exercise_q), stringResource(R.string.faq_quick_exercise_a), FaqSection.EXERCISE),
+        FAQItem(stringResource(R.string.faq_sets_q), stringResource(R.string.faq_sets_a), FaqSection.EXERCISE),
+        FAQItem(stringResource(R.string.faq_routines_q), stringResource(R.string.faq_routines_a), FaqSection.EXERCISE),
+        FAQItem(
+            question = stringResource(R.string.faq_how_gyms),
+            answer = stringResource(R.string.faq_answer_gyms),
+            section = FaqSection.EXERCISE
+        ),
+        FAQItem(stringResource(R.string.faq_synced_copies_q), stringResource(R.string.faq_synced_copies_a), FaqSection.EXERCISE),
+        FAQItem(stringResource(R.string.faq_exercise_swipe_q), stringResource(R.string.faq_exercise_swipe_a), FaqSection.EXERCISE),
+        FAQItem(
+            question = stringResource(R.string.faq_what_exercise_source),
+            answer = stringResource(R.string.faq_answer_exercise_source),
+            section = FaqSection.EXERCISE
+        ),
+        // General
+        FAQItem(stringResource(R.string.faq_fine_control_q), stringResource(R.string.faq_fine_control_a)),
+        FAQItem(stringResource(R.string.faq_sort_group_q), stringResource(R.string.faq_sort_group_a)),
+        FAQItem(stringResource(R.string.faq_scroll_hand_q), stringResource(R.string.faq_scroll_hand_a)),
         FAQItem(
             question = stringResource(R.string.faq_how_track_calories),
             answer = stringResource(R.string.faq_answer_track_calories)
@@ -126,20 +189,12 @@ fun HelpScreen(
             answer = stringResource(R.string.faq_answer_set_goals)
         ),
         FAQItem(
-            question = stringResource(R.string.faq_how_add_exercise),
-            answer = stringResource(R.string.faq_answer_add_exercise)
-        ),
-        FAQItem(
             question = stringResource(R.string.faq_how_view_progress),
             answer = stringResource(R.string.faq_answer_view_progress)
         ),
         FAQItem(
             question = stringResource(R.string.faq_how_change_date),
             answer = stringResource(R.string.faq_answer_change_date)
-        ),
-        FAQItem(
-            question = stringResource(R.string.faq_how_scan_barcode),
-            answer = stringResource(R.string.faq_answer_scan_barcode)
         ),
         FAQItem(
             question = stringResource(R.string.faq_how_edit_entries),
@@ -154,19 +209,6 @@ fun HelpScreen(
             question = stringResource(R.string.faq_how_change_language),
             answer = stringResource(R.string.faq_answer_change_language)
         ),
-        // App Information & Sources
-        FAQItem(
-            question = stringResource(R.string.faq_what_tef_bonus),
-            answer = stringResource(R.string.faq_answer_tef_bonus)
-        ),
-        FAQItem(
-            question = stringResource(R.string.faq_what_food_source),
-            answer = stringResource(R.string.faq_answer_food_source)
-        ),
-        FAQItem(
-            question = stringResource(R.string.faq_what_exercise_source),
-            answer = stringResource(R.string.faq_answer_exercise_source)
-        ),
         // Privacy & Business
         FAQItem(
             question = stringResource(R.string.faq_what_data_collected),
@@ -180,6 +222,14 @@ fun HelpScreen(
             question = stringResource(R.string.faq_what_logo_means),
             answer = stringResource(R.string.faq_answer_logo_means)
         )
+    )
+    // All questions, the tab's section first; faqItems indices stay stable for the expanded state
+    val sectionOrder = faqSectionOrder(focusPage)
+    val faqItems = sectionOrder.flatMap { s -> allFaqItems.filter { it.section == s } }
+    val sectionTitles = mapOf(
+        FaqSection.FOOD to stringResource(R.string.tab_food),
+        FaqSection.EXERCISE to stringResource(R.string.tab_exercise),
+        FaqSection.GENERAL to stringResource(R.string.faq_section_general)
     )
 
     var expandedItems by remember { mutableStateOf(setOf<Int>()) }
@@ -261,7 +311,17 @@ fun HelpScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            items(faqItems.size) { index ->
+            sectionOrder.forEach { section ->
+            item(key = "faq_header_$section") {
+                Text(
+                    text = sectionTitles.getValue(section).uppercase(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = appTextSecondaryColor(),
+                    modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 4.dp)
+                )
+            }
+            items(faqItems.indices.filter { faqItems[it].section == section }) { index ->
                 val faq = faqItems[index]
                 val isExpanded = expandedItems.contains(index)
                 
@@ -348,6 +408,7 @@ fun HelpScreen(
                         }
                     }
                 }
+            }
             }
             
             item {

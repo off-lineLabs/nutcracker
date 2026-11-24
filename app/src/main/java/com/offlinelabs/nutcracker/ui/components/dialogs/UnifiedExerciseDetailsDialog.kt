@@ -24,6 +24,14 @@ import coil.compose.AsyncImage
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper
 import com.offlinelabs.nutcracker.data.model.ExerciseType
+import com.offlinelabs.nutcracker.data.model.Gym
+import com.offlinelabs.nutcracker.data.gymLabel
+import com.offlinelabs.nutcracker.ui.components.gym.GymPickerSheet
+import com.offlinelabs.nutcracker.ui.components.form.FormDefaults
+import androidx.compose.foundation.BorderStroke
+import com.offlinelabs.nutcracker.ui.components.gym.gymPickerOptions
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextOverflow
 import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
 import com.offlinelabs.nutcracker.data.service.ExternalExerciseService
 import com.offlinelabs.nutcracker.data.service.ExerciseImageService
@@ -38,12 +46,28 @@ fun UnifiedExerciseDetailsDialog(
     externalExerciseService: ExternalExerciseService? = null,
     exerciseImageService: ExerciseImageService? = null,
     foodLogRepository: FoodLogRepository? = null,
+    /** The exercise's gym (may be a hidden one), for the header label. Null for shared exercises. */
+    gym: Gym? = null,
+    /** Visible gyms, the targets of "Copy to another gym". */
+    gyms: List<Gym> = emptyList(),
+    /**
+     * Called with the target gym id (null = shared) and whether the copy stays in sync with this
+     * exercise. When null the copy action is hidden.
+     */
+    onCopyToGym: ((Long?, Boolean) -> Unit)? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onCheckIn: () -> Unit
 ) {
     val imagePaths = exercise.imagePaths
     val pagerState = rememberPagerState { imagePaths.size }
+    val copyTargets = remember(gyms, exercise.gymId) {
+        gymPickerOptions(gyms, excludeGymId = exercise.gymId, excludeShared = exercise.gymId == null)
+    }
+    var showCopyPicker by rememberSaveable { mutableStateOf(false) }
+    // Target picked in the sheet, waiting for the "keep in sync?" answer
+    var askSync by rememberSaveable { mutableStateOf(false) }
+    var copyTarget by rememberSaveable { mutableStateOf<Long?>(null) }
     
     // Auto-advance slideshow if there are multiple images
     LaunchedEffect(pagerState) {
@@ -66,11 +90,21 @@ fun UnifiedExerciseDetailsDialog(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    if (gym != null) {
+                        Text(
+                            text = gymLabel(gym.name, gym.unit),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         },
         text = {
@@ -95,6 +129,28 @@ fun UnifiedExerciseDetailsDialog(
                     PersonalDataCard(exercise = exercise, foodLogRepository = foodLogRepository, onEdit = onEdit)
                 }
                 
+                if (onCopyToGym != null && copyTargets.isNotEmpty()) {
+                    item {
+                        // The theme's primary is navy on a navy surface in dark mode; the form
+                        // accent is primary in light and a max-contrast shade in dark.
+                        val copyColor = FormDefaults.colors().accent
+                        OutlinedButton(
+                            onClick = { showCopyPicker = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = copyColor),
+                            border = BorderStroke(1.dp, copyColor.copy(alpha = 0.6f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.gym_copy_action))
+                        }
+                    }
+                }
+
                 // Exercise details
                 item {
                     ExerciseDetailsCard(exercise = exercise)
@@ -133,6 +189,44 @@ fun UnifiedExerciseDetailsDialog(
             }
         }
     )
+
+    if (showCopyPicker && onCopyToGym != null) {
+        GymPickerSheet(
+            title = stringResource(R.string.gym_copy_action),
+            subtitle = stringResource(R.string.gym_copy_subtitle),
+            options = copyTargets,
+            onSelected = { target ->
+                showCopyPicker = false
+                copyTarget = target
+                askSync = true
+            },
+            onDismiss = { showCopyPicker = false }
+        )
+    }
+
+    if (askSync && onCopyToGym != null) {
+        val target = copyTarget
+        val targetName = gyms.firstOrNull { it.id == target }?.let { gymLabel(it.name, it.unit) }
+            ?: stringResource(R.string.gym_all_gyms_shared)
+        val accent = FormDefaults.colors().accent
+        AlertDialog(
+            onDismissRequest = { askSync = false },
+            icon = { Icon(Icons.Filled.Sync, contentDescription = null) },
+            title = { Text(stringResource(R.string.sync_dialog_title)) },
+            text = { Text(stringResource(R.string.sync_dialog_message, targetName)) },
+            confirmButton = {
+                Button(
+                    onClick = { askSync = false; onCopyToGym(target, true) },
+                    colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = FormDefaults.colors().onAccent)
+                ) { Text(stringResource(R.string.sync_keep)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { askSync = false; onCopyToGym(target, false) }) {
+                    Text(stringResource(R.string.sync_independent), color = accent)
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -241,12 +335,13 @@ private fun ExerciseDetailsCard(exercise: Exercise) {
             exercise.level?.let { DetailRow(stringResource(R.string.exercise_level), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             exercise.mechanic?.let { DetailRow(stringResource(R.string.exercise_mechanic), it.replaceFirstChar { it.uppercase() }, contrastingTextColor) }
             
+            val muscleName = com.offlinelabs.nutcracker.ui.components.rememberMuscleLabeler()
             if (exercise.primaryMuscles.isNotEmpty()) {
-                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.primary_muscles), exercise.primaryMuscles.joinToString(", ", transform = muscleName), contrastingTextColor)
             }
             
             if (exercise.secondaryMuscles.isNotEmpty()) {
-                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ") { it.replaceFirstChar { it.uppercase() } }, contrastingTextColor)
+                DetailRow(stringResource(R.string.secondary_muscles), exercise.secondaryMuscles.joinToString(", ", transform = muscleName), contrastingTextColor)
             }
         }
     }
