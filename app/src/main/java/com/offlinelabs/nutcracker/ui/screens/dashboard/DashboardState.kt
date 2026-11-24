@@ -128,6 +128,8 @@ internal class DashboardState(
     var userGoal by mutableStateOf(UserGoal.default())
     var dailyMealCheckIns by mutableStateOf(emptyList<DailyNutritionEntry>())
     var dailyExerciseLogs by mutableStateOf(emptyList<DailyExerciseEntry>())
+    /** Sets of the day's exercise check-ins, by check-in id. */
+    var dailyExerciseSets by mutableStateOf<Map<Long, List<com.offlinelabs.nutcracker.data.model.ExerciseSet>>>(emptyMap())
     /** Heaviest logged weight per exercise: one query for the whole Exercise tab. */
     var exerciseMaxWeights by mutableStateOf<Map<Long, Double>>(emptyMap())
     /** Reps of each exercise's last check-in (where a strength row's reps wheel starts). */
@@ -609,6 +611,7 @@ internal fun DashboardState.CollectDashboardData(
     }
     LaunchedEffect(selectedDateString) {
         launch { foodLogRepository.getExerciseLogsByDate(selectedDateString).collectLatest { dailyExerciseLogs = it } }
+        launch { foodLogRepository.getSetsForDate(selectedDateString).collectLatest { sets -> dailyExerciseSets = sets.groupBy { it.logId } } }
         launch { foodLogRepository.getDailyExerciseCalories(selectedDateString).collectLatest { exerciseCaloriesBurned = it } }
         launch {
             // Raw food calories (without any booster) and the TEF bonus they earn

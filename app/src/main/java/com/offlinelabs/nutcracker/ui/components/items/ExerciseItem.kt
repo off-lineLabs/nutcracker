@@ -33,7 +33,9 @@ import java.util.*
 @Composable
 fun ExerciseItem(
     exerciseEntry: DailyExerciseEntry,
-    onEdit: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null,
+    /** The check-in's sets; when they differ they're listed as "40×8 · 45×6 · 50×6 kg". */
+    sets: List<com.offlinelabs.nutcracker.data.model.ExerciseSet> = emptyList()
 ) {
     // Map database category to UI exercise type
     val exerciseType = ExerciseCategoryMapper.getExerciseType(exerciseEntry.exerciseType)
@@ -119,8 +121,20 @@ fun ExerciseItem(
                 }
                 
                 Spacer(modifier = Modifier.height(4.dp))
-                
-                Row(
+
+                if (exerciseType == ExerciseType.STRENGTH && sets.size > 1 &&
+                    !com.offlinelabs.nutcracker.data.model.setsAreUniform(sets)
+                ) {
+                    // Each set's weight × reps, in order
+                    Text(
+                        text = sets.sortedBy { it.setIndex }.joinToString(" · ") {
+                            "${com.offlinelabs.nutcracker.ui.components.formatWheelValue(it.weight)}×${it.reps}"
+                        } + " " + stringResource(R.string.kg_unit),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = appTextSecondaryColor()
+                    )
+                } else Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Sets (for non-cardio exercises) - First

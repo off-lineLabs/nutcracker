@@ -25,6 +25,9 @@ import com.offlinelabs.nutcracker.data.ListSort
 import com.offlinelabs.nutcracker.data.MealGrouping
 import com.offlinelabs.nutcracker.data.model.Exercise
 import com.offlinelabs.nutcracker.data.model.ExerciseLog
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
+import com.offlinelabs.nutcracker.ui.components.dialogs.DayLog
+import com.offlinelabs.nutcracker.ui.components.dialogs.PlannedSet
 import com.offlinelabs.nutcracker.data.model.Meal
 import com.offlinelabs.nutcracker.data.model.MealCheckIn
 import com.offlinelabs.nutcracker.ui.components.dialogs.ExercisePickerContent
@@ -120,6 +123,14 @@ internal fun DashboardState.ExerciseTab() {
         lastReps = exerciseLastReps,
         onQuickCheckIn = { exercise, value, reps, routineId -> quickCheckInExercise(exercise, value, reps, routineId) },
         onRemoveCheckIns = { exercise, routineId -> removeDayCheckIns(exercise, routineId) },
+        dayLogs = remember(dailyExerciseLogs) {
+            dailyExerciseLogs.map { DayLog(it.logId, it.exerciseId, it.routineId, it.logDateTime) }
+        },
+        daySets = dailyExerciseSets,
+        onCheckInSets = { exercise, sessionLogId, sets, routineId -> checkInExerciseSets(exercise, sessionLogId, sets, routineId) },
+        onUncheckSet = { exercise, logId, setIndex ->
+            coroutineScope.launch { foodLogRepository.uncheckSet(logId, setIndex, exercise.kcalBurnedPerUnit ?: 0.0) }
+        },
         onDeleteExercise = { confirmDeleteExercise(it) }
     )
 }
@@ -190,6 +201,41 @@ private fun DashboardState.removeDayCheckIns(exercise: Exercise, routineId: Long
                 duration = SnackbarDuration.Short
             )
             if (result == SnackbarResult.ActionPerformed) foodLogRepository.restoreExerciseLogs(removed)
+        }
+    }
+}
+
+/**
+ * Ticks sets of a strength exercise from its row or set list, each with its own weight and reps,
+ * on the day shown (the tick time is kept per set): into the day's session, or a new check-in
+ * under the group's routine. Starting a session shows the "Logged" message.
+ */
+private fun DashboardState.checkInExerciseSets(exercise: Exercise, sessionLogId: Long?, sets: List<PlannedSet>, routineId: Long?) {
+    if (sets.isEmpty()) return
+    coroutineScope.launch {
+        try {
+            val at = newCheckInDateTime()
+            val stamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.ROOT).format(at)
+            // The summary is recomputed from the sets once they're stored
+            val newLog = ExerciseLog.create(
+                exerciseId = exercise.id,
+                weight = sets.maxOf { it.weight },
+                reps = sets.last().reps,
+                sets = sets.size,
+                caloriesBurned = 0.0,
+                customDateTime = at,
+                routineId = routineId
+            )
+            foodLogRepository.checkInSets(
+                sessionLogId,
+                newLog,
+                sets.map { ExerciseSet(logId = 0, setIndex = it.index, weight = it.weight, reps = it.reps, completedAt = stamp) },
+                exercise.kcalBurnedPerUnit ?: 0.0
+            )
+            if (sessionLogId == null) showCheckInLoggedSnackbar(context.getString(R.string.exercise_check_in_completed_success))
+        } catch (e: Exception) {
+            AppLogger.exception("DashboardScreen", "Set check-in failed", e)
+            snackbarHostState.showSnackbar(message = context.getString(R.string.failed_to_complete_exercise_check_in))
         }
     }
 }

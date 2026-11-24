@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlin.math.abs
 
-private val WheelItemHeight = 24.dp
+internal val WheelItemHeight = 24.dp
 
 /** "42" for whole values, otherwise one decimal ("42.5"). */
 fun formatWheelValue(value: Double): String =
@@ -53,10 +53,13 @@ fun ValueWheel(
     values: List<Double>,
     value: Double,
     onValueChange: (Double) -> Unit,
-    unit: String,
+    /** Shown under the wheel; null for none (compact wheels whose unit is shown elsewhere). */
+    unit: String?,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    width: androidx.compose.ui.unit.Dp = 60.dp
+    width: androidx.compose.ui.unit.Dp = 60.dp,
+    /** Height of one value; the wheel shows three. */
+    itemHeight: androidx.compose.ui.unit.Dp = WheelItemHeight
 ) {
     val startIndex = remember(values) { values.indices.minByOrNull { abs(values[it] - value) } ?: 0 }
     // With one item of padding above and below, the first visible item is the centred one
@@ -92,14 +95,14 @@ fun ValueWheel(
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
-                .size(width = width, height = WheelItemHeight * 3)
+                .size(width = width, height = itemHeight * 3)
                 .semantics { this.contentDescription = contentDescription }
         ) {
             Box {
                 LazyColumn(
                     state = listState,
                     flingBehavior = fling,
-                    contentPadding = PaddingValues(vertical = WheelItemHeight),
+                    contentPadding = PaddingValues(vertical = itemHeight),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     itemsIndexed(values) { index, v ->
@@ -113,7 +116,7 @@ fun ValueWheel(
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(WheelItemHeight)
+                                .height(itemHeight)
                                 .graphicsLayer {
                                     alpha = if (distance == 0) 1f else 0.35f
                                     val scale = if (distance == 0) 1f else 0.85f
@@ -125,10 +128,12 @@ fun ValueWheel(
                 }
             }
         }
-        Text(
-            text = unit,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (unit != null) {
+            Text(
+                text = unit,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

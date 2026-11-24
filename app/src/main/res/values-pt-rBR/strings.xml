@@ -761,4 +761,10 @@
     <string name="settings_scroll_hand_explanation">Com qual polegar você rola as listas de comida e exercício? As rodas de números e as caixas de check-in ficam do outro lado, para não mudarem sem querer ao rolar.</string>
     <string name="settings_scroll_hand_right">Mão direita (controles à esquerda)</string>
     <string name="settings_scroll_hand_left">Mão esquerda (controles à direita)</string>
+    <string name="set_number">Série %1$d</string>
+    <string name="add_set">Adicionar série</string>
+    <string name="show_sets">Mostrar as séries de %1$s</string>
+    <string name="hide_sets">Ocultar as séries de %1$s</string>
+    <string name="set_check_in">Registrar a série %1$d de %2$s</string>
+    <string name="set_remove">Remover a série %1$d de %2$s</string>
 </resources>

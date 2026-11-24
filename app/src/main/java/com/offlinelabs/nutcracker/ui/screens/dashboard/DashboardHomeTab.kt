@@ -172,7 +172,8 @@ internal fun DashboardState.HomeTab() {
                     onDeleteMeal = { },
                     onDeleteExercise = { },
                     onEditMeal = { checkIn -> showEditMealDialog = checkIn },
-                    onEditExercise = { exerciseEntry -> showEditExerciseDialog = exerciseEntry }
+                    onEditExercise = { exerciseEntry -> showEditExerciseDialog = exerciseEntry },
+                    exerciseSets = dailyExerciseSets
                 )
             }
         }

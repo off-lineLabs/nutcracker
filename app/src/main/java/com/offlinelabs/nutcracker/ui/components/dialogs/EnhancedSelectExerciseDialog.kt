@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import com.offlinelabs.nutcracker.R
 import com.offlinelabs.nutcracker.data.model.Exercise
+import com.offlinelabs.nutcracker.data.model.ExerciseSet
+import androidx.compose.ui.state.ToggleableState
 import com.offlinelabs.nutcracker.data.model.ExternalExercise
 import com.offlinelabs.nutcracker.data.repo.FoodLogRepository
 import com.offlinelabs.nutcracker.data.service.ExternalExerciseService
@@ -95,6 +97,16 @@ fun ExercisePickerContent(
     onQuickCheckIn: (exercise: Exercise, value: Double, reps: Int, routineId: Long?) -> Unit = { _, _, _, _ -> },
     /** Removes the exercise's check-ins of the day shown (only those of [routineId] when given). */
     onRemoveCheckIns: (exercise: Exercise, routineId: Long?) -> Unit = { _, _ -> },
+    /** The day's check-ins and their sets by check-in id (a strength row's box and set list). */
+    dayLogs: List<DayLog> = emptyList(),
+    daySets: Map<Long, List<ExerciseSet>> = emptyMap(),
+    /**
+     * Ticks sets of a strength exercise, each with its own values: into the day's session
+     * [sessionLogId], or a new check-in under the group's routine when null.
+     */
+    onCheckInSets: (exercise: Exercise, sessionLogId: Long?, sets: List<PlannedSet>, routineId: Long?) -> Unit = { _, _, _, _ -> },
+    /** Unticks one set of a strength exercise's session. */
+    onUncheckSet: (exercise: Exercise, logId: Long, setIndex: Int) -> Unit = { _, _, _ -> },
     /** Delete from the row's swipe panel (the caller confirms). */
     onDeleteExercise: (Exercise) -> Unit = {}
 ) {
@@ -171,6 +183,10 @@ fun ExercisePickerContent(
         lastReps = lastReps,
         onQuickCheckIn = onQuickCheckIn,
         onRemoveCheckIns = onRemoveCheckIns,
+        dayLogs = dayLogs,
+        daySets = daySets,
+        onCheckInSets = onCheckInSets,
+        onUncheckSet = onUncheckSet,
         onDeleteExercise = onDeleteExercise
     )
 
@@ -248,6 +264,10 @@ private fun MainExerciseSelectionContent(
     lastReps: Map<Long, Int>,
     onQuickCheckIn: (Exercise, Double, Int, Long?) -> Unit,
     onRemoveCheckIns: (Exercise, Long?) -> Unit,
+    dayLogs: List<DayLog>,
+    daySets: Map<Long, List<ExerciseSet>>,
+    onCheckInSets: (Exercise, Long?, List<PlannedSet>, Long?) -> Unit,
+    onUncheckSet: (Exercise, Long, Int) -> Unit,
     onDeleteExercise: (Exercise) -> Unit
 ) {
     val reorder = rememberGroupedReorderState(groups, prefix = "exercise") { it.id }
@@ -256,6 +276,11 @@ private fun MainExerciseSelectionContent(
     // Wheel values survive rows scrolling out of view (reset when the tab leaves composition)
     val wheelValues = remember { mutableStateMapOf<Long, Double>() }
     val repsValues = remember { mutableStateMapOf<Long, Int>() }
+    // Set lists: one open at a time; per exercise, the sets changed on their own and the added ones
+    var expandedRowKey by remember { mutableStateOf<String?>(null) }
+    val weightChanges = remember { mutableStateMapOf<Long, Map<Int, Double>>() }
+    val repsChanges = remember { mutableStateMapOf<Long, Map<Int, Int>>() }
+    val addedSets = remember { mutableStateMapOf<Long, Int>() }
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
         reorder.move(from.key, to.key) // moves across groups are ignored
@@ -363,43 +388,198 @@ private fun MainExerciseSelectionContent(
                         val repsStart = quickRepsStart(exercise, lastReps[exercise.id])
                         // A routine group counts the check-ins made under it and those without a routine
                         val routineId = group.routineId
-                        ExerciseRow(
-                            exercise = exercise,
-                            maxWeight = maxWeight,
-                            controlsFirst = controlsFirst,
-                            open = openRowKey == rowKey,
-                            onOpenChange = { open -> openRowKey = if (open) rowKey else openRowKey.takeIf { it != rowKey } },
-                            draggable = draggable,
-                            handleModifier = handleModifier,
-                            wheelValue = wheelValues[exercise.id] ?: quickWheelStart(exercise, maxWeight),
-                            onWheelChange = { wheelValues[exercise.id] = it },
-                            repsStart = repsStart,
-                            repsValue = repsValues[exercise.id] ?: repsStart,
-                            onRepsChange = { repsValues[exercise.id] = it },
-                            checkedIn = if (routineId != null) {
+                        val rowWeight = wheelValues[exercise.id] ?: quickWheelStart(exercise, maxWeight)
+                        val rowReps = repsValues[exercise.id] ?: repsStart
+                        val isStrength = com.offlinelabs.nutcracker.data.model.ExerciseCategoryMapper.getExerciseType(exercise.category) ==
+                            com.offlinelabs.nutcracker.data.model.ExerciseType.STRENGTH
+
+                        // Strength rows: the box and the set list follow the sets of the day's session
+                        val session = if (isStrength) sessionLog(dayLogs, exercise.id, routineId) else null
+                        val doneSets = session?.let { daySets[it.logId] }.orEmpty().associateBy { it.setIndex }
+                        val planned = plannedSetCount(exercise.defaultSets, doneSets.keys, addedSets[exercise.id] ?: 0)
+                        fun plannedSet(index: Int) = PlannedSet(
+                            index,
+                            carriedSetValue(index, weightChanges[exercise.id].orEmpty(), rowWeight),
+                            carriedSetValue(index, repsChanges[exercise.id].orEmpty(), rowReps)
+                        )
+                        val tick: ToggleableState
+                        val onTickClick: () -> Unit
+                        if (isStrength) {
+                            val state = setsTick(doneSets.size, planned)
+                            tick = when (state) {
+                                SetsTick.NONE -> ToggleableState.Off
+                                SetsTick.PARTIAL -> ToggleableState.Indeterminate
+                                SetsTick.ALL -> ToggleableState.On
+                            }
+                            onTickClick = {
+                                when (state) {
+                                    // All sets at once, each with its own values
+                                    SetsTick.NONE -> onCheckInSets(exercise, null, (0 until planned).map(::plannedSet), routineId)
+                                    // The sets still to do
+                                    SetsTick.PARTIAL -> onCheckInSets(
+                                        exercise, session?.logId, (0 until planned).filter { it !in doneSets }.map(::plannedSet), routineId
+                                    )
+                                    SetsTick.ALL -> onRemoveCheckIns(exercise, routineId)
+                                }
+                            }
+                        } else {
+                            val checked = if (routineId != null) {
                                 (exercise.id to routineId) in checkedInRoutineKeys || (exercise.id to null) in checkedInRoutineKeys
                             } else {
                                 exercise.id in checkedInIds
-                            },
-                            onCheckedChange = { checked ->
-                                if (checked) {
-                                    onQuickCheckIn(
-                                        exercise,
-                                        wheelValues[exercise.id] ?: quickWheelStart(exercise, maxWeight),
-                                        repsValues[exercise.id] ?: repsStart,
-                                        routineId
-                                    )
-                                } else {
-                                    onRemoveCheckIns(exercise, routineId)
-                                }
-                            },
-                            onClick = { onSelectExercise(exercise) },
-                            onEdit = { openRowKey = null; onEditExercise(exercise) },
-                            onDelete = { openRowKey = null; onDeleteExercise(exercise) }
-                        )
+                            }
+                            tick = ToggleableState(checked)
+                            onTickClick = {
+                                if (checked) onRemoveCheckIns(exercise, routineId)
+                                else onQuickCheckIn(exercise, rowWeight, rowReps, routineId)
+                            }
+                        }
+                        val expanded = isStrength && expandedRowKey == rowKey
+
+                        Column {
+                            ExerciseRow(
+                                exercise = exercise,
+                                maxWeight = maxWeight,
+                                controlsFirst = controlsFirst,
+                                open = openRowKey == rowKey,
+                                onOpenChange = { open -> openRowKey = if (open) rowKey else openRowKey.takeIf { it != rowKey } },
+                                draggable = draggable,
+                                handleModifier = handleModifier,
+                                wheelValue = rowWeight,
+                                onWheelChange = { wheelValues[exercise.id] = it },
+                                repsStart = repsStart,
+                                repsValue = rowReps,
+                                onRepsChange = { repsValues[exercise.id] = it },
+                                tick = tick,
+                                onTickClick = onTickClick,
+                                expandable = isStrength,
+                                expanded = expanded,
+                                onToggleExpanded = { expandedRowKey = if (expanded) null else rowKey },
+                                onClick = { onSelectExercise(exercise) },
+                                onEdit = { openRowKey = null; onEditExercise(exercise) },
+                                onDelete = { openRowKey = null; onDeleteExercise(exercise) }
+                            )
+                            if (expanded) {
+                                SetList(
+                                    exerciseName = exercise.name,
+                                    controlsFirst = controlsFirst,
+                                    planned = planned,
+                                    done = doneSets,
+                                    plannedSet = ::plannedSet,
+                                    weightSteps = remember(rowWeight) { quickWheelValues(rowWeight, 300) },
+                                    onWeightChange = { i, w -> weightChanges[exercise.id] = weightChanges[exercise.id].orEmpty() + (i to w) },
+                                    onRepsChange = { i, r -> repsChanges[exercise.id] = repsChanges[exercise.id].orEmpty() + (i to r) },
+                                    onTick = { i -> onCheckInSets(exercise, session?.logId, listOf(plannedSet(i)), routineId) },
+                                    onUntick = { i -> session?.let { onUncheckSet(exercise, it.logId, i) } },
+                                    onAddSet = { addedSets[exercise.id] = (addedSets[exercise.id] ?: 0) + 1 }
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * The sets of a strength row, under it: done sets show their values, the others compact weight
+ * and reps wheels (a change carries over to the following sets), each with its own box, and
+ * "Add set" at the end.
+ */
+@Composable
+private fun SetList(
+    exerciseName: String,
+    controlsFirst: Boolean,
+    planned: Int,
+    done: Map<Int, ExerciseSet>,
+    plannedSet: (Int) -> PlannedSet,
+    weightSteps: List<Double>,
+    onWeightChange: (index: Int, weight: Double) -> Unit,
+    onRepsChange: (index: Int, reps: Int) -> Unit,
+    onTick: (index: Int) -> Unit,
+    onUntick: (index: Int) -> Unit,
+    onAddSet: () -> Unit
+) {
+    val kg = stringResource(R.string.kg_unit)
+    val repsUnit = stringResource(R.string.reps_unit)
+    val repsSteps = remember { (1..MAX_QUICK_REPS).map { it.toDouble() } }
+    val wheelsWidth = 56.dp + 6.dp + 48.dp
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+        for (i in 0 until planned) {
+            val doneSet = done[i]
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val controls: @Composable RowScope.() -> Unit = {
+                    QuickControls(
+                        controlsFirst = controlsFirst,
+                        state = ToggleableState(doneSet != null),
+                        onClick = { if (doneSet != null) onUntick(i) else onTick(i) },
+                        checkLabel = stringResource(if (doneSet != null) R.string.set_remove else R.string.set_check_in, i + 1, exerciseName)
+                    ) {
+                        if (doneSet != null) {
+                            Text(
+                                text = "${formatWheelValue(doneSet.weight)} $kg × ${doneSet.reps}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.width(wheelsWidth)
+                            )
+                        } else {
+                            val set = plannedSet(i)
+                            // Re-created when a change carries over from an earlier set
+                            key(set.weight) {
+                                ValueWheel(
+                                    values = weightSteps,
+                                    value = set.weight,
+                                    onValueChange = { onWeightChange(i, it) },
+                                    unit = null,
+                                    contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, formatWheelValue(set.weight), kg),
+                                    width = 56.dp,
+                                    itemHeight = 18.dp
+                                )
+                            }
+                            key(set.reps) {
+                                ValueWheel(
+                                    values = repsSteps,
+                                    value = set.reps.toDouble(),
+                                    onValueChange = { onRepsChange(i, it.toInt()) },
+                                    unit = null,
+                                    contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, set.reps.toString(), repsUnit),
+                                    width = 48.dp,
+                                    itemHeight = 18.dp
+                                )
+                            }
+                        }
+                    }
+                }
+                val label: @Composable RowScope.() -> Unit = {
+                    Text(
+                        text = stringResource(R.string.set_number, i + 1),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                    )
+                }
+                if (controlsFirst) {
+                    controls()
+                    label()
+                } else {
+                    label()
+                    controls()
+                }
+            }
+        }
+        TextButton(
+            onClick = onAddSet,
+            modifier = Modifier.align(if (controlsFirst) Alignment.Start else Alignment.End).padding(horizontal = 8.dp)
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(R.string.add_set))
         }
     }
 }
@@ -424,8 +604,12 @@ private fun ExerciseRow(
     repsStart: Int,
     repsValue: Int,
     onRepsChange: (Int) -> Unit,
-    checkedIn: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    tick: ToggleableState,
+    onTickClick: () -> Unit,
+    /** Strength rows can open their set list. */
+    expandable: Boolean,
+    expanded: Boolean,
+    onToggleExpanded: () -> Unit,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -473,9 +657,9 @@ private fun ExerciseRow(
         controls = {
             QuickControls(
                 controlsFirst = controlsFirst,
-                checked = checkedIn,
-                onCheckedChange = onCheckedChange,
-                checkLabel = stringResource(if (checkedIn) R.string.quick_remove_check_in else R.string.quick_check_in, exercise.name)
+                state = tick,
+                onClick = onTickClick,
+                checkLabel = stringResource(if (tick == ToggleableState.On) R.string.quick_remove_check_in else R.string.quick_check_in, exercise.name)
             ) {
                 // Re-created when the start moves (the max weight loads or grows), so it scrolls there
                 key(wheelSteps) {
@@ -519,8 +703,17 @@ private fun ExerciseRow(
                     text = stringResource(R.string.max_weight_display, (maxWeight ?: 0.0).toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp).weight(1f)
                 )
+                if (expandable) {
+                    IconButton(onClick = onToggleExpanded, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            contentDescription = stringResource(if (expanded) R.string.hide_sets else R.string.show_sets, exercise.name),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }

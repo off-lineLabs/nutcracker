@@ -48,7 +48,9 @@ fun FilterableHistoryView(
     onDeleteMeal: (DailyNutritionEntry) -> Unit,
     onDeleteExercise: (DailyExerciseEntry) -> Unit,
     onEditMeal: (DailyNutritionEntry) -> Unit,
-    onEditExercise: (DailyExerciseEntry) -> Unit
+    onEditExercise: (DailyExerciseEntry) -> Unit,
+    /** Sets of the exercise check-ins by check-in id (varied sets are listed one by one). */
+    exerciseSets: Map<Long, List<com.offlinelabs.nutcracker.data.model.ExerciseSet>> = emptyMap()
 ) {
     var selectedFilter by remember { mutableStateOf(HistoryFilter.ALL) }
     
@@ -149,7 +151,8 @@ fun FilterableHistoryView(
                         is HistoryItem.ExerciseItem -> {
                             ExerciseItem(
                                 exerciseEntry = item.entry,
-                                onEdit = { onEditExercise(item.entry) }
+                                onEdit = { onEditExercise(item.entry) },
+                                sets = exerciseSets[item.entry.logId].orEmpty()
                             )
                         }
                     }

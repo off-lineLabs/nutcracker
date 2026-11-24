@@ -833,4 +833,10 @@
     <string name="settings_scroll_hand_explanation">Which thumb do you scroll the food and exercise lists with? The number wheels and check-in boxes go on the other side, so scrolling doesn’t change them by accident.</string>
     <string name="settings_scroll_hand_right">Right hand (controls on the left)</string>
     <string name="settings_scroll_hand_left">Left hand (controls on the right)</string>
+    <string name="set_number">Set %1$d</string>
+    <string name="add_set">Add set</string>
+    <string name="show_sets">Show the sets of %1$s</string>
+    <string name="hide_sets">Hide the sets of %1$s</string>
+    <string name="set_check_in">Check in set %1$d of %2$s</string>
+    <string name="set_remove">Remove set %1$d of %2$s</string>
 </resources>

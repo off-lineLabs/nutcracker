@@ -761,4 +761,10 @@
     <string name="settings_scroll_hand_explanation">¿Con qué pulgar desplazas las listas de comida y ejercicio? Las ruedas de números y las casillas de registro van al otro lado, para no cambiarlas sin querer al desplazarte.</string>
     <string name="settings_scroll_hand_right">Mano derecha (controles a la izquierda)</string>
     <string name="settings_scroll_hand_left">Mano izquierda (controles a la derecha)</string>
+    <string name="set_number">Serie %1$d</string>
+    <string name="add_set">Añadir serie</string>
+    <string name="show_sets">Mostrar las series de %1$s</string>
+    <string name="hide_sets">Ocultar las series de %1$s</string>
+    <string name="set_check_in">Registrar la serie %1$d de %2$s</string>
+    <string name="set_remove">Quitar la serie %1$d de %2$s</string>
 </resources>

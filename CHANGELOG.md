@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick check-in from the Food tab: set the portion on the wheel (starting at your last portion, with the kcal shown as you scroll) and tick the box. Swipe a food left to edit or delete it
 - Checking in under a routine or meal type remembers it: an exercise in two routines, or a food in Breakfast and Snack, is only ticked where you checked it in
 - Add an exercise to routines from its add/edit form
+- Sets: open a strength exercise's set list to tick sets one by one, each with its own weight and reps (changing one carries over to the next sets), or add an extra set. The row's box shows when only some sets are done, and Home lists sets that differ, like "40×8 · 45×6 · 50×6 kg"
 - Settings: choose the hand you scroll with, and the number wheels and check-in boxes move to the other side so scrolling doesn't change them
 - Choose muscle groups when adding or editing an exercise by searching the exercise database's list (shown in your language) or typing your own
 - Backups now include your list order, routines, meal types and synced copies

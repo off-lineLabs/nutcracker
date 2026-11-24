@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TriStateCheckbox
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -93,20 +94,24 @@ fun RowScope.QuickControls(
     onCheckedChange: (Boolean) -> Unit,
     checkLabel: String,
     wheels: @Composable RowScope.() -> Unit
+) = QuickControls(
+    controlsFirst = controlsFirst,
+    state = ToggleableState(checked),
+    onClick = { onCheckedChange(!checked) },
+    checkLabel = checkLabel,
+    wheels = wheels
+)
+
+/** [QuickControls] with a three-state box (e.g. some of an exercise's sets done). */
+@Composable
+fun RowScope.QuickControls(
+    controlsFirst: Boolean,
+    state: ToggleableState,
+    onClick: () -> Unit,
+    checkLabel: String,
+    wheels: @Composable RowScope.() -> Unit
 ) {
-    val colors = FormDefaults.colors()
-    val box: @Composable () -> Unit = {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                checkedColor = colors.accent,
-                checkmarkColor = colors.onAccent,
-                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.semantics { contentDescription = checkLabel }
-        )
-    }
+    val box: @Composable () -> Unit = { CheckInBox(state, onClick, checkLabel) }
     if (controlsFirst) {
         box()
         wheels()
@@ -114,6 +119,22 @@ fun RowScope.QuickControls(
         wheels()
         box()
     }
+}
+
+/** The rows' check-in box in the accent colour: unticked, partly done (a dash) or ticked. */
+@Composable
+fun CheckInBox(state: ToggleableState, onClick: () -> Unit, label: String) {
+    val colors = FormDefaults.colors()
+    TriStateCheckbox(
+        state = state,
+        onClick = onClick,
+        colors = CheckboxDefaults.colors(
+            checkedColor = colors.accent,
+            checkmarkColor = colors.onAccent,
+            uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        modifier = Modifier.semantics { contentDescription = label }
+    )
 }
 
 /** One button of the swipe panel: an icon on a coloured square. */
