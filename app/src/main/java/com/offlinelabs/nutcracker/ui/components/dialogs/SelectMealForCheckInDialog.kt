@@ -337,7 +337,8 @@ private fun MealRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                meal.novaClassification?.let { nova ->
+                // Only real NOVA groups (1–4); some imported foods carry a 0
+                meal.novaClassification?.takeIf { it.group in 1..4 }?.let { nova ->
                     Text(
                         text = " · " + stringResource(R.string.nova_group_format, nova.group),
                         style = MaterialTheme.typography.bodySmall,

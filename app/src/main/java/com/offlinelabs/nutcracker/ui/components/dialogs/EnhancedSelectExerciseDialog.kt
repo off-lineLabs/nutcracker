@@ -525,6 +525,7 @@ private fun SetList(
                                 text = "${formatWheelValue(doneSet.weight)} $kg × ${doneSet.reps}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.width(wheelsWidth)
                             )
@@ -539,7 +540,7 @@ private fun SetList(
                                     unit = null,
                                     contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, formatWheelValue(set.weight), kg),
                                     width = 56.dp,
-                                    itemHeight = 18.dp
+                                    itemHeight = 20.dp
                                 )
                             }
                             key(set.reps) {
@@ -550,7 +551,7 @@ private fun SetList(
                                     unit = null,
                                     contentDescription = stringResource(R.string.quick_wheel_description, exerciseName, set.reps.toString(), repsUnit),
                                     width = 48.dp,
-                                    itemHeight = 18.dp
+                                    itemHeight = 20.dp
                                 )
                             }
                         }
@@ -575,7 +576,10 @@ private fun SetList(
         }
         TextButton(
             onClick = onAddSet,
-            modifier = Modifier.align(if (controlsFirst) Alignment.Start else Alignment.End).padding(horizontal = 8.dp)
+            modifier = Modifier.align(if (controlsFirst) Alignment.Start else Alignment.End).padding(horizontal = 8.dp),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = com.offlinelabs.nutcracker.ui.components.form.FormDefaults.colors().accent
+            )
         ) {
             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(4.dp))

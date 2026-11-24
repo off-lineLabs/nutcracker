@@ -109,7 +109,12 @@ fun ValueWheel(
                         val distance = abs(index - centredIndex)
                         Text(
                             text = formatWheelValue(v),
-                            style = MaterialTheme.typography.titleMedium,
+                            // Compact wheels use a smaller font so the neighbours above and below fit
+                            style = if (itemHeight < WheelItemHeight) {
+                                MaterialTheme.typography.bodyMedium.copy(lineHeight = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp))
+                            } else {
+                                MaterialTheme.typography.titleMedium
+                            },
                             fontWeight = if (distance == 0) FontWeight.Bold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center,
